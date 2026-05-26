@@ -33,21 +33,26 @@
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($users as $u): ?>
+                <?php foreach ($users as $u):
+                    $hasAnyRole = $u['is_student'] || $u['is_teacher'] || $u['is_researcher'] || $u['is_admin'];
+                ?>
                     <tr id="user-row-<?= $u['user_id'] ?>">
                         <td><?= $u['user_id'] ?></td>
                         <td><?= htmlspecialchars($u['first_name'] . ' ' . $u['last_name']) ?></td>
                         <td><?= htmlspecialchars($u['email']) ?></td>
-                        <td class="roles-cell">
-                            <?php if ($u['is_student']): ?><span class="badge badge-course">Étudiant</span><?php endif; ?>
-                            <?php if ($u['is_teacher']): ?><span class="badge badge-free">Enseignant</span><?php endif; ?>
-                            <?php if ($u['is_specialised']): ?><span class="badge badge-free">Spécialisé</span><?php endif; ?>
-                            <?php if ($u['is_researcher']): ?><span class="badge badge-exam">Chercheur</span><?php endif; ?>
-                            <?php if ($u['is_admin']): ?><span class="badge badge-admin">Admin</span><?php endif; ?>
+                        <td>
+                            <div class="roles-cell-wrap">
+                                <?php if ($u['is_student']):    ?><span class="badge badge-course">Étudiant</span><?php endif; ?>
+                                <?php if ($u['is_teacher']):    ?><span class="badge badge-free">Enseignant</span><?php endif; ?>
+                                <?php if ($u['is_specialised']):?><span class="badge badge-specialised">Spécialisé</span><?php endif; ?>
+                                <?php if ($u['is_researcher']): ?><span class="badge badge-exam">Chercheur</span><?php endif; ?>
+                                <?php if ($u['is_admin']):      ?><span class="badge badge-admin">Admin</span><?php endif; ?>
+                                <?php if (!$hasAnyRole):        ?><span class="badge badge-none">Aucun</span><?php endif; ?>
+                            </div>
                         </td>
                         <td><?= date('d/m/Y', strtotime($u['created_at'])) ?></td>
                         <td><?= $u['is_active'] ? icon('check', 'text-success') : icon('x', 'text-error') ?></td>
-                        <td>
+                        <td class="cell-top">
                             <div class="role-actions">
                                 <button class="role-toggle <?= $u['is_student'] ? 'on' : '' ?>"
                                         onclick="toggleRole(<?= $u['user_id'] ?>, 'student', '<?= $u['is_student'] ? 'remove' : 'add' ?>')">
