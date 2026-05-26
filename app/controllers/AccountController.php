@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Application;
+use App\Core\Database;
 use App\Models\User;
 
 class AccountController extends Controller
@@ -22,14 +23,42 @@ class AccountController extends Controller
     {
         $this->requireAuth();
 
-        $user = $this->userModel->find($_SESSION['user_id']);
-        $roles = $this->userModel->getRoles($_SESSION['user_id']);
+        $userId = (int) $_SESSION['user_id'];
+        $user = $this->userModel->find($userId);
+        $roles = $this->userModel->getRoles($userId);
+
+        // Numéro étudiant (table student, peut être absent)
+        $studentRow = Database::getInstance()
+            ->query('SELECT student_number FROM student WHERE user_id = :uid', ['uid' => $userId])
+            ->fetch();
+        $studentNumber = $studentRow['student_number'] ?? null;
+
+        // Statistiques personnelles (volume conversations + taille texte approximative)
+        // NB : la PK de `interaction` est `prompt_id`, pas `interaction_id`.
+        $stats = Database::getInstance()
+            ->query(
+                'SELECT
+                    COUNT(DISTINCT c.conversation_id)                                AS conv_count,
+                    COUNT(i.prompt_id)                                               AS interaction_count,
+                    COALESCE(SUM(OCTET_LENGTH(i.prompt) + OCTET_LENGTH(i.response)), 0) AS bytes_used
+                 FROM conversation c
+                 LEFT JOIN interaction i ON i.conversation_id = c.conversation_id
+                 WHERE c.user_id = :uid',
+                ['uid' => $userId]
+            )
+            ->fetch();
 
         $this->render('pages/account/index', [
-            'title'    => 'Mon compte',
-            'account'  => $user,
-            'roles'    => $roles,
-            'user'     => $this->currentUser(),
+            'title'         => 'Mon compte',
+            'account'       => $user,
+            'roles'         => $roles,
+            'studentNumber' => $studentNumber,
+            'stats'         => [
+                'conversations' => (int) ($stats['conv_count'] ?? 0),
+                'interactions'  => (int) ($stats['interaction_count'] ?? 0),
+                'bytes'         => (int) ($stats['bytes_used'] ?? 0),
+            ],
+            'user'          => $this->currentUser(),
         ]);
     }
 
