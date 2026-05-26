@@ -172,35 +172,138 @@ class ExamController extends Controller
     {
         $this->requireAnyRole(['teacher', 'admin']);
 
-        $session = $this->sessionModel->find((int) $sessionId);
+        $sid = (int) $sessionId;
+        $session = $this->sessionModel->find($sid);
         if (!$session) {
             $this->redirect('/sessions');
             return;
         }
 
-        $conversations = $this->conversationModel->findBySession((int) $sessionId);
+        $db = \App\Core\Database::getInstance();
 
-        // Récupérer toutes les interactions de toutes les conversations de l'examen
-        $allInteractions = [];
-        foreach ($conversations as $conv) {
-            $interactions = $this->interactionModel->findByConversation($conv['conversation_id']);
-            foreach ($interactions as $interaction) {
-                $interaction['conversation_name'] = $conv['name'];
-                $interaction['student_user_id'] = $conv['user_id'];
-                $allInteractions[] = $interaction;
-            }
+        // Liste des étudiants connectés à la session + dernier prompt
+        $rows = $db->query(
+            "SELECT
+                c.conversation_id,
+                c.user_id,
+                c.submitted_at,
+                u.first_name,
+                u.last_name,
+                s.student_number,
+                (SELECT i.prompt FROM interaction i
+                   WHERE i.conversation_id = c.conversation_id
+                   ORDER BY i.sent_at DESC LIMIT 1) AS last_prompt,
+                (SELECT i.sent_at FROM interaction i
+                   WHERE i.conversation_id = c.conversation_id
+                   ORDER BY i.sent_at DESC LIMIT 1) AS last_at,
+                (SELECT m.name FROM interaction i
+                   JOIN model m ON m.model_id = i.model_id
+                   WHERE i.conversation_id = c.conversation_id
+                   ORDER BY i.sent_at DESC LIMIT 1) AS last_model,
+                (SELECT COUNT(*) FROM interaction i WHERE i.conversation_id = c.conversation_id) AS prompt_count,
+                (SELECT COUNT(*) FROM interaction i
+                   WHERE i.conversation_id = c.conversation_id AND i.teacher_flag <> 0) AS flag_count
+             FROM conversation c
+             JOIN \"user\" u ON u.user_id = c.user_id
+             LEFT JOIN student s ON s.user_id = c.user_id
+             WHERE c.session_id = :sid
+             ORDER BY u.last_name, u.first_name",
+            ['sid' => $sid]
+        )->fetchAll();
+
+        // Conversation sélectionnée (?conversation=ID) ou la 1ʳᵉ si présent
+        $selectedConvId = (int) ($_GET['conversation'] ?? 0);
+        if (!$selectedConvId && !empty($rows)) {
+            $selectedConvId = (int) $rows[0]['conversation_id'];
         }
 
-        // Tri par date
-        usort($allInteractions, fn($a, $b) => strtotime($a['sent_at']) - strtotime($b['sent_at']));
+        $selectedInteractions = [];
+        $selectedRow = null;
+        if ($selectedConvId) {
+            $selectedRow = null;
+            foreach ($rows as $r) {
+                if ((int) $r['conversation_id'] === $selectedConvId) {
+                    $selectedRow = $r;
+                    break;
+                }
+            }
+            $selectedInteractions = $db->query(
+                "SELECT i.*, m.name AS model_name
+                 FROM interaction i
+                 JOIN model m ON m.model_id = i.model_id
+                 WHERE i.conversation_id = :cid
+                 ORDER BY i.sent_at ASC",
+                ['cid' => $selectedConvId]
+            )->fetchAll();
+        }
+
+        // Stats agrégées pour le header
+        $stats = [
+            'students'  => count($rows),
+            'submitted' => array_filter($rows, fn($r) => $r['submitted_at'] !== null),
+            'flagged'   => array_filter($rows, fn($r) => $r['flag_count'] > 0),
+        ];
 
         $this->render('pages/exam/supervise', [
-            'title'           => 'Supervision - ' . $session['name'],
-            'session'         => $session,
-            'conversations'   => $conversations,
-            'allInteractions' => $allInteractions,
-            'user'            => $this->currentUser(),
+            'title'                => 'Supervision - ' . $session['name'],
+            'session'              => $session,
+            'students'             => $rows,
+            'selectedConvId'       => $selectedConvId,
+            'selectedRow'          => $selectedRow,
+            'selectedInteractions' => $selectedInteractions,
+            'stats'                => [
+                'students_count'  => count($rows),
+                'submitted_count' => count($stats['submitted']),
+                'flagged_count'   => count($stats['flagged']),
+            ],
+            'user'                 => $this->currentUser(),
         ]);
+    }
+
+    /**
+     * POST /exam/flag : signale un prompt et ajoute un commentaire enseignant.
+     */
+    public function flagPrompt(): void
+    {
+        $this->requireAnyRole(['teacher', 'admin']);
+
+        $promptId = (int) $this->input('prompt_id');
+        $reason   = trim($this->input('reason', ''));
+        $comment  = trim($this->input('comment', ''));
+
+        if (!$promptId) {
+            $this->json(['error' => 'prompt_id requis'], 400);
+            return;
+        }
+
+        \App\Core\Database::getInstance()->query(
+            'UPDATE interaction
+                SET teacher_flag = 1,
+                    teacher_flag_reason = :reason,
+                    teacher_comment = :comment
+              WHERE prompt_id = :pid',
+            ['reason' => $reason ?: null, 'comment' => $comment ?: null, 'pid' => $promptId]
+        );
+
+        $this->json(['success' => true]);
+    }
+
+    /**
+     * POST /exam/{id}/archive : marque toutes les conversations comme rendues.
+     */
+    public function archiveSession(string $sessionId): void
+    {
+        $this->requireAnyRole(['teacher', 'admin']);
+
+        \App\Core\Database::getInstance()->query(
+            'UPDATE conversation
+                SET submitted_at = CURRENT_TIMESTAMP, is_archived = TRUE
+              WHERE session_id = :sid AND submitted_at IS NULL',
+            ['sid' => (int) $sessionId]
+        );
+
+        $this->flash('success', 'Session archivée. Toutes les conversations sont marquées comme rendues.');
+        $this->redirect('/exam/' . $sessionId . '/supervise');
     }
 
     /**
