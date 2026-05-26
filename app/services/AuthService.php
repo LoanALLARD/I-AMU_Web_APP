@@ -25,6 +25,10 @@ class AuthService
      */
     public function register(array $data): array
     {
+        // Normalisation de l'email : les adresses sont case-insensitive,
+        // on stocke en minuscules pour garantir l'unicité et faciliter les lookups.
+        $data['email'] = strtolower($data['email'] ?? '');
+
         // Validation de l'email
         if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             return ['success' => false, 'error' => 'Adresse email invalide.'];
@@ -72,6 +76,9 @@ class AuthService
      */
     public function login(string $email, string $password): array
     {
+        // Les emails sont stockés en minuscules : on normalise pour matcher.
+        $email = strtolower($email);
+
         $user = $this->userModel->findByEmail($email);
 
         if (!$user) {
