@@ -168,12 +168,17 @@ $authorizedSet = array_flip($authorizedModelIds ?? []);
             <div class="access-code-box">
                 <div class="access-code-label">Code d'accès</div>
                 <div class="access-code-value">
-                    <?= htmlspecialchars(substr($accessCode, 0, 3)) ?>-<?= htmlspecialchars(substr($accessCode, 3, 3)) ?>
+                    <?= htmlspecialchars($accessCode) ?>
                 </div>
                 <p class="access-code-hint">
                     Le code reste identique entre les modifications : les étudiants
                     qui l'ont déjà noté peuvent toujours rejoindre.
                 </p>
+                <div class="access-code-actions">
+                    <button type="button" class="btn btn-secondary btn-sm" id="btn-copy-code-edit">
+                        Copier
+                    </button>
+                </div>
             </div>
         </aside>
     </form>
@@ -200,5 +205,18 @@ $authorizedSet = array_flip($authorizedModelIds ?? []);
         cb.addEventListener('change', refreshModels)
     );
     refreshModels();
+
+    // Bouton copier le code d'accès
+    const btnCopy = document.getElementById('btn-copy-code-edit');
+    const code = <?= json_encode($accessCode) ?>;
+    if (btnCopy) {
+        btnCopy.addEventListener('click', () => {
+            navigator.clipboard.writeText(code).then(() => {
+                const old = btnCopy.textContent;
+                btnCopy.textContent = 'Copié ✓';
+                setTimeout(() => btnCopy.textContent = old, 1500);
+            });
+        });
+    }
 })();
 </script>
