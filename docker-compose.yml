@@ -20,12 +20,19 @@ services:
       DB_PASS: iamu_password
       # Pointe vers l'Ollama natif tournant sur la machine hôte
       OLLAMA_HOST: http://host.docker.internal:11434
+      # SMTP de développement (maildev) — aucun mail réel n'est envoyé.
+      MAIL_HOST: maildev
+      MAIL_PORT: 1025
+      MAIL_FROM: noreply@iamu.local
+      MAIL_FROM_NAME: I-AMU
     extra_hosts:
       # Nécessaire sur Linux ; sans effet (mais inoffensif) sur macOS/Windows
       - "host.docker.internal:host-gateway"
     depends_on:
       db:
         condition: service_healthy
+      maildev:
+        condition: service_started
     networks:
       - iamu-net
 
@@ -68,6 +75,22 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - iamu-net
+
+  # ─── Maildev (capture SMTP + interface web) ────────────────
+  maildev:
+    image: maildev/maildev:latest
+    container_name: iamu-maildev
+    restart: unless-stopped
+    ports:
+      # UI web pour lire les mails captés
+      - "8025:1080"
+      # Port SMTP exposé aussi côté hôte si on veut tester depuis l'hôte
+      - "1025:1025"
+    environment:
+      MAILDEV_SMTP_PORT: 1025
+      MAILDEV_WEB_PORT: 1080
     networks:
       - iamu-net
 
