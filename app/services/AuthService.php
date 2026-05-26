@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Core\Application;
+use App\Models\PasswordReset;
 use App\Models\User;
 
 /**
@@ -12,10 +13,12 @@ use App\Models\User;
 class AuthService
 {
     private User $userModel;
+    private PasswordReset $passwordResetModel;
 
     public function __construct()
     {
         $this->userModel = new User();
+        $this->passwordResetModel = new PasswordReset();
     }
 
     /**
@@ -109,6 +112,82 @@ class AuthService
 
         // Régénération de l'ID de session pour éviter le fixation
         session_regenerate_id(true);
+
+        return ['success' => true];
+    }
+
+    /**
+     * Demande de réinitialisation de mot de passe.
+     *
+     * Toujours retourne success=true côté contrôleur (message générique) pour
+     * ne pas révéler l'existence d'un compte. Le jeton n'est généré que si
+     * l'email correspond à un compte actif. En debug, l'URL de reset est
+     * exposée dans la valeur de retour pour faciliter les tests sans mailer.
+     *
+     * @return array{token?: string, debug_url?: string}
+     */
+    public function requestPasswordReset(string $email, string $resetUrlBase): array
+    {
+        $email = strtolower(trim($email));
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return [];
+        }
+
+        $user = $this->userModel->findByEmail($email);
+        if (!$user || empty($user['is_active'])) {
+            return [];
+        }
+
+        $token = $this->passwordResetModel->createForUser((int) $user['user_id']);
+        $url   = rtrim($resetUrlBase, '/') . '?token=' . urlencode($token);
+
+        // En production, c'est ici qu'on enverrait l'email contenant $url.
+        // Tant qu'aucun mailer n'est branché, on remonte le jeton au
+        // contrôleur qui décide s'il l'affiche (debug uniquement).
+        $appConfig = Application::getInstance()->getConfig('app');
+        $result = ['token' => $token];
+        if (!empty($appConfig['debug'])) {
+            $result['debug_url'] = $url;
+        }
+        return $result;
+    }
+
+    /**
+     * Indique si un jeton de reset est encore valide (non expiré, non consommé).
+     */
+    public function isResetTokenValid(string $token): bool
+    {
+        return $this->passwordResetModel->findValidByToken($token) !== null;
+    }
+
+    /**
+     * Applique un nouveau mot de passe à partir d'un jeton de reset valide.
+     *
+     * @return array{success: bool, error?: string}
+     */
+    public function performPasswordReset(string $token, string $newPassword, string $confirm): array
+    {
+        $row = $this->passwordResetModel->findValidByToken($token);
+        if (!$row) {
+            return ['success' => false, 'error' => 'Lien de réinitialisation invalide ou expiré.'];
+        }
+
+        if (strlen($newPassword) < 8) {
+            return ['success' => false, 'error' => 'Le mot de passe doit contenir au moins 8 caractères.'];
+        }
+        if ($newPassword !== $confirm) {
+            return ['success' => false, 'error' => 'Les mots de passe ne correspondent pas.'];
+        }
+
+        $config = Application::getInstance()->getConfig('auth');
+        $hash = password_hash(
+            $newPassword,
+            $config['password_algo'],
+            ['cost' => $config['password_cost']]
+        );
+
+        $this->userModel->update((int) $row['user_id'], ['password_hash' => $hash]);
+        $this->passwordResetModel->markUsed((int) $row['reset_id']);
 
         return ['success' => true];
     }

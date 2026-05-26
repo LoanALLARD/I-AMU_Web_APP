@@ -86,6 +86,18 @@ CREATE TABLE model (
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- PASSWORD_RESET (jetons "mot de passe oublié", stockés hashés)
+CREATE TABLE password_reset (
+    reset_id     SERIAL PRIMARY KEY,
+    user_id      INT NOT NULL REFERENCES "user"(user_id) ON DELETE CASCADE,
+    token_hash   CHAR(64) NOT NULL UNIQUE,
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at   TIMESTAMP NOT NULL,
+    used_at      TIMESTAMP
+);
+CREATE INDEX idx_password_reset_user    ON password_reset (user_id);
+CREATE INDEX idx_password_reset_expires ON password_reset (expires_at);
+
 -- RESOURCE (cours / matières)
 CREATE TABLE resource (
     resource_id     SERIAL PRIMARY KEY,

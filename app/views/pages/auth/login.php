@@ -27,6 +27,7 @@
         </form>
 
         <div class="auth-footer">
+            <p><a href="/password/forgot">Mot de passe oublié&nbsp;?</a></p>
             <p>Pas encore de compte ? <a href="/register">S'inscrire</a></p>
         </div>
     </div>

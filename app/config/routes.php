@@ -14,6 +14,7 @@ use App\Controllers\ExportController;
 use App\Controllers\ExamController;
 use App\Controllers\AdminController;
 use App\Controllers\AccountController;
+use App\Controllers\PasswordResetController;
 
 // ─── Page d'accueil ────────────────────────────────────────
 $router->get('/',          HomeController::class, 'index');
@@ -24,6 +25,12 @@ $router->post('/login',    LoginController::class, 'login');
 $router->get('/register',  LoginController::class, 'showRegister');
 $router->post('/register', LoginController::class, 'register');
 $router->get('/logout',    LoginController::class, 'logout');
+
+// ─── Mot de passe oublié ───────────────────────────────────
+$router->get('/password/forgot',  PasswordResetController::class, 'showForgot');
+$router->post('/password/forgot', PasswordResetController::class, 'requestReset');
+$router->get('/password/reset',   PasswordResetController::class, 'showReset');
+$router->post('/password/reset',  PasswordResetController::class, 'performReset');
 
 // ─── RGPD ──────────────────────────────────────────────────
 $router->get('/gdpr/consent',  GdprController::class, 'showConsent');
