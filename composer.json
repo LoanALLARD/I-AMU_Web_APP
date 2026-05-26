@@ -3,7 +3,8 @@
     "description": "I-AMU - Application web de traçabilité d'usage de LLM pour l'enseignement",
     "type": "project",
     "require": {
-        "php": ">=8.1"
+        "php": ">=8.1",
+        "phpmailer/phpmailer": "^6.9"
     },
     "require-dev": {
         "phpstan/phpstan": "^1.10",

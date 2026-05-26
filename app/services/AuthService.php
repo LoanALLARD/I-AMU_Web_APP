@@ -121,10 +121,10 @@ class AuthService
      *
      * Toujours retourne success=true côté contrôleur (message générique) pour
      * ne pas révéler l'existence d'un compte. Le jeton n'est généré que si
-     * l'email correspond à un compte actif. En debug, l'URL de reset est
-     * exposée dans la valeur de retour pour faciliter les tests sans mailer.
+     * l'email correspond à un compte actif, et le lien est envoyé par mail.
+     * En debug, l'URL est également remontée pour faciliter les tests.
      *
-     * @return array{token?: string, debug_url?: string}
+     * @return array{token?: string, debug_url?: string, mail_sent?: bool}
      */
     public function requestPasswordReset(string $email, string $resetUrlBase): array
     {
@@ -141,11 +141,12 @@ class AuthService
         $token = $this->passwordResetModel->createForUser((int) $user['user_id']);
         $url   = rtrim($resetUrlBase, '/') . '?token=' . urlencode($token);
 
-        // En production, c'est ici qu'on enverrait l'email contenant $url.
-        // Tant qu'aucun mailer n'est branché, on remonte le jeton au
-        // contrôleur qui décide s'il l'affiche (debug uniquement).
+        // Envoi du mail via le SMTP configuré (maildev en dev).
+        $mailer = new Mailer();
+        $sent = $mailer->sendPasswordReset($email, $url);
+
         $appConfig = Application::getInstance()->getConfig('app');
-        $result = ['token' => $token];
+        $result = ['token' => $token, 'mail_sent' => $sent];
         if (!empty($appConfig['debug'])) {
             $result['debug_url'] = $url;
         }

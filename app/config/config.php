@@ -36,6 +36,19 @@ return [
         'host' => getenv('OLLAMA_HOST') ?: 'http://localhost:11434',
     ],
 
+    // ─── Mail (SMTP) ───────────────────────────────────────────
+    // En dev : maildev (capture tous les mails, UI sur :8025).
+    // En prod : pointer MAIL_HOST/MAIL_PORT vers un vrai relai.
+    'mail' => [
+        'host'      => getenv('MAIL_HOST') ?: 'maildev',
+        'port'      => (int) (getenv('MAIL_PORT') ?: 1025),
+        'username'  => getenv('MAIL_USER') ?: null,
+        'password'  => getenv('MAIL_PASS') ?: null,
+        'encryption' => getenv('MAIL_ENC') ?: null, // 'tls', 'ssl' ou null
+        'from'      => getenv('MAIL_FROM') ?: 'noreply@iamu.local',
+        'from_name' => getenv('MAIL_FROM_NAME') ?: 'I-AMU',
+    ],
+
     // ─── Sessions & Auth ───────────────────────────────────────
     'auth' => [
         'session_lifetime'  => 3600,       // 1 heure
