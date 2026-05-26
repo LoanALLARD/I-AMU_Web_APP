@@ -53,6 +53,8 @@ $router->post('/sessions/join',      SessionController::class, 'join');
 $router->get('/sessions/{id}/edit',   SessionController::class, 'edit');
 $router->post('/sessions/{id}/update', SessionController::class, 'update');
 $router->post('/sessions/{id}/cancel', SessionController::class, 'cancel');
+$router->post('/sessions/{id}/start',  SessionController::class, 'start');
+$router->post('/sessions/{id}/end',    SessionController::class, 'end');
 $router->get('/sessions/{id}',       SessionController::class, 'dashboard');
 
 // ─── Mode Examen (interface verrouillée) ──────────────────

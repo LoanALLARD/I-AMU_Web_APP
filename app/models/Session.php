@@ -78,6 +78,67 @@ class Session extends Model
     }
 
     /**
+     * Démarre une session manuellement : passe le statut à ACTIVE et,
+     * si la session n'a pas encore de starts_at, le fixe à NOW.
+     * Refuse les sessions déjà terminées ou annulées.
+     */
+    public function start(int $sessionId): bool
+    {
+        $session = $this->find($sessionId);
+        if (!$session) {
+            return false;
+        }
+        $status = $session['status'] ?? self::STATUS_SCHEDULED;
+        if (in_array($status, [self::STATUS_ENDED, self::STATUS_CANCELLED], true)) {
+            return false;
+        }
+
+        $data = ['status' => self::STATUS_ACTIVE];
+        if (empty($session['starts_at'])) {
+            $data['starts_at'] = date('Y-m-d H:i:s');
+        }
+        return $this->update($sessionId, $data);
+    }
+
+    /**
+     * Termine une session manuellement : passe le statut à ENDED et,
+     * si ends_at est vide, le fixe à NOW.
+     */
+    public function end(int $sessionId): bool
+    {
+        $session = $this->find($sessionId);
+        if (!$session) {
+            return false;
+        }
+        if (($session['status'] ?? null) === self::STATUS_CANCELLED) {
+            return false;
+        }
+
+        $data = ['status' => self::STATUS_ENDED];
+        if (empty($session['ends_at'])) {
+            $data['ends_at'] = date('Y-m-d H:i:s');
+        }
+        return $this->update($sessionId, $data);
+    }
+
+    /**
+     * Indique quelles transitions sont autorisées depuis l'état courant.
+     * Sert à l'affichage conditionnel des boutons d'action.
+     *
+     * @return array{can_edit:bool, can_start:bool, can_end:bool, can_cancel:bool}
+     */
+    public function availableActions(array $session): array
+    {
+        $status = $this->computedStatus($session);
+        return [
+            'can_edit'   => $this->canBeModified($session),
+            'can_start'  => in_array($status, [self::STATUS_DRAFT, self::STATUS_SCHEDULED], true),
+            'can_end'    => $status === self::STATUS_ACTIVE,
+            'can_cancel' => !in_array($status, [self::STATUS_ENDED, self::STATUS_CANCELLED], true),
+        ];
+    }
+
+    /**
      * Indique si une session peut être modifiée par l'enseignant.
      * Règle : statut DRAFT ou SCHEDULED, et starts_at pas encore atteint
      * (les DRAFT sans starts_at restent modifiables).

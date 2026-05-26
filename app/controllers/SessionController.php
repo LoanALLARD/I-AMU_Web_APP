@@ -202,6 +202,38 @@ class SessionController extends Controller
     }
 
     /**
+     * Démarre une session manuellement (statut → ACTIVE).
+     */
+    public function start(string $id): void
+    {
+        $this->requireAnyRole(['teacher', 'admin']);
+
+        $sessionId = (int) $id;
+        if (!$this->sessionModel->start($sessionId)) {
+            $this->flash('error', "Impossible de démarrer cette session.");
+        } else {
+            $this->flash('success', "Session démarrée.");
+        }
+        $this->redirect('/sessions/' . $sessionId);
+    }
+
+    /**
+     * Termine une session manuellement (statut → ENDED).
+     */
+    public function end(string $id): void
+    {
+        $this->requireAnyRole(['teacher', 'admin']);
+
+        $sessionId = (int) $id;
+        if (!$this->sessionModel->end($sessionId)) {
+            $this->flash('error', "Impossible de terminer cette session.");
+        } else {
+            $this->flash('success', "Session terminée.");
+        }
+        $this->redirect('/sessions/' . $sessionId);
+    }
+
+    /**
      * Tableau de bord d'une session (supervision enseignant).
      */
     public function dashboard(string $id): void
