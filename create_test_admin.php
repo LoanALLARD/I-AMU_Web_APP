@@ -5,7 +5,7 @@
  * Exécuter UNE SEULE FOIS : php create_test_admin.php
  * 
  * Identifiants créés :
- *   Email    : Admin
+ *   Email    : admin
  *   Password : Admin
  */
 
@@ -14,7 +14,9 @@ require_once __DIR__ . '/vendor/autoload.php';
 $app = \App\Core\Application::getInstance();
 $db  = \App\Core\Database::getInstance();
 
-$email    = 'Admin';
+// Email en minuscules : cohérent avec la normalisation strtolower
+// appliquée par AuthService::register/login.
+$email    = 'admin';
 $password = 'Admin';
 $hash     = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
 

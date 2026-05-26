@@ -42,14 +42,19 @@ $router->get('/chat/{id}',          ChatController::class, 'show');
 $router->get('/sessions',            SessionController::class, 'index');
 $router->get('/sessions/create',     SessionController::class, 'create');
 $router->post('/sessions/store',     SessionController::class, 'store');
-$router->get('/sessions/{id}',       SessionController::class, 'dashboard');
 $router->post('/sessions/join',      SessionController::class, 'join');
+$router->get('/sessions/{id}/edit',   SessionController::class, 'edit');
+$router->post('/sessions/{id}/update', SessionController::class, 'update');
+$router->post('/sessions/{id}/cancel', SessionController::class, 'cancel');
+$router->get('/sessions/{id}',       SessionController::class, 'dashboard');
 
 // ─── Mode Examen (interface verrouillée) ──────────────────
 $router->get('/exam/{id}',            ExamController::class, 'show');
 $router->post('/exam/send',           ExamController::class, 'sendPrompt');
 $router->get('/exam/{id}/supervise',  ExamController::class, 'supervise');
 $router->get('/exam/{id}/poll',       ExamController::class, 'pollInteractions');
+$router->post('/exam/flag',           ExamController::class, 'flagPrompt');
+$router->post('/exam/{id}/archive',   ExamController::class, 'archiveSession');
 
 // ─── Administration ───────────────────────────────────────
 $router->get('/admin',               AdminController::class, 'index');

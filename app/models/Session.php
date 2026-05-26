@@ -9,6 +9,15 @@ class Session extends Model
     protected string $table = 'session';
     protected string $primaryKey = 'session_id';
 
+    // Statuts stockés en base. ACTIVE/ENDED sont aussi des valeurs valides
+    // de l'ENUM SQL, mais on ne les écrit pas : on les dérive de
+    // starts_at/ends_at au moment de l'affichage (cf. computedStatus()).
+    public const STATUS_DRAFT     = 'DRAFT';
+    public const STATUS_SCHEDULED = 'SCHEDULED';
+    public const STATUS_ACTIVE    = 'ACTIVE';
+    public const STATUS_ENDED     = 'ENDED';
+    public const STATUS_CANCELLED = 'CANCELLED';
+
     /**
      * Trouve une session par son code d'accès.
      */
@@ -18,21 +27,117 @@ class Session extends Model
     }
 
     /**
-     * Crée une session et génère un code d'accès unique.
+     * Crée une session. Si `access_code` est déjà présent dans $data et
+     * encore disponible, il est conservé (utile pour afficher le code avant
+     * la création côté UI). Sinon un nouveau code est généré.
+     *
+     * Le statut initial est DRAFT si starts_at est vide, SCHEDULED sinon.
      */
     public function createSession(array $data): int
     {
-        $data['access_code'] = $this->generateAccessCode();
+        $proposed = $data['access_code'] ?? null;
+        if (!$proposed || $this->findByAccessCode($proposed)) {
+            $data['access_code'] = $this->generateAccessCode();
+        }
+        if (!isset($data['status'])) {
+            $data['status'] = empty($data['starts_at'])
+                ? self::STATUS_DRAFT
+                : self::STATUS_SCHEDULED;
+        }
         return $this->create($data);
     }
 
     /**
+     * Met à jour les champs modifiables d'une session. Le statut est recalculé
+     * si starts_at change (DRAFT ↔ SCHEDULED). On ne touche pas à CANCELLED/ENDED.
+     */
+    public function updateSession(int $sessionId, array $data): bool
+    {
+        if (array_key_exists('starts_at', $data) && !isset($data['status'])) {
+            $current = $this->find($sessionId);
+            $isFinal = $current && in_array(
+                $current['status'] ?? '',
+                [self::STATUS_CANCELLED, self::STATUS_ENDED],
+                true
+            );
+            if (!$isFinal) {
+                $data['status'] = empty($data['starts_at'])
+                    ? self::STATUS_DRAFT
+                    : self::STATUS_SCHEDULED;
+            }
+        }
+        return $this->update($sessionId, $data);
+    }
+
+    /**
+     * Annule une session. Ne s'applique pas aux sessions déjà terminées.
+     */
+    public function cancel(int $sessionId): bool
+    {
+        return $this->update($sessionId, ['status' => self::STATUS_CANCELLED]);
+    }
+
+    /**
+     * Indique si une session peut être modifiée par l'enseignant.
+     * Règle : statut DRAFT ou SCHEDULED, et starts_at pas encore atteint
+     * (les DRAFT sans starts_at restent modifiables).
+     */
+    public function canBeModified(array $session): bool
+    {
+        $status = $session['status'] ?? self::STATUS_SCHEDULED;
+        if (!in_array($status, [self::STATUS_DRAFT, self::STATUS_SCHEDULED], true)) {
+            return false;
+        }
+        if (empty($session['starts_at'])) {
+            return true;
+        }
+        return strtotime($session['starts_at']) > time();
+    }
+
+    /**
+     * Statut "runtime" pour l'affichage : combine le statut stocké avec
+     * l'horloge pour dériver ACTIVE/ENDED depuis SCHEDULED.
+     */
+    public function computedStatus(array $session): string
+    {
+        $status = $session['status'] ?? self::STATUS_SCHEDULED;
+        if ($status !== self::STATUS_SCHEDULED) {
+            return $status;
+        }
+        $now = time();
+        $start = !empty($session['starts_at']) ? strtotime($session['starts_at']) : null;
+        $end   = !empty($session['ends_at'])   ? strtotime($session['ends_at'])   : null;
+        if ($end !== null && $now > $end) {
+            return self::STATUS_ENDED;
+        }
+        if ($start !== null && $now >= $start) {
+            return self::STATUS_ACTIVE;
+        }
+        return self::STATUS_SCHEDULED;
+    }
+
+    /**
+     * Génère un code d'accès unique sans le persister, pour preview UI.
+     */
+    public function previewAccessCode(): string
+    {
+        return $this->generateAccessCode();
+    }
+
+    /**
      * Vérifie si une session est actuellement active.
+     * Une session CANCELLED ou sans dates n'est jamais active.
      */
     public function isActive(int $sessionId): bool
     {
         $session = $this->find($sessionId);
         if (!$session) {
+            return false;
+        }
+        if (($session['status'] ?? null) === self::STATUS_CANCELLED) {
+            return false;
+        }
+        if (empty($session['starts_at']) || empty($session['ends_at'])) {
             return false;
         }
 
@@ -60,6 +165,29 @@ class Session extends Model
             'INSERT INTO authorizes (session_id, model_id) VALUES (:sid, :mid) ON CONFLICT DO NOTHING',
             ['sid' => $sessionId, 'mid' => $modelId]
         );
+    }
+
+    /**
+     * Remplace l'ensemble des modèles autorisés pour une session.
+     * Utile lors d'un update où l'enseignant ajuste la sélection.
+     */
+    public function setAuthorizedModels(int $sessionId, array $modelIds): void
+    {
+        $db = $this->db();
+        $db->beginTransaction();
+        try {
+            $db->query(
+                'DELETE FROM authorizes WHERE session_id = :sid',
+                ['sid' => $sessionId]
+            );
+            foreach ($modelIds as $modelId) {
+                $this->authorizeModel($sessionId, (int) $modelId);
+            }
+            $db->commit();
+        } catch (\Exception $e) {
+            $db->rollback();
+            throw $e;
+        }
     }
 
     /**

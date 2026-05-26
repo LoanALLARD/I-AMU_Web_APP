@@ -10,6 +10,7 @@ BEGIN;
 -- Types ENUM
 -- ============================================================
 CREATE TYPE session_type AS ENUM ('EXAM', 'TP', 'SANDBOX');
+CREATE TYPE session_status AS ENUM ('DRAFT', 'SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED');
 CREATE TYPE resource_state AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED');
 CREATE TYPE conversation_type AS ENUM ('FREE', 'COURSE', 'EXAM');
 
@@ -106,6 +107,7 @@ CREATE TABLE session (
     max_input_size          INT,
     instructions            TEXT,
     type                    session_type NOT NULL,
+    status                  session_status NOT NULL DEFAULT 'SCHEDULED',
     resource_id             INT REFERENCES resource(resource_id) ON DELETE SET NULL,
     created_at              TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -116,6 +118,7 @@ CREATE TABLE conversation (
     name            VARCHAR(255),
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_archived     BOOLEAN DEFAULT FALSE,
+    submitted_at    TIMESTAMP,    -- horodatage "rendu" en session/examen
     type            conversation_type DEFAULT 'FREE',
     user_id         INT NOT NULL REFERENCES "user"(user_id) ON DELETE CASCADE,
     session_id      INT REFERENCES session(session_id) ON DELETE SET NULL
@@ -123,17 +126,23 @@ CREATE TABLE conversation (
 
 -- INTERACTION (prompts et réponses)
 CREATE TABLE interaction (
-    prompt_id       SERIAL PRIMARY KEY,
-    prompt          TEXT NOT NULL,
-    response        TEXT,
-    sent_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    latency         INT,  -- en millisecondes
-    input_tokens    INT,
-    output_tokens   INT,
-    user_feedback   SMALLINT,  -- ex: -1, 0, 1
-    conversation_id INT NOT NULL REFERENCES conversation(conversation_id) ON DELETE CASCADE,
-    model_id        INT NOT NULL REFERENCES model(model_id) ON DELETE RESTRICT
+    prompt_id           SERIAL PRIMARY KEY,
+    prompt              TEXT NOT NULL,
+    response            TEXT,
+    sent_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    latency             INT,  -- en millisecondes
+    input_tokens        INT,
+    output_tokens       INT,
+    user_feedback       SMALLINT,             -- retour étudiant : -1, 0, 1
+    teacher_flag        SMALLINT DEFAULT 0,    -- supervision : 0 = ok, 1 = signalé
+    teacher_flag_reason VARCHAR(100),          -- ex: 'contourne-consigne'
+    teacher_comment     TEXT,                  -- commentaire "de marge" enseignant
+    conversation_id     INT NOT NULL REFERENCES conversation(conversation_id) ON DELETE CASCADE,
+    model_id            INT NOT NULL REFERENCES model(model_id) ON DELETE RESTRICT
 );
+CREATE INDEX IF NOT EXISTS idx_interaction_teacher_flag
+    ON interaction (teacher_flag)
+    WHERE teacher_flag <> 0;
 
 -- ============================================================
 -- Tables d'association (relations N:N du MCD)
@@ -212,6 +221,7 @@ CREATE INDEX idx_interaction_conversation ON interaction(conversation_id);
 CREATE INDEX idx_interaction_sent_at ON interaction(sent_at);
 CREATE INDEX idx_session_access_code ON session(access_code);
 CREATE INDEX idx_session_type ON session(type);
+CREATE INDEX idx_session_status ON session(status);
 CREATE INDEX idx_model_active ON model(is_active);
 
 COMMIT;
