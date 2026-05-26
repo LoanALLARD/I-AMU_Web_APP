@@ -54,23 +54,17 @@ services:
     networks:
       - iamu-net
 
-  # ─── pgAdmin 4 (outil officiel d'administration PostgreSQL) ─
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: iamu-pgadmin
+  # ─── Adminer (interface web légère pour PostgreSQL) ────────
+  adminer:
+    image: adminer:latest
+    container_name: iamu-adminer
     restart: unless-stopped
     ports:
-      - "8081:80"
+      - "8081:8080"
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@iamu.fr
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: "False"
-      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
-      # Auto-enregistrement du serveur I-AMU + mot de passe pré-rempli
-      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
-      - ./docker/pgadmin/pgpass:/pgpass:ro
+      # Pré-sélectionne le serveur `db` à l'ouverture
+      ADMINER_DEFAULT_SERVER: db
+      ADMINER_DESIGN: pepa-linha
     depends_on:
       db:
         condition: service_healthy
@@ -79,8 +73,6 @@ services:
 
 volumes:
   db-data:
-    driver: local
-  pgadmin-data:
     driver: local
 
 networks:

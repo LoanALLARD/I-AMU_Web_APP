@@ -6,7 +6,7 @@
 |-----------|-------|--------------------------------|-----------------------------------|
 | `app`     | 8080  | http://localhost:8080          | Application PHP + Apache          |
 | `db`      | 5433  | localhost:5433 (hôte)          | PostgreSQL 14 (5432 en interne)   |
-| `pgadmin` | 8081  | http://localhost:8081          | pgAdmin 4 (admin PostgreSQL officiel) |
+| `adminer` | 8081  | http://localhost:8081          | Adminer (interface web légère pour PostgreSQL) |
 
 > **Ollama** tourne nativement sur l'hôte (`localhost:11434`). L'app dans Docker y accède via `host.docker.internal:11434`.
 
@@ -26,15 +26,19 @@ docker compose logs -f app
 L'application est dispo sur **http://localhost:8080**.
 Admin par défaut : `admin@univ-amu.fr` / `admin123`.
 
-## Connexion à pgAdmin
+## Connexion à Adminer
 
 URL : http://localhost:8081
 
-**Login pgAdmin** (interface) :
-- Email : `admin@iamu.fr`
-- Mot de passe : `admin`
+Le serveur `db` est pré-sélectionné. Saisir :
 
-Une fois connecté, le serveur **"I-AMU PostgreSQL"** est déjà enregistré dans la sidebar (sous `Servers`) avec le mot de passe pré-rempli — un clic dessus connecte directement à la base `iamu`.
+| Champ        | Valeur          |
+|--------------|-----------------|
+| Système      | PostgreSQL      |
+| Serveur      | `db`            |
+| Utilisateur  | `iamu_user`     |
+| Mot de passe | `iamu_password` |
+| Base         | `iamu`          |
 
 ## Ollama : télécharger un modèle (sur l'hôte)
 
