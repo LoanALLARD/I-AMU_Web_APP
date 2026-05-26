@@ -1,0 +1,228 @@
+/* ============================================================
+   I-AMU - Styles Mode Examen
+   Interface verrouillée, timer, supervision
+   ============================================================ */
+
+/* ─── Exam body ──────────────────────────────────────────── */
+body.exam-mode {
+    background: #0f172a;
+    overflow: hidden;
+    user-select: text;
+}
+
+/* Bloquer clic droit et raccourcis copier-coller en examen */
+body.exam-mode .chat-messages {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* ─── Exam header ────────────────────────────────────────── */
+.exam-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    height: 50px;
+    background: #1e293b;
+    border-bottom: 2px solid #ef4444;
+    color: #f1f5f9;
+}
+.exam-header-left, .exam-header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.exam-header-center {
+    flex: 1;
+    text-align: center;
+}
+.exam-logo {
+    font-weight: 900;
+    font-size: 1.1rem;
+    color: #3b82f6;
+}
+.exam-badge {
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+    animation: pulse-badge 2s infinite;
+}
+@keyframes pulse-badge {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+.exam-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+.exam-timer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #334155;
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+}
+.exam-timer.timer-warning {
+    background: #92400e;
+    color: #fde68a;
+}
+.exam-timer.timer-critical {
+    background: #991b1b;
+    color: #fecaca;
+    animation: blink 1s infinite;
+}
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+.exam-user {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+/* ─── Exam content ───────────────────────────────────────── */
+.exam-content {
+    height: calc(100vh - 50px);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Instructions banner */
+.exam-instructions {
+    background: #1e3a5f;
+    color: #93c5fd;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #1e40af;
+}
+
+/* ─── Exam chat ──────────────────────────────────────────── */
+.exam-chat-layout {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+.exam-chat-layout .chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.exam-chat-layout .chat-header {
+    background: #1e293b;
+    border-bottom: 1px solid #334155;
+    color: #f1f5f9;
+}
+.exam-chat-layout .select-model {
+    background: #334155;
+    color: #f1f5f9;
+    border: 1px solid #475569;
+}
+.exam-chat-layout .chat-messages {
+    background: #0f172a;
+    flex: 1;
+    overflow-y: auto;
+}
+.exam-chat-layout .message-user {
+    background: #2563eb;
+}
+.exam-chat-layout .message-ai {
+    background: #1e293b;
+    color: #e2e8f0;
+}
+.exam-chat-layout .message-meta {
+    color: #64748b;
+}
+.exam-chat-layout .chat-input-area {
+    background: #1e293b;
+    border-top: 1px solid #334155;
+}
+.exam-chat-layout .chat-form textarea {
+    background: #0f172a;
+    color: #f1f5f9;
+    border-color: #475569;
+}
+.exam-chat-layout .chat-form textarea:focus {
+    border-color: #3b82f6;
+}
+
+/* Character counter */
+.char-counter {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+.char-counter.near-limit {
+    color: #f59e0b;
+}
+.char-counter.at-limit {
+    color: #ef4444;
+}
+
+/* ─── Exam ended ─────────────────────────────────────────── */
+.exam-ended {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ended-card {
+    text-align: center;
+    background: #1e293b;
+    padding: 3rem;
+    border-radius: 12px;
+    color: #f1f5f9;
+}
+.ended-icon { font-size: 4rem; margin-bottom: 1rem; }
+.ended-card h1 { margin-bottom: 1rem; }
+.ended-card p { color: #94a3b8; margin-bottom: 0.5rem; }
+
+/* ─── Supervision (teacher) ──────────────────────────────── */
+.live-indicator {
+    color: #ef4444;
+    font-size: 0.8rem;
+    font-weight: 600;
+    animation: pulse-badge 2s infinite;
+}
+.student-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+.student-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+}
+.student-name { font-weight: 600; font-size: 0.9rem; }
+.student-meta { font-size: 0.75rem; color: var(--color-text-muted); }
+
+.prompt-feed {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+}
+.prompt-entry {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+}
+.prompt-entry:last-child { border-bottom: none; }
+.prompt-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+}
+.prompt-student { font-weight: 600; font-size: 0.85rem; color: var(--color-primary); }
+.prompt-time { font-size: 0.75rem; color: var(--color-text-muted); }
+.prompt-text { font-size: 0.85rem; margin-bottom: 0.3rem; }
+.prompt-response { font-size: 0.8rem; color: var(--color-text-muted); font-style: italic; }

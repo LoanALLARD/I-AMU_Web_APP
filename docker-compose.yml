@@ -1,0 +1,88 @@
+name: i-amu-v2-6
+
+services:
+  # ─── Application PHP + Apache ──────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: iamu-app
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: iamu
+      DB_USER: iamu_user
+      DB_PASS: iamu_password
+      # Pointe vers l'Ollama natif tournant sur la machine hôte
+      OLLAMA_HOST: http://host.docker.internal:11434
+    extra_hosts:
+      # Nécessaire sur Linux ; sans effet (mais inoffensif) sur macOS/Windows
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - iamu-net
+
+  # ─── Base de données PostgreSQL ────────────────────────────
+  db:
+    image: postgres:14-alpine
+    container_name: iamu-db
+    restart: unless-stopped
+    ports:
+      # 5433 côté hôte pour ne pas entrer en conflit avec un PostgreSQL local
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: iamu
+      POSTGRES_USER: iamu_user
+      POSTGRES_PASSWORD: iamu_password
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # Auto-chargement du schéma et seed au premier démarrage
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iamu_user -d iamu"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - iamu-net
+
+  # ─── pgAdmin 4 (outil officiel d'administration PostgreSQL) ─
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: iamu-pgadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@iamu.fr
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      # Auto-enregistrement du serveur I-AMU + mot de passe pré-rempli
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - ./docker/pgadmin/pgpass:/pgpass:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - iamu-net
+
+volumes:
+  db-data:
+    driver: local
+  pgadmin-data:
+    driver: local
+
+networks:
+  iamu-net:
+    driver: bridge
