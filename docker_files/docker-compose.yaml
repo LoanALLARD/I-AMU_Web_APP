@@ -1,0 +1,29 @@
+services : 
+  # Conteneur pour ollama
+  ollama2:
+    image: ollama/ollama:latest
+    ports : 
+      - "11434:11434"
+    volumes : # pour sauvegarder les modeles téléchargés
+      - ollama_data:/root/.ollama
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    entrypoint: ["/bin/sh", "-c"]
+
+    command: ["/bin/ollama serve & sleep 5 && /bin/ollama pull llama3.2:1b && wait"]
+
+
+  db:
+    image: postgres:17.10
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_super_secret
+      MYSQL_DATABASE: mon_application_ia
+      MYSQL_USER: mon_utilisateur
+      MYSQL_PASSWORD: mon_password
+    volumes:
+      - db_data:/var/lib/mysql # VOLUME : Sauvegarde les données de la base
+  
+volumes:
+  ollama_data:
+  db_data:
