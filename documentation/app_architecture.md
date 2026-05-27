@@ -562,7 +562,7 @@ Exemple : un enseignant clique sur "Démarrer" pour la session #12.
 ```mermaid
 sequenceDiagram
     autonumber
-    actor B as &gt; Browser
+    actor B as Browser
     participant F as index.php + Application
     participant C as SessionController
     participant S as StartSessionService
