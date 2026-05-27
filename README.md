@@ -11,7 +11,7 @@ Ce plugin permettra :
 
 ## Exploitation du produit
 
-Ce produit est pensé pour fonctionner en symbiose avec la plateforme ***Ametice/Moddle***. Par conséquence la partie connexion y est totalement délégué.
+Ce produit est pensé pour fonctionner en symbiose avec la plateforme ***Ametice/Moddle***. Par conséquence la partie connexion y est totalement déléguée.
 
 L'environnement de l'établissement (*Moodle*) dispose, en fonction de son forfait, d'un **nombre fixe de token par mois**. Chacun des cours se partagera ce nombre de token pour finalement les diviser équitablement entre les étudiants. En conséquence, les étudiants tout comme les professeurs apprendrons à mieux utiliser leurs tokens.
 
@@ -21,12 +21,12 @@ Les professeurs pourront aussi créer des sessions dans lesquels un nombre de to
 
 ## Infrastructure
 
-Lors du dévellopement de ce projet, **trois** serveurs seront utilisés. Un serveur de ***Dev*** pour tester en direct l'avancé du projet, un de ***preProd*** qui permet une validation de la fonction par tous, et enfin un de ***Prob*** qui comment son nom l'indique est la version courante et officielle du produit.
+Lors du dévellopement de ce projet, **trois** serveurs seront utilisés. Un serveur de ***Dev*** pour tester en direct l'avancé du projet, un de ***preProd*** qui permet une validation de la fonction par tous, et enfin un de ***Prod*** qui comme son nom l'indique est la version courante et officielle du produit.
 
-Le projet est constitué de deux entité distinctes. La première est le **LMS** (*Learning Management System*) ametice, il nous sert a organiser les modèles par cours et par règles du professeur.<br>
+Le projet est constitué de deux entité distinctes. La première est le **LMS** (*Learning Management System*) ametice, il nous sert à organiser les modèles par cours et par règles du professeur.<br>
 La seconde est **le serveur IA**, comme son nom l'indique il héberge l'IA et est donc en charge des calcules des réponse.
 
-Le plugin s'affichera dans le **LMS** et pointera les messages vers le **serveur IA** puis enverra la question et la réponse vers une **base de données** héberger sur le même serveur que celui du **LMS** et des fichiers de log temporaires.
+Le plugin s'affichera dans le **LMS** et pointera les messages vers le **serveur IA** puis enverra la question et la réponse vers une **base de données** hébergée sur le même serveur que celui du **LMS** et des fichiers de log temporaires.
 
 
 --- 
