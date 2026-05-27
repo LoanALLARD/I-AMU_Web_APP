@@ -182,6 +182,9 @@ Une phrase claire de ce que la feature fait, pour qui.
 
 ### Commits
 - Format conventional : `feat(sessions): …`, `fix(auth): …`, `chore(...)`, etc.
+- **Messages en anglais**, à l'impératif présent.
+  - ✅ `feat(sessions): add post-prompt override field`
+  - ❌ `feat(sessions): ajoute le champ post-prompt`
 - Un commit = un slice cohérent. On peut faire plusieurs commits par spec.
 - **Pas de co-auteur Claude** par défaut.
 

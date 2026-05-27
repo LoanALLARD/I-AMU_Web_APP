@@ -115,17 +115,28 @@ Http  →  Application  →  Domain  ←  Infrastructure
 
 - **Strings UI / messages utilisateur en français** (interface
   pédagogique destinée à AMU). Les flash messages, libellés de
-  boutons, titres de vues restent en français. Seuls le **code** et
-  les **commentaires** sont en anglais.
+  boutons, titres de vues restent en français. Seuls le **code**, les
+  **commentaires** et les **messages de commit** sont en anglais
+  (cf. §5 *Commits*).
 
 - **Pas de Hungarian notation, pas de préfixe `_` pour les
   privés** — la visibilité PHP (`private`/`protected`/`public`) suffit.
 
 ### Commits
 
-- Format **conventional commits** : `feat(...)`, `fix(...)`, `chore(...)`, `docs(...)`, `refactor(...)`.
+- Format **conventional commits** : `feat(...)`, `fix(...)`, `chore(...)`, `docs(...)`, `refactor(...)`, `test(...)`.
+- **Messages en anglais**, à l'impératif présent (Git convention).
+  - ✅ `feat(sessions): add post-prompt support to session creation`
+  - ✅ `fix(admin): correct vertical alignment of role badges in users table`
+  - ❌ `feat(sessions): ajoute le support du post-prompt`
+  - ❌ `fix(admin): correction de l'alignement vertical des badges`
+- Le **body** du commit (multi-lignes) est aussi en anglais, et peut
+  expliquer le *pourquoi* (pas seulement le *quoi*).
 - **Sans co-auteur** par défaut (préférence du mainteneur).
 - Un commit = un slice cohérent (peut être plusieurs par spec).
+- Le scope correspond à la spec touchée : `feat(auth)`, `feat(sessions)`,
+  `feat(chat)`, `feat(supervise)`, `feat(admin)`, `feat(research)`,
+  `feat(rgpd)`, `feat(core)`.
 
 ---
 
@@ -184,8 +195,9 @@ docker compose exec app php -l /var/www/html/app/Core/Application.php
 - Toujours injecter les dépendances par constructeur.
 - Toujours typer les arguments et les retours (PHP 8.1+).
 - Passer un **ViewModel** aux vues complexes, pas un array PDO.
-- **Écrire les commentaires en anglais** et nommer méthodes /
-  propriétés / variables en `camelCase` anglais.
+- **Écrire les commentaires, identifiants ET messages de commit en
+  anglais.** Méthodes / propriétés / variables en `camelCase` anglais.
+  Commits à l'impératif (`add`, `fix`, `remove`, pas `ajoute` ni `added`).
 - Mettre à jour la spec quand on découvre quelque chose pendant
   l'implémentation.
 
@@ -200,9 +212,10 @@ docker compose exec app php -l /var/www/html/app/Core/Application.php
   SVG Lucide.
 - ❌ Hardcoder des modèles LLM dans les seeds. Le tag doit venir
   d'Ollama via la sync.
-- ❌ **Commentaires en français dans le code** ou **méthodes en
-  snake_case / français** (cf. §5 Style de code). Les seules strings
-  en français sont les textes UI destinés à l'utilisateur final.
+- ❌ **Commentaires en français dans le code**, **méthodes en
+  snake_case / français**, ou **messages de commit en français**
+  (cf. §5 Style de code et §5 Commits). Les seules strings en français
+  sont les textes UI destinés à l'utilisateur final.
 
 ---
 
