@@ -1,9 +1,9 @@
 services : 
-  # Conteneur pour ollama
+  # Conteneur pour ollama
   ollama2:
     image: ollama/ollama:latest
     ports : 
-      - "11434:11434"
+      - "8082:11434"
     volumes : # pour sauvegarder les modeles téléchargés
       - ollama_data:/root/.ollama
     dns:
@@ -23,6 +23,14 @@ services :
       MYSQL_PASSWORD: mon_password
     volumes:
       - db_data:/var/lib/mysql # VOLUME : Sauvegarde les données de la base
+
+  php-app:
+    image: php:8.3-apache
+    ports:
+      - "8085:80"
+    build: ./app
+    volumes :
+     - ./app:/var/www/html 
   
 volumes:
   ollama_data:

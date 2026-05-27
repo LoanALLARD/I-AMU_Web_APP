@@ -45,4 +45,8 @@ exemple **Windows**:
 ---
 
 ### PHP
-Faire l'application au global. Fork le *poc* du projet d'alexendre  
+Version : **8.3**
+
+Le contenue de `/var/www/html` du conteneur est monté en *bind mount* sur votre répertoire `app` de votre machine. Ce qui implique que tout changement dans `app` change en direct la configuration dans le serveur php. 
+
+Une fois le serveur lancer, cliquer [ici](http://localhost:8085/) pour voir votre page web.
