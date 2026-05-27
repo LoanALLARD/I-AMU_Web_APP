@@ -15,14 +15,23 @@ services :
 
 
   db:
-    image: postgres:17.10
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password_super_secret
-      MYSQL_DATABASE: mon_application_ia
-      MYSQL_USER: mon_utilisateur
-      MYSQL_PASSWORD: mon_password
+    image: postgres:17-alpine
+    restart: always
+    shm_size : 128mb
+    environment : 
+      POSTGRES_DB : ${DB_NAME}
+      POSTGRES_USER : ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - db_data:/var/lib/mysql # VOLUME : Sauvegarde les données de la base
+      - db_data:/var/lib/postgresql/data # VOLUME : Sauvegarde les données de la base
+      - ./init-scripts:/docker-entrypoint-initdb.d
+  adminer:
+    image : adminer
+    restart : always
+    ports :
+      - "8083:8080"
+    depends_on:
+      - db
 
   php-app:
     image: php:8.3-apache

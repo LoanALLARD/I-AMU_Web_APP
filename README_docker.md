@@ -41,6 +41,11 @@ exemple **Windows**:
 
 ### Base de données
 
+Version : **17-alpine**
+
+Le conteneur possède deux volumes, un premier *db_data* pour sauvegarder les données. Le second un *bind mount* `init-scripts` dans lequel se trouve le script de creation des tables de la base de donnée.
+
+Il existe aussi un cinquième conteneur qui contient l'interface web vers la base de données. Pour y accèder cliquez [ici](http://localhost:8083/)
 
 ---
 
