@@ -1,0 +1,46 @@
+services : 
+  # Conteneur pour ollama
+  ollama2:
+    image: ollama/ollama:latest
+    ports : 
+      - "8082:11434"
+    volumes : # pour sauvegarder les modeles téléchargés
+      - ollama_data:/root/.ollama
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    entrypoint: ["/bin/sh", "-c"]
+
+    command: ["/bin/ollama serve & sleep 5 && /bin/ollama pull llama3.2:1b && wait"]
+
+
+  db:
+    image: postgres:17-alpine
+    restart: always
+    shm_size : 128mb
+    environment : 
+      POSTGRES_DB : ${DB_NAME}
+      POSTGRES_USER : ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data # VOLUME : Sauvegarde les données de la base
+      - ./init-scripts:/docker-entrypoint-initdb.d
+  adminer:
+    image : adminer
+    restart : always
+    ports :
+      - "8083:8080"
+    depends_on:
+      - db
+
+  php-app:
+    image: php:8.3-apache
+    ports:
+      - "8085:80"
+    build: ./app
+    volumes :
+     - ./app:/var/www/html 
+  
+volumes:
+  ollama_data:
+  db_data:
