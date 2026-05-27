@@ -6,7 +6,7 @@ Réalisation d'un plugin *Moodle* qui sera ajouté à *Ametice*. Il prendra la f
 Ce plugin permettra : 
 -  L'accès à des ***models*** d'IA qui auront connaissance des cours d'une matière.
 - Proposera une environnement d'apprentissage encadré par des **règles sur le models** ainsi que sur les **nombres de tokens disponibles**.
-- Permettra aux professeurs d'avoir accès au échange entre le model et ses étudiants de sorte à pouvoir analyser la facon dont les éléves utilise l'IA.
+- Permettra aux professeurs d'avoir accès aux échanges entre le model et ses étudiants de sorte à pouvoir analyser la facon dont les élèves utilisent l'IA.
 
 
 ## Exploitation du produit
