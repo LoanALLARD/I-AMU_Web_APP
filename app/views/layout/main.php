@@ -25,7 +25,22 @@
     <button class="theme-toggle theme-toggle-floating" id="theme-toggle" title="Changer de thème" aria-label="Changer de thème"><?= icon('moon') ?></button>
     <?php endif; ?>
 
-    <?php if (isset($_SESSION['user_id'])): ?>
+    <?php if (isset($_SESSION['user_id'])):
+        // Liens de navigation calculés une fois (réutilisés topbar desktop + bottom nav mobile)
+        $currentUri = $_SERVER['REQUEST_URI'] ?? '';
+        $isTeacher    = in_array('teacher', $_SESSION['roles'] ?? []);
+        $isAdmin      = in_array('admin', $_SESSION['roles'] ?? []);
+        $isResearcher = in_array('researcher', $_SESSION['roles'] ?? []);
+        $userInitials = strtoupper(
+            substr($_SESSION['user_first_name'] ?? 'U', 0, 1)
+          . substr($_SESSION['user_last_name'] ?? '', 0, 1)
+        );
+
+        $navItems = [['/chat', 'Chat', 'message-circle']];
+        if ($isTeacher || $isAdmin) $navItems[] = ['/sessions', 'Sessions', 'graduation-cap'];
+        if ($isResearcher)          $navItems[] = ['/export',   'Export',   'bar-chart-2'];
+        if ($isAdmin)               $navItems[] = ['/admin',    'Admin',    'settings'];
+    ?>
     <nav class="navbar">
         <div class="navbar-brand">
             <a href="/chat" class="brand-link">
@@ -33,21 +48,21 @@
             </a>
         </div>
         <div class="navbar-menu">
-            <a href="/chat" class="nav-link <?= ($_SERVER['REQUEST_URI'] ?? '') === '/chat' ? 'active' : '' ?>">Chat</a>
-            <?php if (in_array('teacher', $_SESSION['roles'] ?? []) || in_array('admin', $_SESSION['roles'] ?? [])): ?>
-                <a href="/sessions" class="nav-link">Sessions</a>
-            <?php endif; ?>
-            <?php if (in_array('researcher', $_SESSION['roles'] ?? [])): ?>
-                <a href="/export" class="nav-link">Export</a>
-            <?php endif; ?>
-            <?php if (in_array('admin', $_SESSION['roles'] ?? [])): ?>
-                <a href="/admin" class="nav-link">Administration</a>
-            <?php endif; ?>
+            <!-- Liens : visibles desktop, masqués mobile (remplacés par bottom nav) -->
+            <div class="navbar-links">
+                <?php foreach ($navItems as [$href, $label, $_icon]):
+                    $active = $currentUri === $href || str_starts_with($currentUri, $href . '/');
+                ?>
+                    <a href="<?= $href ?>" class="nav-link <?= $active ? 'active' : '' ?>">
+                        <?= htmlspecialchars($label === 'Admin' ? 'Administration' : $label) ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
 
-            <!-- Indicateur statut Ollama -->
+            <!-- Indicateur statut Ollama : compact sur mobile (juste le dot) -->
             <div class="ollama-status" id="ollama-status" title="Statut du serveur IA">
                 <span class="status-dot" id="ollama-dot"></span>
-                <span id="ollama-status-text">Vérification…</span>
+                <span class="ollama-status-text" id="ollama-status-text">Vérification…</span>
             </div>
 
             <!-- Toggle thème sombre -->
@@ -55,8 +70,8 @@
 
             <!-- Menu utilisateur déroulant -->
             <div class="user-menu" id="user-menu">
-                <button class="user-menu-trigger" id="user-menu-trigger">
-                    <span class="user-avatar"><?= strtoupper(substr($_SESSION['user_first_name'] ?? 'U', 0, 1)) ?></span>
+                <button class="user-menu-trigger" id="user-menu-trigger" aria-label="Menu utilisateur">
+                    <span class="user-avatar"><?= htmlspecialchars($userInitials) ?></span>
                     <span class="user-menu-name"><?= htmlspecialchars($_SESSION['user_first_name'] . ' ' . $_SESSION['user_last_name']) ?></span>
                     <span class="user-menu-caret">▾</span>
                 </button>
@@ -75,6 +90,18 @@
                 </div>
             </div>
         </div>
+    </nav>
+
+    <!-- ═══ Bottom nav mobile : visible uniquement < 768px ═══════════ -->
+    <nav class="mobile-bottom-nav" aria-label="Navigation principale">
+        <?php foreach ($navItems as [$href, $label, $iconName]):
+            $active = $currentUri === $href || str_starts_with($currentUri, $href . '/');
+        ?>
+            <a href="<?= $href ?>" class="bottom-nav-item <?= $active ? 'active' : '' ?>">
+                <?= icon($iconName) ?>
+                <span class="bottom-nav-label"><?= htmlspecialchars($label) ?></span>
+            </a>
+        <?php endforeach; ?>
     </nav>
     <?php endif; ?>
 
