@@ -26,7 +26,7 @@ Lors du dévellopement de ce projet, **trois** serveurs seront utilisés. Un ser
 Le projet est constitué de deux entité distinctes. La première est le **LMS** (*Learning Management System*) ametice, il nous sert à organiser les modèles par cours et par règles du professeur.<br>
 La seconde est **le serveur IA**, comme son nom l'indique il héberge l'IA et est donc en charge des calcules des réponse.
 
-Le plugin s'affichera dans le **LMS** et pointera les messages vers le **serveur IA** puis enverra la question et la réponse vers une **base de données** hébergée sur le même serveur que celui du **LMS** et des fichiers de log temporaires.
+Le plugin s'affichera dans le **LMS** et pointera les messages vers le **serveur IA** puis enverra la question et la réponse vers une **base de données** hébergée sur le même serveur que celui du **LMS** et dans des fichiers de log temporaires.
 
 
 --- 
