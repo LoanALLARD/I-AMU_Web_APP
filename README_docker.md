@@ -18,12 +18,11 @@ Vérifiez que les conteneurs ce sont bien lancé avec `docker ps `
 Envoyer une requête à un model avec l'API.<br>
 exemple sur **Linux**:
 ```bash
-$ curl http://localhost:11434/api/generate -d '{
+$ curl http://localhost:8082/api/generate -d '{
   "model": "llama3.2:1b",
   "prompt": "raconte moi une histoire",
   "stream": false,
-  "format":"json",
-  "context":[128006,9125,128007,271,38766,1303,33025,2696,25,6790,220,2366,18,271,128009,128006,882]
+  "format":"json"
   }'
 ``` 
 exemple **Windows**:
@@ -35,7 +34,8 @@ exemple **Windows**:
 `prompt` : contenue de la demande <br>
 `stream` : *false* réponse en un seul block, *true* réponse token par token.<br> 
 `format`: format de la réponse. <br>
-`context`: historique de la conversation en token des réponses précedentes. <br>
+`context`: historique de la conversation en token des réponses précedentes.<br>
+  exemple `"context":[128006,9125,128007,271,38766,1303,33025,2696,25,6790,220,2366,18,271,128009,128006,882]`
 
 ---
 

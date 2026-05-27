@@ -34,12 +34,11 @@ services :
       - db
 
   php-app:
-    image: php:8.3-apache
+    build: ./app
     ports:
       - "8085:80"
-    build: ./app
-    volumes :
-     - ./app:/var/www/html 
+    volumes:
+      - ./app:/var/www/html
   
 volumes:
   ollama_data:

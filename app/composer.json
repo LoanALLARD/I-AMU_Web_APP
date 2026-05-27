@@ -1,0 +1,10 @@
+{
+    "name": "root/html",
+    "autoload": {
+        "psr-4": {
+            "Src\\":"src/",
+            "Controller\\":"src/controllers/"
+        }
+    },
+    "require": {}
+}
