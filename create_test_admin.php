@@ -9,7 +9,7 @@
  *   Password : Admin
  */
 
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/app/autoload.php';
 
 $app = \App\Core\Application::getInstance();
 $db  = \App\Core\Database::getInstance();
