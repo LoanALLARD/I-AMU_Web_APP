@@ -29,12 +29,3 @@ La seconde est **le serveur IA**, comme son nom l'indique il héberge l'IA et es
 Le plugin s'affichera dans le **LMS** et pointera les messages vers le **serveur IA** puis enverra la question et la réponse vers une **base de données** hébergée sur le même serveur que celui du **LMS** et dans des fichiers de log temporaires.
 
 
---- 
-
-## Reflexions personnelles 
-Le TUTOR AI existe déjà ? Si oui c'est notre projet de l'intégrer dans une application web et de rajouter les interfaces et son emplacement des les cours moodle.
-
-Qui a dev ce plugin, voir avec lucas. Il est deployer sur le serveur de lucas. 
-
-Voir le serveur de dev sur lesquels sont deployé ses plugins pour voir ce qui existe déjà.
-
