@@ -39,7 +39,7 @@ email universitaire (domaines paramétrables en config).
 
 Pour consulter un fichier du POC sans le récupérer :
 ```bash
-git show poc:app/controllers/SessionController.php
+git show poc:app/Controllers/SessionController.php
 ```
 
 ---
@@ -161,7 +161,7 @@ docker compose exec -T db psql -U iamu_user -d iamu < database/migrations/YYYY-M
 
 ### Lint
 ```bash
-docker compose exec app php -l /var/www/html/app/Core/Application.php
+docker compose exec app php -l ..ACompleter../app/Core/Application.php
 ```
 
 ### URLs locales

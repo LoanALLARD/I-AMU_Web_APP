@@ -88,7 +88,7 @@ final class Application
     {
         $this->startSession();
         $router = new Router($this->container);
-        require __DIR__ . '/../config/routes.php';   // peuple $router
+        require __DIR__ . '/../Config/routes.php';   // peuple $router
         $router->dispatch(Request::fromGlobals());
     }
 }

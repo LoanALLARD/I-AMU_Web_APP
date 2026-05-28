@@ -606,7 +606,7 @@ dépendances explicitement dans `app/bootstrap.php` :
 
 ```php
 <?php
-$config = require __DIR__ . '/config/config.php';
+$config = require __DIR__ . '/Config/Config.php';
 
 // --- Infrastructure : briques basses ---
 $db          = new PdoConnection($config['database']);
