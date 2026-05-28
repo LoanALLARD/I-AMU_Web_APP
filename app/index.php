@@ -41,9 +41,7 @@
     */
 
     $router->add('POST','/chat',function(){
-        var_dump("la");
         $controller = new controllerChat();
-        var_dump("lo");
         $controller->handleChat();
     });
 
