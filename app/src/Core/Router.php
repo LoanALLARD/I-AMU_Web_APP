@@ -2,7 +2,7 @@
 
 namespace Core;
 
-class Router {e
+class Router{
 
     private array $routes = [];
 
