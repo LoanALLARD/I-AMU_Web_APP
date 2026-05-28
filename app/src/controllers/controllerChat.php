@@ -32,8 +32,15 @@
 
         public function handleChat():void {
             $inputJSON = file_get_contents('php://input');
-            var_dump($inputJSON);
             $input = json_decode($inputJSON,true);
-            var_dump($input);
+            var_dump($input['message']);
+
+            $params = array("model"=>$input['model'],"prompt"=>$input['message'],"stream"=>"false","format"=>"json");
+            $defaults = array(
+                CURLOPT_URL => 'http://myremoteservice/', 
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $params,
+            );
+
         }
     }

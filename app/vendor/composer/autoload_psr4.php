@@ -7,5 +7,6 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Src\\' => array($baseDir . '/src'),
+    'Core\\' => array($baseDir . '/src/Core'),
     'Controller\\' => array($baseDir . '/src/controllers'),
 );
