@@ -14,3 +14,5 @@
 
 # Composer phar binary should not be versioned (use the system one).
 /app/composer.phar
+
+note

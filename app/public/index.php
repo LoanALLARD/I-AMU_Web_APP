@@ -42,7 +42,7 @@
     */
 
     $router->add('POST','/chat',function(){
-        $controller = new ChatController();
+        $controller = new LLMController();
         $controller->handleChat();
     });
 
