@@ -1,0 +1,29 @@
+includes:
+    # Pre-existing errors at the time PHPStan was introduced — the CI
+    # only blocks on *new* errors. Re-run
+    # `composer stan -- --generate-baseline phpstan-baseline.neon`
+    # after fixing some to shrink this file.
+    - phpstan-baseline.neon
+
+parameters:
+    level: 6
+
+    paths:
+        - src
+        - public
+        - tests
+
+    # public/index.php builds and uses the router with closure routes
+    # — too dynamic for static analysis. Exclude it from scanning;
+    # the lint step still catches syntax errors there.
+    excludePaths:
+        analyse:
+            - public/index.php
+            - src/bootstrap.php
+            - src/Helpers/*.php
+            - src/Views/*.php
+
+    # Tighter rules on top of level 6.
+    checkMissingIterableValueType: true
+    checkGenericClassInNonGenericObjectType: true
+    treatPhpDocTypesAsCertain: false

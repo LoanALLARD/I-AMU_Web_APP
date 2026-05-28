@@ -1,11 +1,43 @@
 {
-    "name": "root/html",
+    "name": "iamu/web-app",
+    "description": "I-AMU — encadrement pédagogique LLM (PHP 8.3 / PostgreSQL 17 / Ollama).",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.1"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.11",
+        "phpunit/phpunit": "^10.5",
+        "squizlabs/php_codesniffer": "^3.10"
+    },
     "autoload": {
         "psr-4": {
-            "Src\\":"src/",
-            "Controllers\\": "src/Controllers/",
-            "Core\\":"src/Core/"
+            "Src\\": "src/",
+            "Controller\\": "src/Controllers/",
+            "Core\\": "src/Core/"
         }
     },
-    "require": {}
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "lint": "find src tests -name '*.php' -print0 | xargs -0 -n1 -P4 php -l",
+        "stan": "phpstan analyse --no-progress",
+        "cs": "phpcs",
+        "cbf": "phpcbf",
+        "test": "phpunit",
+        "quality": [
+            "@lint",
+            "@stan",
+            "@cs"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }

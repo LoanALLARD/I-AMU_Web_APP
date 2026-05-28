@@ -1,0 +1,31 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Method Controller\\\\AccueilController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Controllers/AccueilController.php
+
+		-
+			message: "#^Method Controller\\\\ChatController\\:\\:generate_request\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Controllers/ChatController.php
+
+		-
+			message: "#^Method Controller\\\\ChatController\\:\\:generate_request\\(\\) has parameter \\$context with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Controllers/ChatController.php
+
+		-
+			message: "#^Access to an undefined property Controller\\\\loginController\\:\\:\\$authService\\.$#"
+			count: 3
+			path: src/Controllers/LoginController.php
+
+		-
+			message: "#^Access to an undefined static property Core\\\\controller\\:\\:\\$viewsPath\\.$#"
+			count: 2
+			path: src/Core/Controller.php
+
+		-
+			message: "#^Property Core\\\\Router\\:\\:\\$routes type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Core/Router.php

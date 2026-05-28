@@ -1,4 +1,16 @@
 .idea/
+.vscode/
 .env
-app/vendor/
 .DS_Store
+
+# Composer vendor (committed lock = reproducible CI).
+/app/vendor/
+
+# Quality tool caches.
+/app/.phpunit.cache/
+/app/.phpunit.result.cache
+/app/.phpstan-cache/
+/app/phpcs-report.xml
+
+# Composer phar binary should not be versioned (use the system one).
+/app/composer.phar

@@ -1,0 +1,162 @@
+name: CI
+
+# Runs on every push to any branch, plus every pull request.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# A new push to the same ref cancels the previous in-flight run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ────────────────────────────────────────────────────────────────
+  # PHP quality: lint + PHPStan (level 6) + PHPCS (PSR-12) + PHPUnit
+  # All tools live under app/ (composer.json, phpstan.neon, …).
+  # ────────────────────────────────────────────────────────────────
+  quality:
+    name: PHP quality (lint, phpstan, phpcs, phpunit)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_pgsql, curl, mbstring, json
+          tools: composer:v2
+          coverage: none
+
+      - name: Resolve composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('app/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dev dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: PHP syntax check
+        run: find src public tests -name '*.php' -print0 | xargs -0 -n1 -P4 php -l
+
+      - name: PHPStan (level 6)
+        run: vendor/bin/phpstan analyse --no-progress --error-format=github
+
+      - name: PHPCS (PSR-12) — informational
+        # Pre-existing code has 70 style violations (67 auto-fixable).
+        # Step kept informational until cleaned up: run
+        # `composer cbf` locally to auto-fix, then remove
+        # `continue-on-error` here. Tracking metric: PHPCS error count
+        # must trend down, never up.
+        continue-on-error: true
+        run: vendor/bin/phpcs --report=full
+
+      - name: PHPUnit
+        # PHPUnit returns 0 with "No tests executed." when the suites
+        # are empty, so this stays green until the first real test
+        # lands.
+        run: vendor/bin/phpunit --display-warnings
+
+  # ────────────────────────────────────────────────────────────────
+  # Infrastructure: docker-compose.yaml stays parseable
+  # ────────────────────────────────────────────────────────────────
+  infra:
+    name: docker compose config
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Seed .env from .env.example (or sane defaults)
+        run: |
+          if [ -f .env.example ]; then
+            cp .env.example .env
+          else
+            cat > .env <<EOF
+          DB_HOST=db
+          DB_PORT=5432
+          DB_NAME=iamu_ci
+          DB_USER=iamu_ci
+          DB_PASSWORD=iamu_ci_password
+          OLLAMA_BASE_URL=http://ollama2:11434
+          APP_ENV=ci
+          EOF
+          fi
+
+      - name: Validate compose syntax
+        run: docker compose config --quiet
+
+  # ────────────────────────────────────────────────────────────────
+  # Database: schema.sql + seed.sql replay on a real Postgres 17
+  # ────────────────────────────────────────────────────────────────
+  schema:
+    name: SQL schema replay (Postgres 17)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: iamu_ci
+          POSTGRES_USER: iamu_ci
+          POSTGRES_PASSWORD: iamu_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PGHOST: localhost
+      PGUSER: iamu_ci
+      PGDATABASE: iamu_ci
+      PGPASSWORD: iamu_ci_password
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install psql client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-client
+
+      - name: Wait for Postgres
+        run: |
+          for _ in $(seq 1 30); do
+            if pg_isready -h "$PGHOST" -U "$PGUSER" >/dev/null 2>&1; then
+              echo "Postgres is up."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Postgres did not become ready in time." >&2
+          exit 1
+
+      - name: Apply schema.sql
+        run: psql -v ON_ERROR_STOP=1 -f database/schema.sql
+
+      - name: Apply seed.sql
+        run: psql -v ON_ERROR_STOP=1 -f database/seed.sql
+
+      - name: Smoke check (list tables + count seeded users)
+        run: |
+          psql -c '\dt'
+          psql -tA -c 'SELECT COUNT(*) FROM "user";'
