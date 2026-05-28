@@ -39,6 +39,7 @@ services :
       - "8085:80"
     volumes:
       - ./app:/var/www/html
+      - ./vhost.conf:/etc/apache2/sites-available/000-default.conf
   
 volumes:
   ollama_data:

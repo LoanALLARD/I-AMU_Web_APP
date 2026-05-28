@@ -23,7 +23,7 @@
 
     namespace Controller;
     
-    class controllerChat{
+    class ChatController{
         public function generate_request(string $model, string $message, array $context){
             var_dump($model);
             var_dump($message);

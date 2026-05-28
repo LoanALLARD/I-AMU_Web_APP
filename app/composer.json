@@ -3,7 +3,8 @@
     "autoload": {
         "psr-4": {
             "Src\\":"src/",
-            "Controller\\":"src/controllers/"
+            "Controller\\":"src/controllers/",
+            "Core\\":"src/Core/"
         }
     },
     "require": {}

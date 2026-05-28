@@ -1,20 +1,19 @@
 <?php
-    require __DIR__ . '/vendor/autoload.php';
-
-    use Src\Router;
-    use Controller\controllerAccueil;
-    use Controller\controllerChat;
+    require dirname(__DIR__) . '/vendor/autoload.php';
+    use Core\Router;
+    use Controller\AccueilController;
+    use Controller\ChatController;
 
     // routeur 
     $router = new Router();
 
     $router->add('GET','/',function(){
-        $controller = new controllerAccueil();
+        $controller = new AccueilController();
         $controller->index();
     });
 
     $router->add('GET','/accueil',function(){
-        $controller = new controllerAccueil();
+        $controller = new AccueilController();
         $controller->index();
     });
 
@@ -41,7 +40,7 @@
     */
 
     $router->add('POST','/chat',function(){
-        $controller = new controllerChat();
+        $controller = new ChatController();
         $controller->handleChat();
     });
 
