@@ -1,5 +1,7 @@
 <?php
-    require dirname(__DIR__) . '/vendor/autoload.php';
+    // Hand-written autoloader (runtime). Composer's vendor/autoload.php
+    // is reserved for dev tools (PHPStan, PHPUnit, PHPCS).
+    require dirname(__DIR__) . '/autoload.php';
     use Core\Router;
     use Controller\AccueilController;
     use Controller\ChatController;
