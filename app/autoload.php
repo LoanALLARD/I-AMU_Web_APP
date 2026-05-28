@@ -12,9 +12,9 @@ declare(strict_types=1);
  *
  * Namespace mapping mirrors app/composer.json so behaviour is
  * identical between the two autoloaders:
- *   - Src\        → app/src/
- *   - Controller\ → app/src/Controllers/
- *   - Core\       → app/src/Core/
+ *   - Src\         → app/src/
+ *   - Controllers\ → app/src/Controllers/
+ *   - Core\        → app/src/Core/
  *
  * Pure PHP, no dependency.
  */
@@ -28,9 +28,9 @@ spl_autoload_register(static function (string $class): bool {
         // section so we don't drift between the two autoloaders.
         $appRoot = __DIR__;
         $prefixes = [
-            'Controller\\' => $appRoot . '/src/Controllers',
-            'Core\\'       => $appRoot . '/src/Core',
-            'Src\\'        => $appRoot . '/src',
+            'Controllers\\' => $appRoot . '/src/Controllers',
+            'Core\\'        => $appRoot . '/src/Core',
+            'Src\\'         => $appRoot . '/src',
         ];
     }
 

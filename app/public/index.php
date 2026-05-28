@@ -3,8 +3,8 @@
     // is reserved for dev tools (PHPStan, PHPUnit, PHPCS).
     require dirname(__DIR__) . '/autoload.php';
     use Core\Router;
-    use Controller\AccueilController;
-    use Controller\ChatController;
+    use Controllers\AccueilController;
+    use Controllers\ChatController;
 
     // routeur 
     $router = new Router();

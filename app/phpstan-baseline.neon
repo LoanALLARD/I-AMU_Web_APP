@@ -1,27 +1,27 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Method Controller\\\\AccueilController\\:\\:index\\(\\) has no return type specified\\.$#"
+			message: "#^Method Controllers\\\\AccueilController\\:\\:index\\(\\) has no return type specified\\.$#"
 			count: 1
 			path: src/Controllers/AccueilController.php
 
 		-
-			message: "#^Method Controller\\\\ChatController\\:\\:generate_request\\(\\) has no return type specified\\.$#"
+			message: "#^Method Controllers\\\\ChatController\\:\\:generate_request\\(\\) has no return type specified\\.$#"
 			count: 1
 			path: src/Controllers/ChatController.php
 
 		-
-			message: "#^Method Controller\\\\ChatController\\:\\:generate_request\\(\\) has parameter \\$context with no value type specified in iterable type array\\.$#"
+			message: "#^Method Controllers\\\\ChatController\\:\\:generate_request\\(\\) has parameter \\$context with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: src/Controllers/ChatController.php
 
 		-
-			message: "#^Access to an undefined property Controller\\\\loginController\\:\\:\\$authService\\.$#"
+			message: "#^Access to an undefined property Controllers\\\\LoginController\\:\\:\\$authService\\.$#"
 			count: 3
 			path: src/Controllers/LoginController.php
 
 		-
-			message: "#^Access to an undefined static property Core\\\\controller\\:\\:\\$viewsPath\\.$#"
+			message: "#^Access to an undefined static property Core\\\\Controller\\:\\:\\$viewsPath\\.$#"
 			count: 2
 			path: src/Core/Controller.php
 
