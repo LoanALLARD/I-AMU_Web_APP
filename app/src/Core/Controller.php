@@ -2,7 +2,7 @@
 
 namespace Core;
 
-abstract class controller {
+abstract class Controller {
 
 
     /**

@@ -1,10 +1,10 @@
 <?php
 
-namespace Controller;
+namespace Controllers;
 
-use Core\controller;
+use Core\Controller;
 
-class loginController extends controller
+class LoginController extends controller
 {
     /**
      * Affiche le formulaire de connexion.

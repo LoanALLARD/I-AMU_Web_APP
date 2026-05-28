@@ -21,7 +21,7 @@
     *
     */
 
-    namespace Controller;
+    namespace Controllers;
     
     class ChatController{
         public function generate_request(string $model, string $message, array $context){

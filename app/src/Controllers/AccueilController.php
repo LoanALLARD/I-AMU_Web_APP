@@ -1,5 +1,5 @@
 <?php
-namespace Controller;
+namespace Controllers;
 
 class AccueilController{
     public function index(){
