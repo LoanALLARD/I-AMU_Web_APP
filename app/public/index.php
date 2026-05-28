@@ -2,9 +2,11 @@
     // Hand-written autoloader (runtime). Composer's vendor/autoload.php
     // is reserved for dev tools (PHPStan, PHPUnit, PHPCS).
     require dirname(__DIR__) . '/autoload.php';
+    session_start();
     use Core\Router;
     use Controllers\AccueilController;
-    use Controllers\ChatController;
+    use Controllers\LLMController;
+    use Controllers\LoginController;
 
     // routeur 
     $router = new Router();
@@ -48,6 +50,31 @@
 
     $uri = $_SERVER['REQUEST_URI'];
     $method = $_SERVER['REQUEST_METHOD'];
+
+    $router->add('GET', '/login', function() {
+        $controller = new LoginController();
+        $controller->showLogin();
+    });
+
+    $router->add('POST', '/login', function() {
+        $controller = new LoginController();
+        $controller->login();
+    });
+
+    $router->add('GET', '/register', function() {
+        $controller = new LoginController();
+        $controller->showRegister();
+    });
+
+    $router->add('POST', '/register', function() {
+        $controller = new LoginController();
+        $controller->register();
+    });
+
+    $router->add('GET', '/logout', function() {
+        $controller = new LoginController();
+        $controller->logout();
+    });
 
     $router->compare($uri, $method);
 ?>

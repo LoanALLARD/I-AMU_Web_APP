@@ -3,21 +3,30 @@
 namespace Controllers;
 
 use Core\Controller;
+use Services\AuthService;
 
-class LoginController extends controller
+class LoginController extends Controller
 {
+    private AuthService $authService;
+
+    public function __construct()
+    {
+        $this->authService = new AuthService();
+    }
+
     /**
-     * Affiche le formulaire de connexion.
+     * Displays the login form.
      */
     public function showLogin(): void
     {
         if (isset($_SESSION['user_id'])) {
-            $this->redirect('/...'); #redrirection connection
+            $this->redirect('/chat');
         }
+        $this->render('auth/login', ['titrePage' => 'Connexion']);
     }
 
     /**
-     * Traite la soumission du formulaire de connexion.
+     * Processes the login form submission.
      */
     public function login(): void
     {
@@ -27,29 +36,30 @@ class LoginController extends controller
         $result = $this->authService->login($email, $password);
 
         if (!$result['success']) {
-            $this->render('...', [
-                'title' => 'Connexion',
-                'error' => $result['error'],
-                'email' => $email,
+            $this->render('auth/login', [
+                'titrePage' => 'Connexion',
+                'error'     => $result['error'],
+                'email'     => $email,
             ]);
             return;
         }
-        $this->redirect('/...');
+
+        $this->redirect('/chat');
     }
 
     /**
-     * Affiche le formulaire d'inscription.
+     * Displays the registration form.
      */
     public function showRegister(): void
     {
         if (isset($_SESSION['user_id'])) {
-            $this->redirect('/...');
+            $this->redirect('/chat');
         }
-        $this->render('...', ['title' => 'Inscription']);
+        $this->render('auth/register', ['titrePage' => 'Inscription']);
     }
 
     /**
-     * Traite la soumission du formulaire d'inscription.
+     * Processes the registration form submission.
      */
     public function register(): void
     {
@@ -59,26 +69,26 @@ class LoginController extends controller
             'password_confirm' => $this->input('password_confirm', ''),
             'first_name'       => trim($this->input('first_name', '')),
             'last_name'        => trim($this->input('last_name', '')),
-            'rgpd_consent'     => (bool) $this->input('rgpb_consent', false),
+            'rgpd_consent'     => (bool) $this->input('rgpd_consent', false),
         ];
 
         $result = $this->authService->register($data);
 
         if (!$result['success']) {
-            $this->render('pages/auth/register', [
-                'title' => 'Inscription',
-                'error' => $result['error'],
-                'data'  => $data,
+            $this->render('auth/register', [
+                'titrePage' => 'Inscription',
+                'error'     => $result['error'],
+                'data'      => $data,
             ]);
             return;
         }
 
-        $this->flash('success', 'Inscription réussie !');
-        $this->redirect('/...');
+        $this->flash('success', 'Inscription reussie!');
+        $this->redirect('/login');
     }
 
     /**
-     * Déconnexion.
+     * Destroys the session and redirects to login.
      */
     public function logout(): void
     {

@@ -30,6 +30,8 @@ spl_autoload_register(static function (string $class): bool {
         $prefixes = [
             'Controllers\\' => $appRoot . '/src/Controllers',
             'Core\\'        => $appRoot . '/src/Core',
+            'Models\\'      => $appRoot . '/src/Models',
+            'Services\\'    => $appRoot . '/src/Services',
             'Src\\'         => $appRoot . '/src',
         ];
     }
