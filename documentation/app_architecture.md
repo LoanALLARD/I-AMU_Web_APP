@@ -344,7 +344,7 @@ graph LR
 ```
 .
 ├── app_architecture.md          ← ce fichier
-├── composer.json                ← garde, juste pour gérer PHPMailer en vendor/
+├── composer.json                ← garde pour les outils de dev (PHPStan, PHPCS, PHPUnit) en require-dev — et PHPMailer le jour où la spec 01 atterrit
 ├── public/
 │   ├── index.php                ← front controller
 │   └── assets/
@@ -394,7 +394,7 @@ graph LR
 │   ├── Integration/Infrastructure/
 │   └── Acceptance/Http/
 │
-└── vendor/                      ← géré par composer install (PHPMailer)
+└── vendor/                      ← généré par `composer install` ; héberge les outils de dev (PHPStan, PHPCS, PHPUnit) et plus tard les libs prod (PHPMailer)
 ```
 
 ---
@@ -739,9 +739,19 @@ Acceptable car purement fonctionnel et sans état. À utiliser uniquement
 dans les vues.
 
 **Q. Et `composer.json` ?**
-Conservé pour gérer la dépendance `phpmailer/phpmailer` dans `vendor/`.
-On n'utilise plus son autoloader (cf. `app/autoload.php`). Les sections
-`autoload` / `autoload-dev` ont été retirées.
+Conservé pour deux raisons :
+1. **Outils de qualité** (`require-dev`) — PHPStan, PHP_CodeSniffer,
+   PHPUnit. Ils tournent en local et en CI ; le runtime n'en a pas
+   besoin.
+2. **Dépendances de prod** futures — `phpmailer/phpmailer` arrivera
+   avec la spec 01.
+
+L'autoloader runtime reste `app/autoload.php` (cf. `public/index.php`).
+La section `autoload` PSR-4 du `composer.json` est **conservée** : elle
+est utilisée par PHPStan, PHPUnit et l'IDE pour résoudre les classes
+pendant l'analyse statique et les tests. Les deux mappings (maison et
+Composer) doivent rester strictement identiques pour éviter une dérive
+entre ce qui passe les outils et ce qui tourne en prod.
 
 ---
 

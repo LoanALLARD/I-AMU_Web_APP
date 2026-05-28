@@ -1,6 +1,6 @@
 {
     "name": "iamu/web-app",
-    "description": "I-AMU — encadrement pédagogique LLM (PHP 8.3 / PostgreSQL 17 / Ollama).",
+    "description": "I-AMU — encadrement pédagogique LLM (PHP 8.3 / PostgreSQL 17 / Ollama). NOTE: the production runtime uses app/autoload.php, not vendor/autoload.php. Composer is used only to install dev tooling (PHPStan, PHPCS, PHPUnit) and, later, prod libs (PHPMailer). The PSR-4 'autoload' section below is kept in sync with app/autoload.php so the dev tools can resolve classes the same way the runtime does.",
     "type": "project",
     "license": "proprietary",
     "require": {

@@ -16,6 +16,14 @@ Outils installés en `require-dev` dans `app/composer.json` et exécutés
 automatiquement en CI (GitHub Actions) à chaque `push` sur toute
 branche et à chaque pull request.
 
+> **Note sur Composer** : le runtime utilise un autoloader maison
+> (`app/autoload.php`) chargé par `public/index.php`. Composer n'est
+> utilisé que pour installer les outils de qualité (PHPStan, PHPCS,
+> PHPUnit) — `vendor/autoload.php` ne sert qu'à ces outils lors de
+> l'analyse statique et des tests. Les deux mappings PSR-4 (maison et
+> Composer) sont volontairement identiques pour éviter une dérive
+> entre ce que voient les outils et ce qui tourne en production.
+
 ### Installation des dépendances de dev
 
 ```bash
