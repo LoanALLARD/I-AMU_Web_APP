@@ -12,5 +12,5 @@ ob_start();
 $content = ob_get_clean(); 
 
 // 3. On appelle le Layout qui va utiliser cette variable $content
-require '/../Layout/main.php';
+require __DIR__ . '/../Layout/main.php';
 ?>
