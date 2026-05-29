@@ -13,14 +13,12 @@
     <header>
         <nav>
             <a href="/accueil">Accueil</a>
-            <a href="/plats">Nos Plats</a>
-            
+
             <?php if (isset($_SESSION['token'])): ?>
-                <a href="/commandes">Mes Commandes</a>
-                <a href="/cart">Panier</a>
                 <a href="/logout">Déconnexion</a>
             <?php else: ?>
                 <a href="/login">Connexion</a>
+                <a href="/register">Inscription</a>
             <?php endif; ?>
         </nav>
     </header>

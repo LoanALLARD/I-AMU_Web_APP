@@ -58,6 +58,11 @@ class LoginController extends Controller
         $this->render('auth/register', ['titrePage' => 'Inscription']);
     }
 
+    public function showRGPD(): void
+    {
+        $this->render('auth/RGPDConsent', ['titrePage' => 'Mentions RGPD']);
+    }
+
     /**
      * Processes the registration form submission.
      */

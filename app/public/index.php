@@ -78,7 +78,7 @@
 
     $router->add('GET','/RGPDConsent',function(){
         $controller = new AccueilController();
-        $controller->index();
+        $controller->showRGPD();
     });
 
     $router->compare($uri, $method);

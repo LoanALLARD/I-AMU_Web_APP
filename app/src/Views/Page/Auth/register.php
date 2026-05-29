@@ -11,7 +11,7 @@
 
     <div class="card-header">
         <div class="logo-wrap">
-            <img src="../../../../public/assets/img/logo.png" alt="logo_amu">
+            <img src="/app/public/assets/img/logo.png" alt="logo_amu">
         </div>
         <h1>Créer un compte</h1>
         <p>Réservé aux adresses universitaires AMU</p>
