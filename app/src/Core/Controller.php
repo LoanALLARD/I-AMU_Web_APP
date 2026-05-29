@@ -25,7 +25,7 @@ abstract class Controller {
         ): void {
 
         $viewFile   = self::$viewsPath . '/' . $view . '.php';
-        $layoutFile = self::$viewsPath . '/Layouts/' . $layout . '.php';
+        $layoutFile = self::$viewsPath . '/Layout/' . $layout . '.php';
 
         if (!is_file($viewFile)) {
             throw new \RuntimeException("View not found : {$viewFile}");
