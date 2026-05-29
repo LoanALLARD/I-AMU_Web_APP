@@ -77,7 +77,7 @@
     });
 
     $router->add('GET','/RGPDConsent',function(){
-        $controller = new AccueilController();
+        $controller = new  LoginController();
         $controller->showRGPD();
     });
 
