@@ -21,11 +21,11 @@ abstract class Controller {
     protected function render(
         string $view,
         array  $data   = [],
-        string $layout = 'layout'
+        string $layout = 'main'
         ): void {
 
         $viewFile   = self::$viewsPath . '/' . $view . '.php';
-        $layoutFile = self::$viewsPath . '/layouts/' . $layout . '.php';
+        $layoutFile = self::$viewsPath . '/Layouts/' . $layout . '.php';
 
         if (!is_file($viewFile)) {
             throw new \RuntimeException("View not found : {$viewFile}");
