@@ -55,3 +55,50 @@ Version : **8.3**
 Le contenue de `/var/www/html` du conteneur est monté en *bind mount* sur votre répertoire `app` de votre machine. Ce qui implique que tout changement dans `app` change en direct la configuration dans le serveur php. 
 
 Une fois le serveur lancer, cliquer [ici](http://localhost:8085/) pour voir votre page web.
+
+
+
+# Fonctionnalité : Intégration et Gestion des Modèles LLM
+
+Cette fonctionnalité permet de communiquer de manière agnostique avec différents modèles d'Intelligence Artificielle (comme Ollama, OpenAI, etc.). L'architecture repose sur le **Design Pattern Adapter**, permettant d'ajouter de nouveaux modèles ou fournisseurs d'API simplement en base de données, sans modifier le cœur de l'application.
+
+---
+
+## Présentation et Données
+
+Actuellement, seul le modèle `llama3.2:1b` est disponible et configuré. 
+
+Les informations de chaque modèle sont entièrement pilotées par la base de données. On y stocke notamment :
+* Le nom du modèle (`name`)
+* La fenêtre de contexte (`infoContextWindow`)
+* La taille du modèle (`infoSizeOfModel`)
+* L'entreprise émettrice (`infoCompany`)
+* L'URL de l'API cible (`url`)
+* Le type d'adaptateur à utiliser (`adapter_type`)
+
+---
+
+## Architecture et Flux d'Exécution
+
+Lorsqu'une demande de chat est émise, le flux suit les étapes suivantes :
+
+1. **Routage :** La requête HTTP `POST` arrive sur le `LLMController`.
+2. **Vérification (Repository) :** Le contrôleur appelle `AiRepository` pour vérifier si le modèle demandé existe en base de données et récupère ses configurations.
+3. **Instanciation (Métier) :** Le contrôleur instancie l'entité `ModelAi` (ou `AI`) avec ses données spécifiques.
+4. **Adaptation (Pattern Adapter) :** En fonction de la colonne `adapter_type` récupérée en BDD, l'application utilise une classe spécifique implémentant l'interface `LlmAdapterInterface`. Cet adaptateur se charge de traduire fidèlement la requête au format attendu par l'API cible (ex: format spécifique pour Ollama).
+5. **Exécution :** La requête formatée est transmise via cURL au conteneur ou serveur respectif, et la réponse brute est retournée.
+
+---
+
+## Utilisation (Exemple de Requête)
+
+Tu peux tester l'endpoint de l'application en envoyant du JSON brut via une commande `curl` dans ton terminal :
+
+```bash
+curl -X POST http://localhost:8085/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model" : "llama3.2:1b",
+    "message" : "Présente toi",
+    "context" : []
+  }'
