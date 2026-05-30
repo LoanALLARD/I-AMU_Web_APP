@@ -33,6 +33,7 @@ spl_autoload_register(static function (string $class): bool {
             'Models\\'      => $appRoot . '/src/Models',
             'Services\\'    => $appRoot . '/src/Services',
             'Src\\'         => $appRoot . '/src',
+            'Data\\'        => $appRoot . '/src/Data',
         ];
     }
 

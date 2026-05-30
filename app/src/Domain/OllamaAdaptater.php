@@ -1,7 +1,10 @@
 <?php
-namespace App\Domain;
 
-class OllamaAdapter implements LlmAdapterInterface {
+namespace Domain;
+
+use Domain\LlmAdaptaterInterface;
+
+class OllamaAdaptater implements LlmAdaptaterInterface {
     private string $url;
     private string $modelName;
 
@@ -11,7 +14,6 @@ class OllamaAdapter implements LlmAdapterInterface {
     }
 
     public function generate(string $message, array $context): string {
-        // C'est ICI qu'on gère le format spécifique à Ollama
         $payload = json_encode([
             "model" => $this->modelName,
             "prompt" => $message,
@@ -22,13 +24,14 @@ class OllamaAdapter implements LlmAdapterInterface {
         // Code cURL...
         try {
             $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL,"http://i-amu_web_app-php-app-1:11434/api/generate");
+            curl_setopt($ch, CURLOPT_URL,"http://i-amu_web_app-ollama2-1:11434/api/generate");
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            var_dump($ch);
             $response = curl_exec($ch);
 
-            var_dump($response);
-            return $textResultat;
+            return $response;
+
         } catch (\Throwable $th) {
             throw $th;
         } finally {

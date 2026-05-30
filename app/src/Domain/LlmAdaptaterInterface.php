@@ -1,7 +1,8 @@
 <?php
-namespace App\Domain;
 
-interface LlmAdapterInterface {
+namespace Domain;
+
+interface LlmAdaptaterInterface {
     /**
      * Reçoit un message et un contexte, s'occupe de formater la requête 
      * spécifique à l'API cible, l'exécute, et renvoie une chaîne standard.

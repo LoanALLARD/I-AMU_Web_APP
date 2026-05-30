@@ -3,7 +3,8 @@ FROM php:8.3-apache
 
 # On active le module rewrite
 RUN a2enmod rewrite
-
+RUN apt-get update && apt-get install -y libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql
 # Note: pas de `composer dump-autoload` ici — l'autoloader utilisé en
 # runtime est manuel (app/autoload.php). Composer n'est plus utilisé
 # qu'en local et en CI pour installer les outils de qualité

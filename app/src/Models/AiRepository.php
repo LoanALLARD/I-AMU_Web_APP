@@ -1,72 +1,38 @@
 <?php
 
+namespace Models;
+
+use PDO;
+
 /*
- * This class represent the data about LLM in 
- * the DB
- * Its unique role is to interact with the Database 
+ * This class use PDO to recover 
+ * all data about AI in the database
 */
 
 class AiRepository{
-    private string $name;                   // name of the model
-    private string $infoContextWindow;      // size of the context window of the model  
-    private string $infoSizeOfModel;        // size of the model
-    private string $infoCompagny;           // compagny who delivery the model
 
-    public function __construct(string $name, string $infoContextWindow ,string $infoSizeOfModel, string $infoCompagny, string $url, LlmAdapterInterface $adapter) {
-        $this->name = $name;
-        $this->infoContextWindow = $infoContextWindow;
-        $this->infoSizeOfModel = $infoSizeOfModel;
-        $this->infoCompagny = $infoCompagny;
+    private PDO $pdo;
+
+    public function __construct(PDO $pdo){
+        $this->pdo = $pdo;
     }
 
-    // Getters & Setters
-    public function getName(){
-        return $this->name;
-    }
+    public function getModelByName(string $name_AI){
+        $query = $this->pdo->prepare('
+        SELECT * FROM models where name = :name
+        ');
 
-    public function getInfoContextWindow(){
+        $query->execute(['name' => $name_AI]);
 
-    }
+        $result = $query->fetch();
 
-    public function getInfoSizeOfModel(){
+        if ($result === false) {
+            return null;
+        }
 
-    }
-
-    public function getInfoCompagny(){
+        return $result;
 
     }
 
-    public function getUrl(){
-
-    }
-
-    public function getFormatRequest(){
-
-    }
-
-
-    public function setName(string $name){
-
-    }
-
-    public function setInfoContextWindow(string $infoContextWindow){
-
-    }
-
-    public function setInfoSizeOfModel(string $infoSizeOfModel ){
-
-    }
-
-    public function setInfoCompagny(string $infoCompagny){
-
-    }
-
-    public function setUrl(string $url){
-
-    }
-
-    public function setFormatRequest(string $formatRequest){
-
-    }
 
 }
