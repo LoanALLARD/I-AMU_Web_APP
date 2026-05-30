@@ -1,8 +1,10 @@
 <?php
 namespace Controllers;
 
-class AccueilController{
-    public function index(){
-        require dirname(__DIR__) . '/Views/accueilView.php';
+class AccueilController
+{
+    public function index(): void
+    {
+        require dirname(__DIR__) . '/Views/Page/accueilView.php';
     }
 }

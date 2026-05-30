@@ -79,5 +79,10 @@
         $controller->logout();
     });
 
+    $router->add('GET','/RGPDConsent',function(){
+        $controller = new  LoginController();
+        $controller->showRGPD();
+    });
+
     $router->compare($uri, $method);
 ?>

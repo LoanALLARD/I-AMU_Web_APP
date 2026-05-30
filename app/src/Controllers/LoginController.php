@@ -22,7 +22,7 @@ class LoginController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('auth/login', ['titrePage' => 'Connexion']);
+        $this->render('Page/Auth/login', ['titrePage' => 'Connexion']);
     }
 
     /**
@@ -55,7 +55,12 @@ class LoginController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('auth/register', ['titrePage' => 'Inscription']);
+        $this->render('Page/Auth/register', ['titrePage' => 'Inscription']);
+    }
+
+    public function showRGPD(): void
+    {
+        $this->render('Page/Auth/RGPDConsent', ['titrePage' => 'Mentions RGPD']);
     }
 
     /**
