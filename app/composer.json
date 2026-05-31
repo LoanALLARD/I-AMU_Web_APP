@@ -19,7 +19,8 @@
             "Core\\": "src/Core/",
             "Data\\": "src/Data/",
             "Models\\": "src/Models/",
-            "Domain\\": "src/Domain/"
+            "Domain\\": "src/Domain/",
+            "Services\\": "src/Services/"
         }
     },
     "autoload-dev": {
