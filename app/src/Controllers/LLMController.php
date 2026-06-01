@@ -27,6 +27,7 @@ use Data\Database;
 use Models\AiRepository;
 use Domain\Ai;
 use Domain\OllamaAdaptater;
+use Models\InteractionRepository;
 
 class LLMController{
 
@@ -90,8 +91,16 @@ class LLMController{
 
         $response = $ai->ask($userMessage, $context);
 
-        header('Content-Type: application/json');
-        echo json_encode(['response' => $response]);
+        if ($response != false){
+
+            $response = json_decode($response);
+            $interaction = new InteractionRepository($pdo);
+            $output_tokens = count($response->context);
+            $interaction->newInteration($ai->getId(),1,$userMessage,$response->response,200,$output_tokens);
+        }
+
+        //header('Content-Type: application/json');
+        // echo json_encode(['response' => $response]);
         
     }
 }

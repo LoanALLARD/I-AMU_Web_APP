@@ -36,12 +36,12 @@ class OllamaAdaptater implements LlmAdaptaterInterface {
             $response = curl_exec($ch);
 
             if ($response === false) {
-                throw new \Exception("Erreur cURL : " . curl_error($ch));
+                throw new \Exception("Error can't reach the model : " . curl_error($ch));
             }
 
             return $response;
 
-        } catch (\Throwable $th) {
+        } catch (\Exception $th) {
             throw $th;
         } finally {
             curl_close($ch);
