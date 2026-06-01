@@ -15,10 +15,10 @@ services :
 
 
   db:
-    image: postgres:17-alpine
+    build: ./docker/db
     restart: always
     shm_size : 128mb
-    environment : 
+    environment :
       POSTGRES_DB : ${DB_NAME}
       POSTGRES_USER : ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -40,7 +40,45 @@ services :
     volumes:
       - ./app:/var/www/html
       - ./vhost.conf:/etc/apache2/sites-available/000-default.conf
-  
+
+  # pgTAP test runner. Only started via the "test" profile:
+  #   docker compose --profile test run --rm pgtap
+  # Mounts the test suite read-only, installs pgTAP, runs every *.sql file
+  # in order, and exits with the aggregate status.
+  pgtap:
+    image: postgres:17-alpine
+    profiles: ["test"]
+    depends_on:
+      - db
+    environment:
+      PGHOST: db
+      PGUSER: ${DB_USER}
+      PGPASSWORD: ${DB_PASSWORD}
+      PGDATABASE: ${DB_NAME}
+    volumes:
+      - ./tests/db:/tests:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        echo "==> Installing pgTAP extension (idempotent)"
+        psql -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pgtap;" > /dev/null
+        FAILED=0
+        for f in /tests/*.sql; do
+          echo ""
+          echo "--- $$(basename $$f) ---"
+          if ! psql -v ON_ERROR_STOP=1 -f "$$f"; then
+            FAILED=1
+          fi
+        done
+        echo ""
+        if [ $$FAILED -eq 0 ]; then
+          echo "All tests passed."
+        else
+          echo "Some tests FAILED." >&2
+          exit 1
+        fi
+
 volumes:
   ollama_data:
   db_data:
