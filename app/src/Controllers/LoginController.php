@@ -80,7 +80,7 @@ class LoginController extends Controller
         $result = $this->authService->register($data);
 
         if (!$result['success']) {
-            $this->render('auth/register', [
+            $this->render('Page/Auth/register', [
                 'titrePage' => 'Inscription',
                 'error'=> $result['error'], 'data'=> $data,],
                 'auth');
