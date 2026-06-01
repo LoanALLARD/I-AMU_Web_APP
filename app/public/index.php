@@ -9,8 +9,10 @@
     use Core\Router;
     use Controllers\LLMController;
     use Controllers\LoginController;
+    use Controllers\ChatController;
 
-    // routeur 
+
+// routeur
     $router = new Router();
 
     $router->add('GET','/',function(){
@@ -76,6 +78,11 @@
     $router->add('GET','/RGPDConsent',function(){
         $controller = new  LoginController();
         $controller->showRGPD();
+    });
+
+    $router->add('GET', '/chat', function() {
+        $controller = new ChatController();
+        $controller->index();
     });
 
     $router->compare($uri, $method);

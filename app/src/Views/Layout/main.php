@@ -24,10 +24,6 @@
     </header>
     <hr>
 
-    <main>
-        <?= $content ?>
-    </main>
-
     <hr>
     <footer>
         <p>&copy; 2026 - Plateforme IAMU</p>

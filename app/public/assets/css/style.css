@@ -218,6 +218,7 @@ input::placeholder { color: var(--gray-400); font-size: .87rem; }
     border: none;
     border-radius: 8px;
     padding: .78rem 1rem;
+    margin-bottom: 1.1rem;
     font-size: .97rem;
     font-family: 'Nunito', sans-serif;
     font-weight: 700;
@@ -259,11 +260,6 @@ input::placeholder { color: var(--gray-400); font-size: .87rem; }
     .card-header { padding: 1.5rem 1.25rem 1.25rem; }
     .card-footer { padding: 1rem 1.25rem 1.25rem; }
 }
-
-
-/* ==============================
-   RGPD PAGE
-   ============================== */
 
 .rgpd-page {
     font-family: 'Nunito Sans', sans-serif;
