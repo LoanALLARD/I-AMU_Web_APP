@@ -258,3 +258,11 @@ CREATE TABLE model_department_accesses (
     CONSTRAINT fk_model_department_accesses_model FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE CASCADE,
     CONSTRAINT fk_model_department_accesses_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE CASCADE
 );
+
+
+INSERT into users (id, email, password_hash, first_name,last_name,consent_version) VALUES (24,'evan@gmail.com','218937801','atherly','evan','v1');
+INSERT into teachers (id,title) VALUES (24,'dev_Evan');
+INSERT into places (id, name, address, city, zip_code) VALUES (2,'IUT Aix','site gaston berger','Aix-en-Pce','101010');
+INSERT into departments(id, place_id,name, description) VALUES (12,2,'departement informatique','departement de dev logiciel');
+INSERT into resources (id,owner_id,department_id,code,name,description,semester) VALUES (1,24,12,'code','dev','ressources pour le dev de l outils','s3');
+INSERT into models (id,department_id,resource_id,name,version,provider,max_tokens,context_window,api_url,adapter)VALUES (1,12,NULL,'llama3.2:1b','V1','meta',100000,128000,'http://localhost:8082/api/generate','ollama');

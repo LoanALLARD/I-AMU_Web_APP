@@ -12,18 +12,30 @@ use Domain\LlmAdaptaterInterface;
 class Ai {
 
 
+    private int $id;
+    private ?int $department_id;
+    private ?int $resource_id;
     private string $name;                   // name of the model
-    private string $infoContextWindow;      // size of the context window of the model  
-    private string $infoSizeOfModel;        // size of the model
-    private string $infoCompagny;           // compagny who delivery the model
+    private string $version;
+    private string $provider;           // compagny who delivery the model
+    private int $max_tokens;
+    private string $context_window;      // size of the context window of the model  
+    private bool $is_active;
+    private bool $is_shareable;
+    // private string $infoSizeOfModel;        // size of the model
     private string $url;                    // address of the api
     private LlmAdaptaterInterface $adaptater;   // type of adaptator
 
-    public function __construct(string $name, string $infoContextWindow ,string $infoSizeOfModel, string $infoCompagny, string $url, LlmAdaptaterInterface $adaptater) {
+    public function __construct(int $id, ?int $department_id, ?int $resource_id,string $name, string $version, string $provider, int $max_tokens, string $context_window, bool $is_active, bool $is_shareable, string $url, LlmAdaptaterInterface $adaptater) {
+        $this->id = $id;
+        $this->department_id = $department_id;
+        $this->resource_id = $resource_id;
         $this->name = $name;
-        $this->infoContextWindow = $infoContextWindow;
-        $this->infoSizeOfModel = $infoSizeOfModel;
-        $this->infoCompagny = $infoCompagny;
+        $this->version = $version;
+        $this->provider = $provider;
+        $this->max_tokens = $max_tokens;
+        $this->context_window = $context_window;
+        // $this->infoSizeOfModel = $infoSizeOfModel;
         $this->url = $url;
         $this->adaptater = $adaptater;
     }

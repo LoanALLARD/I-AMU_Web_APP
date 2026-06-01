@@ -46,7 +46,7 @@ class LLMController{
         }
 
         $modelName = $data['model'];     // "llama3.2:1b"
-        $userMessage = $data['message']; // "c est un test"
+        $userMessage = $data['message']; 
         $context = $data['context'] ?? [];
 
         $pdo = Database::getConnection();
@@ -61,9 +61,9 @@ class LLMController{
             return;
         }
 
-        switch ($aiData["adaptater"]) {
+        switch ($aiData["adapter"]) {
         case "ollama":
-            $adapter = new OllamaAdaptater($aiData["url"],$aiData["name"]);
+            $adapter = new OllamaAdaptater($aiData["api_url"],$aiData["name"]);
             break;
         case "openAi":
             //code block;
@@ -71,13 +71,20 @@ class LLMController{
         default:
             $adapter = null;
         }
-
+        // if ($aiData["resource_id"] == NULL){ $resource = null;}else{$resource = $aiData["resource_id"];} 
+        // if ($aiData["department_id"] == NULL){ $department = null;}else{$department = $aiData["department_id"];} 
         $ai = new Ai (
+            $id = $aiData["id"],
+            $department_id = $aiData["department_id"],
+            $resource_id = $aiData["resource_id"],
             $aiData["name"],
-            $aiData["contextwindows"],
-            $aiData["modelsize"],
-            $aiData["compagny"],
-            $aiData["url"],
+            $aiData["version"],
+            $aiData["provider"],
+            $aiData["max_tokens"],
+            $aiData["context_window"],
+            $aiData["is_active"],
+            $aiData["created_at"],
+            $aiData["api_url"],
             $adapter,
         );
 
