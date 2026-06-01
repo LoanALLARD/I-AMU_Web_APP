@@ -6,6 +6,13 @@ services :
       - "8082:11434"
     volumes : # pour sauvegarder les modeles téléchargés
       - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
     dns:
       - 8.8.8.8
       - 1.1.1.1

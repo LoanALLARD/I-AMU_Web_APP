@@ -39,8 +39,8 @@ class LoginController extends Controller
             $this->render('Page/Auth/login', [
                 'titrePage' => 'Connexion',
                 'error'     => $result['error'],
-                'email'     => $email,
-            ]);
+                'email'     => $email,],
+                'auth');
             return;
         }
 
@@ -55,7 +55,9 @@ class LoginController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('Page/Auth/register', ['titrePage' => 'Inscription'], 'auth');
+        $this->render('Page/Auth/register', [
+            'titrePage' => 'Inscription'],
+         'auth');
     }
 
     public function showRGPD(): void

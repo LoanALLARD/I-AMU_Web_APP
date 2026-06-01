@@ -5,6 +5,10 @@
     <?php unset($_SESSION['_flash']); ?>
 <?php endif; ?>
 
+<?php if (!empty($error)): ?>
+    <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
+<?php endif; ?>
+
 <div class="register-card">
 
     <div class="card-header">

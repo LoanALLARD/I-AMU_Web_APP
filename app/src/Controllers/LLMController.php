@@ -83,7 +83,7 @@ class LLMController{
             $aiData["max_tokens"],
             $aiData["context_window"],
             $aiData["is_active"],
-            $aiData["created_at"],
+            $aiData["is_shareable"],
             $aiData["api_url"],
             $adapter,
         );
