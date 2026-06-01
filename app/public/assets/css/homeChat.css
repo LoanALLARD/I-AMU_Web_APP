@@ -423,27 +423,6 @@ body:has(header:not(.app-topbar)) {
     padding: .1rem .45rem;
     border-radius: 3px;
 }
-
-.btn-compare {
-    display: flex;
-    align-items: center;
-    gap: .4rem;
-    padding: .4rem .75rem;
-    border: 1.5px solid var(--gray-200);
-    border-radius: 6px;
-    background: var(--white);
-    font-family: 'Nunito', sans-serif;
-    font-size: .78rem;
-    font-weight: 600;
-    color: var(--gray-600);
-    cursor: pointer;
-    transition: border-color .15s, color .15s;
-}
-.btn-compare:hover {
-    border-color: var(--blue);
-    color: var(--blue);
-}
-
 .messages {
     flex: 1;
     overflow-y: auto;
