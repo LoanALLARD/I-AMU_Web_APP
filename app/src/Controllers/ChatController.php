@@ -13,6 +13,6 @@ class ChatController extends Controller
         $this->render('Page/homeView', [
             'titrePage' => 'Chat',
             'user'      => $user],
-            'main');
+            'chat');
     }
 }
