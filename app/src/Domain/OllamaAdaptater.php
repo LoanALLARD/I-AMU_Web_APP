@@ -24,10 +24,20 @@ class OllamaAdaptater implements LlmAdaptaterInterface {
         // Code cURL...
         try {
             $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL,"http://i-amu_web_app-ollama2-1:11434/api/generate");
+            curl_setopt($ch, CURLOPT_URL, $this->url);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($payload)
+            ]);
             $response = curl_exec($ch);
+
+            if ($response === false) {
+                throw new \Exception("Erreur cURL : " . curl_error($ch));
+            }
 
             return $response;
 
