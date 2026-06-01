@@ -28,6 +28,8 @@ use Models\AiRepository;
 use Domain\Ai;
 use Domain\OllamaAdaptater;
 use Models\InteractionRepository;
+use Models\UserRepository;
+use Models\ConversationRepository;
 
 class LLMController{
 
@@ -49,16 +51,37 @@ class LLMController{
         $modelName = $data['model'];     // "llama3.2:1b"
         $userMessage = $data['message']; 
         $context = $data['context'] ?? [];
+        $user_email = $data['user_email'] ?? null;
+        $conversation_id = $data['conversation_id'] ?? null;
+
+        if ($user_email == null){
+            throw new \Exception ("Error, wrong email");
+            return;
+        }
 
         $pdo = Database::getConnection();
         $aiRepository = new AiRepository($pdo);
+        $userRepository = new UserRepository($pdo);
 
         $aiData = $aiRepository->getModelByName($modelName);
+        $userData = $userRepository->getUserByEmail($user_email);
+
+        if ($conversation_id == null) {
+            $conversationRepository = new ConversationRepository($pdo);
+            $conversationRepository->newConversation($userData['id'],1,"nouvelle conversation");
+        }
+
 
         if (!$aiData) {
             header('Content-Type: application/json');
             http_response_code(404);
-            echo json_encode(['error' => "Le modèle demandé n'est pas supporté."]);
+            echo json_encode(['error' => "the model is not supported."]);
+            return;
+        }
+        if (!$userData) {
+            header('Content-Type: application/json');
+            http_response_code(404);
+            echo json_encode(['error' => "the user is unknow."]);
             return;
         }
 
@@ -99,8 +122,8 @@ class LLMController{
             $interaction->newInteration($ai->getId(),1,$userMessage,$response->response,200,$output_tokens);
         }
 
-        //header('Content-Type: application/json');
-        // echo json_encode(['response' => $response]);
+        header('Content-Type: application/json');
+        echo json_encode(['response' => $response]);
         
     }
 }

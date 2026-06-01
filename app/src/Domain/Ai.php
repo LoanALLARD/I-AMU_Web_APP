@@ -19,7 +19,7 @@ class Ai {
     private string $version;
     private string $provider;           // compagny who delivery the model
     private int $max_tokens;
-    private string $context_window;      // size of the context window of the model  
+    private int $context_window;      // size of the context window of the model  
     private bool $is_active;
     private bool $is_shareable;
     // private string $infoSizeOfModel;        // size of the model

@@ -11,9 +11,6 @@ class Database{
 
     // Store the single instance
     private static ?PDO $instance = null;    
-    
-    // Database connection object
-    private mysqli $connection;
 
     // Private constructor to prevent direct instantiation
     public static function getConnection(): PDO
@@ -39,11 +36,4 @@ class Database{
         return self::$instance;
     }
 
-    // Function for recover all the information 
-    // in the database about a model with it name
-    // Use in LLMController
-    public function getModelByName(string $name_AI){
-        $query = "SELECT * from models WHERE name=$name_AI";
-        $result=PDO::query($query);
-    }
 }
