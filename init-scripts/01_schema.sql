@@ -72,36 +72,37 @@ CREATE TABLE departments (
     place_id BIGINT NOT NULL,
     name VARCHAR(50) NOT NULL,
     description TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT pk_departments PRIMARY KEY (id),
     CONSTRAINT fk_departments_place FOREIGN KEY (place_id) REFERENCES places (id)
 );
 
 CREATE TABLE researchers (
     id BIGINT,
-    approved_by_id BIGINT NOT NULL,
+    approved_by_id BIGINT,
     laboratory_id BIGINT NOT NULL,
     CONSTRAINT pk_researchers PRIMARY KEY (id),
     CONSTRAINT fk_researchers_user FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT fk_researchers_approved_by FOREIGN KEY (approved_by_id) REFERENCES super_administrators (id),
+    CONSTRAINT fk_researchers_approved_by FOREIGN KEY (approved_by_id) REFERENCES super_administrators (id) ON DELETE SET NULL,
     CONSTRAINT fk_researchers_laboratory FOREIGN KEY (laboratory_id) REFERENCES laboratories (id)
 );
 
 CREATE TABLE department_administrators (
     id BIGINT,
-    invited_by_id BIGINT NOT NULL,
+    invited_by_id BIGINT,
     CONSTRAINT pk_department_administrators PRIMARY KEY (id),
     CONSTRAINT fk_department_administrators_user FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT fk_department_administrators_invited_by FOREIGN KEY (invited_by_id) REFERENCES super_administrators (id)
+    CONSTRAINT fk_department_administrators_invited_by FOREIGN KEY (invited_by_id) REFERENCES super_administrators (id) ON DELETE SET NULL
 );
 
 CREATE TABLE email_domain_configs (
     id BIGSERIAL,
-    added_by_id BIGINT NOT NULL,
+    added_by_id BIGINT,
     domain VARCHAR(50) NOT NULL,
     role domain_role_type NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT pk_email_domain_configs PRIMARY KEY (id),
-    CONSTRAINT fk_email_domain_configs_added_by FOREIGN KEY (added_by_id) REFERENCES super_administrators (id)
+    CONSTRAINT fk_email_domain_configs_added_by FOREIGN KEY (added_by_id) REFERENCES super_administrators (id) ON DELETE SET NULL
 );
 
 CREATE TABLE resources (
@@ -133,7 +134,7 @@ CREATE TABLE models (
     adapter VARCHAR(50) NOT NULL,
     is_shareable BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT pk_models PRIMARY KEY (id),
-    CONSTRAINT fk_models_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_models_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE SET NULL,
     CONSTRAINT fk_models_resource FOREIGN KEY (resource_id) REFERENCES resources (id) ON DELETE RESTRICT,
     CONSTRAINT ck_models_max_tokens CHECK (max_tokens > 0),
     CONSTRAINT ck_models_context_window CHECK (context_window > 0),
@@ -153,7 +154,6 @@ CREATE TABLE sessions (
     ends_at TIMESTAMPTZ,
     closed_at TIMESTAMPTZ,
     access_code CHAR(6),
-    CONSTRAINT ck_sessions_access_code CHECK (access_code ~ '^[A-Z0-9]{6}$'),
     pre_prompt_override TEXT,
     post_prompt_override TEXT,
     max_input_size INTEGER,
@@ -161,6 +161,8 @@ CREATE TABLE sessions (
     type session_type,
     CONSTRAINT pk_sessions PRIMARY KEY (id),
     CONSTRAINT fk_sessions_resource FOREIGN KEY (resource_id) REFERENCES resources (id) ON DELETE RESTRICT,
+    CONSTRAINT uq_sessions_access_code UNIQUE (access_code),
+    CONSTRAINT ck_sessions_access_code CHECK (access_code IS NULL OR access_code ~ '^[A-Z0-9]{6}$'),
     CONSTRAINT ck_sessions_dates CHECK (ends_at IS NULL OR starts_at IS NULL OR ends_at > starts_at),
     CONSTRAINT ck_sessions_closed_at CHECK (closed_at IS NULL OR starts_at IS NULL OR closed_at >= starts_at),
     CONSTRAINT ck_sessions_max_input_size CHECK (max_input_size IS NULL OR max_input_size > 0)
@@ -219,7 +221,7 @@ CREATE TABLE session_models (
     session_id BIGINT,
     CONSTRAINT pk_session_models PRIMARY KEY (model_id, session_id),
     CONSTRAINT fk_session_models_model FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE CASCADE,
-    CONSTRAINT fk_session_models_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE
+    CONSTRAINT fk_session_models_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE RESTRICT
 );
 
 CREATE TABLE department_administrator_assignments (
@@ -237,7 +239,7 @@ CREATE TABLE enrollments (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT pk_enrollments PRIMARY KEY (student_id, session_id),
     CONSTRAINT fk_enrollments_student FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE,
-    CONSTRAINT fk_enrollments_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE
+    CONSTRAINT fk_enrollments_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE RESTRICT
 );
 
 CREATE TABLE researcher_authorizations (
