@@ -5,8 +5,6 @@
     <?php unset($_SESSION['_flash']); ?>
 <?php endif; ?>
 
-<body>
-
 <div class="register-card">
 
     <div class="card-header">
@@ -81,4 +79,3 @@
     </div>
 
 </div>
-</body>

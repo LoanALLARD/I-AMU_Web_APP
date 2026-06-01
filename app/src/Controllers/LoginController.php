@@ -82,9 +82,8 @@ class LoginController extends Controller
         if (!$result['success']) {
             $this->render('auth/register', [
                 'titrePage' => 'Inscription',
-                'error'     => $result['error'],
-                'data'      => $data,
-            ]);
+                'error'=> $result['error'], 'data'=> $data,],
+                'auth');
             return;
         }
 
