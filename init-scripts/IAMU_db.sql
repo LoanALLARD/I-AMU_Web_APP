@@ -60,13 +60,11 @@ CREATE TABLE students (
 
 CREATE TABLE places (
     id BIGSERIAL,
-    created_by_id BIGINT NOT NULL,
     name VARCHAR(255) NOT NULL,
     address VARCHAR(100),
     city VARCHAR(50),
     zip_code VARCHAR(10),
-    CONSTRAINT pk_places PRIMARY KEY (id),
-    CONSTRAINT fk_places_created_by FOREIGN KEY (created_by_id) REFERENCES super_administrators (id)
+    CONSTRAINT pk_places PRIMARY KEY (id)
 );
 
 CREATE TABLE departments (
