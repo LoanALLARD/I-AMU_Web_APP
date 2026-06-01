@@ -8,8 +8,6 @@ class ChatController extends Controller
 {
     public function index(): void
     {
-        $this->requireAuth();
-
         $user = $this->currentUser();
 
         $this->render('Page/homeView', [
