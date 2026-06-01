@@ -1,0 +1,73 @@
+body:has(header) {
+    display: block;
+    align-items: initial;
+    justify-content: initial;
+    padding: 0;
+    background: var(--gray-100);
+}
+
+header {
+    background: var(--white);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+nav {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: .75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+nav a {
+    font-family: 'Nunito', sans-serif;
+    font-size: .9rem;
+    font-weight: 700;
+    color: var(--gray-600);
+    text-decoration: none;
+    padding: .4rem .75rem;
+    border-radius: 6px;
+    transition: color .18s, background .18s;
+}
+nav a:hover {
+    color: var(--blue);
+    background: var(--blue-light);
+}
+nav a:last-child {
+    margin-left: auto;
+    background: var(--blue);
+    color: var(--white);
+    padding: .45rem 1.1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(26,115,200,.25);
+}
+nav a:last-child:hover {
+    background: var(--blue-dark);
+}
+
+hr { display: none; }
+main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+    min-height: calc(100vh - 140px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+footer {
+    background: var(--gray-800);
+    text-align: center;
+    padding: 1.25rem 1.5rem;
+}
+footer p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .72rem;
+    color: var(--gray-400);
+    margin: 0;
+}

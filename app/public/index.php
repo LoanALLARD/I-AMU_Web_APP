@@ -7,21 +7,17 @@
 
     session_start();
     use Core\Router;
-    use Controllers\AccueilController;
     use Controllers\LLMController;
     use Controllers\LoginController;
+    use Controllers\ChatController;
 
-    // routeur 
+
+// routeur
     $router = new Router();
 
     $router->add('GET','/',function(){
-        $controller = new AccueilController();
-        $controller->index();
-    });
-
-    $router->add('GET','/accueil',function(){
-        $controller = new AccueilController();
-        $controller->index();
+        header('Location: /login');
+        exit;
     });
 
     //L'api doit prendre la forme suivante pour envoyer un prompt 
@@ -82,6 +78,11 @@
     $router->add('GET','/RGPDConsent',function(){
         $controller = new  LoginController();
         $controller->showRGPD();
+    });
+
+    $router->add('GET', '/chat', function() {
+        $controller = new ChatController();
+        $controller->index();
     });
 
     $router->compare($uri, $method);

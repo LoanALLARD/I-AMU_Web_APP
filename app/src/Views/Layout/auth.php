@@ -8,27 +8,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&family=Nunito+Sans:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/style.css">
-    <link rel="stylesheet" href="/assets/css/layoutMain.css">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
-</head>
 <body>
-    <header>
-        <nav>
-            <?php if (isset($_SESSION['token'])): ?>
-                <a href="/logout">Déconnexion</a>
-            <?php else: ?>
-                <a href="/login">Connexion</a>
-                <a href="/register">Inscription</a>
-            <?php endif; ?>
-        </nav>
-    </header>
-    <hr>s
     <main>
         <?= $content ?>
     </main>
-    <hr>
-    <footer>
-        <p>&copy; 2026 - Plateforme IAMU</p>
-    </footer>
 </body>
 </html>

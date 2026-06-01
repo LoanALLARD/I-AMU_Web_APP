@@ -5,8 +5,6 @@
     <?php unset($_SESSION['_flash']); ?>
 <?php endif; ?>
 
-<body>
-
 <div class="register-card">
 
     <div class="card-header">
@@ -60,7 +58,7 @@
 
             <div class="rgpd-group">
                 <input type="checkbox" id="rgpd_consent" name="rgpd_consent" value="1" required>
-                <label for="rgpd_consent" class="rgpd-label" style="text-transform:none;letter-spacing:0;font-weight:400;">
+                <label for="rgpd_consent" class="rgpd-label">
                     J'accepte le traitement de mes données personnelles dans le cadre
                     de la recherche scientifique sur l'usage de l'IA.
                     <a href="/RGPDConsent" target="_blank">En savoir plus</a>
@@ -81,4 +79,3 @@
     </div>
 
 </div>
-</body>
