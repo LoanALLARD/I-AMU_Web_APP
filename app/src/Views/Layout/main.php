@@ -23,8 +23,10 @@
             <?php endif; ?>
         </nav>
     </header>
-    <hr>
-
+    <hr>s
+    <main>
+        <?= $content ?>
+    </main>
     <hr>
     <footer>
         <p>&copy; 2026 - Plateforme IAMU</p>
