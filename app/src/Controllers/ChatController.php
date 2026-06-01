@@ -10,7 +10,7 @@ class ChatController extends Controller
     {
         $user = $this->currentUser();
 
-        $this->render('homeView', [
+        $this->render('Page/homeView', [
             'titrePage' => 'Chat',
             'user'      => $user,
         ], 'chat');
