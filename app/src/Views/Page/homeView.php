@@ -1,144 +1,69 @@
-<aside class="sidebar" id="sidebar">
+<?php
+/**
+ * Chat page content. The sidebar + topbar shell is provided by
+ * Layout/chat.php; this view only owns the model bar, message list,
+ * composer and the chat-specific scripts.
+ *
+ * @var array $user  currentUser() snapshot (id, email, first_name, last_name, roles)
+ */
+?>
+<div class="chat-container">
+    <div class="chat-area">
 
-    <div class="sidebar-header">
-        <div class="sidebar-logo">
-            <img src="/assets/img/logo.png" alt="I-AMU">
-            <div class="sidebar-logo-text">
-                <strong>I-AMU</strong>
-                <span><?= htmlspecialchars($user['roles'][0] ?? 'étudiant') ?></span>
+        <div class="model-bar">
+            <div class="model-tags">
+                <button class="model-tag active" data-model="mistral:latest">
+                    <span class="model-tag-letter">A</span>
+                    <span class="model-tag-name">mistral:latest</span>
+                    <span class="model-tag-badge">local · ollama</span>
+                </button>
             </div>
         </div>
-        <button class="sidebar-close" id="sidebarClose" aria-label="Fermer">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-    </div>
 
-    <button class="btn-new-chat" id="btnNewChat">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        nouvelle conversation
-    </button>
+        <div class="messages" id="messages">
 
-    <div class="sidebar-search">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="rechercher" id="searchConv">
-    </div>
-
-    <div class="sidebar-conversations" id="convList">
-        <div class="conv-group">
-            <span class="conv-group-label">Aujourd'hui</span>
-        </div>
-    </div>
-
-    <div class="sidebar-footer">
-        <a href="/profile" class="sidebar-footer-link">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Mon profil
-        </a>
-        <a href="/logout" class="sidebar-footer-link sidebar-logout">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Déconnexion
-        </a>
-    </div>
-
-</aside>
-
-<div class="app-main">
-
-    <header class="app-topbar">
-        <button class="topbar-burger" id="burgerBtn" aria-label="Menu">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
-
-        <div class="topbar-breadcrumb">
-            <span class="topbar-mode">libre</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-            <span class="topbar-conv-name" id="convName">Nouvelle conversation</span>
-        </div>
-
-        <?php $isTeacher = in_array('teacher', $user['roles'] ?? [], true); ?>
-        <div class="topbar-tabs">
-            <a href="/chat" class="topbar-tab active">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                Chat
-            </a>
-            <?php if ($isTeacher): ?>
-                <a href="/sessions" class="topbar-tab">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                    Mes sessions
-                </a>
-            <?php endif; ?>
-        </div>
-
-        <div class="topbar-right">
-            <a href="/profile" class="topbar-user-avatar" title="<?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?: 'Mon profil') ?>">
-                <?= strtoupper(mb_substr($user['first_name'] ?? '', 0, 1) . mb_substr($user['last_name'] ?? '', 0, 1)) ?>
-            </a>
-        </div>
-    </header>
-
-    <div class="chat-container">
-        <div class="chat-area">
-
-            <div class="model-bar">
-                <div class="model-tags">
-                    <button class="model-tag active" data-model="mistral:latest">
-                        <span class="model-tag-letter">A</span>
-                        <span class="model-tag-name">mistral:latest</span>
-                        <span class="model-tag-badge">local · ollama</span>
-                    </button>
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
                 </div>
-            </div>
-
-            <div class="messages" id="messages">
-
-                <div class="empty-state" id="emptyState">
-                    <div class="empty-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    </div>
-                    <h2>Bonjour <?= htmlspecialchars($user['first_name'] ?? '') ?> !</h2>
-                    <p>Posez une question à l'IA ou sélectionnez un modèle pour commencer.</p>
-                    <div class="empty-suggestions">
-                        <button class="suggestion-chip" onclick="fillPrompt(this)">Explique-moi les pointeurs en C</button>
-                        <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en Python</button>
-                        <button class="suggestion-chip" onclick="fillPrompt(this)">Qu'est-ce que le pattern MVC ?</button>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="input-bar">
-                <div class="input-wrapper">
-                    <textarea
-                            id="promptInput"
-                            placeholder="Écrivez votre message…"
-                            rows="1"
-                            autofocus
-                    ></textarea>
-                    <button class="btn-send" id="btnSend" disabled title="Envoyer">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    </button>
-                </div>
-                <div class="input-footer">
-                    <span class="input-hint">Entrée pour envoyer · Maj+Entrée pour un retour à la ligne</span>
-                    <span class="input-counter" id="charCounter">0 car.</span>
+                <h2>Bonjour <?= htmlspecialchars($user['first_name'] ?? '') ?> !</h2>
+                <p>Posez une question à l'IA ou sélectionnez un modèle pour commencer.</p>
+                <div class="empty-suggestions">
+                    <button class="suggestion-chip" onclick="fillPrompt(this)">Explique-moi les pointeurs en C</button>
+                    <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en Python</button>
+                    <button class="suggestion-chip" onclick="fillPrompt(this)">Qu'est-ce que le pattern MVC ?</button>
                 </div>
             </div>
 
         </div>
-    </div>
 
+        <div class="input-bar">
+            <div class="input-wrapper">
+                <textarea id="promptInput" placeholder="Écrivez votre message…" rows="1" autofocus></textarea>
+                <button class="btn-send" id="btnSend" disabled title="Envoyer">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                </button>
+            </div>
+            <div class="input-footer">
+                <span class="input-hint">Entrée pour envoyer · Maj+Entrée pour un retour à la ligne</span>
+                <span class="input-counter" id="charCounter">0 car.</span>
+            </div>
+        </div>
+
+    </div>
 </div>
 
 <script>
-    const input      = document.getElementById('promptInput');
-    const sendBtn    = document.getElementById('btnSend');
-    const counter    = document.getElementById('charCounter');
-    const sidebar    = document.getElementById('sidebar');
-    const burgerBtn  = document.getElementById('burgerBtn');
-    const sideClose  = document.getElementById('sidebarClose');
-
-    burgerBtn?.addEventListener('click', () => sidebar.classList.add('open'));
-    sideClose?.addEventListener('click', () => sidebar.classList.remove('open'));
+    const input = document.getElementById('promptInput');
+    const sendBtn = document.getElementById('btnSend');
+    const counter = document.getElementById('charCounter');
 
     input?.addEventListener('input', () => {
         input.style.height = 'auto';
@@ -235,7 +160,6 @@
     function copyMsg(btn) {
         const text = btn.closest('.msg').querySelector('.msg-content').textContent;
         navigator.clipboard.writeText(text);
-        const label = btn.querySelector('svg').nextSibling;
         const original = btn.innerHTML;
         btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> copié`;
         setTimeout(() => btn.innerHTML = original, 1500);

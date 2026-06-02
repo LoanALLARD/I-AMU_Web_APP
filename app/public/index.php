@@ -74,16 +74,18 @@ $sessionController = new SessionController(
     getDashboard:    $getDashboard,
 );
 
-// Profile page — surfaces account info and acts as the only exit point
-// for /logout (the navbar's user pill lands here instead of logging out).
+// Profile page — surfaces account info and acts as the exit point for
+// /logout. Renders inside Layout/chat.php (the universal authenticated
+// shell), so the sidebar + topbar wrap the profile cards uniformly.
 $profileController = new class extends Controller {
     public function show(): void
     {
         $this->requireAuth();
         $this->render('pages/profile/index', [
-            'title' => 'Mon profil',
-            'user'  => $this->currentUser(),
-        ]);
+            'page'      => 'profile',
+            'pageTitle' => 'Mon profil',
+            'user'      => $this->currentUser(),
+        ], 'chat');
     }
 };
 

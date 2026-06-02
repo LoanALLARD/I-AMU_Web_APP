@@ -1,10 +1,25 @@
 /* =====================================================================
    I-AMU — Sessions, profile and dashboard styles
 
-   Composed on top of style.css (palette + auth pages tokens) and
-   layoutMain.css (header/nav). Owns the page-level rules unique to
-   /sessions/*, /profile and /chat surfaces.
+   Composed on top of style.css (palette tokens) and homeChat.css
+   (the universal authenticated shell: sidebar + topbar). Owns the
+   page-level rules unique to /sessions/* and /profile when they
+   render inside Layout/chat.php's <main class="app-content">.
    ===================================================================== */
+
+/* ── Authenticated content area (sibling of .app-topbar) ──────────── */
+
+.app-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    background: var(--gray-100);
+}
+
+/* When the page-header / page-body are rendered through the shell,
+   they get cosier vertical padding to match the auth-pages density. */
+.app-content .page-header { padding-top: 24px; padding-bottom: 18px; }
+.app-content .page-body { padding-top: 20px; padding-bottom: 32px; }
 
 /* ── Page chrome ──────────────────────────────────────────────────── */
 

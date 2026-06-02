@@ -54,9 +54,22 @@ final class SessionController extends Controller
     ) {
     }
 
-    // Session pages use the shared 'main' layout (style.css +
-    // layoutMain.css + sessions.css) — the standalone 'app' layout
-    // was retired in favour of the ServeurFolder presentation.
+    /**
+     * Every session page renders inside Layout/chat.php (the universal
+     * authenticated shell: sidebar + topbar). The override injects the
+     * variables that shell expects (page flag + current user + page
+     * title for the topbar breadcrumb) without forcing every action to
+     * repeat them.
+     *
+     * @param array<string, mixed> $data
+     */
+    protected function render(string $template, array $data = [], string $layout = 'chat'): void
+    {
+        $data['page']      ??= 'sessions';
+        $data['user']      ??= $this->currentUser();
+        $data['pageTitle'] ??= ($data['title'] ?? '');
+        parent::render($template, $data, $layout);
+    }
 
     /**
      * GET /sessions — teacher's list.
