@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Application\Services;
 
 use App\Application\DTOs\CreateSessionRequest;
-use App\Application\Ports\ClockInterface;
 use App\Domain\Entities\Session;
 use App\Domain\Repositories\SessionRepositoryInterface;
 use App\Domain\ValueObjects\AccessCode;
@@ -30,7 +29,6 @@ final class CreateSessionService
 {
     public function __construct(
         private readonly SessionRepositoryInterface $sessions,
-        private readonly ClockInterface $clock,
     ) {
     }
 

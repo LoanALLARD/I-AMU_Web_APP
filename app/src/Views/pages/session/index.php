@@ -11,6 +11,7 @@
     <p class="page-sub">Créez une session de cours ou d'examen, puis donnez le code d'accès à vos étudiants.</p>
 </div>
 
+<div class="page-body">
 <div class="session-toolbar">
     <span class="grow"></span>
     <a href="/sessions/create" class="btn primary">
@@ -131,3 +132,4 @@
         <?php endforeach; ?>
     </div>
 <?php endif; ?>
+</div><!-- /.page-body -->

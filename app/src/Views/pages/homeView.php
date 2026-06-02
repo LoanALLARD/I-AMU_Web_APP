@@ -4,8 +4,12 @@
  * Layout/chat.php; this view only owns the model bar, message list,
  * composer and the chat-specific scripts.
  *
- * @var array $user  currentUser() snapshot (id, email, first_name, last_name, roles)
+ * @var array  $user           currentUser() snapshot (id, email, first_name, last_name, roles)
+ * @var bool   $sessionClosed  true when the linked session is over (read-only chat)
+ * @var string $closedReason   why the session is closed (ended / cancelled)
  */
+$sessionClosed = $sessionClosed ?? false;
+$closedReason  = $closedReason ?? '';
 ?>
 <div class="chat-container">
     <div class="chat-area">
@@ -29,20 +33,48 @@
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
                 </div>
-                <h2>Bonjour <?= htmlspecialchars($user['first_name'] ?? '') ?> !</h2>
-                <p>Posez une question à l'IA ou sélectionnez un modèle pour commencer.</p>
-                <div class="empty-suggestions">
-                    <button class="suggestion-chip" onclick="fillPrompt(this)">Explique-moi les pointeurs en C</button>
-                    <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en Python</button>
-                    <button class="suggestion-chip" onclick="fillPrompt(this)">Qu'est-ce que le pattern MVC ?</button>
-                </div>
+<?php if ($sessionClosed): ?>
+                    <h2>Session terminée</h2>
+                    <p><?= htmlspecialchars($closedReason) ?> Cette conversation est en lecture seule.</p>
+                <?php else: ?>
+                    <h2>Bonjour <?= htmlspecialchars($user['first_name'] ?? '') ?> !</h2>
+                    <p>Posez une question à l'IA ou sélectionnez un modèle pour commencer.</p>
+                    <div class="empty-suggestions">
+                        <button class="suggestion-chip" onclick="fillPrompt(this)">Explique-moi les pointeurs en C</button>
+                        <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en Python</button>
+                        <button class="suggestion-chip" onclick="fillPrompt(this)">Qu'est-ce que le pattern MVC ?</button>
+                    </div>
+                    <?php if (in_array('student', $user['roles'] ?? [], true)): ?>
+                        <a href="/sessions/join" class="empty-join-link">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                                <polyline points="10 17 15 12 10 7" />
+                                <line x1="15" y1="12" x2="3" y2="12" />
+                            </svg>
+                            Rejoindre une session avec un code
+                        </a>
+                    <?php endif; ?>
+                <?php endif; ?>
             </div>
 
         </div>
 
         <div class="input-bar">
+            <?php if ($sessionClosed): ?>
+                <div class="session-closed-banner">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <?= htmlspecialchars($closedReason) ?> Vous ne pouvez plus envoyer de message.
+                </div>
+            <?php endif; ?>
             <div class="input-wrapper">
-                <textarea id="promptInput" placeholder="Écrivez votre message…" rows="1" autofocus></textarea>
+                <textarea id="promptInput"
+                    placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
+                    rows="1" <?= $sessionClosed ? 'disabled' : 'autofocus' ?>></textarea>
                 <button class="btn-send" id="btnSend" disabled title="Envoyer">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -90,6 +122,7 @@
     }
 
     async function sendMessage() {
+        if (input.disabled) return;
         const message = input.value.trim();
         if (!message) return;
 

@@ -3,7 +3,7 @@
 
 BEGIN;
 
-SELECT plan(18);
+SELECT plan(19);
 
 -- ============================================================
 -- Fixtures
@@ -210,6 +210,23 @@ SELECT is(
     (SELECT added_by_id FROM email_domain_configs WHERE id = 99),
     NULL,
     'Deleting super_admin sets email_domain_configs.added_by_id to NULL'
+);
+
+-- ============================================================
+-- SET NULL: users.department_id is cleared when its department is deleted
+-- ============================================================
+
+INSERT INTO places (id, name) VALUES (2, 'Campus 2');
+INSERT INTO departments (id, place_id, name) VALUES (2, 2, 'Maths');
+INSERT INTO users (id, department_id, email, password_hash)
+    VALUES (60, 2, 'member@univ-amu.fr', 'h');
+
+DELETE FROM departments WHERE id = 2;
+
+SELECT is(
+    (SELECT department_id FROM users WHERE id = 60),
+    NULL,
+    'Deleting a department sets users.department_id to NULL'
 );
 
 -- ============================================================

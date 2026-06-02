@@ -146,14 +146,15 @@ focused and its context clean:
 
 ## 12. DB schema in brief
 
-Main tables (see `database/schema.sql` once the project is re-imported into `dev`):
+Main tables (see [`database/schema/01_schema.sql`](../database/schema/01_schema.sql)):
 
-- `"user"`, `student`, `teacher`, `researcher`, `administrator` (vertical inheritance for roles).
-- `session` (with `status` enum), `authorizes` (session ↔ model).
-- `conversation` (with `submitted_at`), `interaction` (with `teacher_flag`, `teacher_flag_reason`, `teacher_comment`).
-- `model` (the LLMs).
-- `password_reset` (tokens, 1h TTL).
-- Association tables: `accesses`, `teaches_in`, `managed_by`, `is_affiliated_with`, `administers`, `belongs_to`.
+- `users` — base account. Holds `department_id` (nullable FK to `departments`, `ON DELETE SET NULL`): a user belongs to at most one department. Researchers stay NULL (a researcher is a user but is not attached to a department).
+- `students`, `teachers`, `researchers`, `department_administrators` — vertical inheritance for roles (PK = `users.id`, `ON DELETE CASCADE`). Exclusivity enforced by `enforce_role_exclusivity()` (see [`02_triggers.sql`](../database/schema/02_triggers.sql)): `student` and `researcher` are exclusive; `teacher` + `department_administrator` may coexist.
+- `places`, `departments`, `laboratories`, `super_administrators`.
+- `sessions` (with `status` enum), `resources`, `models` (the LLMs, scoped to a department XOR a resource).
+- `conversations`, `interactions`.
+- `email_domain_configs` (domain → auto-role mapping).
+- Association tables: `teacher_resources`, `student_resources`, `session_models`, `enrollments`, `researcher_authorizations` (researcher ↔ department), `model_department_accesses`.
 
 ## 13. Handling an uncovered case
 
