@@ -15,22 +15,23 @@ INSERT INTO laboratories (code, name, address, email) VALUES
 INSERT INTO super_administrators (email, password_hash, first_name, last_name) VALUES
     ('admin@univ-amu.fr', 'CHANGE_ME', 'Admin', 'Principal');
 
-INSERT INTO users (email, password_hash, first_name, last_name, is_active, theme) VALUES
-    ('jean.martin@univ-amu.fr',       'CHANGE_ME', 'Jean',     'Martin',    TRUE, 'LIGHT'),
-    ('marie.dupont@univ-amu.fr',      'CHANGE_ME', 'Marie',    'Dupont',    TRUE, 'DARK'),
-    ('paul.bernard@univ-amu.fr',      'CHANGE_ME', 'Paul',     'Bernard',   TRUE, 'LIGHT'),
-    ('sophie.leroy@univ-amu.fr',      'CHANGE_ME', 'Sophie',   'Leroy',     TRUE, 'LIGHT'),
-    ('luc.moreau@univ-amu.fr',        'CHANGE_ME', 'Luc',      'Moreau',    TRUE, 'DARK'),
-    ('claire.petit@univ-amu.fr',      'CHANGE_ME', 'Claire',   'Petit',     TRUE, 'LIGHT'),
-    ('alice.durand@etu.univ-amu.fr',  'CHANGE_ME', 'Alice',    'Durand',    TRUE, 'LIGHT'),
-    ('thomas.roux@etu.univ-amu.fr',   'CHANGE_ME', 'Thomas',   'Roux',      TRUE, 'DARK'),
-    ('emma.blanc@etu.univ-amu.fr',    'CHANGE_ME', 'Emma',     'Blanc',     TRUE, 'LIGHT'),
-    ('hugo.noir@etu.univ-amu.fr',     'CHANGE_ME', 'Hugo',     'Noir',      TRUE, 'LIGHT'),
-    ('lea.vert@etu.univ-amu.fr',      'CHANGE_ME', 'Lea',      'Vert',      TRUE, 'DARK'),
-    ('nathan.gris@etu.univ-amu.fr',   'CHANGE_ME', 'Nathan',   'Gris',      TRUE, 'LIGHT'),
-    ('chercheur1@univ-amu.fr',        'CHANGE_ME', 'Pierre',   'Curie',     TRUE, 'LIGHT'),
-    ('chercheur2@univ-amu.fr',        'CHANGE_ME', 'Henri',    'Poincare',  TRUE, 'DARK'),
-    ('orphan@univ-amu.fr',            'CHANGE_ME', 'Sans',     'Role',      TRUE, NULL);
+
+INSERT INTO users (department_id, email, password_hash, first_name, last_name, is_active, theme) VALUES
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'jean.martin@univ-amu.fr',       'CHANGE_ME', 'Jean',     'Martin',    TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'marie.dupont@univ-amu.fr',      'CHANGE_ME', 'Marie',    'Dupont',    TRUE, 'DARK'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'paul.bernard@univ-amu.fr',      'CHANGE_ME', 'Paul',     'Bernard',   TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'sophie.leroy@univ-amu.fr',      'CHANGE_ME', 'Sophie',   'Leroy',     TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'luc.moreau@univ-amu.fr',        'CHANGE_ME', 'Luc',      'Moreau',    TRUE, 'DARK'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'claire.petit@univ-amu.fr',      'CHANGE_ME', 'Claire',   'Petit',     TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'alice.durand@etu.univ-amu.fr',  'CHANGE_ME', 'Alice',    'Durand',    TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'thomas.roux@etu.univ-amu.fr',   'CHANGE_ME', 'Thomas',   'Roux',      TRUE, 'DARK'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'emma.blanc@etu.univ-amu.fr',    'CHANGE_ME', 'Emma',     'Blanc',     TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'hugo.noir@etu.univ-amu.fr',     'CHANGE_ME', 'Hugo',     'Noir',      TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'lea.vert@etu.univ-amu.fr',      'CHANGE_ME', 'Lea',      'Vert',      TRUE, 'DARK'),
+    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'nathan.gris@etu.univ-amu.fr',   'CHANGE_ME', 'Nathan',   'Gris',      TRUE, 'LIGHT'),
+    (NULL,                                                       'chercheur1@univ-amu.fr',        'CHANGE_ME', 'Pierre',   'Curie',     TRUE, 'LIGHT'),
+    (NULL,                                                       'chercheur2@univ-amu.fr',        'CHANGE_ME', 'Henri',    'Poincare',  TRUE, 'DARK'),
+    (NULL,                                                       'orphan@univ-amu.fr',            'CHANGE_ME', 'Sans',     'Role',      TRUE, NULL);
 
 INSERT INTO teachers (id, is_specialised, title) VALUES
     ((SELECT id FROM users WHERE email = 'jean.martin@univ-amu.fr'),  TRUE,  'Professeur'),
@@ -45,12 +46,6 @@ INSERT INTO department_administrators (id, invited_by_id) VALUES
      (SELECT id FROM super_administrators WHERE email = 'admin@univ-amu.fr')),
     ((SELECT id FROM users WHERE email = 'sophie.leroy@univ-amu.fr'),
      (SELECT id FROM super_administrators WHERE email = 'admin@univ-amu.fr'));
-
-INSERT INTO department_administrator_assignments (department_id, administrator_id) VALUES
-    ((SELECT id FROM departments WHERE name = 'Informatique'),
-     (SELECT id FROM users WHERE email = 'jean.martin@univ-amu.fr')),
-    ((SELECT id FROM departments WHERE name = 'Mathematiques'),
-     (SELECT id FROM users WHERE email = 'sophie.leroy@univ-amu.fr'));
 
 INSERT INTO students (id, student_number, year) VALUES
     ((SELECT id FROM users WHERE email = 'alice.durand@etu.univ-amu.fr'),  '21900001', 2),
@@ -298,15 +293,16 @@ INSERT INTO interactions (conversation_id, prompt, response,
      'Avec plaisir.',
      150, 3, 15, NULL);
 
-INSERT INTO users (email, password_hash, first_name, last_name, consent_version) VALUES
-    ('evan@gmail.com', '218937801', 'atherly', 'evan', 'v1');
-INSERT INTO teachers (id, title) VALUES
-    ((SELECT id FROM users WHERE email = 'evan@gmail.com'), 'dev_Evan');
 INSERT INTO places (name, address, city, zip_code) VALUES
     ('IUT Aix', 'site gaston berger', 'Aix-en-Pce', '101010');
 INSERT INTO departments (place_id, name, description) VALUES
     ((SELECT id FROM places WHERE name = 'IUT Aix'),
      'departement informatique', 'departement de dev logiciel');
+INSERT INTO users (department_id, email, password_hash, first_name, last_name, consent_version) VALUES
+    ((SELECT id FROM departments WHERE name = 'departement informatique'),
+     'evan@gmail.com', '218937801', 'atherly', 'evan', 'v1');
+INSERT INTO teachers (id, title) VALUES
+    ((SELECT id FROM users WHERE email = 'evan@gmail.com'), 'dev_Evan');
 INSERT INTO resources (owner_id, department_id, code, name, description, semester) VALUES
     ((SELECT id FROM users WHERE email = 'evan@gmail.com'),
      (SELECT id FROM departments WHERE name = 'departement informatique'),

@@ -4,8 +4,28 @@ CREATE TYPE domain_role_type AS ENUM ('STUDENT', 'TEACHER');
 CREATE TYPE session_type AS ENUM ('EXAM', 'TUTORIAL', 'LAB', 'FREE_STUDY');
 CREATE TYPE session_status_type AS ENUM ('DRAFT', 'SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED');
 
+CREATE TABLE places (
+    id BIGSERIAL,
+    name VARCHAR(255) NOT NULL,
+    address VARCHAR(100),
+    city VARCHAR(50),
+    zip_code VARCHAR(10),
+    CONSTRAINT pk_places PRIMARY KEY (id)
+);
+
+CREATE TABLE departments (
+    id BIGSERIAL,
+    place_id BIGINT NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    CONSTRAINT pk_departments PRIMARY KEY (id),
+    CONSTRAINT fk_departments_place FOREIGN KEY (place_id) REFERENCES places (id)
+);
+
 CREATE TABLE users (
     id BIGSERIAL,
+    department_id BIGINT,
     email VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     first_name VARCHAR(50),
@@ -20,6 +40,7 @@ CREATE TABLE users (
     email_verified_at TIMESTAMPTZ,
     email_verify_token VARCHAR(255),
     CONSTRAINT pk_users PRIMARY KEY (id),
+    CONSTRAINT fk_users_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE SET NULL,
     CONSTRAINT uq_users_email UNIQUE (email),
     CONSTRAINT uq_users_email_verify_token UNIQUE (email_verify_token),
     CONSTRAINT ck_users_archive_duration_days CHECK (archive_duration_days IS NULL OR archive_duration_days > 0)
@@ -62,25 +83,6 @@ CREATE TABLE students (
     CONSTRAINT pk_students PRIMARY KEY (id),
     CONSTRAINT fk_students_user FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT ck_students_year CHECK (year IS NULL OR year > 0)
-);
-
-CREATE TABLE places (
-    id BIGSERIAL,
-    name VARCHAR(255) NOT NULL,
-    address VARCHAR(100),
-    city VARCHAR(50),
-    zip_code VARCHAR(10),
-    CONSTRAINT pk_places PRIMARY KEY (id)
-);
-
-CREATE TABLE departments (
-    id BIGSERIAL,
-    place_id BIGINT NOT NULL,
-    name VARCHAR(50) NOT NULL,
-    description TEXT,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT pk_departments PRIMARY KEY (id),
-    CONSTRAINT fk_departments_place FOREIGN KEY (place_id) REFERENCES places (id)
 );
 
 CREATE TABLE researchers (
@@ -229,14 +231,6 @@ CREATE TABLE session_models (
     CONSTRAINT pk_session_models PRIMARY KEY (model_id, session_id),
     CONSTRAINT fk_session_models_model FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE CASCADE,
     CONSTRAINT fk_session_models_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE RESTRICT
-);
-
-CREATE TABLE department_administrator_assignments (
-    department_id BIGINT,
-    administrator_id BIGINT,
-    CONSTRAINT pk_department_administrator_assignments PRIMARY KEY (department_id, administrator_id),
-    CONSTRAINT fk_department_administrator_assignments_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE CASCADE,
-    CONSTRAINT fk_department_administrator_assignments_administrator FOREIGN KEY (administrator_id) REFERENCES department_administrators (id) ON DELETE CASCADE
 );
 
 CREATE TABLE enrollments (
