@@ -89,7 +89,7 @@ class LoginController extends Controller
             return;
         }
 
-        $this->flash('success', 'Inscription reussie!');
+        $this->flash('success', 'Inscription reussie, un mail de vérification a été envoyé');
         $this->redirect('/login');
     }
 
@@ -101,4 +101,18 @@ class LoginController extends Controller
         $this->authService->logout();
         $this->redirect('/login');
     }
+    public function verify(): void
+    {
+        $token = $_GET['token'] ?? '';
+        $result = $this->authService->verifyEmail($token);
+
+        if ($result['success']) {
+            $this->flash('success', 'Addresse e-mail a été vérifiée !');
+        } else {
+            $this->flash('error', $result['error']);
+        }
+
+        $this->redirect('/login');
+    }
+
 }

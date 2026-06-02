@@ -40,6 +40,12 @@ services :
     depends_on:
       - db
 
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web Interface
+      -
   php-app:
     build: ./app
     ports:
@@ -89,3 +95,4 @@ services :
 volumes:
   ollama_data:
   db_data:
+
