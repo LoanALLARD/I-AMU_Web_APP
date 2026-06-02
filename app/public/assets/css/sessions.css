@@ -7,13 +7,138 @@
    render inside Layout/chat.php's <main class="app-content">.
    ===================================================================== */
 
+/* ── Universal authenticated shell ─────────────────────────────────
+ *
+ * Layout structure (overrides the older horizontal-only flex from
+ * homeChat.css to keep the brand permanently aligned with the topbar):
+ *
+ *   <body class="app-body page-X">           column flex, 100vh
+ *     <header class="app-topbar">            full-width row, 54px
+ *       <a class="topbar-brand">             logo + I-AMU + role
+ *       ... burger / breadcrumb / tabs / avatar ...
+ *     <div class="app-body-row">             row flex, fills remaining
+ *       <aside class="sidebar">              260px, only on /chat
+ *       <div class="app-main">               flex:1
+ *         <div class="app-content">          page body
+ */
+
+.app-body {
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    height: 100vh;
+}
+
+.app-body-row {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+}
+
+/* Sidebar lives inside the row, so it no longer needs its own 100vh
+   nor sticky positioning. */
+.app-body-row > .sidebar {
+    height: auto;
+    position: relative;
+    top: auto;
+}
+
+/* Same for the main column — it's the row's flex child. */
+.app-body-row > .app-main {
+    height: auto;
+}
+
+/* Brand block in the topbar — replaces the former .sidebar-header. */
+.topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    width: 260px;
+    flex-shrink: 0;
+    height: 100%;
+    padding-left: 1.25rem;
+    padding-right: 1rem;
+    margin-left: -1.25rem;           /* extend to the viewport edge */
+    border-right: 1px solid var(--gray-200);
+    text-decoration: none;
+}
+.topbar-brand img {
+    height: 30px;
+    width: auto;
+}
+.topbar-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+.topbar-brand-text strong {
+    font-family: 'Nunito', sans-serif;
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    letter-spacing: -.01em;
+}
+.topbar-brand-text span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .62rem;
+    font-weight: 500;
+    color: var(--blue);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+/* When the sidebar is hidden (non-chat pages), the brand absorbs the
+   leftover column gutter and drops its separator. */
+.app-body:not(.page-chat) .topbar-brand {
+    border-right: none;
+}
+
+/* Sidebar close button (mobile slide-out) — was inside .sidebar-header,
+   now floats at the top-right of the sidebar. Stays display:none on
+   desktop; the mobile media query in homeChat.css re-enables it. */
+.sidebar > .sidebar-close {
+    position: absolute;
+    top: .75rem;
+    right: .75rem;
+    z-index: 1;
+}
+
 /* ── Authenticated content area (sibling of .app-topbar) ──────────── */
 
+/* Base: flex column so children with flex:1 expand. min-height:0 lets
+   inner scrollers behave inside the parent flex container. */
 .app-content {
     flex: 1;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* /chat — the chat-container manages its own scroll, so we just clip
+   any overflow at this level. Background stays the chat shell default. */
+.app-body.page-chat .app-content {
+    overflow: hidden;
+}
+
+/* Non-chat pages (/sessions, /profile, …) — content is a regular
+   scrollable document on a soft gray background, and the sidebar is
+   hidden because the topbar tabs are enough to navigate. The main
+   column then spans the full viewport width. */
+.app-body:not(.page-chat) .sidebar      { display: none; }
+.app-body:not(.page-chat) .topbar-burger { display: none; }
+.app-body:not(.page-chat) .app-content   {
     overflow-y: auto;
     background: var(--gray-100);
+}
+
+/* Override the per-page max-width so /sessions and /profile span the
+   entire content area when the sidebar is hidden. */
+.app-body:not(.page-chat) .page-container,
+.app-body:not(.page-chat) .page-header,
+.app-body:not(.page-chat) .page-body {
+    max-width: none;
+    margin: 0;
 }
 
 /* When the page-header / page-body are rendered through the shell,

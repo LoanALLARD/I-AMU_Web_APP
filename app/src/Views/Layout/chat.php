@@ -42,26 +42,82 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
     <link rel="stylesheet" href="/assets/css/sessions.css">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
-<body class="app-body">
+<body class="app-body page-<?= htmlspecialchars($page) ?>">
+
+<header class="app-topbar">
+    <a href="/chat" class="topbar-brand" aria-label="Accueil I-AMU">
+        <img src="/assets/img/logo.png" alt="">
+        <div class="topbar-brand-text">
+            <strong>I-AMU</strong>
+            <span><?= htmlspecialchars($roleLabel) ?></span>
+        </div>
+    </a>
+
+    <button class="topbar-burger" id="burgerBtn" aria-label="Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+    </button>
+
+    <?php if ($page === 'chat'): ?>
+        <div class="topbar-breadcrumb">
+            <span class="topbar-mode">libre</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+            </svg>
+            <span class="topbar-conv-name" id="convName">Nouvelle conversation</span>
+        </div>
+    <?php elseif ($pageTitle !== ''): ?>
+        <div class="topbar-breadcrumb">
+            <span class="topbar-conv-name"><?= htmlspecialchars($pageTitle) ?></span>
+        </div>
+    <?php else: ?>
+        <div class="topbar-breadcrumb"></div>
+    <?php endif; ?>
+
+    <div class="topbar-tabs">
+        <a href="/chat" class="topbar-tab<?= $page === 'chat' ? ' active' : '' ?>">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            Chat
+        </a>
+        <?php if ($isTeacher): ?>
+            <a href="/sessions" class="topbar-tab<?= $page === 'sessions' ? ' active' : '' ?>">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                </svg>
+                Mes sessions
+            </a>
+        <?php endif; ?>
+    </div>
+
+    <div class="topbar-right">
+        <a href="/profile" class="topbar-user-avatar"
+            title="<?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?>">
+            <?= htmlspecialchars($initials) ?>
+        </a>
+    </div>
+</header>
+
+<div class="app-body-row">
 
 <aside class="sidebar" id="sidebar">
 
-    <div class="sidebar-header">
-        <div class="sidebar-logo">
-            <img src="/assets/img/logo.png" alt="I-AMU">
-            <div class="sidebar-logo-text">
-                <strong>I-AMU</strong>
-                <span><?= htmlspecialchars($roleLabel) ?></span>
-            </div>
-        </div>
-        <button class="sidebar-close" id="sidebarClose" aria-label="Fermer">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-        </button>
-    </div>
+    <button class="sidebar-close" id="sidebarClose" aria-label="Fermer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+    </button>
 
     <?php if ($page === 'chat'): ?>
         <button class="btn-new-chat" id="btnNewChat">
@@ -87,8 +143,6 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
                 <span class="conv-group-label">Aujourd'hui</span>
             </div>
         </div>
-    <?php else: ?>
-        <div class="sidebar-conversations"><!-- placeholder filling the flex space --></div>
     <?php endif; ?>
 
     <div class="sidebar-footer">
@@ -114,67 +168,12 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
 </aside>
 
 <div class="app-main">
-
-    <header class="app-topbar">
-        <button class="topbar-burger" id="burgerBtn" aria-label="Menu">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-        </button>
-
-        <?php if ($page === 'chat'): ?>
-            <div class="topbar-breadcrumb">
-                <span class="topbar-mode">libre</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="9 18 15 12 9 6" />
-                </svg>
-                <span class="topbar-conv-name" id="convName">Nouvelle conversation</span>
-            </div>
-        <?php elseif ($pageTitle !== ''): ?>
-            <div class="topbar-breadcrumb">
-                <span class="topbar-conv-name"><?= htmlspecialchars($pageTitle) ?></span>
-            </div>
-        <?php else: ?>
-            <div class="topbar-breadcrumb"></div>
-        <?php endif; ?>
-
-        <div class="topbar-tabs">
-            <a href="/chat" class="topbar-tab<?= $page === 'chat' ? ' active' : '' ?>">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-                Chat
-            </a>
-            <?php if ($isTeacher): ?>
-                <a href="/sessions" class="topbar-tab<?= $page === 'sessions' ? ' active' : '' ?>">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                        <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                    </svg>
-                    Mes sessions
-                </a>
-            <?php endif; ?>
-        </div>
-
-        <div class="topbar-right">
-            <a href="/profile" class="topbar-user-avatar"
-                title="<?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?>">
-                <?= htmlspecialchars($initials) ?>
-            </a>
-        </div>
-    </header>
-
     <div class="app-content">
         <?= $content ?>
     </div>
-
 </div>
+
+</div><!-- /.app-body-row -->
 
 <script>
     // Universal sidebar toggle for mobile — runs on every page using this layout.
