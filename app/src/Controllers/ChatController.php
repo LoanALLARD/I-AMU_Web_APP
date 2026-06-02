@@ -3,6 +3,8 @@
 namespace Controllers;
 
 use Core\Controller;
+use Data\Database;
+use Models\AiRepository;
 
 class ChatController extends Controller
 {
@@ -11,9 +13,15 @@ class ChatController extends Controller
         $this->requireAuth();
         $user = $this->currentUser();
 
+        $pdo = Database::getConnection();
+        $aiRepository = new AiRepository($pdo);
+        $models = $aiRepository->getAllActiveModels();
+
+
         $this->render('Page/homeView', [
             'titrePage' => 'Chat',
-            'user'      => $user],
+            'user'      => $user,
+            'models'    => $models,],
             'chat');
     }
 }

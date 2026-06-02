@@ -82,11 +82,20 @@
 
             <div class="model-bar">
                 <div class="model-tags">
-                    <button class="model-tag active" data-model="mistral:latest">
-                        <span class="model-tag-letter">A</span>
-                        <span class="model-tag-name">mistral:latest</span>
-                        <span class="model-tag-badge">local · ollama</span>
-                    </button>
+                    <?php $letters = range('A', 'Z'); $i = 0; ?>
+                    <?php foreach ($models as $model): ?>
+                        <button class="model-tag<?= $i === 0 ? ' active' : '' ?>"
+                                data-model="<?= htmlspecialchars($model['name']) ?>"
+                                onclick="selectModel(this)">
+                            <span class="model-tag-letter"><?= $letters[$i % 26] ?></span>
+                            <span class="model-tag-name"><?= htmlspecialchars($model['name']) ?></span>
+                            <span class="model-tag-badge"><?= htmlspecialchars($model['adapter']) ?> · <?= htmlspecialchars($model['provider']) ?></span>
+                        </button>
+                        <?php $i++; endforeach; ?>
+
+                    <?php if (empty($models)): ?>
+                        <span style="font-size:.82rem;color:var(--gray-400);">Aucun modèle disponible</span>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -131,6 +140,8 @@
 </div>
 
 <script>
+    let currentModel = document.querySelector('.model-tag.active')?.dataset.model || '';
+
     const input      = document.getElementById('promptInput');
     const sendBtn    = document.getElementById('btnSend');
     const counter    = document.getElementById('charCounter');
@@ -140,6 +151,12 @@
 
     burgerBtn?.addEventListener('click', () => sidebar.classList.add('open'));
     sideClose?.addEventListener('click', () => sidebar.classList.remove('open'));
+
+    function selectModel(btn) {
+        document.querySelectorAll('.model-tag').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        currentModel = btn.dataset.model;
+    }
 
     input?.addEventListener('input', () => {
         input.style.height = 'auto';
@@ -165,9 +182,15 @@
         input.focus();
     }
 
+    function formatDuration(nanoseconds) {
+        const ms = nanoseconds / 1e6;
+        if (ms < 1000) return Math.round(ms) + ' ms';
+        return (ms / 1000).toFixed(1) + ' s';
+    }
+
     async function sendMessage() {
         const message = input.value.trim();
-        if (!message) return;
+        if (!message || !currentModel) return;
 
         const messagesEl = document.getElementById('messages');
         const emptyState = document.getElementById('emptyState');
@@ -186,29 +209,47 @@
         const aiMsg = document.createElement('div');
         aiMsg.className = 'msg msg-ai';
         aiMsg.innerHTML = `
-            <div class="msg-meta"><span class="msg-model">mistal:latest</span></div>
+            <div class="msg-meta"><span class="msg-model">${escapeHtml(currentModel)}</span></div>
             <div class="msg-content"><span class="typing-indicator"><span></span><span></span><span></span></span></div>
         `;
         messagesEl.appendChild(aiMsg);
         messagesEl.scrollTop = messagesEl.scrollHeight;
+
+        const startTime = performance.now();
 
         try {
             const res = await fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: 'mistral:latest',
+                    model: currentModel,
                     message: message,
                     context: []
                 })
             });
             const data = await res.json();
+
+            if (data.error) {
+                aiMsg.querySelector('.msg-content').innerHTML =
+                    `<p class="msg-error">${escapeHtml(data.error)}</p>`;
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+                return;
+            }
+
             const parsed = typeof data.response === 'string'
                 ? JSON.parse(data.response)
                 : data.response;
 
+            const responseText   = parsed.response || 'Pas de réponse.';
+            const totalDuration  = parsed.total_duration || 0;        // nanosecondes
+            const inputTokens    = parsed.prompt_eval_count || 0;
+            const outputTokens   = parsed.eval_count || 0;
+            const totalTokens    = inputTokens + outputTokens;
+            const durationStr    = totalDuration > 0 ? formatDuration(totalDuration) : '—';
+
             aiMsg.querySelector('.msg-content').innerHTML =
-                `<p>${escapeHtml(parsed.response || 'Pas de réponse.')}</p>`;
+                `<p>${escapeHtml(responseText)}</p>`;
+
             aiMsg.innerHTML += `
                 <div class="msg-actions">
                     <button class="msg-action" onclick="copyMsg(this)">
@@ -219,6 +260,14 @@
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
                         garder
                     </button>
+                    <span class="msg-stat" title="Temps de réponse">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        ${durationStr}
+                    </span>
+                    <span class="msg-stat" title="${inputTokens} entrée + ${outputTokens} sortie">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                        ${totalTokens} tok
+                    </span>
                 </div>`;
         } catch (err) {
             aiMsg.querySelector('.msg-content').innerHTML =
@@ -236,7 +285,6 @@
     function copyMsg(btn) {
         const text = btn.closest('.msg').querySelector('.msg-content').textContent;
         navigator.clipboard.writeText(text);
-        const label = btn.querySelector('svg').nextSibling;
         const original = btn.innerHTML;
         btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> copié`;
         setTimeout(() => btn.innerHTML = original, 1500);
