@@ -17,8 +17,11 @@ CREATE TABLE users (
     consent_version VARCHAR(50),
     theme theme_type,
     archive_duration_days SMALLINT,
+    email_verified_at TIMESTAMPTZ,
+    email_verify_token VARCHAR(255),
     CONSTRAINT pk_users PRIMARY KEY (id),
     CONSTRAINT uq_users_email UNIQUE (email),
+    CONSTRAINT uq_users_email_verify_token UNIQUE (email_verify_token),
     CONSTRAINT ck_users_archive_duration_days CHECK (archive_duration_days IS NULL OR archive_duration_days > 0)
 );
 
@@ -30,7 +33,8 @@ CREATE TABLE laboratories (
     email VARCHAR(255),
     phone VARCHAR(20),
     website VARCHAR(255),
-    CONSTRAINT pk_laboratories PRIMARY KEY (id)
+    CONSTRAINT pk_laboratories PRIMARY KEY (id),
+    CONSTRAINT uq_laboratories_code UNIQUE (code)
 );
 
 CREATE TABLE super_administrators (
@@ -54,8 +58,10 @@ CREATE TABLE teachers (
 CREATE TABLE students (
     id BIGINT,
     student_number VARCHAR(50),
+    year SMALLINT,
     CONSTRAINT pk_students PRIMARY KEY (id),
-    CONSTRAINT fk_students_user FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE
+    CONSTRAINT fk_students_user FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT ck_students_year CHECK (year IS NULL OR year > 0)
 );
 
 CREATE TABLE places (

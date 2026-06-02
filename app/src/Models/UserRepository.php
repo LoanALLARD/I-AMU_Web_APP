@@ -4,25 +4,19 @@ namespace Models;
 
 use PDO;
 
-/*
- * This class use PDO to recover 
- * all data about AI in the database
-*/
-
-class AiRepository{
-
+class UserRepository{
     private PDO $pdo;
 
     public function __construct(PDO $pdo){
         $this->pdo = $pdo;
     }
 
-    public function getModelByName(string $name_AI){
+    public function getUserByEmail(string $email){
         $query = $this->pdo->prepare('
-        SELECT * FROM models where name = :name
+        SELECT * FROM users where email = :email
         ');
 
-        $query->execute(['name' => $name_AI]);
+        $query->execute(['email'=> $email]);
 
         $result = $query->fetch();
 
