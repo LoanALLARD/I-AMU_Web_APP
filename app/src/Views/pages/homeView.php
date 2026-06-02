@@ -12,9 +12,9 @@
 
         <div class="model-bar">
             <div class="model-tags">
-                <button class="model-tag active" data-model="mistral:latest">
+                <button class="model-tag active" data-model="llama3.2:1b">
                     <span class="model-tag-letter">A</span>
-                    <span class="model-tag-name">mistral:latest</span>
+                    <span class="model-tag-name">llama3.2:1b</span>
                     <span class="model-tag-badge">local · ollama</span>
                 </button>
             </div>
@@ -110,7 +110,7 @@
         const aiMsg = document.createElement('div');
         aiMsg.className = 'msg msg-ai';
         aiMsg.innerHTML = `
-            <div class="msg-meta"><span class="msg-model">mistal:latest</span></div>
+            <div class="msg-meta"><span class="msg-model">llama3.2:1b</span></div>
             <div class="msg-content"><span class="typing-indicator"><span></span><span></span><span></span></span></div>
         `;
         messagesEl.appendChild(aiMsg);
@@ -121,12 +121,22 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: 'mistral:latest',
+                    model: 'llama3.2:1b',
                     message: message,
                     context: []
                 })
             });
-            const data = await res.json();
+            const text = await res.text();
+            console.log("RAW RESPONSE:", text);
+
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                console.error("Response n'est pas du JSON valide", text);
+                return;
+            }
+
             const parsed = typeof data.response === 'string'
                 ? JSON.parse(data.response)
                 : data.response;
