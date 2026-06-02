@@ -22,24 +22,31 @@ $displayName     = trim(($_SESSION['user_first_name'] ?? '') . ' ' . ($_SESSION[
 <body>
     <header>
         <nav>
+            <a href="<?= $isAuthenticated ? '/chat' : '/login' ?>" class="navbar-brand">
+                <img src="/assets/img/logo.png" alt="I-AMU" class="navbar-logo">
+            </a>
             <?php if ($isAuthenticated): ?>
-                <a href="/chat">Chat</a>
+                <a href="/chat" class="nav-link">Chat</a>
                 <?php if ($isTeacher): ?>
-                    <a href="/sessions">Mes sessions</a>
+                    <a href="/sessions" class="nav-link">Mes sessions</a>
                 <?php endif; ?>
-                <a href="/profile"><?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?></a>
+                <span class="nav-spacer"></span>
+                <a href="/profile" class="nav-link nav-user">
+                    <?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?>
+                </a>
                 <a href="/logout">Déconnexion</a>
             <?php else: ?>
-                <a href="/login">Connexion</a>
+                <span class="nav-spacer"></span>
+                <a href="/login" class="nav-link">Connexion</a>
                 <a href="/register">Inscription</a>
             <?php endif; ?>
         </nav>
     </header>
-    <hr>s
+
     <main>
         <?= $content ?>
     </main>
-    <hr>
+
     <footer>
         <p>&copy; 2026 - Plateforme IAMU</p>
     </footer>
