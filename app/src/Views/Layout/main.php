@@ -18,6 +18,16 @@ $isAuthenticated = !empty($_SESSION['user_id']);
 $roles           = $_SESSION['roles'] ?? [];
 $isTeacher       = in_array('teacher', $roles, true);
 $displayName     = trim(($_SESSION['user_first_name'] ?? '') . ' ' . ($_SESSION['user_last_name'] ?? ''));
+
+// Stale-session safeguard: a logged-in browser that doesn't carry the
+// `roles` key was authenticated before AuthService::resolveRoles
+// existed (or by a different AuthService). Force a logout so the next
+// login populates the session with proper roles instead of silently
+// hiding role-gated nav entries like "Mes sessions".
+if ($isAuthenticated && $roles === []) {
+    header('Location: /logout');
+    exit;
+}
 ?>
 <body>
     <header>
