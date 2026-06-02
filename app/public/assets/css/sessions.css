@@ -426,7 +426,7 @@ textarea {
     background: var(--white);
     border-radius: var(--r-3);
     box-shadow: var(--shadow-md);
-    margin: 24px 0;
+    margin: 0;
     overflow: hidden;
 }
 .session-form-main { padding: 28px 32px; border-right: 1px solid var(--gray-200); }
