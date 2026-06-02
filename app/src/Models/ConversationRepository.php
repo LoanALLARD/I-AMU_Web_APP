@@ -12,16 +12,19 @@ class ConversationRepository {
         $this->pdo = $pdo;
     }
 
-    public function newConversation(int $user_id, int $session_id, int $model_id, string $name){
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function newConversation(int $user_id, int $session_id, string $name): ?array
+    {
         $query = $this->pdo->prepare('
-        INSERT into conversations (user_id,session_id,model_id,name)
-        VALUES (:user_id,:session_id,:model_id,:name)
+        INSERT into conversations (user_id,session_id,name) 
+        VALUES (:user_id,:session_id,:name)
         ');
 
         $query-> execute([
             'user_id'=>$user_id,
             'session_id'=>$session_id,
-            'model_id'=>$model_id,
             'name'=>$name
         ]);
 
@@ -39,7 +42,11 @@ class ConversationRepository {
         return $result ?: null; 
     }
 
-    public function getConversationByUserId(int $user_id, int $conversation_id){
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getConversationByUserId(int $user_id, int $conversation_id): ?array
+    {
         $query = $this->pdo->prepare('
         SELECT * FROM conversations where user_id = :user_id AND id = :id
         ');
@@ -55,9 +62,5 @@ class ConversationRepository {
         }
 
         return $result; 
-    }
-
-    public function getContextByConversationIdAndUserId(int $conversation_id, int $user_id){
-        
     }
 }

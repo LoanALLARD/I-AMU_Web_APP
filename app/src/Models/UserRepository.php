@@ -11,7 +11,11 @@ class UserRepository{
         $this->pdo = $pdo;
     }
 
-    public function getUserByEmail(string $email){
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getUserByEmail(string $email): ?array
+    {
         $query = $this->pdo->prepare('
         SELECT * FROM users where email = :email
         ');
