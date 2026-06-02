@@ -12,14 +12,13 @@ class InteractionRepository {
         $this->pdo = $pdo;
     }
 
-    public function newInteration(int $model_id,int $conversation_id, string $prompt, string $response, int $input_tokens, int $output_tokens){
+    public function newInteration(int $conversation_id, string $prompt, string $response, int $input_tokens, int $output_tokens){
         $query = $this->pdo->prepare('
-        INSERT INTO interactions (model_id,conversation_id,prompt,response,output_tokens) 
-        VALUES (:model_id, :conversation_id, :prompt, :response, :output_tokens)
+        INSERT INTO interactions (conversation_id,prompt,response,output_tokens)
+        VALUES (:conversation_id, :prompt, :response, :output_tokens)
         ');
 
         $query->execute([
-            'model_id'=>$model_id,
             'conversation_id'=>$conversation_id,
             'prompt'=>$prompt,
             'response'=>$response,

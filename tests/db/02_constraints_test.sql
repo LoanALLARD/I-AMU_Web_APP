@@ -150,19 +150,19 @@ SELECT throws_ok(
 
 INSERT INTO models (id, department_id, name, provider, max_tokens, context_window, api_url, adapter)
     VALUES (1, 1, 'llama3', 'ollama', 4096, 8192, 'http://localhost:11434', 'ollama');
-INSERT INTO conversations (id, user_id, name) VALUES (1, 1, 'Conv 1');
+INSERT INTO conversations (id, user_id, model_id, name) VALUES (1, 1, 1, 'Conv 1');
 
 SELECT throws_ok(
-    $$INSERT INTO interactions (model_id, conversation_id, prompt, user_feedback)
-      VALUES (1, 1, 'Hello', 2)$$,
+    $$INSERT INTO interactions (conversation_id, prompt, user_feedback)
+      VALUES (1, 'Hello', 2)$$,
     '23514',
     NULL,
     'interactions.user_feedback = 2 is rejected'
 );
 
 SELECT lives_ok(
-    $$INSERT INTO interactions (model_id, conversation_id, prompt, user_feedback)
-      VALUES (1, 1, 'Hello', -1)$$,
+    $$INSERT INTO interactions (conversation_id, prompt, user_feedback)
+      VALUES (1, 'Hello', -1)$$,
     'interactions.user_feedback = -1 is accepted'
 );
 

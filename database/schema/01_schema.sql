@@ -178,17 +178,18 @@ CREATE TABLE conversations (
     id BIGSERIAL,
     user_id BIGINT NOT NULL,
     session_id BIGINT,
+    model_id BIGINT NOT NULL,
     name VARCHAR(255) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     is_archived BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT pk_conversations PRIMARY KEY (id),
     CONSTRAINT fk_conversations_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE RESTRICT,
-    CONSTRAINT fk_conversations_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE RESTRICT
+    CONSTRAINT fk_conversations_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_conversations_model FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE RESTRICT
 );
 
 CREATE TABLE interactions (
     id BIGSERIAL,
-    model_id BIGINT NOT NULL,
     conversation_id BIGINT NOT NULL,
     prompt TEXT NOT NULL,
     response TEXT,
@@ -197,8 +198,8 @@ CREATE TABLE interactions (
     input_tokens INTEGER,
     output_tokens INTEGER,
     user_feedback SMALLINT,
+    api_metadata JSONB,
     CONSTRAINT pk_interactions PRIMARY KEY (id),
-    CONSTRAINT fk_interactions_model FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE RESTRICT,
     CONSTRAINT fk_interactions_conversation FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
     CONSTRAINT ck_interactions_user_feedback CHECK (user_feedback IS NULL OR user_feedback IN (-1, 0, 1)),
     CONSTRAINT ck_interactions_input_tokens CHECK (input_tokens IS NULL OR input_tokens > 0),
