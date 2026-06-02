@@ -23,16 +23,19 @@ use App\Application\Services\EndSessionService;
 use App\Application\Services\GetSessionDashboardService;
 use App\Application\Services\JoinSessionService;
 use App\Application\Services\ListMySessionsService;
+use App\Application\Services\GenerateReplyService;
 use App\Application\Services\StartSessionService;
 use App\Application\Services\UpdateSessionService;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\LLMController;
 use App\Http\Controllers\SessionController;
 use App\Infrastructure\Clock\SystemClock;
+use App\Infrastructure\Llm\LlmProviderFactory;
 use App\Infrastructure\Persistence\PdoConnection;
+use App\Infrastructure\Persistence\PdoLlmModelRepository;
 use App\Infrastructure\Persistence\PdoModelRepository;
 use App\Infrastructure\Persistence\PdoResourceRepository;
 use App\Infrastructure\Persistence\PdoSessionRepository;
-use Controllers\ChatController;
-use Controllers\LLMController;
 use Controllers\LoginController;
 use Core\Controller;
 use Core\Router;
@@ -48,6 +51,7 @@ $authService = new AuthService($db);
 $sessionRepo  = new PdoSessionRepository($db);
 $modelRepo    = new PdoModelRepository($db);
 $resourceRepo = new PdoResourceRepository($db);
+$llmModelRepo = new PdoLlmModelRepository($db);
 
 // ─── Application services (use-cases) ───────────────────────────────
 $createSession   = new CreateSessionService($sessionRepo, $clock);
@@ -58,6 +62,10 @@ $cancelSession   = new CancelSessionService($sessionRepo, $clock);
 $joinSession     = new JoinSessionService($sessionRepo, $clock);
 $listMySessions  = new ListMySessionsService($sessionRepo, $clock);
 $getDashboard    = new GetSessionDashboardService($sessionRepo, $modelRepo, $clock);
+
+// Chat / LLM use-case: resolve a model by name then delegate to its
+// provider. The factory is the only place that instantiates an adapter.
+$generateReply   = new GenerateReplyService($llmModelRepo, new LlmProviderFactory());
 
 // ─── Controllers ────────────────────────────────────────────────────
 $sessionController = new SessionController(
@@ -73,6 +81,11 @@ $sessionController = new SessionController(
     listMySessions:  $listMySessions,
     getDashboard:    $getDashboard,
 );
+
+// Chat controllers (Clean Architecture; migrated out of the legacy
+// ServeurFolder Controllers\ namespace).
+$chatController = new ChatController();
+$llmController  = new LLMController($generateReply);
 
 // Profile page — surfaces account info and acts as the exit point for
 // /logout. Renders inside Layout/chat.php (the universal authenticated
@@ -101,9 +114,9 @@ $router->add('POST', '/register',     fn() => (new LoginController($authService)
 $router->add('GET',  '/logout',       fn() => (new LoginController($authService))->logout());
 $router->add('GET',  '/RGPDConsent',  fn() => (new LoginController($authService))->showRGPD());
 
-// Chat — real shell from ServeurFolder (sidebar + composer + LLM) ----
-$router->add('GET',  '/chat', fn() => (new ChatController())->index());
-$router->add('POST', '/chat', fn() => (new LLMController())->handleChat());
+// Chat — authenticated shell (GET) + LLM round-trip endpoint (POST) ---
+$router->add('GET',  '/chat', fn() => $chatController->index());
+$router->add('POST', '/chat', fn() => $llmController->handleChat());
 
 // Profile -------------------------------------------------------------
 $router->add('GET',  '/profile', fn() => $profileController->show());
