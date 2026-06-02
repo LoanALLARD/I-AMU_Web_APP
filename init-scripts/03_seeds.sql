@@ -20,5 +20,5 @@ INSERT into models (id,department_id,resource_id,name,version,provider,max_token
 -- SESSION
 INSERT into sessions (resource_id,name) VALUES (1,'session de dev');
 -- CONVERSATION
-INSERT into conversations (user_id,session_id,name) VALUES (24,1,'testconv');
+-- INSERT into conversations (user_id,session_id,name) VALUES (24,1,'testconv');
 
