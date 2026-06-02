@@ -16,7 +16,7 @@ $roles = $user['roles'] ?? [];
 <div class="page-header">
     <div class="page-header-row">
         <h1>Mon profil</h1>
-        <span class="mono" style="font-size:11px;color:var(--ink-3);">compte personnel</span>
+        <span class="mono" style="font-size:11px;color:var(--gray-400);">compte personnel</span>
     </div>
     <p class="page-sub">Informations de votre compte. Les options de modification arriveront avec la spec d'authentification.</p>
 </div>
@@ -42,7 +42,7 @@ $roles = $user['roles'] ?? [];
             <div class="dashboard-card">
                 <h2>Rôles</h2>
                 <?php if ($roles === []): ?>
-                    <p style="color:var(--ink-3);font-size:12px;">Aucun rôle attribué.</p>
+                    <p style="color:var(--gray-400);font-size:12px;">Aucun rôle attribué.</p>
                 <?php else: ?>
                     <div style="display:flex;flex-wrap:wrap;gap:8px;">
                         <?php foreach ($roles as $role): ?>
@@ -54,7 +54,7 @@ $roles = $user['roles'] ?? [];
 
             <div class="dashboard-card">
                 <h2>Sécurité</h2>
-                <p style="color:var(--ink-3);font-size:12px;margin: 0 0 14px;">
+                <p style="color:var(--gray-400);font-size:12px;margin: 0 0 14px;">
                     Changement de mot de passe et options RGPD à venir (specs 01 + 06).
                 </p>
                 <a href="/logout" class="btn danger">
@@ -69,7 +69,7 @@ $roles = $user['roles'] ?? [];
                     <?= htmlspecialchars($initials) ?>
                 </div>
                 <div style="font-weight:600;font-size:16px;"><?= htmlspecialchars($displayName) ?></div>
-                <div class="mono" style="font-size:11px;color:var(--ink-3);margin-top:4px;">
+                <div class="mono" style="font-size:11px;color:var(--gray-400);margin-top:4px;">
                     <?= htmlspecialchars(implode(' · ', $roles) ?: 'aucun rôle') ?>
                 </div>
             </div>

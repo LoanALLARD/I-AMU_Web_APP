@@ -1,4 +1,5 @@
 :root {
+    /* ── Brand palette ───────────────────────────────────────── */
     --blue:       #1a73c8;
     --blue-dark:  #0f5aa0;
     --blue-light: #e8f1fb;
@@ -10,9 +11,30 @@
     --gray-400:   #9ba3b5;
     --gray-600:   #5a6275;
     --gray-800:   #2c3145;
+
+    /* ── Semantic / status colours (used by badges, alerts, preflight) ── */
+    --accept:     #15803d;
+    --accept-bg:  #f0fdf4;
+    --refuse:     #b91c1c;
+    --refuse-bg:  #fef2f2;
+    --warn:       #b45309;
+    --warn-bg:    #fef3c7;
+
+    /* ── Exam mode chromatic exception (sessions of type EXAM) ── */
+    --exam-ink:   #7a4a05;
+
+    /* ── Type ────────────────────────────────────────────────── */
+    --font-sans:    'Nunito Sans', system-ui, -apple-system, sans-serif;
+    --font-display: 'Nunito', system-ui, -apple-system, sans-serif;
+    --font-mono:    'JetBrains Mono', 'Geist Mono', ui-monospace, monospace;
+
+    /* ── Geometry / shadows ──────────────────────────────────── */
     --shadow-sm:  0 2px 8px rgba(26,115,200,.10);
     --shadow-md:  0 8px 32px rgba(26,115,200,.14);
     --radius:     12px;
+    --r-1:        8px;       /* controls (buttons, inputs, small cards) */
+    --r-2:        10px;      /* secondary cards */
+    --r-3:        12px;      /* main cards (matches --radius) */
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

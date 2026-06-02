@@ -54,18 +54,9 @@ final class SessionController extends Controller
     ) {
     }
 
-    /**
-     * Override the base render() to default to the authenticated app
-     * layout (`Views/Layout/app.php`) which carries the modern shell,
-     * navbar and CSS tokens. The base class's default 'main' layout is
-     * meant for guest pages (login / register).
-     *
-     * @param array<string, mixed> $data
-     */
-    protected function render(string $template, array $data = [], string $layout = 'app'): void
-    {
-        parent::render($template, $data, $layout);
-    }
+    // Session pages use the shared 'main' layout (style.css +
+    // layoutMain.css + sessions.css) — the standalone 'app' layout
+    // was retired in favour of the ServeurFolder presentation.
 
     /**
      * GET /sessions — teacher's list.

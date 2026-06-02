@@ -81,11 +81,9 @@ $profileController = new class extends Controller {
     {
         $this->requireAuth();
         $this->render('pages/profile/index', [
-            'title'      => 'Mon profil',
-            'breadcrumb' => 'profil',
-            'navSection' => 'profile',
-            'user'       => $this->currentUser(),
-        ], 'app');
+            'title' => 'Mon profil',
+            'user'  => $this->currentUser(),
+        ]);
     }
 };
 

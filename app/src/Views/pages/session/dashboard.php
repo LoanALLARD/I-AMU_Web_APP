@@ -11,7 +11,7 @@
         <div class="dashboard-meta">
             <span class="badge <?= htmlspecialchars($view->typeClass) ?>"><?= htmlspecialchars($view->typeLabel) ?></span>
             <span class="badge <?= htmlspecialchars($view->statusClass) ?>"><?= htmlspecialchars($view->statusLabel) ?></span>
-            <code class="access-code-cell" style="font-size:13px;color:var(--ink-2);">
+            <code class="access-code-cell" style="font-size:13px;color:var(--gray-600);">
                 <?= htmlspecialchars($view->accessCode) ?>
             </code>
         </div>
@@ -117,14 +117,14 @@
         <div class="dashboard-card">
             <h2>Modèles autorisés</h2>
             <?php if ($view->authorizedModels === []): ?>
-                <p style="color:var(--ink-3);font-size:12px;">Aucun modèle autorisé.</p>
+                <p style="color:var(--gray-400);font-size:12px;">Aucun modèle autorisé.</p>
             <?php else: ?>
                 <div class="preview-models">
                     <?php foreach ($view->authorizedModels as $m): ?>
                         <div class="preview-model">
                             <span><?= htmlspecialchars((string) $m['name']) ?></span>
                             <?php if (!empty($m['version'])): ?>
-                                <span style="color:var(--ink-3);">· <?= htmlspecialchars((string) $m['version']) ?></span>
+                                <span style="color:var(--gray-400);">· <?= htmlspecialchars((string) $m['version']) ?></span>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>

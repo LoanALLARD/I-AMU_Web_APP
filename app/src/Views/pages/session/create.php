@@ -65,7 +65,7 @@ $typeCards = [
 <div class="page-header">
     <div class="page-header-row">
         <h1><?= $isEdit ? 'Modifier la session' : 'Nouvelle session' ?></h1>
-        <span class="mono" style="font-size:11px;color:var(--ink-3);">
+        <span class="mono" style="font-size:11px;color:var(--gray-400);">
             <?= $isEdit ? 'édition' : 'brouillon · saisie' ?>
         </span>
     </div>

@@ -6,7 +6,7 @@
 <div class="page-header">
     <div class="page-header-row">
         <h1>Mes sessions</h1>
-        <span class="mono" style="font-size:11px;color:var(--ink-3);"><?= count($sessions) ?> session(s)</span>
+        <span class="mono" style="font-size:11px;color:var(--gray-400);"><?= count($sessions) ?> session(s)</span>
     </div>
     <p class="page-sub">Créez une session de cours ou d'examen, puis donnez le code d'accès à vos étudiants.</p>
 </div>
