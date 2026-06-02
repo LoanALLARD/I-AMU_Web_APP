@@ -684,7 +684,7 @@
 
 .msg-actions {
     display: flex;
-    gap: .35rem;
+    gap: .85rem;
     margin-top: .4rem;
 }
 
@@ -696,6 +696,7 @@
     border: none;
     cursor: pointer;
     padding: .25rem .5rem;
+    margin-left: -.5rem;
     border-radius: 6px;
     transition: color .15s, background .15s;
     display: flex;
@@ -707,6 +708,24 @@
     color: var(--blue);
     background: var(--blue-light);
 }
+.msg-stat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .66rem;
+    color: var(--gray-400);
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+}
+
+
+.msg-action svg,
+.msg-stat svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    stroke-width: 2px;
+}
+
 
 .typing-indicator {
     display: inline-flex;

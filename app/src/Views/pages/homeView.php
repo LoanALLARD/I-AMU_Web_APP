@@ -117,6 +117,8 @@
         messagesEl.scrollTop = messagesEl.scrollHeight;
 
         try {
+            const startTime = performance.now();
+
             const res = await fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -127,22 +129,34 @@
                 })
             });
             const data = await res.json();
+
+            const endTime = performance.now();
+            const durationStr = ((endTime - startTime) / 1000).toFixed(2) + 's';
+
             const parsed = typeof data.response === 'string'
                 ? JSON.parse(data.response)
                 : data.response;
 
+            const inputTokens = parsed.prompt_eval_count || data.prompt_eval_count || 0;
+            const outputTokens = parsed.eval_count || data.eval_count || 0;
+            const totalTokens = inputTokens + outputTokens;
+
             aiMsg.querySelector('.msg-content').innerHTML =
-                `<p>${escapeHtml(parsed.response || 'Pas de réponse.')}</p>`;
+                `<p>${escapeHtml(parsed.response || parsed.message?.content || data.response || 'Pas de réponse.')}</p>`;
+
             aiMsg.innerHTML += `
                 <div class="msg-actions">
                     <button class="msg-action" onclick="copyMsg(this)">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                         copier
                     </button>
-                    <button class="msg-action">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-                        garder
-                    </button>
+                    <span class="msg-stat" title="Temps de réponse">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        ${durationStr}
+                    </span>
+                    <span class="msg-stat" title="${inputTokens} entrée + ${outputTokens} sortie">
+                        ${totalTokens} tokens
+                    </span>
                 </div>`;
         } catch (err) {
             aiMsg.querySelector('.msg-content').innerHTML =
