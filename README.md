@@ -130,7 +130,9 @@ curl -X POST http://localhost:8085/chat \
   -d '{
     "model" : "llama3.2:1b",
     "message" : "Présente toi",
-    "context" : []
+    "context" : [],
+    "user_email" : "evan@gmail.com",
+    "conversation_id" : 1 
   }'
 ```
 Si vous avez déjà utilisé l'application, il se peut que vous aillez besoin de racharger les images des conteneur docker. Pour ce faire faite : 

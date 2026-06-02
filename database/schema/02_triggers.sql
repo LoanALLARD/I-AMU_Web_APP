@@ -24,8 +24,7 @@ EXECUTE FUNCTION generate_session_access_code();
 -- Enforce role exclusivity rules:
 --   student     : exclusive with every other role
 --   researcher  : exclusive with every other role
---   teacher + department_administrator may coexist
--- TG_ARGV[0] carries the role being inserted.
+--   teacher + department_administrator may coexist.
 CREATE OR REPLACE FUNCTION enforce_role_exclusivity()
 RETURNS TRIGGER AS $$
 DECLARE
