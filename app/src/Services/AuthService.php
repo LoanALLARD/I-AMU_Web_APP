@@ -19,6 +19,7 @@ class AuthService
     }
 
     //login
+
     /**
      * @return array{success: bool, error?: string}
      */
@@ -30,7 +31,7 @@ class AuthService
 
         // search user
         $stmt = $this->pdo->prepare('
-            SELECT id, email, password_hash, first_name, last_name, is_active, email_verified_at
+            SELECT id, email, password_hash, first_name, last_name, is_active
             FROM users
             WHERE email = :email
         ');
@@ -43,10 +44,6 @@ class AuthService
 
         if (!$user['is_active']) {
             return ['success' => false, 'error' => 'Ce compte a été désactivé.'];
-        }
-        // Verify mail confirmed
-        if ($user['email_verified_at'] === null) {
-            return ['success' => false, 'error' => 'Votre adresse e-mail n\'a pas encore été vérifiée. Consultez votre mail.'];
         }
 
         // Verify pwd
@@ -66,41 +63,6 @@ class AuthService
 
         return ['success' => true];
     }
-    //verify mail
-    /**
-     * @return array{success: bool, error?: string}
-     */
-    public function verifyEmail(string $token): array
-    {
-        if ($token === '') {
-            return ['success' => false, 'error' => 'Lien de vérification invalide.'];
-        }
-
-        $stmt = $this->pdo->prepare('
-            SELECT id, email_verified_at 
-            FROM users 
-            WHERE email_verify_token = :token
-        ');
-        $stmt->execute(['token' => $token]);
-        $user = $stmt->fetch();
-        if (!$user) {
-            return ['success' => false, 'error' => 'Lien de vérification invalide ou expiré.'];
-        }
-
-        if ($user['email_verified_at'] !== null) {
-            return ['success' => true];
-        }
-
-        $stmt = $this->pdo->prepare('
-            UPDATE users 
-            SET email_verified_at = NOW(), email_verify_token = NULL 
-            WHERE id = :id
-        ');
-        $stmt->execute(['id' => $user['id']]);
-        return ['success' => true];
-    }
-
-
     //register
 
     /**
@@ -142,22 +104,19 @@ class AuthService
         }
 
         // Check that the email address is not already in use.
-        $stmt = $this->pdo->prepare('SELECT id 
-                                            FROM users 
-                                            WHERE email = :email');
+        $stmt = $this->pdo->prepare('SELECT id FROM users WHERE email = :email');
         $stmt->execute(['email' => $email]);
 
         if ($stmt->fetch()) {
             return ['success' => false, 'error' => 'Un compte existe déjà avec cette adresse.'];
         }
 
-        $verifyToken = bin2hex(random_bytes(32));
+        // insert username
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
-        // insert username
         $stmt = $this->pdo->prepare('
-            INSERT INTO users (email, password_hash, first_name, last_name, consent_at, consent_version, email_verify_token)
-            VALUES (:email, :hash, :first_name, :last_name, NOW(), :consent_version, :token)
+            INSERT INTO users (email, password_hash, first_name, last_name, consent_at, consent_version)
+            VALUES (:email, :hash, :first_name, :last_name, NOW(), :consent_version)
             RETURNING id
         ');
         $stmt->execute([
@@ -166,7 +125,6 @@ class AuthService
             'first_name'      => $firstName,
             'last_name'       => $lastName,
             'consent_version' => 'v1',
-            'token'           => $verifyToken,
         ]);
 
         $userId = (int) $stmt->fetchColumn();
@@ -182,37 +140,8 @@ class AuthService
                 ->execute(['id' => $userId]);
         }
 
-        $this->sendVerificationEmail($email, $firstName, $verifyToken);
         return ['success' => true];
     }
-
-    //Verification
-     /**
-     * @return array{success: bool, error?: string}
-     */
-    public function resendVerification(string $email): array
-    {
-        $stmt = $this->pdo->prepare('
-            SELECT id, first_name, email_verified_at 
-            FROM users WHERE email = :email
-        ');
-        $stmt->execute(['email' => $email]);
-        $user = $stmt->fetch();
-
-        if (!$user || $user['email_verified_at'] !== null) {
-            return ['success' => true];
-        }
-
-        $newToken = bin2hex(random_bytes(32));
-
-        $this->pdo->prepare('UPDATE users SET email_verify_token = :token WHERE id = :id')
-            ->execute(['token' => $newToken, 'id' => $user['id']]);
-
-        $this->sendVerificationEmail($email, $user['first_name'], $newToken);
-
-        return ['success' => true];
-    }
-
 
     public function logout(): void
     {
@@ -298,32 +227,4 @@ class AuthService
         $_SESSION['roles']           = $roles;
         $_SESSION['token']           = bin2hex(random_bytes(32));
     }
-
-    /**
-     * send the vérification mail with activation link.
-     */
-    private function sendVerificationEmail(string $email, string $firstName, string $token): void
-    {
-        $baseUrl = ($_SERVER['HTTPS'] ?? 'off') === 'on' ? 'https' : 'http';
-        $baseUrl .= '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost:8085');
-        $verifyUrl = $baseUrl . '/verify?token=' . $token;
-
-        $subject = '=?UTF-8?B?' . base64_encode('I-AMU — Vérifiez votre adresse e-mail') . '?=';
-
-        $body = "Bonjour {$firstName},\r\n\r\n"
-            . "Merci de vous être inscrit(e) sur la plateforme I-AMU.\r\n\r\n"
-            . "Pour activer votre compte, cliquez sur le lien suivant :\r\n"
-            . "{$verifyUrl}\r\n\r\n"
-            . "Si vous n'êtes pas à l'origine de cette inscription, ignorez ce message.\r\n\r\n"
-            . "Cordialement,\r\n"
-            . "L'équipe I-AMU — IUT Informatique, Aix-Marseille Université";
-
-        $headers = "From: noreply@univ-amu.fr\r\n"
-            . "Reply-To: noreply@univ-amu.fr\r\n"
-            . "Content-Type: text/plain; charset=UTF-8\r\n"
-            . "X-Mailer: I-AMU/1.0";
-
-        mail($email, $subject, $body, $headers);
-    }
-
 }
