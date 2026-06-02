@@ -56,4 +56,8 @@ class ConversationRepository {
 
         return $result; 
     }
+
+    public function getContextByConversationIdAndUserId(int $conversation_id, int $user_id){
+        
+    }
 }
