@@ -128,10 +128,18 @@
 /* Non-chat pages (/sessions, /profile, …) — content is a regular
    scrollable document on a soft gray background, and the sidebar is
    hidden because the topbar tabs are enough to navigate. The main
-   column then spans the full viewport width. */
+   column then spans the full viewport width.
+
+   IMPORTANT: switch .app-content from `display: flex` back to a plain
+   block here. As a flex column container, its child <form> kept its
+   intrinsic min-height (flex's default `min-height: auto` on items)
+   and overflow-y: auto refused to scroll because the flex algorithm
+   couldn't decide who to shrink. A regular block scroll model is the
+   reliable fix for long pages like /sessions/create. */
 .app-body:not(.page-chat) .sidebar      { display: none; }
 .app-body:not(.page-chat) .topbar-burger { display: none; }
 .app-body:not(.page-chat) .app-content   {
+    display: block;
     overflow-y: auto;
     background: var(--gray-100);
 }
