@@ -3,7 +3,7 @@
 
 BEGIN;
 
-SELECT plan(16);
+SELECT plan(18);
 
 -- ============================================================
 -- Fixtures
@@ -38,9 +38,9 @@ INSERT INTO models (id, department_id, name, provider, max_tokens, context_windo
     VALUES (1, 1, 'llama3', 'ollama', 4096, 8192, 'http://x', 'ollama');
 
 INSERT INTO sessions (id, resource_id, name, status) VALUES (1, 1, 'S1', 'DRAFT');
-INSERT INTO conversations (id, user_id, name) VALUES (1, 50, 'Conv');
-INSERT INTO interactions (id, model_id, conversation_id, prompt)
-    VALUES (1, 1, 1, 'Hello');
+INSERT INTO conversations (id, user_id, model_id, name) VALUES (1, 50, 1, 'Conv');
+INSERT INTO interactions (id, conversation_id, prompt)
+    VALUES (1, 1, 'Hello');
 
 -- ============================================================
 -- CASCADE: user role rows disappear when the user is deleted
@@ -84,6 +84,18 @@ SELECT throws_ok(
     '23503',
     NULL,
     'Cannot delete a user who has conversations (RESTRICT)'
+);
+
+-- ============================================================
+-- RESTRICT: cannot delete a model still used by a conversation
+-- (conversations.model_id is ON DELETE RESTRICT)
+-- ============================================================
+
+SELECT throws_ok(
+    $$DELETE FROM models WHERE id = 1$$,
+    '23503',
+    NULL,
+    'Cannot delete a model still used by a conversation (RESTRICT)'
 );
 
 -- ============================================================
@@ -233,14 +245,14 @@ SELECT throws_ok(
 );
 
 -- Deleting a model cascades to session_models on the model side.
--- We need to clear interactions first (interactions.model_id is RESTRICT).
+-- conversations.model_id is RESTRICT, but conversation 1 (the only one
+-- referencing model 1) was already removed above, so nothing blocks the delete.
 DELETE FROM session_models WHERE session_id = 3;
 DELETE FROM sessions WHERE id = 3;
 INSERT INTO sessions (id, resource_id, name, status)
     VALUES (4, 1, 'S with model 2', 'DRAFT');
 INSERT INTO session_models (model_id, session_id) VALUES (1, 4);
 
-DELETE FROM interactions WHERE model_id = 1;
 DELETE FROM models WHERE id = 1;
 
 SELECT results_eq(

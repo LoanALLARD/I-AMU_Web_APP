@@ -1,0 +1,746 @@
+/* =====================================================================
+   I-AMU — Sessions, profile and dashboard styles
+
+   Composed on top of style.css (palette tokens) and homeChat.css
+   (the universal authenticated shell: sidebar + topbar). Owns the
+   page-level rules unique to /sessions/* and /profile when they
+   render inside Layout/chat.php's <main class="app-content">.
+   ===================================================================== */
+
+/* ── Universal authenticated shell ─────────────────────────────────
+ *
+ * Layout structure (overrides the older horizontal-only flex from
+ * homeChat.css to keep the brand permanently aligned with the topbar):
+ *
+ *   <body class="app-body page-X">           column flex, 100vh
+ *     <header class="app-topbar">            full-width row, 54px
+ *       <a class="topbar-brand">             logo + I-AMU + role
+ *       ... burger / breadcrumb / tabs / avatar ...
+ *     <div class="app-body-row">             row flex, fills remaining
+ *       <aside class="sidebar">              260px, only on /chat
+ *       <div class="app-main">               flex:1
+ *         <div class="app-content">          page body
+ */
+
+.app-body {
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    height: 100vh;
+}
+
+.app-body-row {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+}
+
+/* Sidebar lives inside the row, so it no longer needs its own 100vh
+   nor sticky positioning. */
+.app-body-row > .sidebar {
+    height: auto;
+    position: relative;
+    top: auto;
+}
+
+/* Same for the main column — it's the row's flex child. The
+   min-height: 0 is critical: without it, .app-main expands to its
+   content's intrinsic size (flexbox default) and the inner
+   .app-content can never scroll on long pages like /sessions/create. */
+.app-body-row > .app-main {
+    height: auto;
+    min-height: 0;
+}
+
+/* Brand block in the topbar — replaces the former .sidebar-header. */
+.topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    width: 260px;
+    flex-shrink: 0;
+    height: 100%;
+    padding-left: 1.25rem;
+    padding-right: 1rem;
+    margin-left: -1.25rem;           /* extend to the viewport edge */
+    border-right: 1px solid var(--gray-200);
+    text-decoration: none;
+}
+.topbar-brand img {
+    height: 30px;
+    width: auto;
+}
+.topbar-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+.topbar-brand-text strong {
+    font-family: 'Nunito', sans-serif;
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    letter-spacing: -.01em;
+}
+.topbar-brand-text span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .62rem;
+    font-weight: 500;
+    color: var(--blue);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+/* When the sidebar is hidden (non-chat pages), the brand absorbs the
+   leftover column gutter and drops its separator. */
+.app-body:not(.page-chat) .topbar-brand {
+    border-right: none;
+}
+
+/* Sidebar close button (mobile slide-out) — was inside .sidebar-header,
+   now floats at the top-right of the sidebar. Stays display:none on
+   desktop; the mobile media query in homeChat.css re-enables it. */
+.sidebar > .sidebar-close {
+    position: absolute;
+    top: .75rem;
+    right: .75rem;
+    z-index: 1;
+}
+
+/* ── Authenticated content area (sibling of .app-topbar) ──────────── */
+
+/* Base: flex column so children with flex:1 expand. min-height:0 lets
+   inner scrollers behave inside the parent flex container. */
+.app-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* /chat — the chat-container manages its own scroll, so we just clip
+   any overflow at this level. Background stays the chat shell default. */
+.app-body.page-chat .app-content {
+    overflow: hidden;
+}
+
+/* Non-chat pages (/sessions, /profile, …) — content is a regular
+   scrollable document on a soft gray background, and the sidebar is
+   hidden because the topbar tabs are enough to navigate. The main
+   column then spans the full viewport width.
+
+   IMPORTANT: switch .app-content from `display: flex` back to a plain
+   block here. As a flex column container, its child <form> kept its
+   intrinsic min-height (flex's default `min-height: auto` on items)
+   and overflow-y: auto refused to scroll because the flex algorithm
+   couldn't decide who to shrink. A regular block scroll model is the
+   reliable fix for long pages like /sessions/create. */
+.app-body:not(.page-chat) .sidebar      { display: none; }
+.app-body:not(.page-chat) .topbar-burger { display: none; }
+.app-body:not(.page-chat) .app-content   {
+    display: block;
+    overflow-y: auto;
+    background: var(--gray-100);
+}
+
+/* Override the per-page max-width so /sessions and /profile span the
+   entire content area when the sidebar is hidden, but keep generous
+   horizontal padding so titles, tables and cards breathe away from
+   the edges. Padding scales with viewport width via clamp(). */
+.app-body:not(.page-chat) .page-container,
+.app-body:not(.page-chat) .page-header,
+.app-body:not(.page-chat) .page-body {
+    max-width: none;
+    margin: 0;
+    padding-left:  clamp(1rem, 5vw, 4rem);
+    padding-right: clamp(1rem, 5vw, 4rem);
+}
+
+/* When the page-header / page-body are rendered through the shell,
+   they get cosier vertical padding to match the auth-pages density. */
+.app-content .page-header { padding-top: 24px; padding-bottom: 18px; }
+.app-content .page-body { padding-top: 20px; padding-bottom: 32px; }
+
+/* ── Page chrome ──────────────────────────────────────────────────── */
+
+.page-container,
+.page-body,
+.page-header {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    width: 100%;
+}
+
+.page-header {
+    padding: 28px 24px 22px;
+    border-bottom: 1px solid var(--gray-200);
+}
+.page-header h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--gray-800);
+    letter-spacing: -.02em;
+}
+.page-header .page-sub {
+    margin: 8px 0 0;
+    color: var(--gray-600);
+    font-size: 14px;
+    max-width: 640px;
+}
+.page-header-row { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+
+.page-body { padding: 24px; flex: 1; min-height: 0; }
+
+/* ── Generic buttons (sessions surface uses .btn variants alongside
+       .btn-submit from style.css for auth forms) ──────────────────── */
+
+.btn, .btn-bordered, .btn-primary, .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 18px;
+    border: 1.5px solid var(--gray-200);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    border-radius: var(--r-1);
+    background: var(--white);
+    color: var(--gray-800);
+    text-decoration: none;
+    transition: background .15s, color .15s, border-color .15s, box-shadow .15s, transform .12s;
+    white-space: nowrap;
+}
+.btn:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+    text-decoration: none;
+    box-shadow: var(--shadow-sm);
+}
+.btn.primary {
+    background: var(--blue);
+    color: var(--white);
+    border-color: var(--blue);
+    box-shadow: 0 3px 10px rgba(26,115,200,.3);
+}
+.btn.primary:hover {
+    background: var(--blue-dark);
+    border-color: var(--blue-dark);
+    color: var(--white);
+    transform: translateY(-1px);
+}
+.btn.bordered { background: var(--white); border-color: var(--blue); color: var(--blue); }
+.btn.bordered:hover { background: var(--blue-light); color: var(--blue-dark); }
+.btn.ghost { border-color: transparent; color: var(--gray-600); background: transparent; box-shadow: none; }
+.btn.ghost:hover { background: var(--gray-100); color: var(--gray-800); border-color: transparent; }
+.btn.danger { background: var(--white); color: var(--refuse); border-color: var(--refuse); }
+.btn.danger:hover { background: var(--refuse); color: var(--white); }
+.btn.success { background: var(--white); color: var(--accept); border-color: var(--accept); }
+.btn.success:hover { background: var(--accept); color: var(--white); }
+.btn.sm { height: 32px; padding: 0 12px; font-size: 13px; }
+
+.icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-1);
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
+    text-decoration: none;
+}
+.icon-btn:hover { color: var(--blue); border-color: var(--blue); box-shadow: var(--shadow-sm); text-decoration: none; }
+.icon-btn.success:hover { color: var(--accept); border-color: var(--accept); }
+.icon-btn.warning:hover { color: var(--warn); border-color: var(--warn); }
+.icon-btn.danger:hover  { color: var(--refuse); border-color: var(--refuse); }
+
+/* ── Sessions-page inputs (broad rule: style.css already styles
+       the auth inputs; this widens it to datetime-local, number,
+       textarea, select used by the create form) ───────────────────── */
+
+input[type="datetime-local"],
+input[type="number"],
+textarea,
+select {
+    font: inherit;
+    font-size: 14px;
+    color: var(--gray-800);
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-1);
+    padding: 10px 12px;
+    height: 40px;
+    width: 100%;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    font-family: var(--font-sans);
+}
+input[type="datetime-local"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(26, 115, 200, .15);
+}
+textarea {
+    height: auto;
+    min-height: 120px;
+    padding: 12px 14px;
+    font-family: var(--font-mono);
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.field-suffix { position: relative; }
+.field-suffix > input { padding-right: 50px; }
+.field-suffix > .suffix {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    font-size: 11px; color: var(--gray-400);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    pointer-events: none;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+/* ── Badges ───────────────────────────────────────────────────────── */
+
+.badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 12px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 100px;
+    background: var(--gray-100);
+    color: var(--gray-600);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    border: 1px solid var(--gray-200);
+}
+.badge-exam        { background: var(--gold-light); color: var(--exam-ink); border-color: var(--gold); }
+.badge-tutorial    { background: var(--blue-light); color: var(--blue-dark); border-color: var(--blue); }
+.badge-lab         { background: #f0f9ff; color: #075985; border-color: #7dd3fc; }
+.badge-free-study  { background: #f5f3ff; color: #5b21b6; border-color: #c4b5fd; }
+.badge-draft       { background: var(--gray-100); color: var(--gray-600); border-color: var(--gray-200); }
+.badge-scheduled   { background: var(--blue-light); color: var(--blue-dark); border-color: var(--blue); }
+.badge-active      { background: var(--accept-bg); color: var(--accept); border-color: var(--accept); }
+.badge-ended       { background: var(--gray-100); color: var(--gray-600); border-color: var(--gray-400); }
+.badge-cancelled   { background: var(--refuse-bg); color: var(--refuse); border-color: var(--refuse); }
+.badge-teacher     { background: var(--blue-light); color: var(--blue-dark); border-color: var(--blue); }
+.badge-student     { background: #dcfce7; color: #166534; border-color: #4ade80; }
+
+/* ── Sessions list ────────────────────────────────────────────────── */
+
+.session-toolbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--gray-200);
+}
+.session-toolbar .grow { flex: 1; }
+
+.session-table-wrap { padding: 0 0 32px; }
+.session-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: var(--white);
+    border-radius: var(--r-3);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+.session-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--gray-800);
+    padding: 14px 18px;
+    background: var(--gray-200);
+    border-bottom: 2px solid var(--gray-400);
+}
+.session-table td {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--gray-200);
+    font-size: 14px;
+    color: var(--gray-800);
+}
+.session-table tr:last-child td { border-bottom: none; }
+.session-table tr:hover td { background: var(--gray-100); }
+.session-table .cell-actions { text-align: right; white-space: nowrap; }
+.session-table .cell-actions form { display: inline; margin: 0; }
+.session-table .cell-actions > * { margin-left: 4px; }
+.session-table .access-code-cell {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--blue-dark);
+    background: var(--blue-light);
+    padding: 3px 10px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.session-cards { display: none; padding: 16px 0 32px; gap: 14px; flex-direction: column; }
+.session-card {
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-3);
+    padding: 18px;
+    box-shadow: var(--shadow-sm);
+}
+.session-card-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.session-card-title { font-weight: 700; font-size: 15px; color: var(--gray-800); font-family: var(--font-display); }
+.session-card-meta { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.session-card-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+@media (max-width: 720px) {
+    .session-table-wrap { display: none; }
+    .session-cards      { display: flex; }
+}
+
+.session-empty {
+    margin: 48px 0;
+    padding: 64px 32px;
+    background: var(--white);
+    border: 2px dashed var(--gray-200);
+    border-radius: var(--r-3);
+    text-align: center;
+    color: var(--gray-600);
+}
+.session-empty p { margin: 0 0 16px; font-size: 15px; }
+
+/* ── Create / Edit form (2-column with aside) ─────────────────────── */
+
+.session-form-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    background: var(--white);
+    border-radius: var(--r-3);
+    box-shadow: var(--shadow-md);
+    margin: 24px 0;
+    overflow: hidden;
+}
+.session-form-main { padding: 28px 32px; border-right: 1px solid var(--gray-200); }
+.session-aside {
+    padding: 28px;
+    background: linear-gradient(180deg, var(--gray-100) 0%, var(--blue-light) 100%);
+    display: flex; flex-direction: column; gap: 24px;
+}
+@media (max-width: 960px) {
+    .session-form-grid { grid-template-columns: 1fr; }
+    .session-form-main { border-right: 0; border-bottom: 1px solid var(--gray-200); }
+}
+
+.fsection { margin-bottom: 26px; }
+.fsection-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.fsection-label { font-size: 11px; color: var(--gray-600); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.fsection-rule { flex: 1; height: 1px; background: var(--gray-200); }
+.fsection-extra { font-family: var(--font-mono); font-size: 11px; color: var(--gray-400); font-weight: 600; }
+.fsection-hint { font-size: 12.5px; color: var(--gray-400); margin: 0 0 10px; line-height: 1.55; }
+
+.row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr;     gap: 12px; }
+.flabel { font-size: 11px; color: var(--gray-600); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; display: block; }
+
+/* Kind cards (session types) */
+.kind-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.kind-card {
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    background: var(--white);
+    color: var(--gray-800);
+    border: 2px solid var(--gray-200);
+    border-radius: var(--r-2);
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 8px;
+    transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
+}
+.kind-card input { display: none; }
+.kind-card .kind-head { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; color: var(--gray-800); font-family: var(--font-display); }
+.kind-card .kind-desc { font-size: 12.5px; line-height: 1.5; color: var(--gray-600); }
+.kind-card:hover { border-color: var(--blue); box-shadow: var(--shadow-sm); }
+.kind-card.is-active {
+    background: var(--blue);
+    color: var(--white);
+    border-color: var(--blue);
+    box-shadow: 0 6px 20px rgba(26,115,200,.30);
+}
+.kind-card.is-active .kind-head { color: var(--white); }
+.kind-card.is-active .kind-desc { color: rgba(255,255,255,.85); }
+.kind-card.kraft.is-active {
+    background: var(--gold);
+    border-color: var(--gold);
+    box-shadow: 0 6px 20px rgba(245,166,35,.35);
+}
+.kind-card.kraft.is-active .kind-head,
+.kind-card.kraft.is-active .kind-desc { color: var(--exam-ink); }
+
+/* Models list */
+.models-list { border: 1.5px solid var(--gray-200); border-radius: var(--r-1); overflow: hidden; background: var(--white); }
+.model-row {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 13.5px;
+    border-top: 1px solid var(--gray-200);
+    transition: background .15s;
+}
+.model-row:first-child { border-top: 0; }
+.model-row:hover { background: var(--gray-100); }
+.model-row input[type="checkbox"] { margin: 0; accent-color: var(--blue); width: 16px; height: 16px; cursor: pointer; }
+.model-row.is-checked { background: var(--blue-light); }
+.model-row .model-name { font-family: var(--font-mono); color: var(--gray-800); font-weight: 600; }
+.model-row.is-unchecked .model-name { color: var(--gray-400); }
+.model-row .model-version { font-family: var(--font-mono); font-size: 11px; color: var(--gray-400); }
+
+.prompt-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--gray-400);
+    margin-top: 8px;
+    display: flex; justify-content: space-between;
+}
+
+/* Aside: access code card + student preview + preflight */
+.access-card {
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-3);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+}
+.access-card-label { font-size: 11px; color: var(--gray-400); letter-spacing: .10em; text-transform: uppercase; font-weight: 700; }
+.access-code-display {
+    font-family: var(--font-mono);
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    margin: 12px 0 14px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--blue);
+    text-shadow: 0 2px 8px rgba(26,115,200,.15);
+}
+.access-card-hint { font-size: 13px; color: var(--gray-600); line-height: 1.55; margin-bottom: 18px; }
+.access-card-actions { display: flex; gap: 8px; }
+.access-card-actions .btn { flex: 1; justify-content: center; }
+
+.preview-card {
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-2);
+    padding: 16px;
+    margin-top: 10px;
+    box-shadow: var(--shadow-sm);
+}
+.preview-card-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.preview-card-tag { font-family: var(--font-mono); font-size: 10px; color: var(--gray-400); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+.preview-card-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; color: var(--gray-800); font-family: var(--font-display); }
+.preview-card-meta { color: var(--gray-600); font-size: 13px; margin-bottom: 14px; }
+.preview-models { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.preview-model { font-family: var(--font-mono); font-size: 12px; color: var(--gray-600); display: flex; align-items: center; gap: 8px; }
+.preview-model::before { content: ""; width: 5px; height: 5px; background: var(--blue); border-radius: 50%; }
+.preview-prompt {
+    background: var(--gray-100);
+    border-left: 3px solid var(--blue);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--gray-600);
+    white-space: pre-wrap;
+}
+.preview-prompt-marker { color: var(--gray-400); font-weight: 600; }
+
+.preflight-list { list-style: none; padding: 0; margin: 12px 0 0; font-size: 13px; }
+.preflight-list li { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--gray-200); color: var(--gray-600); }
+.preflight-list li:last-child { border-bottom: none; }
+.preflight-marker {
+    width: 24px; height: 24px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.preflight-marker.ok   { color: var(--accept); background: var(--accept-bg); }
+.preflight-marker.warn { color: var(--warn);   background: var(--warn-bg); }
+
+.form-actions { display: flex; gap: 12px; padding-top: 16px; border-top: 1px solid var(--gray-200); margin-top: 8px; }
+.form-actions .grow { flex: 1; }
+
+/* ── Dashboard view ───────────────────────────────────────────────── */
+
+.dashboard-header {
+    display: flex; justify-content: space-between; gap: 16px;
+    align-items: flex-start;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--gray-200);
+    flex-wrap: wrap;
+}
+.dashboard-header h1 { font-family: var(--font-display); color: var(--gray-800); }
+.dashboard-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+.dashboard-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    padding: 24px 0;
+}
+@media (max-width: 960px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+    /* Profile: once the grid stacks, surface the identity card (avatar +
+       name) above the detail cards. Scoped so the desktop two-column order
+       is untouched. */
+    .page-profile .dashboard-grid > aside { order: -1; }
+    /* Match the 18px card rhythm: the stacked gap otherwise doubled up
+       (24px grid gap + the avatar card's 18px margin-bottom). */
+    .page-profile .dashboard-grid { gap: 18px; }
+    .page-profile .dashboard-grid > aside .dashboard-card { margin-bottom: 0; }
+}
+
+.dashboard-card {
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-3);
+    padding: 22px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow-sm);
+}
+.dashboard-card h2 {
+    margin: 0 0 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+    font-family: var(--font-sans);
+}
+.kv-grid { display: grid; grid-template-columns: auto 1fr; gap: 10px 20px; }
+.kv-key { font-size: 11px; color: var(--gray-400); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+.kv-val { font-size: 14px; color: var(--gray-800); font-weight: 600; }
+.kv-val.mono { font-family: var(--font-mono); }
+
+.prompt-block {
+    background: var(--gray-100);
+    border-left: 3px solid var(--blue);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--gray-800);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Code overlay (fullscreen access code) */
+.code-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15, 90, 160, .92);
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+}
+.code-overlay-value {
+    font-family: var(--font-mono);
+    font-size: clamp(96px, 25vw, 240px);
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--white);
+    text-shadow: 0 8px 32px rgba(0,0,0,.3);
+}
+.code-overlay-close {
+    position: absolute;
+    bottom: 32px; left: 50%; transform: translateX(-50%);
+    color: var(--white); background: transparent;
+    border: 2px solid var(--white);
+    padding: 12px 24px; border-radius: var(--r-1);
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.code-overlay-close:hover { background: var(--white); color: var(--blue-dark); }
+
+/* ── Profile page ─────────────────────────────────────────────────── */
+
+.user-pill-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--blue);
+    color: var(--white);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font-display);
+}
+
+/* ── Mono / icon utilities ────────────────────────────────────────── */
+
+.mono { font-family: var(--font-mono); letter-spacing: 0; }
+.lucide { vertical-align: middle; }
+
+/* =====================================================================
+   Mobile drawer navigation (<= 768px)
+
+   On phones the burger drawer is the single navigation surface for
+   EVERY authenticated page. The desktop shell above hides the sidebar
+   and burger on non-chat pages (they navigate via the topbar pills),
+   but on mobile those pills are hidden, so the drawer must come back.
+
+   This block sits at the end of the last-loaded stylesheet on purpose:
+   it authoritatively overrides both homeChat.css's base shell and the
+   `.app-body:not(.page-chat)` desktop overrides earlier in this file.
+   ===================================================================== */
+@media (max-width: 768px) {
+
+    /* Drawer = fixed slide-over on every page, chat or not. The
+       `.app-body-row >` prefix matches the desktop rule it replaces so
+       it wins on source order. */
+    .app-body-row > .sidebar,
+    .app-body:not(.page-chat) .sidebar {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: min(84vw, 300px);
+        min-width: 0;
+        transform: translateX(-100%);
+        z-index: 1000;
+    }
+    .app-body-row > .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .18);
+    }
+
+    /* Burger is always present to open that drawer. */
+    .app-body .topbar-burger,
+    .app-body:not(.page-chat) .topbar-burger {
+        display: flex;
+        order: -1;
+    }
+
+    /* Collapse the 260px brand column to its content so the topbar
+       breathes; the avatar then sits flush right. */
+    .app-body .topbar-brand {
+        width: auto;
+        margin-left: 0;
+        padding-left: 0;
+        padding-right: 0;
+        border-right: none;
+    }
+}

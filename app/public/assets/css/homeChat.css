@@ -7,8 +7,8 @@
     min-height: 100vh;
     overflow: hidden;
     background-image:
-            radial-gradient(ellipse 600px 400px at 5% 95%, rgba(26,115,200,.04) 0%, transparent 70%),
-            radial-gradient(ellipse 400px 300px at 95% 5%, rgba(245,166,35,.03) 0%, transparent 70%);
+        radial-gradient(ellipse 600px 400px at 5% 95%, rgba(26, 115, 200, .04) 0%, transparent 70%),
+        radial-gradient(ellipse 400px 300px at 95% 5%, rgba(245, 166, 35, .03) 0%, transparent 70%);
 }
 
 .sidebar {
@@ -22,7 +22,7 @@
     position: sticky;
     top: 0;
     z-index: 200;
-    transition: transform .25s cubic-bezier(.22,.9,.32,1);
+    transition: transform .25s cubic-bezier(.22, .9, .32, 1);
 }
 
 .sidebar-header {
@@ -31,7 +31,7 @@
     justify-content: space-between;
     padding: 1rem 1rem .75rem;
     border-bottom: 1px solid var(--gray-200);
-    background: linear-gradient(180deg, rgba(26,115,200,.03) 0%, transparent 100%);
+    background: linear-gradient(180deg, rgba(26, 115, 200, .03) 0%, transparent 100%);
 }
 
 .sidebar-logo {
@@ -39,15 +39,18 @@
     align-items: center;
     gap: .6rem;
 }
+
 .sidebar-logo img {
     height: 30px;
     width: auto;
 }
+
 .sidebar-logo-text {
     display: flex;
     flex-direction: column;
     line-height: 1.15;
 }
+
 .sidebar-logo-text strong {
     font-family: 'Nunito', sans-serif;
     font-size: .95rem;
@@ -55,6 +58,7 @@
     color: var(--gray-800);
     letter-spacing: -.01em;
 }
+
 .sidebar-logo-text span {
     font-family: 'JetBrains Mono', monospace;
     font-size: .62rem;
@@ -74,7 +78,10 @@
     border-radius: 6px;
     transition: background .15s;
 }
-.sidebar-close:hover { background: var(--gray-100); }
+
+.sidebar-close:hover {
+    background: var(--gray-100);
+}
 
 .btn-new-chat {
     margin: .75rem .75rem .5rem;
@@ -91,13 +98,15 @@
     align-items: center;
     gap: .45rem;
     transition: background .18s, box-shadow .18s, transform .12s;
-    box-shadow: 0 2px 8px rgba(26,115,200,.2);
+    box-shadow: 0 2px 8px rgba(26, 115, 200, .2);
 }
+
 .btn-new-chat:hover {
     background: var(--blue-dark);
-    box-shadow: 0 4px 12px rgba(26,115,200,.3);
+    box-shadow: 0 4px 12px rgba(26, 115, 200, .3);
     transform: translateY(-1px);
 }
+
 .btn-new-chat:active {
     transform: translateY(0);
 }
@@ -110,24 +119,35 @@
     background: var(--gray-100);
     border: 1.5px solid var(--gray-200);
     border-radius: 8px;
-    padding: .45rem .7rem;
+    padding: .10rem .7rem;
     transition: border-color .18s, box-shadow .18s;
 }
+
 .sidebar-search:focus-within {
     border-color: var(--blue);
-    box-shadow: 0 0 0 3px rgba(26,115,200,.08);
+    box-shadow: 0 0 0 3px rgba(26, 115, 200, .08);
 }
-.sidebar-search svg { color: var(--gray-400); flex-shrink: 0; }
+
+.sidebar-search svg {
+    color: var(--gray-400);
+    flex-shrink: 0;
+}
+
 .sidebar-search input {
     border: none;
     background: transparent;
     outline: none;
     font-size: .82rem;
+    line-height: 1.3;
+    /* trim the default leading so the field stays slim */
     font-family: 'Nunito Sans', sans-serif;
     color: var(--gray-800);
     width: 100%;
 }
-.sidebar-search input::placeholder { color: var(--gray-400); }
+
+.sidebar-search input::placeholder {
+    color: var(--gray-400);
+}
 
 .sidebar-conversations {
     flex: 1;
@@ -135,7 +155,10 @@
     padding: .25rem 0;
 }
 
-.conv-group { padding: .25rem .75rem; }
+.conv-group {
+    padding: .25rem .75rem;
+}
+
 .conv-group-label {
     display: block;
     font-family: 'JetBrains Mono', monospace;
@@ -156,8 +179,14 @@
     margin-bottom: 2px;
     cursor: pointer;
 }
-.conv-item:hover { background: var(--gray-100); }
-.conv-item.active { background: var(--blue-light); }
+
+.conv-item:hover {
+    background: var(--gray-100);
+}
+
+.conv-item.active {
+    background: var(--blue-light);
+}
 
 .conv-title {
     font-family: 'Nunito Sans', sans-serif;
@@ -168,9 +197,103 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 .conv-item.active .conv-title {
     color: var(--blue);
     font-weight: 600;
+}
+
+/* Drawer header brand — hidden on desktop (the brand sits in the topbar
+   there); the mobile media query reveals it at the top of the slide-out. */
+.sidebar-brand {
+    display: none;
+    align-items: center;
+    gap: .6rem;
+    padding: .85rem 1rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.sidebar-brand img {
+    height: 30px;
+    width: auto;
+}
+
+.sidebar-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.sidebar-brand-text strong {
+    font-family: 'Nunito', sans-serif;
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    letter-spacing: -.01em;
+}
+
+.sidebar-brand-text span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .62rem;
+    font-weight: 500;
+    color: var(--blue);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+/* Primary nav inside the drawer — desktop keeps it hidden because the
+   same links live as pills in the topbar (.topbar-tabs). The mobile
+   media query below flips it on and hides the topbar pills. */
+.sidebar-nav {
+    display: none;
+}
+
+.sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .6rem .7rem;
+    border-radius: 8px;
+    font-family: 'Nunito', sans-serif;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    text-decoration: none;
+    transition: background .15s, color .15s;
+}
+
+.sidebar-nav-link svg {
+    flex-shrink: 0;
+    color: var(--gray-400);
+    transition: color .15s;
+}
+
+.sidebar-nav-link:hover {
+    background: var(--gray-100);
+    color: var(--gray-800);
+}
+
+.sidebar-nav-link.is-active {
+    background: var(--blue-light);
+    color: var(--blue);
+}
+
+.sidebar-nav-link.is-active svg {
+    color: var(--blue);
+}
+
+/* Dimmed overlay behind the mobile drawer. Inert (display:none) on
+   desktop where the sidebar is part of the static layout. */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 26, 46, .42);
+    opacity: 0;
+    pointer-events: none;
+    /* inert until .show, so it never traps taps */
+    z-index: 900;
+    transition: opacity .25s ease;
 }
 
 .sidebar-footer {
@@ -179,7 +302,10 @@
     display: flex;
     flex-direction: column;
     gap: 1px;
+    margin-top: auto;
+    /* pin the account links to the drawer bottom */
 }
+
 .sidebar-footer-link {
     display: flex;
     align-items: center;
@@ -193,10 +319,12 @@
     text-decoration: none;
     transition: background .15s, color .15s;
 }
+
 .sidebar-footer-link:hover {
     background: var(--gray-100);
     color: var(--gray-800);
 }
+
 .sidebar-logout:hover {
     color: #b91c1c;
     background: #fef2f2;
@@ -219,7 +347,7 @@
     min-height: 54px;
     background: var(--white);
     border-bottom: 1px solid var(--gray-200);
-    box-shadow: 0 1px 4px rgba(26,115,200,.04);
+    box-shadow: 0 1px 4px rgba(26, 115, 200, .04);
 }
 
 .topbar-burger {
@@ -232,13 +360,17 @@
     border-radius: 6px;
     transition: background .15s;
 }
-.topbar-burger:hover { background: var(--gray-100); }
+
+.topbar-burger:hover {
+    background: var(--gray-100);
+}
 
 .topbar-breadcrumb {
     display: flex;
     align-items: center;
     gap: .4rem;
 }
+
 .topbar-mode {
     font-family: 'JetBrains Mono', monospace;
     font-size: .68rem;
@@ -250,7 +382,11 @@
     padding: .2rem .55rem;
     border-radius: 4px;
 }
-.topbar-breadcrumb svg { color: var(--gray-400); }
+
+.topbar-breadcrumb svg {
+    color: var(--gray-400);
+}
+
 .topbar-conv-name {
     font-family: 'Nunito', sans-serif;
     font-size: .88rem;
@@ -271,6 +407,7 @@
     border-radius: 8px;
     padding: 3px;
 }
+
 .topbar-tab {
     font-family: 'Nunito', sans-serif;
     font-size: .8rem;
@@ -284,16 +421,21 @@
     align-items: center;
     gap: .35rem;
 }
-.topbar-tab:hover { color: var(--gray-800); }
+
+.topbar-tab:hover {
+    color: var(--gray-800);
+}
+
 .topbar-tab.active {
     background: var(--white);
     color: var(--blue);
-    box-shadow: 0 1px 4px rgba(26,115,200,.08);
+    box-shadow: 0 1px 4px rgba(26, 115, 200, .08);
 }
 
 .topbar-right {
     margin-left: .75rem;
 }
+
 .topbar-user-avatar {
     width: 34px;
     height: 34px;
@@ -307,7 +449,7 @@
     align-items: center;
     justify-content: center;
     letter-spacing: .02em;
-    box-shadow: 0 2px 6px rgba(26,115,200,.2);
+    box-shadow: 0 2px 6px rgba(26, 115, 200, .2);
 }
 
 .chat-container {
@@ -337,6 +479,7 @@
     display: flex;
     gap: .4rem;
 }
+
 .model-tag {
     display: flex;
     align-items: center;
@@ -349,13 +492,15 @@
     font-family: inherit;
     transition: border-color .18s, background .18s, box-shadow .18s;
 }
+
 .model-tag:hover {
     border-color: var(--gray-400);
 }
+
 .model-tag.active {
     border-color: var(--blue);
     background: var(--blue-light);
-    box-shadow: 0 1px 4px rgba(26,115,200,.08);
+    box-shadow: 0 1px 4px rgba(26, 115, 200, .08);
 }
 
 .model-tag-letter {
@@ -371,6 +516,7 @@
     align-items: center;
     justify-content: center;
 }
+
 .model-tag.active .model-tag-letter {
     background: var(--blue);
 }
@@ -381,6 +527,7 @@
     font-weight: 500;
     color: var(--gray-800);
 }
+
 .model-tag-badge {
     font-family: 'JetBrains Mono', monospace;
     font-size: .62rem;
@@ -409,11 +556,13 @@
     gap: .75rem;
     padding: 2rem;
 }
+
 .empty-icon {
     color: var(--blue);
     opacity: .35;
     margin-bottom: .5rem;
 }
+
 .empty-state h2 {
     font-family: 'Nunito', sans-serif;
     font-size: 1.45rem;
@@ -421,6 +570,7 @@
     color: var(--gray-800);
     letter-spacing: -.01em;
 }
+
 .empty-state p {
     font-family: 'Nunito Sans', sans-serif;
     font-size: .92rem;
@@ -435,6 +585,7 @@
     justify-content: center;
     margin-top: .75rem;
 }
+
 .suggestion-chip {
     padding: .5rem 1rem;
     border: 1.5px solid var(--gray-200);
@@ -445,28 +596,38 @@
     color: var(--gray-600);
     cursor: pointer;
     transition: border-color .18s, color .18s, background .18s, box-shadow .18s;
-    box-shadow: 0 1px 3px rgba(0,0,0,.03);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .03);
 }
+
 .suggestion-chip:hover {
     border-color: var(--blue);
     color: var(--blue);
     background: var(--blue-light);
-    box-shadow: 0 2px 8px rgba(26,115,200,.1);
+    box-shadow: 0 2px 8px rgba(26, 115, 200, .1);
 }
 
 .msg {
     max-width: 720px;
     width: 100%;
-    animation: msgAppear .3s cubic-bezier(.22,.9,.32,1) both;
+    animation: msgAppear .3s cubic-bezier(.22, .9, .32, 1) both;
 }
+
 @keyframes msgAppear {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .msg-user {
     align-self: flex-end;
 }
+
 .msg-user .msg-content {
     background: var(--blue);
     color: var(--white);
@@ -476,15 +637,17 @@
     font-size: .92rem;
     line-height: 1.65;
     white-space: pre-wrap;
-    box-shadow: 0 2px 8px rgba(26,115,200,.18);
+    box-shadow: 0 2px 8px rgba(26, 115, 200, .18);
 }
 
 .msg-ai {
     align-self: flex-start;
 }
+
 .msg-meta {
     margin-bottom: .35rem;
 }
+
 .msg-model {
     font-family: 'JetBrains Mono', monospace;
     font-size: .66rem;
@@ -494,6 +657,7 @@
     padding: .15rem .5rem;
     border-radius: 4px;
 }
+
 .msg-ai .msg-content {
     background: var(--white);
     border: 1px solid var(--gray-200);
@@ -502,20 +666,28 @@
     font-family: 'Nunito Sans', sans-serif;
     font-size: .92rem;
     line-height: 1.7;
-    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .04);
 }
-.msg-ai .msg-content p { margin: 0 0 .5rem; }
-.msg-ai .msg-content p:last-child { margin-bottom: 0; }
+
+.msg-ai .msg-content p {
+    margin: 0 0 .5rem;
+}
+
+.msg-ai .msg-content p:last-child {
+    margin-bottom: 0;
+}
 
 .msg-error {
     color: #b91c1c;
     font-style: italic;
 }
+
 .msg-actions {
     display: flex;
     gap: .35rem;
     margin-top: .4rem;
 }
+
 .msg-action {
     font-family: 'JetBrains Mono', monospace;
     font-size: .66rem;
@@ -530,6 +702,7 @@
     align-items: center;
     gap: .3rem;
 }
+
 .msg-action:hover {
     color: var(--blue);
     background: var(--blue-light);
@@ -540,6 +713,7 @@
     gap: 4px;
     padding: .25rem 0;
 }
+
 .typing-indicator span {
     width: 7px;
     height: 7px;
@@ -548,11 +722,25 @@
     opacity: .4;
     animation: typingBounce .6s infinite alternate;
 }
-.typing-indicator span:nth-child(2) { animation-delay: .15s; }
-.typing-indicator span:nth-child(3) { animation-delay: .3s; }
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: .15s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: .3s;
+}
+
 @keyframes typingBounce {
-    from { opacity: .25; transform: translateY(0); }
-    to   { opacity: .8;  transform: translateY(-4px); }
+    from {
+        opacity: .25;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: .8;
+        transform: translateY(-4px);
+    }
 }
 
 .msg-content pre {
@@ -567,6 +755,7 @@
     margin: .6rem 0;
     border-left: 3px solid var(--blue);
 }
+
 .msg-content code {
     font-family: 'JetBrains Mono', monospace;
     font-size: .82rem;
@@ -575,6 +764,7 @@
     border-radius: 4px;
     color: var(--blue-dark);
 }
+
 .msg-content pre code {
     background: none;
     padding: 0;
@@ -589,7 +779,8 @@
 
 .input-wrapper {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
+    /* centre the textarea against the taller send button */
     gap: .5rem;
     background: var(--gray-100);
     border: 1.5px solid var(--gray-200);
@@ -597,9 +788,10 @@
     padding: .5rem .65rem .5rem .9rem;
     transition: border-color .18s, box-shadow .18s;
 }
+
 .input-wrapper:focus-within {
     border-color: var(--blue);
-    box-shadow: 0 0 0 3px rgba(26,115,200,.1);
+    box-shadow: 0 0 0 3px rgba(26, 115, 200, .1);
 }
 
 .input-wrapper textarea {
@@ -616,7 +808,10 @@
     line-height: 1.5;
     padding: .15rem 0;
 }
-.input-wrapper textarea::placeholder { color: var(--gray-400); }
+
+.input-wrapper textarea::placeholder {
+    color: var(--gray-400);
+}
 
 .btn-send {
     width: 36px;
@@ -631,15 +826,18 @@
     justify-content: center;
     flex-shrink: 0;
     transition: background .18s, opacity .18s, transform .12s;
-    box-shadow: 0 2px 6px rgba(26,115,200,.25);
+    box-shadow: 0 2px 6px rgba(26, 115, 200, .25);
 }
+
 .btn-send:hover {
     background: var(--blue-dark);
     transform: translateY(-1px);
 }
+
 .btn-send:active {
     transform: translateY(0);
 }
+
 .btn-send:disabled {
     opacity: .35;
     cursor: not-allowed;
@@ -652,51 +850,102 @@
     justify-content: space-between;
     padding: .3rem .25rem 0;
 }
-.input-hint, .input-counter {
+
+.input-hint,
+.input-counter {
     font-size: .66rem;
     color: var(--gray-400);
     font-family: 'JetBrains Mono', monospace;
 }
 
 @media (max-width: 768px) {
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100vh;
-        transform: translateX(-100%);
-        box-shadow: none;
-        z-index: 1000;
+
+    /* The drawer itself (position, width, burger and brand sizing) is
+       owned by the authoritative mobile block at the end of sessions.css
+       so it can win over the desktop non-chat shell overrides there.
+       This block keeps the generic, conflict-free pieces. */
+    .sidebar-close {
+        display: block;
     }
-    .sidebar.open {
-        transform: translateX(0);
-        box-shadow: 4px 0 24px rgba(0,0,0,.12);
+
+    .sidebar-backdrop {
+        display: block;
     }
-    .sidebar-close { display: block; }
-    .topbar-burger { display: flex; }
-    .topbar-breadcrumb { display: none; }
-    .topbar-tabs { margin-left: 0; }
+
+    .sidebar-backdrop.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Logo header at the very top of the drawer; the absolute close button
+       floats over its right edge like a standard slide-out header. */
+    .sidebar-brand {
+        display: flex;
+    }
+
+    /* Primary nav moves from the topbar into the drawer, just under the
+       brand header. */
+    .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: .55rem .65rem .6rem;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    /* Clean topbar: the crowded Chat / Mes sessions pills are gone —
+       they live in the drawer now — and the avatar sits flush right. */
+    .app-topbar {
+        gap: .5rem;
+        padding: 0 .85rem;
+    }
+
+    .topbar-breadcrumb {
+        display: none;
+    }
+
+    .topbar-tabs {
+        display: none;
+    }
+
+    .topbar-right {
+        margin-left: auto;
+    }
 
     .model-bar {
         flex-direction: column;
         gap: .5rem;
         align-items: stretch;
     }
-    .model-tags { overflow-x: auto; }
 
-    .messages { padding: 1rem; }
-    .msg { max-width: 100%; }
-}
+    .model-tags {
+        overflow-x: auto;
+    }
 
-.msg-stat {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: .66rem;
-    color: var(--gray-400);
-    padding: .25rem .5rem;
-    display: flex;
-    align-items: center;
-    gap: .3rem;
-    border-left: 1px solid var(--gray-200);
-    margin-left: .15rem;
-    padding-left: .5rem;
+    .messages {
+        padding: 1rem;
+    }
+
+    .msg {
+        max-width: 100%;
+    }
+
+    /* The long usage hint is dropped on mobile; the char counter moves to
+       a slim line above the composer (footer reordered to the top) so the
+       bottom edge stays clean. */
+    .input-bar {
+        display: flex;
+        flex-direction: column;
+        padding: .5rem 1rem .75rem;
+    }
+
+    .input-footer {
+        order: -1;
+        justify-content: flex-end;
+        padding: 0 .25rem .3rem;
+    }
+
+    .input-hint {
+        display: none;
+    }
 }

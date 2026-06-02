@@ -31,7 +31,13 @@ services :
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - db_data:/var/lib/postgresql/data # VOLUME : Sauvegarde les données de la base
-      - ./init-scripts:/docker-entrypoint-initdb.d
+      # The Postgres entrypoint only runs files at the root of initdb.d and
+      # ignores subdirectories, so each script is mounted as a flat file.
+      # Numeric prefixes drive the execution order: schema, then seeds.
+      - ./database/schema/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./database/schema/02_triggers.sql:/docker-entrypoint-initdb.d/02_triggers.sql:ro
+      - ./database/seeds/01_bootstrap.sql:/docker-entrypoint-initdb.d/03_bootstrap.sql:ro
+      - ./database/seeds/02_dev_fixtures.sql:/docker-entrypoint-initdb.d/04_dev_fixtures.sql:ro
   adminer:
     image : adminer
     restart : always
@@ -44,9 +50,36 @@ services :
     build: ./app
     ports:
       - "8085:80"
+    environment:
+      # Docker Compose only auto-injects .env vars into ${} interpolation
+      # inside this YAML file, NOT into container processes. Re-exporting
+      # here so PdoConnection can read them at runtime via $_ENV.
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      OLLAMA_URL: http://ollama2:11434
+      APP_DEBUG: "true"
+    depends_on:
+      - db
     volumes:
       - ./app:/var/www/html
       - ./vhost.conf:/etc/apache2/sites-available/000-default.conf
+
+  # Throwaway database for the test suite. Same image as db (so pgTAP is
+  # available) but loads only the schema -- never the seeds -- and keeps no
+  # persistent volume, so every test run starts from an empty schema.
+  db-test:
+    build: ./docker/db
+    profiles: ["test"]
+    shm_size: 128mb
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./database/schema:/docker-entrypoint-initdb.d:ro
 
   # pgTAP test runner. Only started via the "test" profile:
   #   docker compose --profile test run --rm pgtap
@@ -56,9 +89,9 @@ services :
     image: postgres:17-alpine
     profiles: ["test"]
     depends_on:
-      - db
+      - db-test
     environment:
-      PGHOST: db
+      PGHOST: db-test
       PGUSER: ${DB_USER}
       PGPASSWORD: ${DB_PASSWORD}
       PGDATABASE: ${DB_NAME}
@@ -68,13 +101,20 @@ services :
     command:
       - |
         set -e
+        echo "==> Waiting for db-test to accept connections"
+        until pg_isready -q; do sleep 1; done
         echo "==> Installing pgTAP extension (idempotent)"
         psql -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pgtap;" > /dev/null
         FAILED=0
         for f in /tests/*.sql; do
           echo ""
           echo "--- $$(basename $$f) ---"
-          if ! psql -v ON_ERROR_STOP=1 -f "$$f"; then
+          # Capture output so we can detect both psql errors (exit code) and
+          # pgTAP assertion failures ("not ok" lines), which psql does not
+          # surface through its exit status.
+          OUT="$$(psql -v ON_ERROR_STOP=1 -f "$$f" 2>&1)" || FAILED=1
+          echo "$$OUT"
+          if echo "$$OUT" | grep -q '^ *not ok'; then
             FAILED=1
           fi
         done

@@ -1,230 +1,243 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Services;
 
-use Data\Database;
-use PDO;
+use App\Infrastructure\Persistence\PdoConnection;
 
 /**
- * Manages authentication: registration, login, logout.
- *  Uses the PostgreSQL database via the Singleton Database.
+ * Minimal authentication service against the real `users` table.
+ *
+ * Temporary bridge between the legacy login flow (kept on
+ * Controllers\LoginController) and the real database introduced by spec 00.
+ * To be rewritten on top of UserRepositoryInterface / App\Application
+ * once spec 01 (Auth & Account) is properly implemented.
+ *
+ * Schema alignment notes:
+ *   - Tables and columns are plural / `id`-based per init-scripts/IAMU_db.sql:
+ *     `users.id`, `users.last_login_at`, `teachers.id`, `students.id`.
+ *   - `users` no longer carries `gdpr_consent` / `gdpr_consent_at`; the
+ *     equivalent is now `consent_at` + `consent_version`. We do not touch
+ *     these fields here — they are owned by spec 06 (RGPD).
  */
-class AuthService
+final class AuthService
 {
-    private PDO $pdo;
-
-    public function __construct()
-    {
-        $this->pdo = Database::getConnection();
+    public function __construct(
+        private readonly PdoConnection $db,
+    ) {
     }
 
-    //login
-
     /**
-     * @return array{success: bool, error?: string}
+     * @return array{success: true} | array{success: false, error: string}
      */
     public function login(string $email, string $password): array
     {
         if ($email === '' || $password === '') {
-            return ['success' => false, 'error' => 'Veuillez remplir tous les champs.'];
+            return ['success' => false, 'error' => 'Email et mot de passe requis.'];
         }
 
-        // search user
-        $stmt = $this->pdo->prepare('
-            SELECT id, email, password_hash, first_name, last_name, is_active
-            FROM users
-            WHERE email = :email
-        ');
-        $stmt->execute(['email' => $email]);
-        $user = $stmt->fetch();
+        $row = $this->db->query(
+            'SELECT id, email, password_hash, first_name, last_name, is_active
+             FROM users WHERE email = :email',
+            ['email' => $email]
+        )->fetch();
 
-        if (!$user) {
-            return ['success' => false, 'error' => 'Identifiants incorrects.'];
+        if (!$row || !password_verify($password, (string) $row['password_hash'])) {
+            return ['success' => false, 'error' => 'Identifiants invalides.'];
         }
 
-        if (!$user['is_active']) {
-            return ['success' => false, 'error' => 'Ce compte a été désactivé.'];
+        if (!$row['is_active']) {
+            return ['success' => false, 'error' => 'Ce compte est désactivé.'];
         }
 
-        // Verify pwd
-        if (!password_verify($password, $user['password_hash'])) {
-            return ['success' => false, 'error' => 'Identifiants incorrects.'];
-        }
+        $userId = (int) $row['id'];
 
-        // Dertermine role
-        $roles = $this->getUserRoles((int) $user['id']);
+        $this->db->query(
+            'UPDATE users SET last_login_at = NOW() WHERE id = :id',
+            ['id' => $userId]
+        );
 
-        //Update last_login_at
-        $this->pdo->prepare('UPDATE users SET last_login_at = NOW() WHERE id = :id')
-            ->execute(['id' => $user['id']]);
-
-        //Create session
-        $this->createSession($user, $roles);
+        $_SESSION['user_id']         = $userId;
+        $_SESSION['user_email']      = (string) $row['email'];
+        $_SESSION['user_first_name'] = (string) $row['first_name'];
+        $_SESSION['user_last_name']  = (string) $row['last_name'];
+        $_SESSION['roles']           = $this->resolveRoles($userId);
+        session_regenerate_id(true);
 
         return ['success' => true];
     }
-    //register
 
     /**
-     * @param array{email: string, password: string, password_confirm: string,
-     *              first_name: string, last_name: string, rgpd_consent: bool} $data
-     * @return array{success: bool, error?: string}
+     * Registers a new user.
+     *
+     * Behaviour:
+     *   - Format-validates the form input (email, password >= 8 chars,
+     *     password_confirm match, RGPD consent ticked).
+     *   - Looks up the email domain to derive the role:
+     *       @etu.univ-amu.fr  -> student auto
+     *       @univ-amu.fr      -> teacher auto
+     *       anything else     -> rejected (per CLAUDE.md §7).
+     *     Once spec 05 ships an admin UI for `email_domain_configs`, this
+     *     lookup will move to the DB; the contract here doesn't change.
+     *   - Hashes the password with bcrypt.
+     *   - Wraps `INSERT users` + `INSERT teachers|students` in a single
+     *     transaction so a half-created account can never linger.
+     *
+     * Does NOT auto-login: the caller flashes a success message and
+     * redirects to /login (LoginController::register already does that).
+     *
+     * @param array<string, mixed> $data
+     * @return array{success: true} | array{success: false, error: string}
      */
     public function register(array $data): array
     {
-        $email           = trim($data['email'] ?? '');
-        $password        = $data['password'] ?? '';
-        $passwordConfirm = $data['password_confirm'] ?? '';
-        $firstName       = trim($data['first_name'] ?? '');
-        $lastName        = trim($data['last_name'] ?? '');
-        $rgpdConsent     = (bool) ($data['rgpd_consent'] ?? false);
+        $email           = trim((string) ($data['email']            ?? ''));
+        $password        = (string) ($data['password']             ?? '');
+        $passwordConfirm = (string) ($data['password_confirm']     ?? '');
+        $firstName       = trim((string) ($data['first_name']      ?? ''));
+        $lastName        = trim((string) ($data['last_name']       ?? ''));
+        $rgpdConsent     = (bool)  ($data['rgpd_consent']          ?? false);
 
+        // ----- Format validation ------------------------------------
         if ($email === '' || $password === '' || $firstName === '' || $lastName === '') {
             return ['success' => false, 'error' => 'Tous les champs sont obligatoires.'];
         }
-
-        if (mb_strlen($password) < 8) {
-            return ['success' => false, 'error' => 'Le mot de passe doit contenir au moins 8 caractères.'];
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'error' => 'Email invalide.'];
         }
-
+        if (strlen($password) < 8) {
+            return ['success' => false, 'error' => 'Le mot de passe doit faire au moins 8 caractères.'];
+        }
         if ($password !== $passwordConfirm) {
             return ['success' => false, 'error' => 'Les mots de passe ne correspondent pas.'];
         }
-
         if (!$rgpdConsent) {
-            return ['success' => false, 'error' => 'Vous devez accepter le traitement des données.'];
+            return ['success' => false, 'error' => 'Vous devez accepter les conditions RGPD pour créer un compte.'];
         }
 
-        // Check the email domain
-        $domain = $this->extractDomain($email);
-        $domainConfig = $this->getDomainConfig($domain);
-
-        if (!$domainConfig) {
-            return ['success' => false, 'error' => 'Seules les adresses @etu.univ-amu.fr et @univ-amu.fr sont acceptées.'];
+        // ----- Role lookup ------------------------------------------
+        $role = $this->resolveRoleFromDomain($email);
+        if ($role === null) {
+            return [
+                'success' => false,
+                'error'   => "Seuls les emails AMU sont acceptés (@etu.univ-amu.fr ou @univ-amu.fr).",
+            ];
         }
 
-        // Check that the email address is not already in use.
-        $stmt = $this->pdo->prepare('SELECT id FROM users WHERE email = :email');
-        $stmt->execute(['email' => $email]);
-
-        if ($stmt->fetch()) {
-            return ['success' => false, 'error' => 'Un compte existe déjà avec cette adresse.'];
+        // ----- Email uniqueness -------------------------------------
+        $existing = $this->db
+            ->query('SELECT 1 FROM users WHERE email = :email', ['email' => $email])
+            ->fetch();
+        if ($existing !== false) {
+            return ['success' => false, 'error' => 'Cet email est déjà utilisé.'];
         }
 
-        // insert username
+        // ----- Insert -----------------------------------------------
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
-        $stmt = $this->pdo->prepare('
-            INSERT INTO users (email, password_hash, first_name, last_name, consent_at, consent_version)
-            VALUES (:email, :hash, :first_name, :last_name, NOW(), :consent_version)
-            RETURNING id
-        ');
-        $stmt->execute([
-            'email'           => $email,
-            'hash'            => $hash,
-            'first_name'      => $firstName,
-            'last_name'       => $lastName,
-            'consent_version' => 'v1',
-        ]);
+        $this->db->beginTransaction();
+        try {
+            $stmt = $this->db->query(
+                'INSERT INTO users (email, password_hash, first_name, last_name, consent_at, consent_version)
+                 VALUES (:email, :hash, :fn, :ln, NOW(), :ver)
+                 RETURNING id',
+                [
+                    'email' => $email,
+                    'hash'  => $hash,
+                    'fn'    => $firstName,
+                    'ln'    => $lastName,
+                    'ver'   => '1.0',
+                ]
+            );
+            $userId = (int) $stmt->fetchColumn();
 
-        $userId = (int) $stmt->fetchColumn();
+            // The role table only carries the FK to users.id; default
+            // values are good for is_specialised (false) / title (null) /
+            // student_number (null) — the user can fill them later.
+            if ($role === 'teacher') {
+                $this->db->query('INSERT INTO teachers (id) VALUES (:id)', ['id' => $userId]);
+            } else {
+                $this->db->query('INSERT INTO students (id) VALUES (:id)', ['id' => $userId]);
+            }
 
-        // Insert into the role table
-        $role = $domainConfig['role']; // 'STUDENT' ou 'TEACHER'
-
-        if ($role === 'STUDENT') {
-            $this->pdo->prepare('INSERT INTO students (id) VALUES (:id)')
-                ->execute(['id' => $userId]);
-        } elseif ($role === 'TEACHER') {
-            $this->pdo->prepare('INSERT INTO teachers (id) VALUES (:id)')
-                ->execute(['id' => $userId]);
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollback();
+            return [
+                'success' => false,
+                'error'   => "Erreur lors de l'enregistrement. Merci de réessayer.",
+            ];
         }
 
         return ['success' => true];
+    }
+
+    /**
+     * Hardcoded domain → role mapping (CLAUDE.md §7).
+     *
+     * To be replaced by a lookup in `email_domain_configs` once spec 05
+     * is implemented. Returning null means "no auto-role for this domain".
+     */
+    private function resolveRoleFromDomain(string $email): ?string
+    {
+        $lower = strtolower($email);
+        if (str_ends_with($lower, '@etu.univ-amu.fr')) {
+            return 'student';
+        }
+        if (str_ends_with($lower, '@univ-amu.fr')) {
+            return 'teacher';
+        }
+        return null;
     }
 
     public function logout(): void
     {
         $_SESSION = [];
-
         if (ini_get('session.use_cookies')) {
-            $p = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $p['path'], $p['domain'], $p['secure'], $p['httponly']
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $params['path'],
+                $params['domain'],
+                $params['secure'],
+                $params['httponly']
             );
         }
-
         session_destroy();
     }
 
     /**
-     * Extracts the domain from an email address.
-     *  e.g., "thomas.dupont@etu.univ-amu.fr" → "etu.univ-amu.fr"
-     */
-    private function extractDomain(string $email): string
-    {
-        $parts = explode('@', $email);
-        return strtolower(end($parts));
-    }
-
-    /**
-     * Searches for the domain configuration in email_domain_configs.
-     *  Returns null if the domain is not authorized.
-     */
-    private function getDomainConfig(string $domain): ?array
-    {
-        $stmt = $this->pdo->prepare('
-            SELECT domain, role
-            FROM email_domain_configs
-            WHERE domain = :domain AND is_active = TRUE
-        ');
-        $stmt->execute(['domain' => $domain]);
-        $result = $stmt->fetch();
-
-        return $result ?: null;
-    }
-
-    /**
-     * Determines a user's roles by checking
-     *  each role table (students, teachers, researchers, department_administrators).
+     * Resolves the user's roles by checking the specialisation tables.
+     * A single user may carry multiple roles.
      *
-     * @return string[]  ex: ['STUDENT'] ou ['TEACHER', 'DEPARTMENT_ADMIN']
+     * @return list<string>
      */
-    private function getUserRoles(int $userId): array
+    private function resolveRoles(int $userId): array
     {
         $roles = [];
 
-        $tables = [
-            'students'                  => 'STUDENT',
-            'teachers'                  => 'TEACHER',
-            'researchers'               => 'RESEARCHER',
-            'department_administrators' => 'DEPARTMENT_ADMIN',
-        ];
-
-        foreach ($tables as $table => $role) {
-            $stmt = $this->pdo->prepare("SELECT 1 FROM {$table} WHERE id = :id");
-            $stmt->execute(['id' => $userId]);
-            if ($stmt->fetch()) {
-                $roles[] = $role;
-            }
+        if ($this->existsIn('teachers', $userId)) {
+            $roles[] = 'teacher';
         }
+        if ($this->existsIn('students', $userId)) {
+            $roles[] = 'student';
+        }
+        // researchers / department_administrators exist on the live
+        // schema but their HTTP surface belongs to spec 05.
 
         return $roles;
     }
 
-    /**
-     * Creates the PHP session with the user's data.
-     */
-    private function createSession(array $user, array $roles): void
+    private function existsIn(string $table, int $userId): bool
     {
-        // Regenerate the session ID to avoid session fixation
-        session_regenerate_id(true);
-
-        $_SESSION['user_id']         = (int) $user['id'];
-        $_SESSION['user_email']      = $user['email'];
-        $_SESSION['user_first_name'] = $user['first_name'];
-        $_SESSION['user_last_name']  = $user['last_name'];
-        $_SESSION['roles']           = $roles;
-        $_SESSION['token']           = bin2hex(random_bytes(32));
+        // Table whitelist enforced by the call sites (teachers/students/...).
+        $row = $this->db->query(
+            "SELECT 1 FROM {$table} WHERE id = :id",
+            ['id' => $userId]
+        )->fetch();
+        return $row !== false;
     }
 }

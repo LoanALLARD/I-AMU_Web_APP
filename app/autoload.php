@@ -28,6 +28,14 @@ spl_autoload_register(static function (string $class): bool {
         // section so we don't drift between the two autoloaders.
         $appRoot = __DIR__;
         $prefixes = [
+            // Clean architecture layout — added by SPEC-sessions-backend (2026-05-29).
+            'App\\Domain\\'         => $appRoot . '/src/Domain',
+            'App\\Application\\'    => $appRoot . '/src/Application',
+            'App\\Infrastructure\\' => $appRoot . '/src/Infrastructure',
+            'App\\Http\\'           => $appRoot . '/src/Http',
+
+            // Legacy flat layout — kept for the existing login/accueil/LLM controllers
+            // until they are migrated. Do NOT add new classes under these prefixes.
             'Controllers\\' => $appRoot . '/src/Controllers',
             'Core\\'        => $appRoot . '/src/Core',
             'Models\\'      => $appRoot . '/src/Models',
