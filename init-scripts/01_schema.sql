@@ -30,7 +30,8 @@ CREATE TABLE laboratories (
     email VARCHAR(255),
     phone VARCHAR(20),
     website VARCHAR(255),
-    CONSTRAINT pk_laboratories PRIMARY KEY (id)
+    CONSTRAINT pk_laboratories PRIMARY KEY (id),
+    CONSTRAINT uq_laboratories_code UNIQUE (code)
 );
 
 CREATE TABLE super_administrators (
@@ -54,8 +55,10 @@ CREATE TABLE teachers (
 CREATE TABLE students (
     id BIGINT,
     student_number VARCHAR(50),
+    year SMALLINT,
     CONSTRAINT pk_students PRIMARY KEY (id),
-    CONSTRAINT fk_students_user FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE
+    CONSTRAINT fk_students_user FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT ck_students_year CHECK (year IS NULL OR year > 0)
 );
 
 CREATE TABLE places (

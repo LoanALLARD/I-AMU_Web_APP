@@ -2,7 +2,7 @@
 
 BEGIN;
 
-SELECT plan(22);
+SELECT plan(23);
 
 -- ============================================================
 -- Fixtures
@@ -181,9 +181,6 @@ SELECT throws_ok(
 -- interactions: user_feedback must be in (-1, 0, 1)
 -- ============================================================
 
--- Fixtures needed for interactions.
--- User id=100 sits outside the BIGSERIAL range already consumed by the
--- lives_ok inserts above (which auto-assigned ids 3, 4, ...).
 INSERT INTO users (id, email, password_hash) VALUES (100, 'user100@amu.fr', 'hash100');
 INSERT INTO models (id, department_id, name, provider, max_tokens, context_window, api_url, adapter)
     VALUES (1, 1, 'llama3', 'ollama', 4096, 8192, 'http://localhost:11434', 'ollama');
@@ -225,6 +222,17 @@ SELECT throws_ok(
     '23505',
     NULL,
     'super_administrators.email duplicate is rejected'
+);
+
+-- laboratories.code must be unique
+INSERT INTO laboratories (id, code, name) VALUES (1001, 'LAB01', 'Laboratoire test');
+
+SELECT throws_ok(
+    $$INSERT INTO laboratories (id, code, name)
+      VALUES (1002, 'LAB01', 'Duplicate lab')$$,
+    '23505',
+    NULL,
+    'laboratories.code duplicate is rejected'
 );
 
 -- sessions.access_code must be unique
