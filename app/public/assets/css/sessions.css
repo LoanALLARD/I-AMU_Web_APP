@@ -150,7 +150,9 @@
    the edges. Padding scales with viewport width via clamp(). */
 .app-body:not(.page-chat) .page-container,
 .app-body:not(.page-chat) .page-header,
-.app-body:not(.page-chat) .page-body {
+.app-body:not(.page-chat) .page-body,
+.app-body:not(.page-chat) .dashboard-header,
+.app-body:not(.page-chat) .dashboard-grid {
     max-width: none;
     margin: 0;
     padding-left:  clamp(1rem, 5vw, 4rem);
