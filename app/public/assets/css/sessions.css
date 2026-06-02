@@ -746,3 +746,201 @@ textarea {
         border-right: none;
     }
 }
+
+/* ── Join-a-session page (student) ─────────────────────────────────── */
+
+.join-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: clamp(2rem, 8vh, 5rem) 1rem;
+}
+.join-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-3);
+    box-shadow: var(--shadow-md);
+    padding: 36px 32px 32px;
+    text-align: center;
+}
+.join-card-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--blue-light);
+    color: var(--blue);
+}
+.join-card h1 {
+    margin: 0 0 8px;
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gray-800);
+}
+.join-card-sub {
+    margin: 0 0 24px;
+    font-size: 14px;
+    color: var(--gray-600);
+    line-height: 1.5;
+}
+.join-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.join-code-field {
+    width: 100%;
+    height: auto;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    padding: 14px 12px;
+    color: var(--blue-dark);
+}
+.join-code-field::placeholder {
+    color: var(--gray-400);
+    letter-spacing: .12em;
+}
+.join-submit {
+    justify-content: center;
+    height: 46px;
+    font-size: 15px;
+}
+
+/* Secondary sidebar button (students only) sitting under "Nouvelle
+   conversation"; mirrors .btn-new-chat's box but in a bordered, lower-
+   emphasis style so it doesn't compete with the primary action. */
+.btn-join-session {
+    margin: 0 .75rem .5rem;
+    padding: .55rem .9rem;
+    background: var(--white);
+    color: var(--blue);
+    border: 1.5px solid var(--blue);
+    border-radius: 8px;
+    font-family: 'Nunito', sans-serif;
+    font-size: .82rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    transition: background .18s, color .18s, box-shadow .18s;
+}
+.btn-join-session:hover {
+    background: var(--blue-light);
+    color: var(--blue-dark);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Entry point shown in the chat empty-state for students. */
+.empty-join-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 22px;
+    padding: 10px 18px;
+    border: 1.5px solid var(--blue);
+    border-radius: var(--r-1);
+    color: var(--blue);
+    background: var(--white);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .15s, color .15s, box-shadow .15s;
+}
+.empty-join-link:hover {
+    background: var(--blue-light);
+    color: var(--blue-dark);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ── Flash messages inside the authenticated shell ─────────────────── */
+
+/* Floating toast just below the 54px topbar. Taken out of flow (fixed) so
+   it never disrupts the constrained flex layout of /chat — where it used
+   to render as a full-width slab squeezed above the chat area. Auto-
+   dismissed (and click-to-close) by the script in Layout/chat.php. */
+.flash-stack {
+    position: fixed;
+    top: 68px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: fit-content;
+    max-width: min(92vw, 480px);
+    pointer-events: none;            /* clicks fall through the gaps */
+}
+
+/* On /chat the 260px sidebar shifts the content area to the right; nudge
+   the toast by half the sidebar so it stays centred over the chat itself,
+   not the whole viewport. The sidebar is hidden on mobile / non-chat. */
+@media (min-width: 769px) {
+    .page-chat .flash-stack {
+        left: calc(50% + 130px);
+    }
+}
+.flash-stack .alert {
+    margin: 0;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 10px 30px rgba(20, 26, 46, .18);
+    animation: flashIn .25s cubic-bezier(.22, .9, .32, 1) both;
+}
+@keyframes flashIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Empty-state hint in the sidebar conversation list. */
+.conv-empty {
+    margin: 0;
+    padding: .5rem .75rem;
+    font-size: .8rem;
+    color: var(--gray-400);
+    font-family: var(--font-sans);
+}
+
+/* Topbar mode badge: a session-bound chat is marked in gold to stand
+   apart from the blue "libre" (free) chat. */
+.topbar-mode.topbar-mode-session {
+    color: var(--exam-ink);
+    background: var(--gold-light);
+}
+
+/* Read-only notice shown above the composer when the linked session is
+   over; the textarea is also rendered with [disabled]. */
+.session-closed-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--r-1, 8px);
+    background: var(--gray-100);
+    color: var(--gray-600);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+}
+.session-closed-banner svg { color: var(--gray-400); flex-shrink: 0; }
+
+#promptInput:disabled {
+    background: var(--gray-100);
+    color: var(--gray-400);
+    cursor: not-allowed;
+}

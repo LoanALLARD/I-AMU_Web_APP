@@ -32,6 +32,8 @@ use App\Http\Controllers\SessionController;
 use App\Infrastructure\Clock\SystemClock;
 use App\Infrastructure\Llm\LlmProviderFactory;
 use App\Infrastructure\Persistence\PdoConnection;
+use App\Infrastructure\Persistence\PdoConversationRepository;
+use App\Infrastructure\Persistence\PdoEnrollmentRepository;
 use App\Infrastructure\Persistence\PdoLlmModelRepository;
 use App\Infrastructure\Persistence\PdoModelRepository;
 use App\Infrastructure\Persistence\PdoResourceRepository;
@@ -48,18 +50,20 @@ $clock       = new SystemClock();
 $authService = new AuthService($db);
 
 // ─── Repositories ───────────────────────────────────────────────────
-$sessionRepo  = new PdoSessionRepository($db);
-$modelRepo    = new PdoModelRepository($db);
-$resourceRepo = new PdoResourceRepository($db);
-$llmModelRepo = new PdoLlmModelRepository($db);
+$sessionRepo      = new PdoSessionRepository($db);
+$modelRepo        = new PdoModelRepository($db);
+$resourceRepo     = new PdoResourceRepository($db);
+$llmModelRepo     = new PdoLlmModelRepository($db);
+$conversationRepo = new PdoConversationRepository($db);
+$enrollmentRepo   = new PdoEnrollmentRepository($db);
 
 // ─── Application services (use-cases) ───────────────────────────────
-$createSession   = new CreateSessionService($sessionRepo, $clock);
+$createSession   = new CreateSessionService($sessionRepo);
 $updateSession   = new UpdateSessionService($sessionRepo, $clock);
 $startSession    = new StartSessionService($sessionRepo, $clock);
 $endSession      = new EndSessionService($sessionRepo, $clock);
 $cancelSession   = new CancelSessionService($sessionRepo, $clock);
-$joinSession     = new JoinSessionService($sessionRepo, $clock);
+$joinSession     = new JoinSessionService($sessionRepo, $clock, $enrollmentRepo, $conversationRepo);
 $listMySessions  = new ListMySessionsService($sessionRepo, $clock);
 $getDashboard    = new GetSessionDashboardService($sessionRepo, $modelRepo, $clock);
 
@@ -84,7 +88,7 @@ $sessionController = new SessionController(
 
 // Chat controllers (Clean Architecture; migrated out of the legacy
 // ServeurFolder Controllers\ namespace).
-$chatController = new ChatController();
+$chatController = new ChatController($conversationRepo, $sessionRepo, $clock);
 $llmController  = new LLMController($generateReply);
 
 // Profile page — surfaces account info and acts as the exit point for
@@ -115,8 +119,9 @@ $router->add('GET',  '/logout',       fn() => (new LoginController($authService)
 $router->add('GET',  '/RGPDConsent',  fn() => (new LoginController($authService))->showRGPD());
 
 // Chat — authenticated shell (GET) + LLM round-trip endpoint (POST) ---
-$router->add('GET',  '/chat', fn() => $chatController->index());
-$router->add('POST', '/chat', fn() => $llmController->handleChat());
+$router->add('GET',  '/chat',      fn() => $chatController->index());
+$router->add('GET',  '/chat/{id}', fn(string $id) => $chatController->index($id));
+$router->add('POST', '/chat',      fn() => $llmController->handleChat());
 
 // Profile -------------------------------------------------------------
 $router->add('GET',  '/profile', fn() => $profileController->show());
@@ -124,6 +129,7 @@ $router->add('GET',  '/profile', fn() => $profileController->show());
 // Sessions ------------------------------------------------------------
 $router->add('GET',  '/sessions',             fn() => $sessionController->index());
 $router->add('GET',  '/sessions/create',      fn() => $sessionController->create());
+$router->add('GET',  '/sessions/join',        fn() => $sessionController->showJoin());
 $router->add('POST', '/sessions/store',       fn() => $sessionController->store());
 $router->add('POST', '/sessions/join',        fn() => $sessionController->join());
 $router->add('GET',  '/sessions/{id}',        fn(string $id) => $sessionController->dashboard($id));

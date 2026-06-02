@@ -319,27 +319,41 @@ final class SessionController extends Controller
     }
 
     /**
-     * POST /sessions/join — student endpoint.
+     * GET /sessions/join — student-facing form to enter an access code.
+     */
+    public function showJoin(): void
+    {
+        $this->requireRole('student');
+
+        $this->render('pages/session/join', [
+            'title'      => 'Rejoindre une session',
+            'breadcrumb' => 'sessions / rejoindre',
+        ]);
+    }
+
+    /**
+     * POST /sessions/join — student joins, gets enrolled and lands in the
+     * session-bound conversation. Idempotent (see JoinSessionService).
      */
     public function join(): void
     {
-        $this->requireAuth();
+        $this->requireRole('student');
         $this->verifyCsrf();
 
         $rawCode = (string) $this->input('access_code', '');
         $userId  = $this->currentUser()['id'];
 
         try {
-            $session = $this->joinSession->execute($rawCode, $userId);
+            $result = $this->joinSession->execute($rawCode, $userId);
         } catch (\Throwable $e) {
             $this->flash('error', $e->getMessage());
-            $this->redirect('/');
+            $this->redirect('/sessions/join');
         }
 
-        // Spec 03 will redirect to /chat/{conversationId}; for now, send
-        // the student back to the home page with a confirmation flash.
-        $this->flash('success', "Vous avez rejoint la session « {$session->name()} ».");
-        $this->redirect('/');
+        $this->flash('success', $result->alreadyJoined
+            ? "Vous êtes déjà inscrit à « {$result->sessionName} » — voici votre conversation."
+            : "Vous avez rejoint la session « {$result->sessionName} ».");
+        $this->redirect('/chat/' . $result->conversationId);
     }
 
     // ----------------------------------------------------------------
