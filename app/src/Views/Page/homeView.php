@@ -82,6 +82,7 @@
 
             <div class="model-bar">
                 <div class="model-tags">
+                    <?php $models = $models ?? []; ?>
                     <?php $letters = range('A', 'Z'); $i = 0; ?>
                     <?php foreach ($models as $model): ?>
                         <button class="model-tag<?= $i === 0 ? ' active' : '' ?>"

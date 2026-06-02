@@ -13,15 +13,19 @@ class ChatController extends Controller
         $this->requireAuth();
         $user = $this->currentUser();
 
-        $pdo = Database::getConnection();
-        $aiRepository = new AiRepository($pdo);
-        $models = $aiRepository->getAllActiveModels();
-
+        $models = [];
+        try {
+            $pdo = Database::getConnection();
+            $aiRepository = new AiRepository($pdo);
+            $models = $aiRepository->getAllActiveModels();
+        } catch (\Throwable $e) {
+            error_log('Impossible de charger les modèles : ' . $e->getMessage());
+        }
 
         $this->render('Page/homeView', [
             'titrePage' => 'Chat',
             'user'      => $user,
-            'models'    => $models,],
-            'chat');
+            'models'    => $models,
+        ], 'chat');
     }
 }
