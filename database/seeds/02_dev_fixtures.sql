@@ -1,8 +1,3 @@
--- Default email domain configurations.
-INSERT INTO email_domain_configs (domain, role, is_active) VALUES
-    ('etu.univ-amu.fr', 'STUDENT', TRUE),
-    ('univ-amu.fr', 'TEACHER', TRUE);
-
 INSERT INTO places (name, address, city, zip_code) VALUES
     ('Campus de Luminy',       '163 Avenue de Luminy',   'Marseille', '13288'),
     ('Campus Saint-Charles',   '3 Place Victor Hugo',    'Marseille', '13003');
@@ -322,24 +317,26 @@ INSERT INTO interactions (model_id, conversation_id, prompt, response,
      'Avec plaisir.',
      150, 3, 15, NULL);
 
-INSERT INTO users (id, email, password_hash, first_name, last_name, consent_version) VALUES
-    (24, 'evan@gmail.com', '218937801', 'atherly', 'evan', 'v1');
-INSERT INTO teachers (id, title) VALUES (24, 'dev_Evan');
-INSERT INTO places (id, name, address, city, zip_code) VALUES
-    (2, 'IUT Aix', 'site gaston berger', 'Aix-en-Pce', '101010');
-INSERT INTO departments (id, place_id, name, description) VALUES
-    (12, 2, 'departement informatique', 'departement de dev logiciel');
-INSERT INTO resources (id, owner_id, department_id, code, name, description, semester) VALUES
-    (1, 24, 12, 'code', 'dev', 'ressources pour le dev de l outils', 's3');
-INSERT INTO models (id, department_id, resource_id, name, version, provider, max_tokens, context_window, api_url, adapter) VALUES
-    (1, 12, NULL, 'llama3.2:1b', 'V1', 'meta', 100000, 128000, 'http://i-amu_web_app-ollama2-1:11434/api/generate', 'ollama');
-INSERT INTO sessions (resource_id, name) VALUES (1, 'session de dev');
-INSERT INTO conversations (user_id, session_id, name) VALUES (24, 1, 'testconv');
-
-SELECT setval(pg_get_serial_sequence('users',         'id'), (SELECT MAX(id) FROM users));
-SELECT setval(pg_get_serial_sequence('places',        'id'), (SELECT MAX(id) FROM places));
-SELECT setval(pg_get_serial_sequence('departments',   'id'), (SELECT MAX(id) FROM departments));
-SELECT setval(pg_get_serial_sequence('resources',     'id'), (SELECT MAX(id) FROM resources));
-SELECT setval(pg_get_serial_sequence('models',        'id'), (SELECT MAX(id) FROM models));
-SELECT setval(pg_get_serial_sequence('sessions',      'id'), (SELECT MAX(id) FROM sessions));
-SELECT setval(pg_get_serial_sequence('conversations', 'id'), (SELECT MAX(id) FROM conversations));
+INSERT INTO users (email, password_hash, first_name, last_name, consent_version) VALUES
+    ('evan@gmail.com', '218937801', 'atherly', 'evan', 'v1');
+INSERT INTO teachers (id, title) VALUES
+    ((SELECT id FROM users WHERE email = 'evan@gmail.com'), 'dev_Evan');
+INSERT INTO places (name, address, city, zip_code) VALUES
+    ('IUT Aix', 'site gaston berger', 'Aix-en-Pce', '101010');
+INSERT INTO departments (place_id, name, description) VALUES
+    ((SELECT id FROM places WHERE name = 'IUT Aix'),
+     'departement informatique', 'departement de dev logiciel');
+INSERT INTO resources (owner_id, department_id, code, name, description, semester) VALUES
+    ((SELECT id FROM users WHERE email = 'evan@gmail.com'),
+     (SELECT id FROM departments WHERE name = 'departement informatique'),
+     'code', 'dev', 'ressources pour le dev de l outils', 's3');
+INSERT INTO models (department_id, resource_id, name, version, provider, max_tokens, context_window, api_url, adapter) VALUES
+    ((SELECT id FROM departments WHERE name = 'departement informatique'),
+     NULL, 'llama3.2:1b', 'V1', 'meta', 100000, 128000,
+     'http://i-amu_web_app-ollama2-1:11434/api/generate', 'ollama');
+INSERT INTO sessions (resource_id, name) VALUES
+    ((SELECT id FROM resources WHERE code = 'code'), 'session de dev');
+INSERT INTO conversations (user_id, session_id, name) VALUES
+    ((SELECT id FROM users WHERE email = 'evan@gmail.com'),
+     (SELECT id FROM sessions WHERE name = 'session de dev'),
+     'testconv');

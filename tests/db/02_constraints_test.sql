@@ -2,7 +2,7 @@
 
 BEGIN;
 
-SELECT plan(23);
+SELECT plan(24);
 
 -- ============================================================
 -- Fixtures
@@ -216,6 +216,9 @@ SELECT throws_ok(
 );
 
 -- super_administrators.email must be unique
+INSERT INTO super_administrators (id, email, password_hash)
+    VALUES (1000, 'sa@amu.fr', 'hash');
+
 SELECT throws_ok(
     $$INSERT INTO super_administrators (id, email, password_hash)
       VALUES (1001, 'sa@amu.fr', 'other_hash')$$,
