@@ -17,8 +17,11 @@ CREATE TABLE users (
     consent_version VARCHAR(50),
     theme theme_type,
     archive_duration_days SMALLINT,
+    email_verified_at TIMESTAMPTZ,
+    email_verify_token VARCHAR(255),
     CONSTRAINT pk_users PRIMARY KEY (id),
     CONSTRAINT uq_users_email UNIQUE (email),
+    CONSTRAINT uq_users_email_verify_token UNIQUE (email_verify_token),
     CONSTRAINT ck_users_archive_duration_days CHECK (archive_duration_days IS NULL OR archive_duration_days > 0)
 );
 
