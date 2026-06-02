@@ -25,7 +25,7 @@ class LoginController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('Page/Auth/login', ['titrePage' => 'Connexion'], 'auth');
+        $this->render('pages/Auth/login', ['titrePage' => 'Connexion'], 'auth');
     }
 
     /**
@@ -39,7 +39,7 @@ class LoginController extends Controller
         $result = $this->authService->login($email, $password);
 
         if (!$result['success']) {
-            $this->render('Page/Auth/login', [
+            $this->render('pages/Auth/login', [
                 'titrePage' => 'Connexion',
                 'error'     => $result['error'],
                 'email'     => $email,],
@@ -58,14 +58,14 @@ class LoginController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('Page/Auth/register', [
+        $this->render('pages/Auth/register', [
             'titrePage' => 'Inscription'],
          'auth');
     }
 
     public function showRGPD(): void
     {
-        $this->render('Page/Auth/RGPDConsent', ['titrePage' => 'Mentions RGPD']);
+        $this->render('pages/Auth/RGPDConsent', ['titrePage' => 'Mentions RGPD']);
     }
 
     /**
@@ -85,7 +85,7 @@ class LoginController extends Controller
         $result = $this->authService->register($data);
 
         if (!$result['success']) {
-            $this->render('Page/Auth/register', [
+            $this->render('pages/Auth/register', [
                 'titrePage' => 'Inscription',
                 'error'=> $result['error'], 'data'=> $data,],
                 'auth');

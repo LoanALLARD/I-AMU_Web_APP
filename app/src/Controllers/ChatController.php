@@ -11,7 +11,7 @@ class ChatController extends Controller
         $this->requireAuth();
         $user = $this->currentUser();
 
-        $this->render('Page/homeView', [
+        $this->render('pages/homeView', [
             'user' => $user,
             'page' => 'chat',
         ], 'chat');
