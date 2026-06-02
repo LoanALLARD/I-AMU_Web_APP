@@ -1,6 +1,61 @@
 # SPEC: sessions-backend — Vertical slice Sessions (cours + examen)
 
-> Date: 2026-05-29 | Branche: `Sessions` | Statut: EN COURS
+> Créée: 2026-05-29 | MàJ: 2026-06-02 | Branche: `Sessions` | Statut: **MVP enseignant livré — côté étudiant + temps réel à faire**
+
+## État d'avancement (2026-06-02)
+
+> Snapshot avant bascule sur la **spec 01 (auth)**. On reprend les
+> Sessions après. Le détail des tâches initiales reste plus bas (cases
+> cochées de la Phase 4) ; cette section donne la vérité terrain **après**
+> le réalignement de schéma, le rebase sur `ServeurFolder` et
+> l'intégration du shell d'authentification universel.
+
+### ✅ Fait
+
+| Domaine | État |
+|---|---|
+| **Clean Archi complète** | Domain (`Session` entity, `SessionType`, `SessionStatus`, `AccessCode`, `SessionRepositoryInterface`, 6 exceptions) + Application (8 services, 4 DTOs, ports `Clock`/`ModelRead`/`ResourceRead`) + Infrastructure (`PdoSessionRepository`, `PdoModelRepository`, `PdoResourceRepository`, `PdoConnection`, `SystemClock`) + Http (`SessionController` 9 actions, `CreateSessionForm`). |
+| **Cycle de vie** | `DRAFT → SCHEDULED → ACTIVE → ENDED` + `CANCELLED`, statut **dérivé** (`computedStatus`) et actions contextuelles (`availableActions`). |
+| **CRUD enseignant** | Créer / lister / modifier (avant démarrage) / démarrer / terminer / annuler / dashboard. Vue `create.php` réutilisée pour l'édition (`$mode='edit'`, type + code en lecture seule). |
+| **Code d'accès** | 6 chars `[A-Z0-9]`, formaté `XXX-XXX` en UI, génération unique (`generateUniqueAccessCode`), copie presse-papier + overlay plein écran. |
+| **Sécurité** | `verifyCsrf()` sur tous les POST, `requireRole('teacher')`, ownership guard (`teacherId === currentUser.id`), requêtes préparées only. |
+| **Rejoindre (étudiant)** | `JoinSessionService` : normalise le code, vérifie le statut `ACTIVE`. **Mais** voir « Pas fait » pour la suite du flux. |
+| **Schéma réaligné** | Tables **plurielles** (`sessions`, `resources`, `models`…), PK `id`. `teacher_id` **dérivé** via JOIN `resources.owner_id` (plus de colonne directe). Contraintes CHECK `ck_sessions_dates` / `ck_sessions_closed_at` respectées par re-ancrage des timestamps dans l'entity. |
+| **Intégration UI** | Pages rendues dans le shell d'auth universel (`Layout/chat.php`) : sidebar masquée hors `/chat`, contenu pleine largeur + scroll OK, marges fluides. |
+
+### ⚠️ Divergences vs décisions Phase 1 (le code fait foi)
+
+Le plan du 29/05 a évolué pendant l'implémentation. **Les décisions ci-dessous, listées plus bas dans ce fichier, sont périmées :**
+
+| Décision initiale (29/05) | Réalité actuelle (code) |
+|---|---|
+| 2 types `COURSE` / `EXAM` | **4 types** `EXAM` / `TUTORIAL` / `LAB` / `FREE_STUDY` (enum PG `session_type`). |
+| 3 limites `max_input_tokens` / `max_output_tokens` / `max_requests_per_student` | **1 seule** colonne `max_input_size`. |
+| Schéma singulier (`session`, PK `session_id`, colonne `teacher_id`) | Schéma **pluriel** (`sessions`, PK `id`, `teacher_id` dérivé par JOIN). |
+
+Pré-prompt **et** post-prompt sont bien présents (`pre_prompt_override`, `post_prompt_override`), conforme au plan.
+
+### ❌ Pas fait
+
+| Manque | Détail | Dépend de |
+|---|---|---|
+| **Vue examen étudiant** | Le verrouillage kraft (`02-examen-modern.jsx`) n'est pas porté. | spec 03 |
+| **Flux `join` complet** | `join` redirige avec un flash placeholder, **pas** vers un vrai chat de session. | spec 03 |
+| **Compteur temps réel** | User story §2 « combien d'étudiants connectés » : non implémenté (pas de polling/WS). | spec 03 |
+| **Preflight réel** | « N modèles dispo / charge serveur X % » est un **placeholder statique**, aucun ping Ollama. | spec 03 |
+| **`auto_close`** | Clôture auto vs manuelle : question ouverte **non tranchée**, pas de colonne ni de logique. | — |
+| **Liste d'étudiants / « 27 places »** | Pas de table `enrollment`, participation implicite via futur `conversation.user_id`. | spec 03 |
+| **QR code** | Bouton QR de la maquette : non (could-have). | — |
+| **Tests automatisés** | 0 test PHPUnit. La section Tests de [`02-sessions.md`](./02-sessions.md) reste vide. | — |
+| **Seed persistant** | `places` / `departments` / `resources` / `models` ont été créés **à la main en DB** pour le dev — **non rejouables** via une migration versionnée. | — |
+
+### Prochaines étapes Sessions (après spec 01)
+
+1. Figer le seed dans une migration versionnée (`database/seed.sql` rejouable).
+2. Trancher `auto_close` et l'intégrer à `computedStatus()`.
+3. Câbler `join` → chat de session réel (avec spec 03).
+4. Compteur d'étudiants connectés + preflight Ollama réel (spec 03).
+5. Tests PHPUnit : Domain (`Session` lifecycle, `AccessCode`) + Application (services avec repo in-memory).
 
 ## Contexte
 
@@ -288,4 +343,7 @@ Maquette : [`Downloads/I-AMU (1)/src/screens/03-session-modern.jsx`](../../../Do
 | Phase 4 — Codage Bloc B (Domain/App/Infra) | 2026-05-29 | Terminé — Review APPROVE 8/8 |
 | Phase 4 — Codage Bloc C (Http/Vues/JS) | 2026-05-29 | Terminé — Review APPROVE 8/8 |
 | Phase 5 — Vérification finale | 2026-05-29 | OK (curl + Chrome screenshots) |
-| Phase 6 — Capitalisation | — | À faire après commit Bloc C |
+| Phase 6 — Capitalisation | 2026-05-29 | Fait (cette note) |
+| Réalignement schéma (tables plurielles, teacher_id dérivé) | 2026-06-01 | Fait — 4 types, `max_input_size` unique |
+| Rebase sur `ServeurFolder` + shell d'auth universel | 2026-06-02 | Fait — sidebar/topbar partagés, pleine largeur + scroll |
+| Snapshot fait/pas-fait (cette section « État d'avancement ») | 2026-06-02 | Fait — bascule sur spec 01, reprise Sessions ensuite |

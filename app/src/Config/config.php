@@ -6,13 +6,11 @@
  * Values come from environment variables (injected by Docker or loaded
  * from app/.env via Dotenv in bootstrap.php).
  *
- * The DB block is exposed under TWO keys so both consumer styles work
- * during the Sessions/ServeurFolder convergence:
- *   - `database.{host,port,name,user,password}` — consumed by
- *     App\Infrastructure\Persistence\PdoConnection (Sessions stack).
- *   - `db.{host,port,dbname,user,password}` — consumed by
- *     Data\Database::getConnection() (ServeurFolder legacy singleton).
- * Both point at the same env vars so they cannot drift.
+ * The DB block is consumed by
+ * App\Infrastructure\Persistence\PdoConnection (the single connection
+ * point). The legacy `db` key (used by the removed Data\Database
+ * singleton) was dropped when the ServeurFolder chat stack was migrated
+ * to Clean Architecture.
  */
 
 $dbHost     = $_ENV['DB_HOST']     ?? 'db';
@@ -26,13 +24,6 @@ return [
         'host'     => $dbHost,
         'port'     => $dbPort,
         'name'     => $dbName,
-        'user'     => $dbUser,
-        'password' => $dbPassword,
-    ],
-    'db' => [
-        'host'     => $dbHost,
-        'port'     => (string) $dbPort,
-        'dbname'   => $dbName,
         'user'     => $dbUser,
         'password' => $dbPassword,
     ],
