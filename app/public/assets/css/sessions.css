@@ -600,7 +600,17 @@ textarea {
     gap: 24px;
     padding: 24px 0;
 }
-@media (max-width: 960px) { .dashboard-grid { grid-template-columns: 1fr; } }
+@media (max-width: 960px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+    /* Profile: once the grid stacks, surface the identity card (avatar +
+       name) above the detail cards. Scoped so the desktop two-column order
+       is untouched. */
+    .page-profile .dashboard-grid > aside { order: -1; }
+    /* Match the 18px card rhythm: the stacked gap otherwise doubled up
+       (24px grid gap + the avatar card's 18px margin-bottom). */
+    .page-profile .dashboard-grid { gap: 18px; }
+    .page-profile .dashboard-grid > aside .dashboard-card { margin-bottom: 0; }
+}
 
 .dashboard-card {
     background: var(--white);
@@ -682,3 +692,55 @@ textarea {
 
 .mono { font-family: var(--font-mono); letter-spacing: 0; }
 .lucide { vertical-align: middle; }
+
+/* =====================================================================
+   Mobile drawer navigation (<= 768px)
+
+   On phones the burger drawer is the single navigation surface for
+   EVERY authenticated page. The desktop shell above hides the sidebar
+   and burger on non-chat pages (they navigate via the topbar pills),
+   but on mobile those pills are hidden, so the drawer must come back.
+
+   This block sits at the end of the last-loaded stylesheet on purpose:
+   it authoritatively overrides both homeChat.css's base shell and the
+   `.app-body:not(.page-chat)` desktop overrides earlier in this file.
+   ===================================================================== */
+@media (max-width: 768px) {
+
+    /* Drawer = fixed slide-over on every page, chat or not. The
+       `.app-body-row >` prefix matches the desktop rule it replaces so
+       it wins on source order. */
+    .app-body-row > .sidebar,
+    .app-body:not(.page-chat) .sidebar {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: min(84vw, 300px);
+        min-width: 0;
+        transform: translateX(-100%);
+        z-index: 1000;
+    }
+    .app-body-row > .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .18);
+    }
+
+    /* Burger is always present to open that drawer. */
+    .app-body .topbar-burger,
+    .app-body:not(.page-chat) .topbar-burger {
+        display: flex;
+        order: -1;
+    }
+
+    /* Collapse the 260px brand column to its content so the topbar
+       breathes; the avatar then sits flush right. */
+    .app-body .topbar-brand {
+        width: auto;
+        margin-left: 0;
+        padding-left: 0;
+        padding-right: 0;
+        border-right: none;
+    }
+}
