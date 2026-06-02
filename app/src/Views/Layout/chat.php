@@ -37,9 +37,15 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&family=Nunito+Sans:wght@300;400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/style.css">
-    <link rel="stylesheet" href="/assets/css/homeChat.css">
-    <link rel="stylesheet" href="/assets/css/sessions.css">
+    <?php
+        // Cache-bust stylesheets via filemtime() so layout fixes don't
+        // get hidden behind aggressive browser caching during dev.
+        $cssDir = dirname(__DIR__, 3) . '/public/assets/css';
+        $v = static fn(string $f): string => '?v=' . (@filemtime("$cssDir/$f") ?: 0);
+    ?>
+    <link rel="stylesheet" href="/assets/css/style.css<?= $v('style.css') ?>">
+    <link rel="stylesheet" href="/assets/css/homeChat.css<?= $v('homeChat.css') ?>">
+    <link rel="stylesheet" href="/assets/css/sessions.css<?= $v('sessions.css') ?>">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
 <body class="app-body page-<?= htmlspecialchars($page) ?>">
@@ -71,11 +77,11 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
             </svg>
             <span class="topbar-conv-name" id="convName">Nouvelle conversation</span>
         </div>
-    <?php elseif ($pageTitle !== ''): ?>
-        <div class="topbar-breadcrumb">
-            <span class="topbar-conv-name"><?= htmlspecialchars($pageTitle) ?></span>
-        </div>
     <?php else: ?>
+        <?php /* Other pages already display their own H1 in .page-header,
+              so the topbar stays uncluttered: brand on the left, tabs +
+              avatar on the right. The empty spacer pushes the right-side
+              group via margin-left:auto on .topbar-tabs. */ ?>
         <div class="topbar-breadcrumb"></div>
     <?php endif; ?>
 

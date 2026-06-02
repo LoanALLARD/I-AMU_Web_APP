@@ -44,9 +44,13 @@
     top: auto;
 }
 
-/* Same for the main column — it's the row's flex child. */
+/* Same for the main column — it's the row's flex child. The
+   min-height: 0 is critical: without it, .app-main expands to its
+   content's intrinsic size (flexbox default) and the inner
+   .app-content can never scroll on long pages like /sessions/create. */
 .app-body-row > .app-main {
     height: auto;
+    min-height: 0;
 }
 
 /* Brand block in the topbar — replaces the former .sidebar-header. */
@@ -133,12 +137,16 @@
 }
 
 /* Override the per-page max-width so /sessions and /profile span the
-   entire content area when the sidebar is hidden. */
+   entire content area when the sidebar is hidden, but keep generous
+   horizontal padding so titles, tables and cards breathe away from
+   the edges. Padding scales with viewport width via clamp(). */
 .app-body:not(.page-chat) .page-container,
 .app-body:not(.page-chat) .page-header,
 .app-body:not(.page-chat) .page-body {
     max-width: none;
     margin: 0;
+    padding-left:  clamp(1rem, 5vw, 4rem);
+    padding-right: clamp(1rem, 5vw, 4rem);
 }
 
 /* When the page-header / page-body are rendered through the shell,
