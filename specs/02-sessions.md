@@ -4,6 +4,16 @@
 - **Priorité** : must-have
 - **Dépend de** : 00-foundations, 01-auth-account
 - **État POC** : implémenté (lifecycle déjà bien modélisé)
+- **État I-AMU (2026-06-02)** : **MVP enseignant livré** (CRUD + cycle de
+  vie + code d'accès), côté étudiant et temps réel à faire. Le détail
+  fait/pas-fait et les **divergences** (4 types au lieu de 3, schéma
+  pluriel, `max_input_size` unique) sont dans
+  [`SPEC-sessions-backend.md` § État d'avancement](./SPEC-sessions-backend.md).
+
+> ⚠️ Ce cahier des charges décrit la cible initiale ; certaines valeurs
+> ci-dessous (types `TP`/`EXAM`/`SANDBOX`, table `session` singulière)
+> ont évolué à l'implémentation. La source de vérité est le code +
+> [`SPEC-sessions-backend.md`](./SPEC-sessions-backend.md).
 
 ## 1. Objectifs
 

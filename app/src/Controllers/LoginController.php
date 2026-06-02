@@ -7,11 +7,14 @@ use Services\AuthService;
 
 class LoginController extends Controller
 {
-    private AuthService $authService;
-
-    public function __construct()
-    {
-        $this->authService = new AuthService();
+    public function __construct(
+        private readonly AuthService $authService,
+    ) {
+        // AuthService is injected from public/index.php where the DI graph
+        // is assembled (PdoConnection -> AuthService -> LoginController).
+        // Do NOT swap this back to a no-arg constructor + `new AuthService()`
+        // — AuthService now requires a PdoConnection to talk to the users
+        // table, so a no-arg new throws ArgumentCountError at first request.
     }
 
     /**
@@ -22,7 +25,7 @@ class LoginController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('Page/Auth/login', ['titrePage' => 'Connexion']);
+        $this->render('pages/Auth/login', ['titrePage' => 'Connexion'], 'auth');
     }
 
     /**
@@ -36,11 +39,11 @@ class LoginController extends Controller
         $result = $this->authService->login($email, $password);
 
         if (!$result['success']) {
-            $this->render('auth/login', [
+            $this->render('pages/Auth/login', [
                 'titrePage' => 'Connexion',
                 'error'     => $result['error'],
-                'email'     => $email,
-            ]);
+                'email'     => $email,],
+                'auth');
             return;
         }
 
@@ -55,12 +58,14 @@ class LoginController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('Page/Auth/register', ['titrePage' => 'Inscription']);
+        $this->render('pages/Auth/register', [
+            'titrePage' => 'Inscription'],
+         'auth');
     }
 
     public function showRGPD(): void
     {
-        $this->render('Page/Auth/RGPDConsent', ['titrePage' => 'Mentions RGPD']);
+        $this->render('pages/Auth/RGPDConsent', ['titrePage' => 'Mentions RGPD']);
     }
 
     /**
@@ -80,11 +85,10 @@ class LoginController extends Controller
         $result = $this->authService->register($data);
 
         if (!$result['success']) {
-            $this->render('auth/register', [
+            $this->render('pages/Auth/register', [
                 'titrePage' => 'Inscription',
-                'error'     => $result['error'],
-                'data'      => $data,
-            ]);
+                'error'=> $result['error'], 'data'=> $data,],
+                'auth');
             return;
         }
 

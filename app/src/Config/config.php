@@ -1,11 +1,30 @@
 <?php
 
+/**
+ * Application configuration.
+ *
+ * Values come from environment variables (injected by Docker or loaded
+ * from app/.env via Dotenv in bootstrap.php).
+ *
+ * The DB block is consumed by
+ * App\Infrastructure\Persistence\PdoConnection (the single connection
+ * point). The legacy `db` key (used by the removed Data\Database
+ * singleton) was dropped when the ServeurFolder chat stack was migrated
+ * to Clean Architecture.
+ */
+
+$dbHost     = $_ENV['DB_HOST']     ?? 'db';
+$dbPort     = (int) ($_ENV['DB_PORT'] ?? 5432);
+$dbName     = $_ENV['DB_NAME']     ?? 'iamu';
+$dbUser     = $_ENV['DB_USER']     ?? 'iamu_user';
+$dbPassword = $_ENV['DB_PASSWORD'] ?? '';
+
 return [
-    'db' => [
-        'host'     => $_ENV["DB_HOST"] ?? 'postgres_db', // Mets le nom de ton conteneur BDD par défaut
-        'port'     => $_ENV["DB_PORT"] ?? '5432',
-        'dbname'   => $_ENV["DB_NAME"] ?? 'ma_bdd',
-        'user'     => $_ENV["DB_USER"] ?? 'root',
-        'password' => $_ENV["DB_PASSWORD"] ?? '',
-    ]
+    'database' => [
+        'host'     => $dbHost,
+        'port'     => $dbPort,
+        'name'     => $dbName,
+        'user'     => $dbUser,
+        'password' => $dbPassword,
+    ],
 ];

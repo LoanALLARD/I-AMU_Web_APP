@@ -6,6 +6,7 @@ services :
       - "8082:11434"
     volumes : # pour sauvegarder les modeles téléchargés
       - ollama_data:/root/.ollama
+    
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -43,6 +44,19 @@ services :
     build: ./app
     ports:
       - "8085:80"
+    environment:
+      # Docker Compose only auto-injects .env vars into ${} interpolation
+      # inside this YAML file, NOT into container processes. Re-exporting
+      # here so PdoConnection can read them at runtime via $_ENV.
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      OLLAMA_URL: http://ollama2:11434
+      APP_DEBUG: "true"
+    depends_on:
+      - db
     volumes:
       - ./app:/var/www/html
       - ./vhost.conf:/etc/apache2/sites-available/000-default.conf

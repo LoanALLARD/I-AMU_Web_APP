@@ -1,0 +1,99 @@
+body:has(header) {
+    display: block;
+    align-items: initial;
+    justify-content: initial;
+    padding: 0;
+    background: var(--gray-100);
+}
+
+header {
+    background: var(--white);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+nav {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: .75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+nav a {
+    font-family: 'Nunito', sans-serif;
+    font-size: .9rem;
+    font-weight: 700;
+    color: var(--gray-600);
+    text-decoration: none;
+    padding: .4rem .75rem;
+    border-radius: 6px;
+    transition: color .18s, background .18s;
+}
+nav a:hover {
+    color: var(--blue);
+    background: var(--blue-light);
+}
+/* Brand mark (left) — opts out of the generic nav a hover style. */
+.navbar-brand {
+    padding: .25rem .5rem;
+    display: inline-flex;
+    align-items: center;
+    line-height: 0;
+}
+.navbar-brand:hover { background: transparent; }
+.navbar-logo {
+    height: 36px;
+    width: auto;
+    display: block;
+}
+
+/* Push the trailing items (user + logout) to the right. */
+.nav-spacer { flex: 1; }
+
+/* User pill — link to /profile, highlighted softly. */
+.nav-user {
+    color: var(--gray-800) !important;
+    background: var(--gray-100);
+}
+.nav-user:hover { background: var(--blue-light); color: var(--blue) !important; }
+
+/* CTA-style for the last link (Déconnexion when auth, Inscription
+   otherwise). Excludes the brand and any element already pilled. */
+nav a:last-child:not(.navbar-brand):not(.nav-user) {
+    background: var(--blue);
+    color: var(--white);
+    padding: .45rem 1.1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(26,115,200,.25);
+}
+nav a:last-child:not(.navbar-brand):not(.nav-user):hover {
+    background: var(--blue-dark);
+    color: var(--white);
+}
+
+hr { display: none; }
+main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+    min-height: calc(100vh - 140px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+footer {
+    background: var(--gray-800);
+    text-align: center;
+    padding: 1.25rem 1.5rem;
+}
+footer p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .72rem;
+    color: var(--gray-400);
+    margin: 0;
+}
