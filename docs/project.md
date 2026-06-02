@@ -14,9 +14,9 @@ via university email (domains configurable in config).
 
 ## 2. Read first
 
-- **Architecture** — [`documentation/app_architecture.md`](../documentation/app_architecture.md): always, before touching code. Defines the layers (Core / Domain / Application / Infrastructure / Http), dependency rules, patterns.
+- **Architecture** — [`docs/design/app_architecture.md`](design/app_architecture.md): always, before touching code. Defines the layers (Core / Domain / Application / Infrastructure / Http), dependency rules, patterns.
 - **Conventions** — [`docs/conventions/php.md`](conventions/php.md), [`sql.md`](conventions/sql.md), [`git.md`](conventions/git.md): code, SQL and commit rules.
-- **Specs** — [`specs/README.md`](../specs/README.md) to find the right spec; [`specs/00-foundations.md`](../specs/00-foundations.md) → [`05-admin-research.md`](../specs/05-admin-research.md) for per-scope detail.
+- **Specs** — [`specs/README.md`](specs/README.md) to find the right spec; [`specs/00-foundations.md`](specs/00-foundations.md) → [`05-admin-research.md`](specs/05-admin-research.md) for per-scope detail.
 - **Product overview** — [`README.md`](../README.md).
 
 ## 3. Repo state
@@ -158,8 +158,8 @@ Main tables (see `database/schema.sql` once the project is re-imported into `dev
 ## 13. Handling an uncovered case
 
 1. If a spec covers it → update that spec.
-2. If it is a new scope → create `specs/0X-name.md` from the [`specs/README.md`](../specs/README.md) template.
-3. If it is a cross-cutting technical decision → update [`documentation/app_architecture.md`](../documentation/app_architecture.md) and this file.
+2. If it is a new scope → create `specs/0X-name.md` from the [`specs/README.md`](specs/README.md) template.
+3. If it is a cross-cutting technical decision → update [`docs/design/app_architecture.md`](design/app_architecture.md) and this file.
 
 ## 14. Agent response style
 

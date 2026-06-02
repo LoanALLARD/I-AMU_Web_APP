@@ -3,7 +3,7 @@
 > **Date** : 2026-05-27
 > **Référence rapport** : `Rapport_Propre.pdf` (24 pages, daté du début
 > de projet, équipe Acemyan / Allard / Atherly / Jacob / Valette).
-> **Référence specs** : `specs/00-foundations.md` à `specs/06-rgpd.md`.
+> **Référence specs** : `../specs/00-foundations.md` à `../specs/06-rgpd.md`.
 >
 > Ce document recense les **points qui n'ont pas été traités directement**
 > par les corrections de Niveau 1 (déjà appliquées dans les specs). Il

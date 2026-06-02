@@ -59,11 +59,11 @@ Pré-prompt **et** post-prompt sont bien présents (`pre_prompt_override`, `post
 
 ## Contexte
 
-Premier vertical slice de la réécriture I-AMU sur la branche `Sessions`. Objectif : permettre à un enseignant de créer / lister / modifier / démarrer / terminer / annuler une session (cours ou examen), et à un étudiant de la rejoindre avec un code d'accès. Bout en bout : DB → Domain → Application → Infrastructure → Http → Vue PHP + Vanilla JS, en suivant la Clean Archi de [`documentation/app_architecture.md`](../documentation/app_architecture.md).
+Premier vertical slice de la réécriture I-AMU sur la branche `Sessions`. Objectif : permettre à un enseignant de créer / lister / modifier / démarrer / terminer / annuler une session (cours ou examen), et à un étudiant de la rejoindre avec un code d'accès. Bout en bout : DB → Domain → Application → Infrastructure → Http → Vue PHP + Vanilla JS, en suivant la Clean Archi de [`docs/design/app_architecture.md`](../design/app_architecture.md).
 
 État de départ : branche `Sessions` quasi vide (un seul controller `Login/Accueil/LLM` partiel, autoloader OK pour anciens namespaces, pas de DB, pas de bootstrap câblé). La spec [`02-sessions.md`](./02-sessions.md) sert de cahier des charges ; le POC (`git show poc:app/models/Session.php`) sert de bibliothèque d'algorithmes (code généré, statuts dérivés).
 
-Maquette : [`Downloads/I-AMU (1)/src/screens/03-session-modern.jsx`](../../../Downloads/I-AMU%20(1)/src/screens/03-session-modern.jsx) (création) + [`02-examen-modern.jsx`](../../../Downloads/I-AMU%20(1)/src/screens/02-examen-modern.jsx) (examen côté étudiant).
+Maquette : [`Downloads/I-AMU (1)/src/screens/03-session-modern.jsx`](../../../../Downloads/I-AMU%20(1)/src/screens/03-session-modern.jsx) (création) + [`02-examen-modern.jsx`](../../../../Downloads/I-AMU%20(1)/src/screens/02-examen-modern.jsx) (examen côté étudiant).
 
 ## Décisions tranchées avec l'utilisateur (Phases 1 et 3)
 
@@ -83,13 +83,13 @@ Maquette : [`Downloads/I-AMU (1)/src/screens/03-session-modern.jsx`](../../../Do
 
 | Règle | Statut | Détail | Source |
 |---|---|---|---|
-| Architecture cible définie | OK | 5 couches Core/Domain/Application/Infra/Http | [`app_architecture.md:36-66`](../documentation/app_architecture.md#L36) |
-| Squelette `App\Domain\*` | KO | Namespace pas dans l'autoloader, dossiers absents | [`app/autoload.php:30-36`](../app/autoload.php#L30) |
-| Bootstrap & config | KO | Fichiers vides | [`app/src/bootstrap.php`](../app/src/bootstrap.php), [`app/src/Config/config.php`](../app/src/Config/config.php) |
-| Connexion PDO | KO | `app/Data/db.php` vide | [`app/Data/db.php`](../app/Data/db.php) |
-| Schéma SQL | KO | Seulement `test1` factice | [`init-scripts/IAMU_db.sql`](../init-scripts/IAMU_db.sql) |
-| Auth réelle | Partiel | Compte hardcodé `test@etu.univ-amu.fr / azerty123` | [`AuthService.php:14`](../app/src/Services/AuthService.php#L14) — hors scope cette spec |
-| Routes session | KO | Aucune route | [`app/public/index.php`](../app/public/index.php) |
+| Architecture cible définie | OK | 5 couches Core/Domain/Application/Infra/Http | [`app_architecture.md:36-66`](../design/app_architecture.md#L36) |
+| Squelette `App\Domain\*` | KO | Namespace pas dans l'autoloader, dossiers absents | [`app/autoload.php:30-36`](../../app/autoload.php#L30) |
+| Bootstrap & config | KO | Fichiers vides | [`app/src/bootstrap.php`](../../app/src/bootstrap.php), [`app/src/Config/config.php`](../../app/src/Config/config.php) |
+| Connexion PDO | KO | `app/Data/db.php` vide | [`app/Data/db.php`](../../app/Data/db.php) |
+| Schéma SQL | KO | Seulement `test1` factice | [`init-scripts/IAMU_db.sql`](../../init-scripts/IAMU_db.sql) |
+| Auth réelle | Partiel | Compte hardcodé `test@etu.univ-amu.fr / azerty123` | [`AuthService.php:14`](../../app/src/Services/AuthService.php#L14) — hors scope cette spec |
+| Routes session | KO | Aucune route | [`app/public/index.php`](../../app/public/index.php) |
 | POC référence | Disponible | `Session::createSession/start/end/cancel/computedStatus/generateAccessCode` | `git show poc:app/models/Session.php` |
 | Maquette React/Babel | À traduire | JSX → vues PHP + vanilla JS | `Downloads/I-AMU (1)/src/screens/03-session-modern.jsx` |
 

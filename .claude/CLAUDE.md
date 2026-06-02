@@ -11,7 +11,7 @@ Read first, **before touching code**:
 - **PHP conventions**: [`docs/conventions/php.md`](../docs/conventions/php.md)
 - **SQL conventions**: [`docs/conventions/sql.md`](../docs/conventions/sql.md)
 - **Git conventions** (commits): [`docs/conventions/git.md`](../docs/conventions/git.md)
-- **Architecture**: [`documentation/app_architecture.md`](../documentation/app_architecture.md)
+- **Architecture**: [`docs/design/app_architecture.md`](../docs/design/app_architecture.md)
 
 The agent response style (reply in French, justify the *why*, check the POC
 when unsure) is project-wide — see [`docs/project.md`](../docs/project.md) §14.

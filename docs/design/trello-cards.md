@@ -1149,7 +1149,7 @@ distinctive.
 - [ ] À la fin : appel auto `SyncOllamaModelsService`
 - [ ] View : formulaire dans `/admin/models` + zone de progression
 
-**Référence** : [`documentation/gap-analysis.md`](./gap-analysis.md) §N3.1
+**Référence** : [`docs/design/gap-analysis.md`](./gap-analysis.md) §N3.1
 
 ---
 
@@ -1169,7 +1169,7 @@ sans terminer toute la session.
 - [ ] JS étudiant : polling toutes les 5s sur `/exam/conversation/status`, redirige si archivée
 - [ ] Bouton dans la vue supervise (icône `x` à côté de chaque ligne)
 
-**Référence** : [`documentation/gap-analysis.md`](./gap-analysis.md) §N3.2
+**Référence** : [`docs/design/gap-analysis.md`](./gap-analysis.md) §N3.2
 
 ---
 
@@ -1189,7 +1189,7 @@ d'onglet.
 - [ ] Pas de bouton logout accessible
 - [ ] Log d'événement si l'étudiant quitte (`document.visibilitychange`)
 
-**Référence** : [`documentation/gap-analysis.md`](./gap-analysis.md) §N3.3
+**Référence** : [`docs/design/gap-analysis.md`](./gap-analysis.md) §N3.3
 
 ---
 
@@ -1207,7 +1207,7 @@ Détecter et alerter sur changement d'IP pendant un examen.
 - [ ] À chaque prompt en mode EXAM : si IP différente, marquer un `teacher_flag` automatique avec raison `ip-change`
 - [ ] Badge "IP changée" dans la vue supervise
 
-**Référence** : [`documentation/gap-analysis.md`](./gap-analysis.md) §N3.4
+**Référence** : [`docs/design/gap-analysis.md`](./gap-analysis.md) §N3.4
 
 ---
 
@@ -1225,7 +1225,7 @@ ni documenté ni mis en valeur UI.
 - [ ] Le ViewModel `ConversationDetailView` liste `modelsUsedInConv: list<string>`
 - [ ] L'UI affiche un mini-récap "3 modèles utilisés sur 12 tours"
 
-**Référence** : [`documentation/gap-analysis.md`](./gap-analysis.md) §N3.5
+**Référence** : [`docs/design/gap-analysis.md`](./gap-analysis.md) §N3.5
 
 ---
 
@@ -1244,7 +1244,7 @@ d'information. Action **externe** (pas du code).
 - [ ] Mettre à jour `config.rgpd.*`
 - [ ] Mettre à jour `Views/legal/privacy.php` avec le texte final
 
-**Référence** : [`documentation/gap-analysis.md`](./gap-analysis.md) §N3.6, rapport §5.2
+**Référence** : [`docs/design/gap-analysis.md`](./gap-analysis.md) §N3.6, rapport §5.2
 
 ---
 
@@ -1263,7 +1263,7 @@ Au-delà de 3 ans, supprimer les entrées `data_access_log` (durée légale
 - [ ] Crontab mensuel dans `docker/cron.dockerfile` (ou doc setup)
 - [ ] Endpoint admin `POST /admin/logs/purge?before=date` pour purge ponctuelle
 
-**Référence** : [`documentation/gap-analysis.md`](./gap-analysis.md) §N3.7
+**Référence** : [`docs/design/gap-analysis.md`](./gap-analysis.md) §N3.7
 
 ---
 

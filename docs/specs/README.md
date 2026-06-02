@@ -1,6 +1,6 @@
 # Specifications — I-AMU
 
-> **Avant de lire ces specs**, lire [`../documentation/app_architecture.md`](../documentation/app_architecture.md).
+> **Avant de lire ces specs**, lire [`../design/app_architecture.md`](../design/app_architecture.md).
 > Les specs partent du principe que les couches `Core/`, `Domain/`,
 > `Application/`, `Infrastructure/`, `Http/` sont déjà comprises.
 
@@ -18,7 +18,7 @@
 | 05 | [Admin & Research](./05-admin-research.md)      | nice-to-have | Admin (users/models/config), dashboard chercheur |
 | 06 | [RGPD](./06-rgpd.md)                            | must-have | Mention CNIL, 4 droits, journalisation, opposition recherche |
 
-> 📋 Voir aussi [`../documentation/gap-analysis.md`](../documentation/gap-analysis.md)
+> 📋 Voir aussi [`../design/gap-analysis.md`](../design/gap-analysis.md)
 > pour les points encore à clarifier avec le client et les features
 > could-have à anticiper.
 

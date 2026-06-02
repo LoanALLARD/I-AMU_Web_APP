@@ -27,7 +27,7 @@ Les étudiants la rejoignent avec un **code d'accès à 6 caractères**.
 > cette session », pas « 1 code = 1 étudiant ». Si le client demande
 > finalement un code par étudiant, il faudra une table d'association
 > `session_invite (session_id, student_id, code, used_at)` — cf.
-> [gap-analysis](../documentation/gap-analysis.md).
+> [gap-analysis](../design/gap-analysis.md).
 
 Une session a un **cycle de vie** :
 ```
@@ -289,5 +289,5 @@ limiter les possibilités de triche »*. Voir
 ### 11.3 Code d'accès par étudiant
 
 Si le client clarifie en faveur de codes individuels, voir
-[gap-analysis](../documentation/gap-analysis.md) — table
+[gap-analysis](../design/gap-analysis.md) — table
 `session_invite` à introduire.
