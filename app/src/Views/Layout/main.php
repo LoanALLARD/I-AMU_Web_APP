@@ -11,10 +11,22 @@
     <link rel="stylesheet" href="/assets/css/layoutMain.css">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
+<?php
+// Sessions's AuthService populates these on successful login.
+$isAuthenticated = !empty($_SESSION['user_id']);
+$roles           = $_SESSION['roles'] ?? [];
+$isTeacher       = in_array('teacher', $roles, true);
+$displayName     = trim(($_SESSION['user_first_name'] ?? '') . ' ' . ($_SESSION['user_last_name'] ?? ''));
+?>
 <body>
     <header>
         <nav>
-            <?php if (isset($_SESSION['token'])): ?>
+            <?php if ($isAuthenticated): ?>
+                <a href="/chat">Chat</a>
+                <?php if ($isTeacher): ?>
+                    <a href="/sessions">Mes sessions</a>
+                <?php endif; ?>
+                <a href="/profile"><?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?></a>
                 <a href="/logout">Déconnexion</a>
             <?php else: ?>
                 <a href="/login">Connexion</a>
