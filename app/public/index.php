@@ -11,6 +11,7 @@
     use Controllers\LLMController;
     use Controllers\LoginController;
     use Controllers\SessionController;
+    use Controllers\ProfileController;
 
     // routeur 
     $router = new Router();
@@ -84,6 +85,11 @@
         $controller = new  LoginController();
         $controller->showRGPD();
     });
+
+    // --- Chat home + profile (authenticated) --------------------------
+    $router->add('GET', '/chat',      function()    { (new AccueilController())->index(); });
+    $router->add('GET', '/chat/{id}', function($id)  { (new AccueilController())->index(); });
+    $router->add('GET', '/profile',   function()    { (new ProfileController())->index(); });
 
     // --- Sessions (teacher) + join (student) --------------------------
     // Literal routes are registered before the `{id}` wildcard so they win.
