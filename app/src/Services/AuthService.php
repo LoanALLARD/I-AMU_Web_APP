@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Services;
 
 use Data\Database;
+use Models\EmailDomainRepository;
 use Models\PlaceRepository;
 use Models\UserRepository;
 
@@ -13,11 +14,7 @@ use Models\UserRepository;
  *
  * Owns the application logic (input validation, domain -> role mapping,
  * password hashing/verification, session population). All SQL lives in
- * UserRepository, which this service drives.
- *
- * Known remaining shortcut: the domain -> role mapping is hardcoded in
- * resolveRoleFromDomain(); it will move to a lookup in `email_domain_configs`
- * once spec 05 ships the admin UI. The contract here will not change.
+ * the repositories, which this service drives.
  *
  * Schema alignment notes:
  *   - Tables and columns are plural / `id`-based per init-scripts/IAMU_db.sql:
@@ -30,13 +27,15 @@ final class AuthService
 {
     private UserRepository $users;
     private PlaceRepository $places;
+    private EmailDomainRepository $emailDomains;
 
     public function __construct()
     {
         // Data\Database singleton connection. Matches how the controllers
-        $pdo          = Database::getConnection();
-        $this->users  = new UserRepository($pdo);
-        $this->places = new PlaceRepository($pdo);
+        $pdo                = Database::getConnection();
+        $this->users        = new UserRepository($pdo);
+        $this->places       = new PlaceRepository($pdo);
+        $this->emailDomains = new EmailDomainRepository($pdo);
     }
 
     /**
@@ -78,12 +77,9 @@ final class AuthService
      * Behaviour:
      *   - Format-validates the form input (email, password >= 8 chars,
      *     password_confirm match, RGPD consent ticked).
-     *   - Looks up the email domain to derive the role:
-     *       @etu.univ-amu.fr  -> student auto
-     *       @univ-amu.fr      -> teacher auto
-     *       anything else     -> rejected (per CLAUDE.md §7).
-     *     Once spec 05 ships an admin UI for `email_domain_configs`, this
-     *     lookup will move to the DB; the contract here doesn't change.
+     *   - Looks up the email domain in `email_domain_configs` to derive the
+     *     role (active domains only). An unknown / disabled domain is
+     *     rejected — only domains an admin configured can register.
      *   - Hashes the password with bcrypt.
      *   - Delegates persistence to UserRepository::createUserWithRole(),
      *     which creates the user + role row in a single transaction so a
@@ -201,21 +197,24 @@ final class AuthService
     }
 
     /**
-     * Hardcoded domain → role mapping (CLAUDE.md §7).
-     *
-     * To be replaced by a lookup in `email_domain_configs` once spec 05
-     * is implemented. Returning null means "no auto-role for this domain".
+     * Maps an email to its role by looking up the part after the `@` in the
+     * `email_domain_configs` table. Only active domains match. Returns the
+     * role in the lowercase form createUserWithRole() expects
+     * ('student' / 'teacher'), or null when the domain is unknown / disabled.
      */
     private function resolveRoleFromDomain(string $email): ?string
     {
-        $lower = strtolower($email);
-        if (str_ends_with($lower, '@etu.univ-amu.fr')) {
-            return 'student';
+        $atPos = strrpos($email, '@');
+        if ($atPos === false) {
+            return null;
         }
-        if (str_ends_with($lower, '@univ-amu.fr')) {
-            return 'teacher';
-        }
-        return null;
+        $domain = strtolower(substr($email, $atPos + 1));
+
+        // The table stores the SQL enum (UPPERCASE); the rest of the code
+        // (createUserWithRole) works with lowercase role names.
+        $role = $this->emailDomains->findRoleByDomain($domain);
+
+        return $role === null ? null : strtolower($role);
     }
 
     public function logout(): void
