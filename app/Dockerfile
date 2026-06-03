@@ -1,0 +1,23 @@
+# On part de l'image officielle
+FROM php:8.3-apache
+
+# PostgreSQL client lib + PHP PDO driver. Required by PdoConnection;
+# without this the runtime fails with "could not find driver".
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libpq-dev \
+ && docker-php-ext-install pdo pdo_pgsql \
+ && rm -rf /var/lib/apt/lists/*
+
+# On active le module rewrite
+RUN a2enmod rewrite
+RUN apt-get update && apt-get install -y libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql
+# Note: pas de `composer dump-autoload` ici — l'autoloader utilisé en
+# runtime est manuel (app/autoload.php). Composer n'est plus utilisé
+# qu'en local et en CI pour installer les outils de qualité
+# (PHPStan, PHPCS, PHPUnit) ; vendor/autoload.php n'est jamais
+# chargé par public/index.php.
+
+# On autorise le fichier .htaccess à fonctionner (Evite l'erreur 500)
+RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
+

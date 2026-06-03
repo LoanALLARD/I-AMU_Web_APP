@@ -1,0 +1,125 @@
+services : 
+  # Conteneur pour ollama
+  ollama2:
+    image: ollama/ollama:latest
+    ports : 
+      - "8082:11434"
+    volumes : # pour sauvegarder les modeles téléchargés
+      - ollama_data:/root/.ollama
+    
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    entrypoint: ["/bin/sh", "-c"]
+
+    command: ["/bin/ollama serve & sleep 5 && /bin/ollama pull llama3.2:1b && wait"]
+
+
+  db:
+    build: ./docker/db
+    restart: always
+    shm_size : 128mb
+    environment :
+      POSTGRES_DB : ${DB_NAME}
+      POSTGRES_USER : ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data # VOLUME : Sauvegarde les données de la base
+      # The Postgres entrypoint only runs files at the root of initdb.d and
+      # ignores subdirectories, so each script is mounted as a flat file.
+      # Numeric prefixes drive the execution order: schema, then seeds.
+      - ./database/schema/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./database/schema/02_triggers.sql:/docker-entrypoint-initdb.d/02_triggers.sql:ro
+      - ./database/seeds/01_bootstrap.sql:/docker-entrypoint-initdb.d/03_bootstrap.sql:ro
+      - ./database/seeds/02_dev_fixtures.sql:/docker-entrypoint-initdb.d/04_dev_fixtures.sql:ro
+  adminer:
+    image : adminer
+    restart : always
+    ports :
+      - "8083:8080"
+    depends_on:
+      - db
+
+  php-app:
+    build: ./app
+    ports:
+      - "8085:80"
+    environment:
+      # Docker Compose only auto-injects .env vars into ${} interpolation
+      # inside this YAML file, NOT into container processes. Re-exporting
+      # here so PdoConnection can read them at runtime via $_ENV.
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      OLLAMA_URL: http://ollama2:11434
+      APP_DEBUG: "true"
+    depends_on:
+      - db
+    volumes:
+      - ./app:/var/www/html
+      - ./vhost.conf:/etc/apache2/sites-available/000-default.conf
+
+  # Throwaway database for the test suite. Same image as db (so pgTAP is
+  # available) but loads only the schema -- never the seeds -- and keeps no
+  # persistent volume, so every test run starts from an empty schema.
+  db-test:
+    build: ./docker/db
+    profiles: ["test"]
+    shm_size: 128mb
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./database/schema:/docker-entrypoint-initdb.d:ro
+
+  # pgTAP test runner. Only started via the "test" profile:
+  #   docker compose --profile test run --rm pgtap
+  # Mounts the test suite read-only, installs pgTAP, runs every *.sql file
+  # in order, and exits with the aggregate status.
+  pgtap:
+    image: postgres:17-alpine
+    profiles: ["test"]
+    depends_on:
+      - db-test
+    environment:
+      PGHOST: db-test
+      PGUSER: ${DB_USER}
+      PGPASSWORD: ${DB_PASSWORD}
+      PGDATABASE: ${DB_NAME}
+    volumes:
+      - ./tests/db:/tests:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        echo "==> Waiting for db-test to accept connections"
+        until pg_isready -q; do sleep 1; done
+        echo "==> Installing pgTAP extension (idempotent)"
+        psql -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pgtap;" > /dev/null
+        FAILED=0
+        for f in /tests/*.sql; do
+          echo ""
+          echo "--- $$(basename $$f) ---"
+          # Capture output so we can detect both psql errors (exit code) and
+          # pgTAP assertion failures ("not ok" lines), which psql does not
+          # surface through its exit status.
+          OUT="$$(psql -v ON_ERROR_STOP=1 -f "$$f" 2>&1)" || FAILED=1
+          echo "$$OUT"
+          if echo "$$OUT" | grep -q '^ *not ok'; then
+            FAILED=1
+          fi
+        done
+        echo ""
+        if [ $$FAILED -eq 0 ]; then
+          echo "All tests passed."
+        else
+          echo "Some tests FAILED." >&2
+          exit 1
+        fi
+
+volumes:
+  ollama_data:
+  db_data:
