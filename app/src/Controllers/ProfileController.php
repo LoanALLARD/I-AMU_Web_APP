@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Controllers;
 
 use Core\Controller;
+use Services\AuthService;
+use Data\Database;
 
 /**
  * Profile page (account info). Routed from `/profile`, renders inside the
@@ -13,6 +15,13 @@ use Core\Controller;
  */
 class ProfileController extends Controller
 {
+    protected  AuthService $auth;
+
+    public function __construct()
+    {
+        $pdo = Database::getConnection();
+        $this->auth = new AuthService($pdo);
+    }
     public function index(): void
     {
         $this->requireAuth();
@@ -29,10 +38,7 @@ class ProfileController extends Controller
         $this->requireAuth();
         $this->verifyCsrf();
 
-        $user = $this->currentUser();
-        if ($user === null) {
-            $this->redirect('/login');
-        }
+        $user = $this->currentUser() ?? $this->redirect('/login');
 
         $result = $this->auth->deactivateAccount($user['id']);
 
@@ -51,5 +57,4 @@ class ProfileController extends Controller
         $this->flash('success', 'Votre compte a été désactivé. Pour demander la suppression définitive de vos données, veuillez envoyer un email à dpo@univ-amu.fr.');
         $this->redirect('/login');
     }
-
 }

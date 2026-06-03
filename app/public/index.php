@@ -13,7 +13,7 @@
     use Controllers\ProfileController;
     use Controllers\PlaceController;
 
-    // routeur 
+// routeur
     $router = new Router();
 
     $router->add('GET',  '/',            function() { (new AccueilController())->index(); });
@@ -33,7 +33,7 @@
     $router->add('GET',  '/register',    function() { (new AuthController())->showRegister(); });
     $router->add('POST', '/register',    function() { (new AuthController())->register(); });
     $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
-    $router->add('POST', '/reactivate',  fn() => (new LoginController($authService))->reactivate());
+    $router->add('POST', '/reactivate',  function() { (new AuthController())->reactivate();});
     $router->add('GET',  '/RGPDConsent', function() { (new AuthController())->showRGPD(); });
 
     // AJAX: departments of a place, for the registration form's dependent select.

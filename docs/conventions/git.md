@@ -22,7 +22,7 @@
 
 ## 3. Scope
 
-Matches the touched spec: `auth` · `sessions` · `chat` · `supervise` · `admin` · `research` · `rgpd` · `core`.
+Matches the touched spec: `auth` · `sessions` · `chat` · `supervise` · `admin` · `research` · `rgpd` · `core`. `profile`
 
 ## 4. Rules
 

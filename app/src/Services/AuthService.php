@@ -171,12 +171,9 @@ final class AuthService
     public function deactivateAccount(int $userId): array
     {
         try {
-            $stmt = $this->db->query(
-                'UPDATE users SET is_active = FALSE WHERE id = :id AND is_active = TRUE',
-                ['id' => $userId]
-            );
+            $affected = $this->users->deactivate($userId);
 
-            if ($stmt->rowCount() === 0) {
+            if ($affected === 0) {
                 return [
                     'success' => false,
                     'error'   => 'Le compte est déjà désactivé ou introuvable.',
@@ -198,10 +195,7 @@ final class AuthService
             return ['success' => false, 'error' => 'Email et mot de passe requis.'];
         }
 
-        $row = $this->db->query(
-            'SELECT id, password_hash, is_active FROM users WHERE email = :email',
-            ['email' => $email]
-        )->fetch();
+        $row = $this->users->findByEmail($email);
 
         if (!$row || !password_verify($password, (string) $row['password_hash'])) {
             return ['success' => false, 'error' => 'Identifiants invalides.'];
@@ -212,11 +206,7 @@ final class AuthService
         }
 
         try {
-            $this->db->query(
-                'UPDATE users SET is_active = TRUE WHERE id = :id',
-                ['id' => (int) $row['id']]
-            );
-
+            $this->users->reactivate((int) $row['id']);
             return ['success' => true];
         } catch (\Throwable $e) {
             return [
