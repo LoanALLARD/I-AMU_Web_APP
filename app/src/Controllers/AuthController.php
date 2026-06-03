@@ -38,8 +38,18 @@ class AuthController extends Controller
      */
     public function login(): void
     {
-        $email    = trim($this->input('email', ''));
-        $password = $this->input('password', '');
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+
+        if (str_contains($contentType, 'application/json')) {
+            // Lecture JSON pour cURL
+            $data = json_decode(file_get_contents('php://input'), true);
+            $email    = isset($data['email']) ? trim($data['email']) : '';
+            $password = isset($data['password']) ? $data['password'] : '';
+        } else {
+            // Lecture Formulaire pour le Web
+            $email    = trim($this->input('email', ''));
+            $password = $this->input('password', '');
+        }
 
         $result = $this->authService->login($email, $password);
 
