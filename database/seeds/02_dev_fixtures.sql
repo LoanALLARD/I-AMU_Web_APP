@@ -31,7 +31,9 @@ INSERT INTO users (department_id, email, password_hash, first_name, last_name, i
     ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'nathan.gris@etu.univ-amu.fr',   'CHANGE_ME', 'Nathan',   'Gris',      TRUE, 'LIGHT'),
     (NULL,                                                       'chercheur1@univ-amu.fr',        'CHANGE_ME', 'Pierre',   'Curie',     TRUE, 'LIGHT'),
     (NULL,                                                       'chercheur2@univ-amu.fr',        'CHANGE_ME', 'Henri',    'Poincare',  TRUE, 'DARK'),
-    (NULL,                                                       'orphan@univ-amu.fr',            'CHANGE_ME', 'Sans',     'Role',      TRUE, NULL);
+    (NULL,                                                       'orphan@univ-amu.fr',            'CHANGE_ME', 'Sans',     'Role',      TRUE, NULL),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'admin.info@univ-amu.fr',        'CHANGE_ME', 'Admin',    'Info',      TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'admin.maths@univ-amu.fr',       'CHANGE_ME', 'Admin',    'Maths',     TRUE, 'LIGHT');
 
 INSERT INTO teachers (id, is_specialised, title) VALUES
     ((SELECT id FROM users WHERE email = 'jean.martin@univ-amu.fr'),  TRUE,  'Professeur'),
@@ -42,9 +44,9 @@ INSERT INTO teachers (id, is_specialised, title) VALUES
     ((SELECT id FROM users WHERE email = 'claire.petit@univ-amu.fr'), FALSE, 'Maitre de conferences');
 
 INSERT INTO department_administrators (id, invited_by_id) VALUES
-    ((SELECT id FROM users WHERE email = 'jean.martin@univ-amu.fr'),
+    ((SELECT id FROM users WHERE email = 'admin.info@univ-amu.fr'),
      (SELECT id FROM super_administrators WHERE email = 'admin@univ-amu.fr')),
-    ((SELECT id FROM users WHERE email = 'sophie.leroy@univ-amu.fr'),
+    ((SELECT id FROM users WHERE email = 'admin.maths@univ-amu.fr'),
      (SELECT id FROM super_administrators WHERE email = 'admin@univ-amu.fr'));
 
 INSERT INTO students (id, student_number, year) VALUES
@@ -175,7 +177,7 @@ INSERT INTO enrollments (student_id, session_id) VALUES
 INSERT INTO researcher_authorizations (researcher_id, department_id, authorized_by_id) VALUES
     ((SELECT id FROM users WHERE email = 'chercheur1@univ-amu.fr'),
      (SELECT id FROM departments WHERE name = 'Informatique'),
-     (SELECT id FROM users WHERE email = 'jean.martin@univ-amu.fr'));
+     (SELECT id FROM users WHERE email = 'admin.info@univ-amu.fr'));
 
 INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
     ((SELECT id FROM users WHERE email = 'emma.blanc@etu.univ-amu.fr'),
