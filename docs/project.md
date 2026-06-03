@@ -14,7 +14,7 @@ via university email (domains configurable in config).
 
 ## 2. Read first
 
-- **Architecture** — [`docs/design/app_architecture.md`](design/app_architecture.md): always, before touching code. Defines the layers (Core / Domain / Application / Infrastructure / Http), dependency rules, patterns.
+- **Architecture** — [`docs/design/app_architecture.md`](design/app_architecture.md): always, before touching code. Defines the MVC + Domain layers (Core / Controllers / Services / Models / Domain / Data / Views), dependency rules, patterns.
 - **Conventions** — [`docs/conventions/php.md`](conventions/php.md), [`sql.md`](conventions/sql.md), [`git.md`](conventions/git.md): code, SQL and commit rules.
 - **Specs** — [`specs/README.md`](specs/README.md) to find the right spec; [`specs/00-foundations.md`](specs/00-foundations.md) → [`05-admin-research.md`](specs/05-admin-research.md) for per-scope detail.
 - **Product overview** — [`README.md`](../README.md).
@@ -113,9 +113,10 @@ Do:
 Don't (project-specific cases; general rules live in [`conventions/php.md`](conventions/php.md)):
 
 - Hardcode LLM model tags in seeds — the tag must come from Ollama via sync.
-- Use `Database::getInstance()` or `Application::getInstance()` in business code (concrete case of "no singletons").
-- Write `new OllamaLlmProvider()` in a controller — go through the interface (concrete case of constructor injection).
-- Use `extends Model` ActiveRecord style — a POC pattern not to carry over.
+- Instantiate PDO outside `Data\Database` — always go through `Database::getConnection()`.
+- Write `new OllamaAdaptater()` inside the `Ai` entity — reach the LLM through `LlmAdaptaterInterface`.
+- Use `extends Model` ActiveRecord style (`$entity->save()`) — data access is the repository's job.
+- Put SQL in a Controller or a View — it belongs in a Model or a Service.
 
 ## 10. AI agent pitfalls to avoid
 
