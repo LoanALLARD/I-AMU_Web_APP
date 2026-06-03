@@ -42,7 +42,8 @@ class LoginController extends Controller
             $this->render('pages/Auth/login', [
                 'titrePage' => 'Connexion',
                 'error'     => $result['error'],
-                'email'     => $email,],
+                'email'     => $email,
+                'deactivated' => !empty($result['deactivated']),],
                 'auth');
             return;
         }
@@ -60,7 +61,7 @@ class LoginController extends Controller
         $result = $this->authService->reactivateAccount($email, $password);
 
         if (!$result['success']) {
-            $this->render('pages/Auth/reactivate', [
+            $this->render('pages/homeView', [
                 'titrePage' => 'Connexion',
                 'error'     => $result['error'],
                 'email'     => $email,

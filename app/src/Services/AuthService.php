@@ -44,7 +44,13 @@ final class AuthService
         )->fetch();
 
         if (!$row || !password_verify($password, (string) $row['password_hash'])) {
-            return ['success' => false, 'error' => 'Identifiants invalides.'];
+            return [
+                'success' => false,
+                'error' => 'Identifiants invalides.',
+                'desactivated' => true,
+                'email' => (string) $row['email'],
+
+            ];
         }
 
         if (!$row['is_active']) {
@@ -173,7 +179,7 @@ final class AuthService
         return ['success' => true];
     }
 
-    public function deactivateAccount(int $userId): array
+    public function desactivateAccount(int $userId): array
     {
         try {
             $stmt = $this->db->query(

@@ -56,7 +56,7 @@ final class ProfileController extends Controller
             $this->redirect('/login');
         }
 
-        $result = $this->auth->deactivateAccount($user['id']);
+        $result = $this->auth->desactivateAccount($user['id']);
 
         if (!$result['success']) {
             $this->flash('error', $result['error']);
