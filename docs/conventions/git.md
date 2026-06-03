@@ -18,7 +18,7 @@
 
 ## 2. Types
 
-`feat` · `fix` · `chore` · `docs` · `refactor` · `test` · `TryServer`
+`feat` · `fix` · `chore` · `docs` · `refactor` · `test`
 
 ## 3. Scope
 

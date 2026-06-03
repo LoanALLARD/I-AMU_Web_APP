@@ -173,6 +173,31 @@ final class AuthService
         return ['success' => true];
     }
 
+    public function deactivateAccount(int $userId): array
+    {
+        try {
+            $stmt = $this->db->query(
+                'UPDATE users SET is_active = FALSE WHERE id = :id AND is_active = TRUE',
+                ['id' => $userId]
+            );
+
+            if ($stmt->rowCount() === 0) {
+                return [
+                    'success' => false,
+                    'error'   => 'Le compte est déjà désactivé ou introuvable.',
+                ];
+            }
+
+            return ['success' => true];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error'   => 'Erreur lors de la désactivation du compte.',
+            ];
+        }
+    }
+
+
     /**
      * Hardcoded domain → role mapping (CLAUDE.md §7).
      *
