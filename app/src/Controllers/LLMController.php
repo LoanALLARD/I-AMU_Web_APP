@@ -65,8 +65,8 @@ class LLMController{
         if ($conversation_id == null) {
             $conversationData = $conversationRepository->newConversation(
                 $userId,
-                1,
-                $aiData['id'],
+                (int) $aiData['id'],
+                null,
                 "nouvelle conversation"
             );
             $context = [];
