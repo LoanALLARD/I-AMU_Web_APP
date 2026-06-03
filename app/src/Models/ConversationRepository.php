@@ -13,34 +13,81 @@ class ConversationRepository {
     }
 
     /**
-     * @return array<string, mixed>|null
+     * Creates a conversation and returns its new id. `session_id` is null
+     * for a free-mode conversation. (The `conversations` table has no
+     * model_id column — the model is chosen per interaction.)
      */
-    public function newConversation(int $user_id, int $session_id, int $model_id,string $name): ?array
+    public function newConversation(int $user_id, ?int $session_id, string $name): int
     {
-        $query = $this->pdo->prepare('
-        INSERT into conversations (user_id,session_id,model_id,name) 
-        VALUES (:user_id,:session_id,:model_id,:name)
-        ');
-
-        $query-> execute([
-            'user_id'=>$user_id,
-            'session_id'=>$session_id,
-            'model_id'=>$model_id,
-            'name'=>$name
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO conversations (user_id, session_id, name)
+             VALUES (:user_id, :session_id, :name)
+             RETURNING id'
+        );
+        $stmt->execute([
+            'user_id'    => $user_id,
+            'session_id' => $session_id,
+            'name'       => $name,
         ]);
 
-        $idGenere = $this->pdo->lastInsertId();
+        return (int) $stmt->fetchColumn();
+    }
 
-        if (!$idGenere) {
-            return null;
-        }
+    /**
+     * Conversations a user owns in a given session, with their prompt count,
+     * most recent first. Used by the session-environment sidebar.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listByUserAndSession(int $userId, int $sessionId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT c.id, c.name, COUNT(i.id) AS prompt_count
+               FROM conversations c
+               LEFT JOIN interactions i ON i.conversation_id = c.id
+              WHERE c.user_id = :u AND c.session_id = :s AND c.is_archived = FALSE
+              GROUP BY c.id, c.name, c.created_at
+              ORDER BY c.created_at DESC, c.id DESC'
+        );
+        $stmt->execute(['u' => $userId, 's' => $sessionId]);
 
-        $querySelect = $this->pdo->prepare('SELECT * FROM conversations WHERE id = :id');
-        $querySelect->execute(['id' => $idGenere]);
-        
-        $result = $querySelect->fetch();
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
 
-        return $result ?: null; 
+        return $rows;
+    }
+
+    /**
+     * Free-mode conversations (no session) a user owns, most recent first.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listFreeByUser(int $userId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT c.id, c.name, COUNT(i.id) AS prompt_count
+               FROM conversations c
+               LEFT JOIN interactions i ON i.conversation_id = c.id
+              WHERE c.user_id = :u AND c.session_id IS NULL AND c.is_archived = FALSE
+              GROUP BY c.id, c.name, c.created_at
+              ORDER BY c.created_at DESC, c.id DESC'
+        );
+        $stmt->execute(['u' => $userId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
+
+    public function countByUserAndSession(int $userId, int $sessionId): int
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT COUNT(*) FROM conversations WHERE user_id = :u AND session_id = :s'
+        );
+        $stmt->execute(['u' => $userId, 's' => $sessionId]);
+
+        return (int) $stmt->fetchColumn();
     }
 
     /**

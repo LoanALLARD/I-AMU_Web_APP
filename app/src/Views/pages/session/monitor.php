@@ -4,9 +4,10 @@
  *
  * @var array $view  monitor data:
  *   id, name, accessCode, statusLabel, statusClass, studentCount,
- *   students[] (id, name, promptCount, lastActivity, lastModel),
- *   selected|null (id, name, transcript[] (prompt, response, model, sentAt))
+ *   students[] (id, name, totalPrompts, conversations[] (id, name, promptCount, lastActivity, lastModel)),
+ *   selected|null (conversationId, conversationName, studentName, transcript[] (prompt, response, model, sentAt))
  */
+$activeConvId = $view['selected']['conversationId'] ?? null;
 ?>
 <div class="page-header">
     <div class="page-header-row" style="align-items:center;">
@@ -28,54 +29,76 @@
 <div class="page-body">
     <div class="monitor-grid">
 
-        <!-- Left : enrolled students -->
+        <!-- Left : students, each with their conversations -->
         <aside class="monitor-list">
             <?php if ($view['students'] === []): ?>
                 <p class="conv-empty">Aucun étudiant n'a rejoint cette session.</p>
             <?php else: ?>
-                <?php foreach ($view['students'] as $s): ?>
-                    <a href="/sessions/<?= (int) $view['id'] ?>/monitor?student=<?= (int) $s['id'] ?>"
-                        class="monitor-student<?= (($view['selected']['id'] ?? null) === $s['id']) ? ' is-active' : '' ?>">
-                        <div class="monitor-student-top">
-                            <span class="monitor-student-name"><?= htmlspecialchars($s['name']) ?></span>
-                            <span class="monitor-student-count" title="prompts"><?= (int) $s['promptCount'] ?></span>
-                        </div>
-                        <div class="monitor-student-meta">
-                            <?php if ($s['lastModel'] !== null): ?>
-                                <span class="mono"><?= htmlspecialchars($s['lastModel']) ?></span>
-                            <?php endif; ?>
-                            <?php if ($s['lastActivity'] !== null): ?>
-                                <span><?= $s['lastModel'] !== null ? '· ' : '' ?><?= htmlspecialchars($s['lastActivity']) ?></span>
-                            <?php else: ?>
-                                <span class="monitor-muted">aucune activité</span>
-                            <?php endif; ?>
-                        </div>
-                    </a>
+                <?php foreach ($view['students'] as $stu): ?>
+                    <?php
+                    // Collapsed by default; open the group that holds the
+                    // currently selected conversation.
+                    $hasActive = false;
+                    foreach ($stu['conversations'] as $cc) {
+                        if ((int) $cc['id'] === (int) $activeConvId) {
+                            $hasActive = true;
+                            break;
+                        }
+                    }
+                    ?>
+                    <details class="monitor-student-group"<?= $hasActive ? ' open' : '' ?>>
+                        <summary class="monitor-student-head">
+                            <svg class="monitor-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                            <span class="monitor-student-name"><?= htmlspecialchars($stu['name']) ?></span>
+                            <span class="monitor-student-conv-count"><?= count($stu['conversations']) ?> conv.</span>
+                            <span class="monitor-student-count" title="total prompts"><?= (int) $stu['totalPrompts'] ?></span>
+                        </summary>
+                        <?php if ($stu['conversations'] === []): ?>
+                            <p class="monitor-muted monitor-noconv">aucune conversation</p>
+                        <?php else: ?>
+                            <?php foreach ($stu['conversations'] as $conv): ?>
+                                <a href="/sessions/<?= (int) $view['id'] ?>/monitor?conversation=<?= (int) $conv['id'] ?>"
+                                    class="monitor-conv<?= (int) $conv['id'] === (int) $activeConvId ? ' is-active' : '' ?>">
+                                    <span class="monitor-conv-name"><?= htmlspecialchars($conv['name']) ?></span>
+                                    <span class="monitor-conv-meta">
+                                        <span class="monitor-conv-count"><?= (int) $conv['promptCount'] ?> prompt(s)</span>
+                                        <?php if ($conv['lastActivity'] !== null): ?>
+                                            <span class="monitor-muted">· <?= htmlspecialchars($conv['lastActivity']) ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                </a>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </details>
                 <?php endforeach; ?>
             <?php endif; ?>
         </aside>
 
-        <!-- Right : selected student's transcript -->
+        <!-- Right : selected conversation transcript -->
         <section class="monitor-transcript">
             <?php if ($view['selected'] === null): ?>
                 <div class="monitor-empty">
                     <?= icon('message-circle', '', 40) ?>
-                    <p>Sélectionnez un étudiant pour voir l'historique de ses prompts.</p>
+                    <p>Sélectionnez une conversation pour voir l'historique des prompts.</p>
                 </div>
             <?php else: ?>
                 <div class="monitor-transcript-head">
-                    <strong><?= htmlspecialchars($view['selected']['name']) ?></strong>
-                    <span class="monitor-muted"><?= count($view['selected']['transcript']) ?> prompt(s)</span>
+                    <strong><?= htmlspecialchars($view['selected']['studentName']) ?></strong>
+                    <span class="monitor-muted"><?= htmlspecialchars($view['selected']['conversationName']) ?></span>
+                    <span class="monitor-muted">· <?= count($view['selected']['transcript']) ?> prompt(s)</span>
                 </div>
                 <?php if ($view['selected']['transcript'] === []): ?>
                     <div class="monitor-empty">
-                        <p>Aucun prompt enregistré pour cet étudiant.</p>
+                        <p>Aucun prompt enregistré dans cette conversation.</p>
                     </div>
                 <?php else: ?>
-                    <?php foreach ($view['selected']['transcript'] as $i => $t): ?>
+                    <?php foreach ($view['selected']['transcript'] as $idx => $t): ?>
                         <div class="transcript-turn">
                             <div class="transcript-meta">
-                                <span class="transcript-num"><?= str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) ?></span>
+                                <span class="transcript-num"><?= str_pad((string) ($idx + 1), 2, '0', STR_PAD_LEFT) ?></span>
                                 <span class="mono"><?= htmlspecialchars($t['model']) ?></span>
                                 <span>· <?= htmlspecialchars($t['sentAt']) ?></span>
                             </div>

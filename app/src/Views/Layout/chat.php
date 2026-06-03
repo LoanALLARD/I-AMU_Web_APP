@@ -19,6 +19,13 @@ $user = $user ?? null;
 $page = $page ?? 'other';
 $pageTitle = $pageTitle ?? '';
 $conversation = $conversation ?? null;
+$conversations = $conversations ?? [];
+$env = $env ?? null;
+// "Chat" nav target: stay inside the open session conversation instead of
+// dropping back to free chat.
+$chatHref = (($env['mode'] ?? '') === 'session' && !empty($conversation['id']))
+    ? '/chat/' . (int) $conversation['id']
+    : '/chat';
 $roles = $user['roles'] ?? [];
 $isTeacher = in_array('teacher', $roles, true);
 $isStudent = in_array('student', $roles, true);
@@ -94,7 +101,7 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
         <?php endif; ?>
 
         <div class="topbar-tabs">
-            <a href="/chat" class="topbar-tab<?= $page === 'chat' ? ' active' : '' ?>">
+            <a href="<?= htmlspecialchars($chatHref) ?>" class="topbar-tab<?= $page === 'chat' ? ' active' : '' ?>">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -151,7 +158,7 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
      On desktop these live as pills in the topbar (.topbar-tabs), so
      .sidebar-nav stays display:none there to avoid duplication. */ ?>
             <nav class="sidebar-nav" aria-label="Navigation principale">
-                <a href="/chat" class="sidebar-nav-link<?= $page === 'chat' ? ' is-active' : '' ?>">
+                <a href="<?= htmlspecialchars($chatHref) ?>" class="sidebar-nav-link<?= $page === 'chat' ? ' is-active' : '' ?>">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -171,16 +178,41 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
             </nav>
 
             <?php if ($page === 'chat'): ?>
-                <button class="btn-new-chat" id="btnNewChat">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                    Nouvelle conversation
-                </button>
+                <?php /* Current environment: session (filtered to one session's
+                  conversations) or free. */ ?>
+                <div class="sidebar-env">
+                    <span class="sidebar-env-label<?= ($env['mode'] ?? '') === 'session' ? ' is-session' : '' ?>">
+                        <?= htmlspecialchars($env['label'] ?? 'Chat libre') ?>
+                    </span>
+                </div>
 
-                <?php if ($isStudent): ?>
+                <form method="POST" action="/chat/new" class="new-chat-form">
+                    <?= csrf_field() ?>
+                    <?php if (!empty($env['sessionId'])): ?>
+                        <input type="hidden" name="session_id" value="<?= (int) $env['sessionId'] ?>">
+                    <?php endif; ?>
+                    <button type="submit" class="btn-new-chat" id="btnNewChat">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        Nouvelle conversation
+                    </button>
+                </form>
+
+                <?php if (($env['mode'] ?? '') === 'session'): ?>
+                    <a href="/chat" class="btn-leave-session"
+                        onclick="return confirm('Quitter la session et revenir au chat libre ? Vos conversations de session restent accessibles en la rejoignant à nouveau.');">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        Quitter la session
+                    </a>
+                <?php elseif ($isStudent): ?>
                     <a href="/sessions/join" class="btn-join-session">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                             stroke-linecap="round" stroke-linejoin="round">

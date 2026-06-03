@@ -239,8 +239,8 @@ class SessionController extends Controller
         $this->requireRole('teacher');
         $session = $this->loadOwned((int) $id);
 
-        $studentId = (int) $this->query('student', 0);
-        $view      = $this->sessions->monitor($session, $studentId);
+        $conversationId = (int) $this->query('conversation', 0);
+        $view           = $this->sessions->monitor($session, $conversationId);
 
         if ($view === null) {
             $this->flash('error', "Le suivi n'est disponible que pour une session en cours ou terminée.");

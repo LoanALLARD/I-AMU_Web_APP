@@ -21,6 +21,7 @@
     $router->add('GET',  '/accueil',     function() { (new AccueilController())->index(); });
 
     $router->add('POST', '/chat',        function() { (new LLMController())->handleChat(); });
+    $router->add('POST', '/chat/new',    function() { (new AccueilController())->newChat(); });
 
     $uri = $_SERVER['REQUEST_URI'];
     $method = $_SERVER['REQUEST_METHOD'];
@@ -37,7 +38,7 @@
 
     // --- Chat home + profile (authenticated) --------------------------
     $router->add('GET', '/chat',      function()    { (new AccueilController())->index(); });
-    $router->add('GET', '/chat/{id}', function($id)  { (new AccueilController())->index(); });
+    $router->add('GET', '/chat/{id}', function($id)  { (new AccueilController())->index($id); });
     $router->add('GET', '/profile',   function()    { (new ProfileController())->index(); });
 
     // --- Sessions (teacher) + join (student) --------------------------

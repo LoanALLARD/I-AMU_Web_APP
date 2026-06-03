@@ -5,28 +5,71 @@ declare(strict_types=1);
 namespace Controllers;
 
 use Core\Controller;
+use Data\Database;
+use Services\ChatService;
 
 /**
- * Home page (authenticated chat shell). Routed from `/` and `/accueil`.
+ * Authenticated chat shell, routed from `/`, `/accueil`, `/chat` and
+ * `/chat/{id}`.
  *
- * Minimal MVC controller: it guards auth and renders the chat home inside
- * Layout/chat.php. The conversation history and live LLM round-trip belong
- * to the Chat/LLM feature (ChatController / LLMController) — to be migrated
- * to MVC separately; the layout degrades gracefully without that data.
+ * Resolves the current chat environment (session-bound or free) so the
+ * sidebar lists the right conversations, then renders the chat home. New
+ * conversations are created via POST /chat/new.
  */
 class AccueilController extends Controller
 {
-    public function index(): void
+    private ChatService $chat;
+
+    public function __construct()
+    {
+        $this->chat = new ChatService(Database::getConnection());
+    }
+
+    public function index(?string $id = null): void
     {
         $this->requireAuth();
+        $user = $this->currentUser();
+
+        $conversationId = $id !== null && $id !== '' ? (int) $id : null;
+        $env            = $this->chat->environment((int) $user['id'], $conversationId);
+
+        if (!empty($env['notFound'])) {
+            $this->flash('error', 'Conversation introuvable.');
+            $this->redirect('/chat');
+        }
 
         $this->render('pages/homeView', [
-            'user'          => $this->currentUser(),
+            'user'          => $user,
             'page'          => 'chat',
-            'conversation'  => null,
-            'conversations' => [],
-            'sessionClosed' => false,
-            'closedReason'  => '',
+            'conversation'  => $env['conversation'],
+            'conversations' => $env['conversations'],
+            'sessionClosed' => $env['sessionClosed'],
+            'closedReason'  => $env['closedReason'],
+            'env'           => $env['env'],
         ], 'chat');
+    }
+
+    /**
+     * POST /chat/new — create a conversation in the current environment.
+     * A `session_id` field means a session conversation; absent means free.
+     */
+    public function newChat(): void
+    {
+        $this->requireAuth();
+        $this->verifyCsrf();
+        $user = $this->currentUser();
+
+        $sessionId = (int) $this->input('session_id', 0);
+
+        try {
+            $conversationId = $sessionId > 0
+                ? $this->chat->newSessionConversation((int) $user['id'], $sessionId)
+                : $this->chat->newFreeConversation((int) $user['id']);
+        } catch (\Throwable $e) {
+            $this->flash('error', $e->getMessage());
+            $this->redirect('/chat');
+        }
+
+        $this->redirect('/chat/' . $conversationId);
     }
 }

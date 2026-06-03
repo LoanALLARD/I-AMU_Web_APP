@@ -142,14 +142,14 @@ class SessionService
     }
 
     /**
-     * Read-only supervision view of a session: the enrolled students with
-     * their activity, plus the prompt/response transcript of the selected
-     * student. Returns null when the session is neither active nor ended
-     * (nothing to monitor yet).
+     * Read-only supervision view of a session: the enrolled students, each
+     * with their (possibly several) conversations, plus the transcript of
+     * the selected conversation. Returns null when the session is neither
+     * active nor ended (nothing to monitor yet).
      *
      * @return array<string, mixed>|null
      */
-    public function monitor(Session $session, int $studentId = 0): ?array
+    public function monitor(Session $session, int $conversationId = 0): ?array
     {
         $computed = $session->computedStatus($this->now());
         if ($computed !== SessionStatus::Active && $computed !== SessionStatus::Ended) {
@@ -158,42 +158,58 @@ class SessionService
 
         $sessionId = (int) $session->id();
 
-        $students = array_map(
-            static fn (array $r): array => [
-                'id'           => (int) $r['student_id'],
-                'name'         => trim(((string) $r['first_name']) . ' ' . ((string) $r['last_name'])),
-                'promptCount'  => (int) $r['prompt_count'],
-                'lastActivity' => $r['last_activity'] !== null
-                    ? (new DateTimeImmutable((string) $r['last_activity']))->format('d/m/Y H:i')
-                    : null,
-                'lastModel'    => $r['last_model'] !== null && $r['last_model'] !== '' ? (string) $r['last_model'] : null,
-            ],
-            $this->sessions->monitorStudents($sessionId)
-        );
-
-        $selected = null;
-        if ($studentId > 0) {
-            $name = null;
-            foreach ($students as $s) {
-                if ($s['id'] === $studentId) {
-                    $name = $s['name'];
-                    break;
-                }
-            }
-            if ($name !== null) {
-                $selected = [
-                    'id'         => $studentId,
-                    'name'       => $name,
-                    'transcript' => array_map(
-                        static fn (array $r): array => [
-                            'prompt'   => (string) $r['prompt'],
-                            'response' => $r['response'] !== null ? (string) $r['response'] : '',
-                            'model'    => (string) $r['model_name'],
-                            'sentAt'   => (new DateTimeImmutable((string) $r['sent_at']))->format('d/m/Y H:i'),
-                        ],
-                        $this->sessions->studentTranscript($sessionId, $studentId)
-                    ),
+        // Group the (student, conversation) rows by student. A student with
+        // no conversation still appears, with an empty conversation list.
+        $byStudent = [];
+        foreach ($this->sessions->monitorStudents($sessionId) as $r) {
+            $sid = (int) $r['student_id'];
+            if (!isset($byStudent[$sid])) {
+                $byStudent[$sid] = [
+                    'id'            => $sid,
+                    'name'          => trim(((string) $r['first_name']) . ' ' . ((string) $r['last_name'])),
+                    'conversations' => [],
+                    'totalPrompts'  => 0,
                 ];
+            }
+            if ($r['conversation_id'] !== null) {
+                $byStudent[$sid]['conversations'][] = [
+                    'id'           => (int) $r['conversation_id'],
+                    'name'         => (string) $r['conversation_name'],
+                    'promptCount'  => (int) $r['prompt_count'],
+                    'lastActivity' => $r['last_activity'] !== null
+                        ? (new DateTimeImmutable((string) $r['last_activity']))->format('d/m/Y H:i')
+                        : null,
+                    'lastModel'    => $r['last_model'] !== null && $r['last_model'] !== '' ? (string) $r['last_model'] : null,
+                ];
+                $byStudent[$sid]['totalPrompts'] += (int) $r['prompt_count'];
+            }
+        }
+        $students = array_values($byStudent);
+
+        // Resolve the selected conversation (must belong to one of the
+        // session's students) and load its transcript.
+        $selected = null;
+        if ($conversationId > 0) {
+            foreach ($students as $stu) {
+                foreach ($stu['conversations'] as $conv) {
+                    if ($conv['id'] === $conversationId) {
+                        $selected = [
+                            'conversationId'   => $conversationId,
+                            'conversationName' => $conv['name'],
+                            'studentName'      => $stu['name'],
+                            'transcript'       => array_map(
+                                static fn (array $r): array => [
+                                    'prompt'   => (string) $r['prompt'],
+                                    'response' => $r['response'] !== null ? (string) $r['response'] : '',
+                                    'model'    => (string) $r['model_name'],
+                                    'sentAt'   => (new DateTimeImmutable((string) $r['sent_at']))->format('d/m/Y H:i'),
+                                ],
+                                $this->sessions->interactionsOfConversation($conversationId, $sessionId)
+                            ),
+                        ];
+                        break 2;
+                    }
+                }
             }
         }
 
@@ -340,12 +356,16 @@ class SessionService
             $this->enrollments->enroll($studentUserId, $sessionId);
         }
 
+        // Land on the student's existing conversation, or create the first
+        // one ("SESSION - CODE #1"). They can add more from the chat.
         $conversationId = $this->conversations->findIdByUserAndSession($studentUserId, $sessionId);
         if ($conversationId === null) {
-            $created        = $this->conversations->newConversation($studentUserId, $sessionId, 'SESSION - ' . $session->accessCodeFormatted());
-            $conversationId = $created !== null
-                ? (int) $created['id']
-                : (int) ($this->conversations->findIdByUserAndSession($studentUserId, $sessionId) ?? 0);
+            $code           = $session->accessCodeFormatted() ?? ('S' . $sessionId);
+            $conversationId = $this->conversations->newConversation(
+                $studentUserId,
+                $sessionId,
+                'SESSION - ' . $code . ' #1'
+            );
         }
 
         return [

@@ -11,6 +11,8 @@
 $sessionClosed = $sessionClosed ?? false;
 $closedReason  = $closedReason ?? '';
 $conversation  = $conversation ?? null;
+$env           = $env ?? null;
+$inSession     = ($env['mode'] ?? 'libre') === 'session';
 ?>
 <div class="chat-container">
     <div class="chat-area">
@@ -45,7 +47,7 @@ $conversation  = $conversation ?? null;
                         <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en Python</button>
                         <button class="suggestion-chip" onclick="fillPrompt(this)">Qu'est-ce que le pattern MVC ?</button>
                     </div>
-                    <?php if (in_array('student', $user['roles'] ?? [], true)): ?>
+                    <?php if (!$inSession && in_array('student', $user['roles'] ?? [], true)): ?>
                         <a href="/sessions/join" class="empty-join-link">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                 stroke-linecap="round" stroke-linejoin="round">
