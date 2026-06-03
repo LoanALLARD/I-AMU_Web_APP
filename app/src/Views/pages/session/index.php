@@ -4,20 +4,21 @@
  */
 ?>
 <div class="page-header">
-    <div class="page-header-row">
-        <h1>Mes sessions</h1>
-        <span class="mono" style="font-size:11px;color:var(--gray-400);"><?= count($sessions) ?> session(s)</span>
+    <div class="page-header-row" style="align-items:center;">
+        <div>
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                <h1>Mes sessions</h1>
+                <span class="mono" style="font-size:11px;color:var(--gray-400);"><?= count($sessions) ?> session(s)</span>
+            </div>
+            <p class="page-sub" style="margin-top:6px;">Créez une session de cours ou d'examen, puis donnez le code d'accès à vos étudiants.</p>
+        </div>
+        <a href="/sessions/create" class="btn primary" style="margin-left:auto;">
+            <?= icon('graduation-cap', '', 14) ?> Nouvelle session
+        </a>
     </div>
-    <p class="page-sub">Créez une session de cours ou d'examen, puis donnez le code d'accès à vos étudiants.</p>
 </div>
 
 <div class="page-body">
-<div class="session-toolbar">
-    <span class="grow"></span>
-    <a href="/sessions/create" class="btn primary">
-        <?= icon('graduation-cap', '', 14) ?> Nouvelle session
-    </a>
-</div>
 
 <?php if ($sessions === []): ?>
     <div class="session-empty">
