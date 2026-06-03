@@ -30,16 +30,13 @@
             <div style="background:var(--blue-50, #eff6ff);border:1px solid var(--blue-200, #bfdbfe);border-radius:8px;padding:14px 16px;margin-top:12px;margin-bottom:16px;">
                 <p style="font-size:13px;color:var(--blue-800, #1e40af);line-height:1.5;margin:0 0 12px;">
                     Vous avez précédemment désactivé votre compte.
-                    Souhaitez-vous le réactiver pour retrouver l'accès à votre espace ?
+                    Souhaitez-vous le réactiver pour retrouver l'accès ?
                 </p>
                 <form method="POST" action="/reactivate">
                     <?= csrf_field() ?>
                     <input type="hidden" name="email" value="<?= htmlspecialchars($email ?? '') ?>">
                     <input type="hidden" name="password" id="reactivate-password" value="">
                     <button type="submit" class="btn-submit" id="btn-reactivate" style="width:100%;background:var(--blue-600, #2563eb);">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
-                        </svg>
                         Réactiver mon compte
                     </button>
                 </form>
