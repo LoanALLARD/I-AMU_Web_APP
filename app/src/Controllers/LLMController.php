@@ -71,6 +71,7 @@ class LLMController{
             $conversationData = $conversationRepository->newConversation(
                 $userData['id'],
                 1,
+                $aiData['id'],
                 $nameConversation
             );
         } else {

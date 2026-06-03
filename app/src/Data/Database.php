@@ -18,9 +18,9 @@ class Database{
         if (self::$instance === null) {
 
             $config = require __DIR__ . '/../Config/config.php';
-            $dbConfig = $config['db'];
+            $dbConfig = $config['database'];
 
-            $dsn = "pgsql:host={$dbConfig['host']};port={$dbConfig['port']};dbname={$dbConfig['dbname']}";
+            $dsn = "pgsql:host={$dbConfig['host']};port={$dbConfig['port']};dbname={$dbConfig['name']}";
 
             try {
                 self::$instance = new PDO($dsn, $dbConfig['user'], $dbConfig['password'], [
