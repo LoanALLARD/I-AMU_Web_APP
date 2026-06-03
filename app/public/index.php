@@ -9,7 +9,7 @@
     use Core\Router;
     use Controllers\AccueilController;
     use Controllers\LLMController;
-    use Controllers\LoginController;
+    use Controllers\AuthController;
     use Controllers\SessionController;
     use Controllers\ProfileController;
     use Controllers\PlaceController;
@@ -26,12 +26,12 @@
     $uri = $_SERVER['REQUEST_URI'];
     $method = $_SERVER['REQUEST_METHOD'];
 
-    $router->add('GET',  '/login',       function() { (new LoginController())->showLogin(); });
-    $router->add('POST', '/login',       function() { (new LoginController())->login(); });
-    $router->add('GET',  '/register',    function() { (new LoginController())->showRegister(); });
-    $router->add('POST', '/register',    function() { (new LoginController())->register(); });
-    $router->add('GET',  '/logout',      function() { (new LoginController())->logout(); });
-    $router->add('GET',  '/RGPDConsent', function() { (new LoginController())->showRGPD(); });
+    $router->add('GET',  '/login',       function() { (new AuthController())->showLogin(); });
+    $router->add('POST', '/login',       function() { (new AuthController())->login(); });
+    $router->add('GET',  '/register',    function() { (new AuthController())->showRegister(); });
+    $router->add('POST', '/register',    function() { (new AuthController())->register(); });
+    $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
+    $router->add('GET',  '/RGPDConsent', function() { (new AuthController())->showRGPD(); });
 
     // AJAX: departments of a place, for the registration form's dependent select.
     $router->add('GET',  '/places/{id}/departments', function($id) { (new PlaceController())->departments($id); });

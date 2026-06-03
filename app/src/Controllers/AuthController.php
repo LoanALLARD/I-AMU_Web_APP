@@ -7,7 +7,7 @@ use Data\Database;
 use Models\PlaceRepository;
 use Services\AuthService;
 
-class LoginController extends Controller
+class AuthController extends Controller
 {
     private AuthService $authService;
     private PlaceRepository $places;
@@ -16,7 +16,7 @@ class LoginController extends Controller
     {
         // MVC wiring: the controller builds its own service, which gets the
         // shared connection from the Data\Database singleton. This matches
-        // how public/index.php instantiates controllers (`new LoginController()`).
+        // how public/index.php instantiates controllers (`new AuthController()`).
         $this->authService = new AuthService();
         $this->places      = new PlaceRepository(Database::getConnection());
     }

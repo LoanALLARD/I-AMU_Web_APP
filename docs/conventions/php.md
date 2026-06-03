@@ -14,7 +14,7 @@
 
 ## 2. Naming Suffixes
 
-- HTTP controller → `*Controller` (`LoginController`).
+- HTTP controller → `*Controller` (`AuthController`).
 - Data access (Model) → `*Repository` (`AiRepository`, `UserRepository`).
 - Application service → `*Service` (`AuthService`).
 - LLM contract → `*Interface` (`LlmAdaptaterInterface`) — the only interface kept.
