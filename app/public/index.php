@@ -33,6 +33,7 @@
     $router->add('GET',  '/register',    function() { (new AuthController())->showRegister(); });
     $router->add('POST', '/register',    function() { (new AuthController())->register(); });
     $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
+    $router->add('POST', '/reactivate',  fn() => (new LoginController($authService))->reactivate());
     $router->add('GET',  '/RGPDConsent', function() { (new AuthController())->showRGPD(); });
 
     // AJAX: departments of a place, for the registration form's dependent select.
@@ -42,6 +43,7 @@
     $router->add('GET', '/chat',      function()    { (new AccueilController())->index(); });
     $router->add('GET', '/chat/{id}', function($id)  { (new AccueilController())->index($id); });
     $router->add('GET', '/profile',   function()    { (new ProfileController())->index(); });
+    $router->add('POST', '/profile/deactivate', function()    { (new ProfileController())->deactivate(); });
 
     // --- Sessions (teacher) + join (student) --------------------------
     // Literal routes are registered before the `{id}` wildcard so they win.
@@ -61,3 +63,4 @@
 
     $router->compare($uri, $method);
 ?>
+
