@@ -1294,3 +1294,162 @@ textarea {
     color: var(--gray-600);
 }
 .monitor-conv-count { font-family: var(--font-mono); }
+
+/* ── Conversation row + per-item kebab menu (chat sidebar) ─────────────
+   The conversation list wraps each entry in a flex `.conv-row` so a kebab
+   button can sit to the right of the link. The row owns the hover/active
+   background (overriding homeChat.css, which is loaded earlier). */
+.conv-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    margin-bottom: 2px;
+}
+.conv-row:hover { background: var(--gray-100); }
+.conv-row.active { background: var(--blue-light); }
+
+.conv-row .conv-item {
+    flex: 1 1 auto;
+    min-width: 0;          /* let the title ellipsis kick in */
+    margin-bottom: 0;
+    background: transparent;
+}
+.conv-row .conv-item:hover { background: transparent; }
+.conv-row.active .conv-title {
+    color: var(--blue);
+    font-weight: 600;
+}
+
+.conv-actions {
+    position: relative;
+    flex: 0 0 auto;
+}
+.conv-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin-right: 4px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    color: var(--gray-400);
+    cursor: pointer;
+    opacity: .45;          /* visible-but-muted so it stays tappable on touch */
+    transition: opacity .15s, background .15s, color .15s;
+}
+.conv-row:hover .conv-menu-btn,
+.conv-menu-btn:focus-visible,
+.conv-menu-btn[aria-expanded="true"] { opacity: 1; }
+.conv-menu-btn:hover {
+    background: var(--gray-200);
+    color: var(--gray-800);
+}
+
+.conv-menu {
+    position: absolute;
+    top: calc(100% - 2px);
+    right: 4px;
+    z-index: 40;
+    min-width: 156px;
+    padding: 5px;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(20, 30, 60, .14);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.conv-menu[hidden] { display: none; }
+
+.conv-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 9px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: .82rem;
+    color: var(--gray-800);
+    text-align: left;
+    cursor: pointer;
+}
+.conv-menu-item:hover { background: var(--gray-100); }
+.conv-menu-item svg {
+    flex: 0 0 auto;
+    color: var(--gray-400);
+}
+
+/* ── Conversation scope switch (Conversations / Archivées) ─────────────
+   The list header is a dropdown trigger: a chevron signals it can switch
+   between the active and the archived conversation list. */
+.conv-scope {
+    position: relative;
+    padding: .5rem .5rem .3rem;
+}
+.conv-scope-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+.conv-scope-toggle .conv-group-label {
+    padding: 0;            /* the wrapper owns the spacing now */
+}
+.conv-scope-chevron {
+    color: var(--gray-400);
+    transition: transform .15s;
+}
+.conv-scope-toggle[aria-expanded="true"] .conv-scope-chevron {
+    transform: rotate(180deg);
+}
+.conv-scope-toggle:hover .conv-group-label,
+.conv-scope-toggle:hover .conv-scope-chevron {
+    color: var(--gray-600);
+}
+
+.conv-scope-menu {
+    position: absolute;
+    top: calc(100% - 2px);
+    left: .5rem;
+    z-index: 40;
+    min-width: 184px;
+    padding: 5px;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(20, 30, 60, .14);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.conv-scope-menu[hidden] { display: none; }
+.conv-scope-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 9px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: .82rem;
+    color: var(--gray-800);
+}
+.conv-scope-item:hover { background: var(--gray-100); }
+.conv-scope-item svg { flex: 0 0 auto; color: var(--gray-400); }
+.conv-scope-item.is-current {
+    background: var(--blue-light);
+    color: var(--blue);
+    font-weight: 600;
+}
+.conv-scope-item.is-current svg { color: var(--blue); }

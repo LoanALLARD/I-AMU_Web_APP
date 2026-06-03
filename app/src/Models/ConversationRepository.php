@@ -35,17 +35,21 @@ class ConversationRepository {
 
     /**
      * Conversations a user owns in a given session, with their prompt count,
-     * most recent first. Used by the session-environment sidebar.
+     * most recent first. `$archived` flips the view between the active and the
+     * archived list. Used by the session-environment sidebar.
      *
      * @return list<array<string, mixed>>
      */
-    public function listByUserAndSession(int $userId, int $sessionId): array
+    public function listByUserAndSession(int $userId, int $sessionId, bool $archived = false): array
     {
+        // Controlled boolean literal (never user input) — safe to inline,
+        // and avoids PDO boolean-binding quirks on the pgsql driver.
+        $flag = $archived ? 'TRUE' : 'FALSE';
         $stmt = $this->pdo->prepare(
             'SELECT c.id, c.name, COUNT(i.id) AS prompt_count
                FROM conversations c
                LEFT JOIN interactions i ON i.conversation_id = c.id
-              WHERE c.user_id = :u AND c.session_id = :s AND c.is_archived = FALSE
+              WHERE c.user_id = :u AND c.session_id = :s AND c.is_archived = ' . $flag . '
               GROUP BY c.id, c.name, c.created_at
               ORDER BY c.created_at DESC, c.id DESC'
         );
@@ -59,16 +63,18 @@ class ConversationRepository {
 
     /**
      * Free-mode conversations (no session) a user owns, most recent first.
+     * `$archived` flips between the active and the archived list.
      *
      * @return list<array<string, mixed>>
      */
-    public function listFreeByUser(int $userId): array
+    public function listFreeByUser(int $userId, bool $archived = false): array
     {
+        $flag = $archived ? 'TRUE' : 'FALSE';
         $stmt = $this->pdo->prepare(
             'SELECT c.id, c.name, COUNT(i.id) AS prompt_count
                FROM conversations c
                LEFT JOIN interactions i ON i.conversation_id = c.id
-              WHERE c.user_id = :u AND c.session_id IS NULL AND c.is_archived = FALSE
+              WHERE c.user_id = :u AND c.session_id IS NULL AND c.is_archived = ' . $flag . '
               GROUP BY c.id, c.name, c.created_at
               ORDER BY c.created_at DESC, c.id DESC'
         );
@@ -126,5 +132,40 @@ class ConversationRepository {
         $id = $query->fetchColumn();
 
         return $id === false ? null : (int) $id;
+    }
+
+    /**
+     * Renames a conversation the user owns. The `user_id` predicate scopes
+     * the write to the owner so a forged id cannot touch another user's row.
+     */
+    public function rename(int $userId, int $conversationId, string $name): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE conversations SET name = :name WHERE id = :id AND user_id = :u'
+        );
+        $stmt->execute(['name' => $name, 'id' => $conversationId, 'u' => $userId]);
+    }
+
+    /**
+     * Soft-archives a conversation the user owns (hidden from the sidebar
+     * lists, which all filter on `is_archived = FALSE`). Ownership-scoped.
+     */
+    public function archive(int $userId, int $conversationId): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE conversations SET is_archived = TRUE WHERE id = :id AND user_id = :u'
+        );
+        $stmt->execute(['id' => $conversationId, 'u' => $userId]);
+    }
+
+    /**
+     * Restores an archived conversation the user owns. Ownership-scoped.
+     */
+    public function unarchive(int $userId, int $conversationId): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE conversations SET is_archived = FALSE WHERE id = :id AND user_id = :u'
+        );
+        $stmt->execute(['id' => $conversationId, 'u' => $userId]);
     }
 }

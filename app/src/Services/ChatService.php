@@ -36,11 +36,13 @@ class ChatService
      * and whether the linked session is closed.
      *
      * `notFound` is true when a conversation id was given but does not
-     * belong to the user (the controller redirects to /chat).
+     * belong to the user (the controller redirects to /chat). `$archived`
+     * lists the archived conversations of the environment instead of the
+     * active ones (the open conversation is unaffected by the flag).
      *
      * @return array<string, mixed>
      */
-    public function environment(int $userId, ?int $conversationId): array
+    public function environment(int $userId, ?int $conversationId, bool $archived = false): array
     {
         $conversation = null;
         $sessionId    = null;
@@ -78,11 +80,11 @@ class ChatService
                     $closedReason  = 'Cette session a été annulée.';
                 }
             }
-            $rows = $this->conversations->listByUserAndSession($userId, $sessionId);
+            $rows = $this->conversations->listByUserAndSession($userId, $sessionId, $archived);
         } else {
             $envMode  = 'libre';
             $envLabel = 'Chat libre';
-            $rows     = $this->conversations->listFreeByUser($userId);
+            $rows     = $this->conversations->listFreeByUser($userId, $archived);
         }
 
         return [
@@ -136,5 +138,69 @@ class ChatService
         $n = count($this->conversations->listFreeByUser($userId)) + 1;
 
         return $this->conversations->newConversation($userId, null, 'Conversation #' . $n);
+    }
+
+    /**
+     * Renames a free-mode conversation the user owns. Session conversations
+     * keep their generated "SESSION - CODE #N" name and cannot be renamed.
+     */
+    public function rename(int $userId, int $conversationId, string $name): void
+    {
+        $row = $this->conversations->getConversationByUserId($userId, $conversationId);
+        if ($row === null) {
+            throw new RuntimeException('Conversation introuvable.');
+        }
+        if ($row['session_id'] !== null) {
+            throw new RuntimeException('Une conversation de session ne peut pas être renommée.');
+        }
+
+        $name = trim($name);
+        if ($name === '') {
+            throw new RuntimeException('Le nom ne peut pas être vide.');
+        }
+        if (mb_strlen($name) > 120) {
+            $name = mb_substr($name, 0, 120);
+        }
+
+        $this->conversations->rename($userId, $conversationId, $name);
+    }
+
+    /**
+     * Archives a conversation the user owns and returns where the chat shell
+     * should land next: the environment of the archived conversation plus the
+     * id of the most recent remaining conversation there (null when none).
+     *
+     * @return array{sessionId: int|null, next: int|null}
+     */
+    public function archive(int $userId, int $conversationId): array
+    {
+        $row = $this->conversations->getConversationByUserId($userId, $conversationId);
+        if ($row === null) {
+            throw new RuntimeException('Conversation introuvable.');
+        }
+
+        $sessionId = $row['session_id'] !== null ? (int) $row['session_id'] : null;
+        $this->conversations->archive($userId, $conversationId);
+
+        $remaining = $sessionId !== null
+            ? $this->conversations->listByUserAndSession($userId, $sessionId)
+            : $this->conversations->listFreeByUser($userId);
+
+        $next = $remaining !== [] ? (int) $remaining[0]['id'] : null;
+
+        return ['sessionId' => $sessionId, 'next' => $next];
+    }
+
+    /**
+     * Restores an archived conversation the user owns.
+     */
+    public function unarchive(int $userId, int $conversationId): void
+    {
+        $row = $this->conversations->getConversationByUserId($userId, $conversationId);
+        if ($row === null) {
+            throw new RuntimeException('Conversation introuvable.');
+        }
+
+        $this->conversations->unarchive($userId, $conversationId);
     }
 }
