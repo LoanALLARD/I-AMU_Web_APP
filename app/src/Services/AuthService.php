@@ -47,14 +47,17 @@ final class AuthService
             return [
                 'success' => false,
                 'error' => 'Identifiants invalides.',
-                'desactivated' => true,
-                'email' => (string) $row['email'],
 
             ];
         }
 
         if (!$row['is_active']) {
-            return ['success' => false, 'error' => 'Ce compte est désactivé.'];
+            return [
+                'success' => false,
+                'error' => 'Ce compte est désactivé.',
+                'desactivated' => true,
+                'email' => (string) $row['email']
+                ];
         }
 
         $userId = (int) $row['id'];
@@ -179,7 +182,7 @@ final class AuthService
         return ['success' => true];
     }
 
-    public function desactivateAccount(int $userId): array
+    public function deactivateAccount(int $userId): array
     {
         try {
             $stmt = $this->db->query(
