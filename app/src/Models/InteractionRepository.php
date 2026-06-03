@@ -24,7 +24,7 @@ class InteractionRepository {
         string $response,
         int $input_tokens,
         int $output_tokens
-    ): void {
+    ) {
         $query = $this->pdo->prepare(
             'INSERT INTO interactions
                 (conversation_id, model_id, prompt, response, input_tokens, output_tokens)
@@ -40,7 +40,6 @@ class InteractionRepository {
             'input_tokens'    => $input_tokens > 0 ? $input_tokens : null,
             'output_tokens'   => $output_tokens >= 0 ? $output_tokens : null,
         ]);
-    }
 
         $idGenere = $this->pdo->lastInsertId();
 
@@ -54,6 +53,7 @@ class InteractionRepository {
         $result = $querySelect->fetch();
 
         return $result ?: null; 
+    }
     /**
      * Full prompt/response history of a conversation, oldest first, with the
      * model name of each turn. Ownership is enforced by the caller: the chat
