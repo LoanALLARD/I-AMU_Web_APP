@@ -9,12 +9,14 @@
             <?= htmlspecialchars($view['name']) ?>
         </h1>
         <div class="dashboard-meta">
-            <span class="badge <?= htmlspecialchars($view['typeClass']) ?>"><?= htmlspecialchars($view['typeLabel']) ?></span>
-            <span class="badge <?= htmlspecialchars($view['statusClass']) ?>"><?= htmlspecialchars($view['statusLabel']) ?></span>
+            <span
+                class="badge <?= htmlspecialchars($view['typeClass']) ?>"><?= htmlspecialchars($view['typeLabel']) ?></span>
+            <span
+                class="badge <?= htmlspecialchars($view['statusClass']) ?>"><?= htmlspecialchars($view['statusLabel']) ?></span>
             <?php if ($view['accessCode'] !== ''): ?>
-            <code class="access-code-cell" style="font-size:13px;color:var(--gray-600);">
-                <?= htmlspecialchars($view['accessCode']) ?>
-            </code>
+                <code class="access-code-cell" style="font-size:13px;color:var(--gray-600);">
+                        <?= htmlspecialchars($view['accessCode']) ?>
+                    </code>
             <?php endif; ?>
         </div>
     </div>
@@ -39,7 +41,7 @@
         <?php endif; ?>
         <?php if ($view['canEnd']): ?>
             <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/end" style="margin:0;"
-                  onsubmit="return confirm('Terminer cette session maintenant ?')">
+                onsubmit="return confirm('Terminer cette session maintenant ?')">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn">
                     <?= icon('square', '', 12) ?> Terminer
@@ -48,7 +50,7 @@
         <?php endif; ?>
         <?php if ($view['canCancel']): ?>
             <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/cancel" style="margin:0;"
-                  onsubmit="return confirm('Annuler cette session ?')">
+                onsubmit="return confirm('Annuler cette session ?')">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn danger">
                     <?= icon('x-circle', '', 12) ?> Annuler
@@ -107,20 +109,20 @@
 
     <aside>
         <?php if ($view['accessCode'] !== ''): ?>
-        <div class="dashboard-card">
-            <h2>Code d'accès</h2>
-            <div class="access-code-display" style="font-size: 38px; margin: 4px 0 12px;">
-                <?= htmlspecialchars($view['accessCode']) ?>
+            <div class="dashboard-card">
+                <h2>Code d'accès</h2>
+                <div class="access-code-display" style="font-size: 38px; margin: 4px 0 12px;">
+                    <?= htmlspecialchars($view['accessCode']) ?>
+                </div>
+                <div class="access-card-actions">
+                    <button type="button" class="btn bordered" id="btn-copy-code">
+                        <?= icon('copy', '', 11) ?> Copier
+                    </button>
+                    <button type="button" class="btn bordered" id="btn-fullscreen-code">
+                        <?= icon('eye', '', 11) ?> Plein écran
+                    </button>
+                </div>
             </div>
-            <div class="access-card-actions">
-                <button type="button" class="btn bordered" id="btn-copy-code">
-                    <?= icon('copy', '', 11) ?> copier
-                </button>
-                <button type="button" class="btn bordered" id="btn-fullscreen-code">
-                    <?= icon('eye', '', 11) ?> plein écran
-                </button>
-            </div>
-        </div>
         <?php endif; ?>
 
         <div class="dashboard-card">
@@ -150,6 +152,6 @@
 </script>
 <?php
 $jsPath = __DIR__ . '/../../../../public/assets/js/session-create.js';
-$jsVer  = is_file($jsPath) ? filemtime($jsPath) : 0;
+$jsVer = is_file($jsPath) ? filemtime($jsPath) : 0;
 ?>
 <script src="/assets/js/session-create.js?v=<?= $jsVer ?>" defer></script>

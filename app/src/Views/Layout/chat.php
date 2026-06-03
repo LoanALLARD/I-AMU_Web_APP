@@ -114,9 +114,10 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
         </div>
 
         <div class="topbar-right">
-            <a href="/profile" class="topbar-user-avatar"
+            <a href="/profile" class="topbar-user"
                 title="<?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?>">
-                <?= htmlspecialchars($initials) ?>
+                <span class="topbar-user-name"><?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?></span>
+                <span class="topbar-user-avatar"><?= htmlspecialchars($initials) ?></span>
             </a>
         </div>
     </header>

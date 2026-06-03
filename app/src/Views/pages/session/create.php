@@ -251,10 +251,10 @@ $typeCards = [
             </div>
             <div class="access-card-actions">
                 <button type="button" class="btn bordered" id="btn-copy-code">
-                    <?= icon('copy', '', 11) ?> copier
+                    <?= icon('copy', '', 11) ?> Copier
                 </button>
                 <button type="button" class="btn bordered" id="btn-fullscreen-code">
-                    <?= icon('eye', '', 11) ?> plein écran
+                    <?= icon('eye', '', 11) ?> Plein écran
                 </button>
             </div>
         </div>

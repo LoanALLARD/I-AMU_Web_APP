@@ -397,13 +397,16 @@
     text-overflow: ellipsis;
 }
 
+/* Segmented pill control: outlined white container, fully-rounded pills,
+   active tab gets a soft blue fill. */
 .topbar-tabs {
     display: flex;
     align-items: center;
-    gap: .15rem;
+    gap: .2rem;
     margin-left: auto;
-    background: var(--gray-100);
-    border-radius: 8px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 100px;
     padding: 3px;
 }
 
@@ -413,41 +416,65 @@
     font-weight: 600;
     color: var(--gray-600);
     text-decoration: none;
-    padding: .35rem .85rem;
-    border-radius: 6px;
+    padding: .35rem .9rem;
+    border-radius: 100px;
     transition: background .15s, color .15s;
     display: flex;
     align-items: center;
-    gap: .35rem;
+    gap: .4rem;
 }
 
 .topbar-tab:hover {
     color: var(--gray-800);
+    background: var(--gray-100);
 }
 
 .topbar-tab.active {
-    background: var(--white);
+    background: var(--blue-light);
     color: var(--blue);
-    box-shadow: 0 1px 4px rgba(26, 115, 200, .08);
 }
 
 .topbar-right {
-    margin-left: .75rem;
+    margin-left: .6rem;
+}
+
+/* Profile chip: user name + avatar, like a single clickable unit. */
+.topbar-user {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    text-decoration: none;
+    padding: .2rem .25rem .2rem .65rem;
+    border-radius: 100px;
+    transition: background .15s;
+}
+
+.topbar-user:hover {
+    background: var(--gray-100);
+}
+
+.topbar-user-name {
+    font-family: 'Nunito', sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    white-space: nowrap;
 }
 
 .topbar-user-avatar {
-    width: 34px;
-    height: 34px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     background: var(--blue);
     color: var(--white);
     font-family: 'Nunito', sans-serif;
-    font-size: .72rem;
+    font-size: .68rem;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     letter-spacing: .02em;
+    flex-shrink: 0;
     box-shadow: 0 2px 6px rgba(26, 115, 200, .2);
 }
 
@@ -908,6 +935,14 @@
 
     .topbar-right {
         margin-left: auto;
+    }
+
+    /* Keep only the avatar on phones to save space. */
+    .topbar-user-name {
+        display: none;
+    }
+    .topbar-user {
+        padding: 0;
     }
 
     .model-bar {
