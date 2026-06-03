@@ -54,10 +54,23 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
     // get hidden behind aggressive browser caching during dev.
     $cssDir = dirname(__DIR__, 3) . '/public/assets/css';
     $v = static fn(string $f): string => '?v=' . (@filemtime("$cssDir/$f") ?: 0);
+    $vendorDir = dirname(__DIR__, 3) . '/public/assets/vendor';
+    $vv = static fn(string $f): string => '?v=' . (@filemtime("$vendorDir/$f") ?: 0);
     ?>
     <link rel="stylesheet" href="/assets/css/style.css<?= $v('style.css') ?>">
     <link rel="stylesheet" href="/assets/css/homeChat.css<?= $v('homeChat.css') ?>">
     <link rel="stylesheet" href="/assets/css/sessions.css<?= $v('sessions.css') ?>">
+    <?php if ($page === 'chat'): ?>
+        <?php /* Markdown rendering for AI replies (live + history). Loaded
+         synchronously in <head> so the chat view's inline script can use
+         marked / DOMPurify / hljs immediately. Vendored under
+         public/assets/vendor (no CDN dependency). */ ?>
+        <link rel="stylesheet"
+            href="/assets/vendor/highlight/styles/github-dark.min.css<?= $vv('highlight/styles/github-dark.min.css') ?>">
+        <script src="/assets/vendor/marked.min.js<?= $vv('marked.min.js') ?>"></script>
+        <script src="/assets/vendor/purify.min.js<?= $vv('purify.min.js') ?>"></script>
+        <script src="/assets/vendor/highlight/highlight.min.js<?= $vv('highlight/highlight.min.js') ?>"></script>
+    <?php endif; ?>
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
 

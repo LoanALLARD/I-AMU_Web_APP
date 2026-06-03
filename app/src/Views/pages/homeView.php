@@ -9,12 +9,12 @@
  * @var string $closedReason   why the session is closed (ended / cancelled)
  */
 $sessionClosed = $sessionClosed ?? false;
-$closedReason  = $closedReason ?? '';
-$conversation  = $conversation ?? null;
-$env           = $env ?? null;
-$inSession     = ($env['mode'] ?? 'libre') === 'session';
-$messages      = $messages ?? [];
-$hasMessages   = $messages !== [];
+$closedReason = $closedReason ?? '';
+$conversation = $conversation ?? null;
+$env = $env ?? null;
+$inSession = ($env['mode'] ?? 'libre') === 'session';
+$messages = $messages ?? [];
+$hasMessages = $messages !== [];
 ?>
 <div class="chat-container">
     <div class="chat-area">
@@ -33,49 +33,52 @@ $hasMessages   = $messages !== [];
 
             <?php if ($hasMessages): ?>
                 <?php /* Server-rendered history: mirrors the DOM the live
-                  composer builds, so a reloaded thread is indistinguishable
-                  from a fresh exchange. */ ?>
+                composer builds, so a reloaded thread is indistinguishable
+                from a fresh exchange. */ ?>
                 <?php foreach ($messages as $m): ?>
                     <div class="msg msg-user">
                         <div class="msg-content"><?= htmlspecialchars($m['prompt']) ?></div>
                     </div>
                     <div class="msg msg-ai">
                         <div class="msg-meta"><span class="msg-model"><?= htmlspecialchars($m['model']) ?></span></div>
-                        <div class="msg-content"><p><?= htmlspecialchars($m['response']) ?></p></div>
+                        <?php /* Raw markdown, escaped. JS upgrades it to rendered
+                                HTML on load; without JS the plain text still reads. */ ?>
+                        <div class="msg-content" data-markdown><?= htmlspecialchars($m['response']) ?></div>
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
-            <div class="empty-state" id="emptyState">
-                <div class="empty-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                </div>
-<?php if ($sessionClosed): ?>
-                    <h2>Session terminée</h2>
-                    <p><?= htmlspecialchars($closedReason) ?> Cette conversation est en lecture seule.</p>
-                <?php else: ?>
-                    <h2>Bonjour <?= htmlspecialchars($user['first_name'] ?? '') ?> !</h2>
-                    <p>Posez une question à l'IA ou sélectionnez un modèle pour commencer.</p>
-                    <div class="empty-suggestions">
-                        <button class="suggestion-chip" onclick="fillPrompt(this)">Explique-moi les pointeurs en C</button>
-                        <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en Python</button>
-                        <button class="suggestion-chip" onclick="fillPrompt(this)">Qu'est-ce que le pattern MVC ?</button>
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
                     </div>
-                    <?php if (!$inSession && in_array('student', $user['roles'] ?? [], true)): ?>
-                        <a href="/sessions/join" class="empty-join-link">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                                <polyline points="10 17 15 12 10 7" />
-                                <line x1="15" y1="12" x2="3" y2="12" />
-                            </svg>
-                            Rejoindre une session avec un code
-                        </a>
+                    <?php if ($sessionClosed): ?>
+                        <h2>Session terminée</h2>
+                        <p><?= htmlspecialchars($closedReason) ?> Cette conversation est en lecture seule.</p>
+                    <?php else: ?>
+                        <h2>Bonjour <?= htmlspecialchars($user['first_name'] ?? '') ?> !</h2>
+                        <p>Posez une question à l'IA ou sélectionnez un modèle pour commencer.</p>
+                        <div class="empty-suggestions">
+                            <button class="suggestion-chip" onclick="fillPrompt(this)">Explique-moi les pointeurs en C</button>
+                            <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en
+                                Python</button>
+                            <button class="suggestion-chip" onclick="fillPrompt(this)">Qu'est-ce que le pattern MVC ?</button>
+                        </div>
+                        <?php if (!$inSession && in_array('student', $user['roles'] ?? [], true)): ?>
+                            <a href="/sessions/join" class="empty-join-link">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                                    <polyline points="10 17 15 12 10 7" />
+                                    <line x1="15" y1="12" x2="3" y2="12" />
+                                </svg>
+                                Rejoindre une session avec un code
+                            </a>
+                        <?php endif; ?>
                     <?php endif; ?>
-                <?php endif; ?>
-            </div>
+                </div>
             <?php endif; ?>
 
         </div>
@@ -96,10 +99,14 @@ $hasMessages   = $messages !== [];
                     placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
                     rows="1" <?= $sessionClosed ? 'disabled' : 'autofocus' ?>></textarea>
                 <button class="btn-send" id="btnSend" disabled title="Envoyer">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    <svg class="icon-send" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13" />
                         <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    <svg class="icon-stop" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"
+                        aria-hidden="true">
+                        <rect x="6" y="6" width="12" height="12" rx="2" />
                     </svg>
                 </button>
             </div>
@@ -121,9 +128,56 @@ $hasMessages   = $messages !== [];
     const sendBtn = document.getElementById('btnSend');
     const counter = document.getElementById('charCounter');
 
-    // On load, jump to the latest message so a reopened thread starts at the
-    // bottom instead of the top.
+    // Render an AI reply's markdown to sanitized HTML, then syntax-highlight
+    // its code blocks. Falls back to escaped plain text if the libs are absent.
+    function renderMarkdown(text, el) {
+        if (!el) return;
+        el.innerHTML = (window.marked && window.DOMPurify)
+            ? DOMPurify.sanitize(marked.parse(text ?? '', { breaks: true, gfm: true }))
+            : `<p>${escapeHtml(text ?? '')}</p>`;
+        if (window.hljs) {
+            el.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
+        }
+        addCodeCopyButtons(el);
+    }
+
+    // Adds a "Copier" button to each code block so the snippet alone can be
+    // copied (separate from the message-level copy action).
+    function addCodeCopyButtons(container) {
+        container.querySelectorAll('pre').forEach((pre) => {
+            // Wrap the <pre> so the button is pinned to a non-scrolling parent
+            // (the <pre> itself scrolls horizontally for long lines).
+            if (pre.parentElement.classList.contains('code-block')) return;
+            const wrap = document.createElement('div');
+            wrap.className = 'code-block';
+            pre.parentNode.insertBefore(wrap, pre);
+            wrap.appendChild(pre);
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'code-copy';
+            btn.textContent = 'Copier';
+            btn.addEventListener('click', () => {
+                const code = pre.querySelector('code') || pre;
+                navigator.clipboard.writeText(code.textContent).then(() => {
+                    btn.textContent = 'Copié';
+                    btn.classList.add('is-copied');
+                    setTimeout(() => {
+                        btn.textContent = 'Copier';
+                        btn.classList.remove('is-copied');
+                    }, 1500);
+                });
+            });
+            wrap.appendChild(btn);
+        });
+    }
+
+    // On load: render persisted AI bubbles (raw markdown -> HTML), then jump to
+    // the latest message so a reopened thread starts at the bottom.
     (function () {
+        document.querySelectorAll('.msg-ai .msg-content[data-markdown]').forEach((el) => {
+            renderMarkdown(el.textContent, el);
+        });
         const m = document.getElementById('messages');
         if (m) m.scrollTop = m.scrollHeight;
     })();
@@ -142,7 +196,21 @@ $hasMessages   = $messages !== [];
         }
     });
 
+    // Tracks the in-flight request so the send button can double as a stop
+    // button while the model is generating.
+    let currentAbort = null;
+
+    function setSending(on) {
+        sendBtn.classList.toggle('is-stop', on);
+        sendBtn.title = on ? 'Arrêter la génération' : 'Envoyer';
+        sendBtn.disabled = on ? false : !input.value.trim();
+    }
+
     sendBtn?.addEventListener('click', () => {
+        if (sendBtn.classList.contains('is-stop')) {
+            currentAbort?.abort();
+            return;
+        }
         if (input.value.trim()) sendMessage();
     });
 
@@ -153,7 +221,7 @@ $hasMessages   = $messages !== [];
     }
 
     async function sendMessage() {
-        if (input.disabled) return;
+        if (input.disabled || currentAbort) return;
         const message = input.value.trim();
         if (!message) return;
 
@@ -168,7 +236,6 @@ $hasMessages   = $messages !== [];
 
         input.value = '';
         input.style.height = 'auto';
-        sendBtn.disabled = true;
         counter.textContent = '0 car.';
 
         const aiMsg = document.createElement('div');
@@ -180,6 +247,9 @@ $hasMessages   = $messages !== [];
         messagesEl.appendChild(aiMsg);
         messagesEl.scrollTop = messagesEl.scrollHeight;
 
+        currentAbort = new AbortController();
+        setSending(true);
+
         try {
             const res = await fetch('/chat', {
                 method: 'POST',
@@ -189,7 +259,8 @@ $hasMessages   = $messages !== [];
                     message: message,
                     context: [],
                     conversation_id: CHAT_CONVERSATION_ID
-                })
+                }),
+                signal: currentAbort.signal
             });
             const text = await res.text();
             console.log("RAW RESPONSE:", text);
@@ -206,22 +277,25 @@ $hasMessages   = $messages !== [];
                 ? JSON.parse(data.response)
                 : data.response;
 
-            aiMsg.querySelector('.msg-content').innerHTML =
-                `<p>${escapeHtml(parsed.response || 'Pas de réponse.')}</p>`;
-            aiMsg.innerHTML += `
+            renderMarkdown(parsed.response || 'Pas de réponse.', aiMsg.querySelector('.msg-content'));
+            aiMsg.insertAdjacentHTML('beforeend', `
                 <div class="msg-actions">
                     <button class="msg-action" onclick="copyMsg(this)">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                        copier
+                        Copier
                     </button>
                     <button class="msg-action">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-                        garder
+                        Garder
                     </button>
-                </div>`;
+                </div>`);
         } catch (err) {
-            aiMsg.querySelector('.msg-content').innerHTML =
-                `<p class="msg-error">Erreur de connexion au modèle.</p>`;
+            aiMsg.querySelector('.msg-content').innerHTML = err.name === 'AbortError'
+                ? `<p class="msg-error">Génération interrompue.</p>`
+                : `<p class="msg-error">Erreur de connexion au modèle.</p>`;
+        } finally {
+            currentAbort = null;
+            setSending(false);
         }
         messagesEl.scrollTop = messagesEl.scrollHeight;
     }
