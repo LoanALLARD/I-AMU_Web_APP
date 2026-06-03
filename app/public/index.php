@@ -41,7 +41,8 @@
     // --- Chat home + profile (authenticated) --------------------------
     $router->add('GET', '/chat',      function()    { (new AccueilController())->index(); });
     $router->add('GET', '/chat/{id}', function($id)  { (new AccueilController())->index($id); });
-    $router->add('GET', '/profile',   function()    { (new ProfileController())->index(); });
+    $router->add('GET',  '/profile',       function() { (new ProfileController())->index(); });
+    $router->add('POST', '/profile/theme', function() { (new ProfileController())->updateTheme(); });
 
     // --- Sessions (teacher) + join (student) --------------------------
     // Literal routes are registered before the `{id}` wildcard so they win.
