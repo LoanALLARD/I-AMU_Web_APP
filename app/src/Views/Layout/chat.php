@@ -18,6 +18,7 @@
 $user = $user ?? null;
 $page = $page ?? 'other';
 $pageTitle = $pageTitle ?? '';
+$conversation = $conversation ?? null;
 $roles = $user['roles'] ?? [];
 $isTeacher = in_array('teacher', $roles, true);
 $isStudent = in_array('student', $roles, true);
@@ -73,13 +74,16 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
         </button>
 
         <?php if ($page === 'chat'): ?>
+            <?php $isSessionChat = !empty($conversation['sessionId']); ?>
             <div class="topbar-breadcrumb">
-                <span class="topbar-mode">libre</span>
+                <span class="topbar-mode<?= $isSessionChat ? ' topbar-mode-session' : '' ?>">
+                    <?= $isSessionChat ? 'session' : 'libre' ?>
+                </span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="9 18 15 12 9 6" />
                 </svg>
-                <span class="topbar-conv-name" id="convName">Nouvelle conversation</span>
+                <span class="topbar-conv-name" id="convName"><?= htmlspecialchars($conversation['name'] ?? 'Nouvelle conversation') ?></span>
             </div>
         <?php else: ?>
             <?php /* Other pages already display their own H1 in .page-header,
@@ -175,6 +179,18 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
                     Nouvelle conversation
                 </button>
 
+                <?php if ($isStudent): ?>
+                    <a href="/sessions/join" class="btn-join-session">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                            <polyline points="10 17 15 12 10 7" />
+                            <line x1="15" y1="12" x2="3" y2="12" />
+                        </svg>
+                        Rejoindre une session
+                    </a>
+                <?php endif; ?>
+
                 <div class="sidebar-search">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -186,7 +202,17 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
 
                 <div class="sidebar-conversations" id="convList">
                     <div class="conv-group">
-                        <span class="conv-group-label">Aujourd'hui</span>
+                        <span class="conv-group-label">Conversations</span>
+                        <?php $activeConvId = $conversation['id'] ?? null; ?>
+                        <?php foreach (($conversations ?? []) as $c): ?>
+                            <a href="/chat/<?= (int) $c['id'] ?>"
+                                class="conv-item<?= (int) $c['id'] === (int) $activeConvId ? ' active' : '' ?>">
+                                <span class="conv-title"><?= htmlspecialchars($c['name']) ?></span>
+                            </a>
+                        <?php endforeach; ?>
+                        <?php if (empty($conversations)): ?>
+                            <p class="conv-empty">Aucune conversation pour le moment.</p>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endif; ?>
@@ -215,6 +241,16 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
 
         <div class="app-main">
             <div class="app-content">
+                <?php if (!empty($_SESSION['_flash'])): ?>
+                    <div class="flash-stack">
+                        <?php foreach ($_SESSION['_flash'] as $flash): ?>
+                            <div class="alert alert-<?= htmlspecialchars($flash['type']) ?>">
+                                <?= htmlspecialchars($flash['message']) ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php unset($_SESSION['_flash']); ?>
+                <?php endif; ?>
                 <?= $content ?>
             </div>
         </div>
@@ -243,6 +279,20 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
             backdrop?.addEventListener('click', close);
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') close();
+            });
+        })();
+
+        // Flash toasts: click to dismiss, and auto-dismiss after 5s.
+        (function () {
+            document.querySelectorAll('.flash-stack .alert').forEach((el) => {
+                const dismiss = () => {
+                    el.style.transition = 'opacity .2s ease, transform .2s ease';
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-8px)';
+                    setTimeout(() => el.remove(), 200);
+                };
+                el.addEventListener('click', dismiss);
+                setTimeout(dismiss, 5000);
             });
         })();
     </script>

@@ -14,7 +14,7 @@ via university email (domains configurable in config).
 
 ## 2. Read first
 
-- **Architecture** — [`docs/design/app_architecture.md`](design/app_architecture.md): always, before touching code. Defines the layers (Core / Domain / Application / Infrastructure / Http), dependency rules, patterns.
+- **Architecture** — [`docs/design/app_architecture.md`](design/app_architecture.md): always, before touching code. Defines the MVC + Domain layers (Core / Controllers / Services / Models / Domain / Data / Views), dependency rules, patterns.
 - **Conventions** — [`docs/conventions/php.md`](conventions/php.md), [`sql.md`](conventions/sql.md), [`git.md`](conventions/git.md): code, SQL and commit rules.
 - **Specs** — [`specs/README.md`](specs/README.md) to find the right spec; [`specs/00-foundations.md`](specs/00-foundations.md) → [`05-admin-research.md`](specs/05-admin-research.md) for per-scope detail.
 - **Product overview** — [`README.md`](../README.md).
@@ -113,9 +113,10 @@ Do:
 Don't (project-specific cases; general rules live in [`conventions/php.md`](conventions/php.md)):
 
 - Hardcode LLM model tags in seeds — the tag must come from Ollama via sync.
-- Use `Database::getInstance()` or `Application::getInstance()` in business code (concrete case of "no singletons").
-- Write `new OllamaLlmProvider()` in a controller — go through the interface (concrete case of constructor injection).
-- Use `extends Model` ActiveRecord style — a POC pattern not to carry over.
+- Instantiate PDO outside `Data\Database` — always go through `Database::getConnection()`.
+- Write `new OllamaAdaptater()` inside the `Ai` entity — reach the LLM through `LlmAdaptaterInterface`.
+- Use `extends Model` ActiveRecord style (`$entity->save()`) — data access is the repository's job.
+- Put SQL in a Controller or a View — it belongs in a Model or a Service.
 
 ## 10. AI agent pitfalls to avoid
 
@@ -146,14 +147,15 @@ focused and its context clean:
 
 ## 12. DB schema in brief
 
-Main tables (see `database/schema.sql` once the project is re-imported into `dev`):
+Main tables (see [`database/schema/01_schema.sql`](../database/schema/01_schema.sql)):
 
-- `"user"`, `student`, `teacher`, `researcher`, `administrator` (vertical inheritance for roles).
-- `session` (with `status` enum), `authorizes` (session ↔ model).
-- `conversation` (with `submitted_at`), `interaction` (with `teacher_flag`, `teacher_flag_reason`, `teacher_comment`).
-- `model` (the LLMs).
-- `password_reset` (tokens, 1h TTL).
-- Association tables: `accesses`, `teaches_in`, `managed_by`, `is_affiliated_with`, `administers`, `belongs_to`.
+- `users` — base account. Holds `department_id` (nullable FK to `departments`, `ON DELETE SET NULL`): a user belongs to at most one department. Researchers stay NULL (a researcher is a user but is not attached to a department).
+- `students`, `teachers`, `researchers`, `department_administrators` — vertical inheritance for roles (PK = `users.id`, `ON DELETE CASCADE`). Exclusivity enforced by `enforce_role_exclusivity()` (see [`02_triggers.sql`](../database/schema/02_triggers.sql)): `student` and `researcher` are exclusive; `teacher` + `department_administrator` may coexist.
+- `places`, `departments`, `laboratories`, `super_administrators`.
+- `sessions` (with `status` enum), `resources`, `models` (the LLMs, scoped to a department XOR a resource).
+- `conversations`, `interactions`.
+- `email_domain_configs` (domain → auto-role mapping).
+- Association tables: `teacher_resources`, `student_resources`, `session_models`, `enrollments`, `researcher_authorizations` (researcher ↔ department), `model_department_accesses`.
 
 ## 13. Handling an uncovered case
 
