@@ -36,12 +36,30 @@ $initials = strtoupper(
     . mb_substr($user['last_name'] ?? '·', 0, 1)
 );
 $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
+
+// Theme preference, stored on the user as LIGHT / DARK (NULL = follow the
+// OS). The inline script in <head> resolves it to a concrete data-theme
+// before paint, so there is no flash of the wrong theme.
+$themePref = match ($user['theme'] ?? null) {
+    'DARK'  => 'dark',
+    'LIGHT' => 'light',
+    default => 'auto',
+};
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme-pref="<?= $themePref ?>">
 
 <head>
     <meta charset="UTF-8">
+    <script>
+        // Resolve the theme before the stylesheet is applied (no FOUC).
+        (function () {
+            var p = document.documentElement.getAttribute('data-theme-pref') || 'auto';
+            var dark = p === 'dark' || (p === 'auto' && window.matchMedia
+                && matchMedia('(prefers-color-scheme: dark)').matches);
+            if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>I-AMU<?= $pageTitle !== '' ? ' · ' . htmlspecialchars($pageTitle) : '' ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">

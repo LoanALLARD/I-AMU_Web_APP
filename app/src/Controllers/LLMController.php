@@ -4,11 +4,13 @@ namespace Controllers;
 
 use Data\Database;
 
+use Domain\Conversation;
 use Domain\Ai;
 use Domain\OllamaAdaptater;
 
 use Models\AiRepository;
 use Models\InteractionRepository;
+use Models\UserRepository;
 use Models\ConversationRepository;
 
 class LLMController{
@@ -20,7 +22,6 @@ class LLMController{
 
         // Transaltion of the raw data to a associative array  
         $data = json_decode($jsonRaw, true);
-
         if (!$data || !isset($data['model']) || !isset($data['message'])) {
             header('Content-Type: application/json');
             http_response_code(400);
@@ -30,12 +31,12 @@ class LLMController{
 
         $modelName = $data['model'];     
         $userMessage = $data['message'];
-        $user_email = $data['user_email'] ?? null;
         $conversation_id = $data['conversation_id'] ?? null;
         // Identify the user from the authenticated session (set at login),
         // never from the client payload. No email lookup needed.
         $userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
-
+        // $userId = 1;
+        
         if ($userId <= 0) {
             header('Content-Type: application/json');
             http_response_code(401);
@@ -60,17 +61,19 @@ class LLMController{
         // it (with an ownership check) so the interaction can be persisted.
         // Free chat (no id) runs without persistence.
         $conversationData = null;
-        if ($conversation_id !== null) {
-            $conversationRepository = new ConversationRepository($pdo);
-            $conversationData = $conversationRepository->getConversationByUserId(
+        $conversationRepository = new ConversationRepository($pdo);
+        if ($conversation_id == null) {
+            $conversationData = $conversationRepository->newConversation(
                 $userId,
-                (int) $conversation_id,
+                1,
+                $aiData['id'],
+                "nouvelle conversation"
             );
             $context = [];
         } else {
             // else recover the conversation and check if it's own by the same user
             $conversationData = $conversationRepository->getConversationByUserId(   
-                $userData['id'],
+                $userId,
                 $conversation_id,
             );               
         }                                                           
@@ -83,6 +86,8 @@ class LLMController{
             return;
         }    
 
+        $metadata = $conversationRepository->getContextByConversationIdAndUserId($conversationData['id'], $userId);
+
         switch ($aiData["adapter"]) {
         case "ollama":
             $adapter = new OllamaAdaptater($aiData["api_url"],$aiData["name"]);
@@ -92,10 +97,12 @@ class LLMController{
             break;
         default:
             $adapter = null;
+            return;
+            break;
         }
 
         // read from the database all the context of the conversation
-        $metadata = $conversationRepository->getContextByConversationIdAndUserId($conversationData['id'],$userData['id']);
+        $metadata = $conversationRepository->getContextByConversationIdAndUserId($conversationData['id'],$userId);
         // then translate it trought the adapter of the api used
         if ($metadata){
             $context = $adapter->readContextFromMetadata($metadata);
@@ -131,7 +138,6 @@ class LLMController{
             $output_tokens = isset($response->context) && is_array($response->context) ? count($response->context) : 0;
             $interactionData = $interaction->newInteration(
                 (int) $conversationData['id'],
-                (int) $aiData['id'],
                 $userMessage,
                 (string) $response->response,
                 200,

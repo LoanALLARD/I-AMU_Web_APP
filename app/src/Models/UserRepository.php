@@ -30,7 +30,7 @@ class UserRepository
     public function findByEmail(string $email): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, email, password_hash, first_name, last_name, is_active
+            'SELECT id, email, password_hash, first_name, last_name, is_active, theme
              FROM users WHERE email = :email'
         );
         $stmt->execute(['email' => $email]);
@@ -38,6 +38,19 @@ class UserRepository
         $result = $stmt->fetch();
 
         return $result === false ? null : $result;
+    }
+
+    /**
+     * Persists the user's UI theme preference. Pass null for "follow the OS".
+     *
+     * @param 'LIGHT'|'DARK'|null $theme
+     */
+    public function updateTheme(int $userId, ?string $theme): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE users SET theme = CAST(:theme AS theme_type) WHERE id = :id'
+        );
+        $stmt->execute(['theme' => $theme, 'id' => $userId]);
     }
 
     /**
