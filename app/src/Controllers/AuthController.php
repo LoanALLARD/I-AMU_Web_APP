@@ -136,12 +136,9 @@ class AuthController extends Controller
 
         $result = $this->authService->register($data);
 
-        if (!$result['success']) {
-            $this->render('pages/Auth/register', [
-                'titrePage' => 'Inscription',
-                'error'=> $result['error'], 'data'=> $data,
-                'places'=> $this->places->all(),],
-                'auth');
+        if (!empty($result['pending_verification'])) {
+            $this->flash('success', 'Inscription réussie ! Un email de vérification a été envoyé. Vérifiez votre boîte de réception.');
+            $this->redirect('/login');
             return;
         }
 
@@ -156,6 +153,27 @@ class AuthController extends Controller
     public function logout(): void
     {
         $this->authService->logout();
+        $this->redirect('/login');
+    }
+
+    public function verifyEmail(): void
+    {
+        $token = $this->query('token', '');
+
+        if ($token === '') {
+            $this->flash('error', 'Lien de vérification invalide.');
+            $this->redirect('/login');
+        }
+
+        $pdo  = Database::getConnection();
+        $users = new \Models\UserRepository($pdo);
+
+        if ($users->verifyEmail($token)) {
+            $this->flash('success', 'Votre email a été vérifié ! Vous pouvez vous connecter.');
+        } else {
+            $this->flash('error', 'Ce lien est invalide ou a déjà été utilisé.');
+        }
+
         $this->redirect('/login');
     }
 }

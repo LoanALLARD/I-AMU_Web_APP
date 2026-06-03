@@ -32,4 +32,13 @@ return [
     // runtime and the DB connection are both pinned to this zone so stored
     // instants are entered and displayed in local (AMU = France) time.
     'timezone' => $_ENV['APP_TIMEZONE'] ?? 'Europe/Paris',
+    'mail' => [
+        'host' => $_ENV['SMTP_HOST'] ?? 'mailpit',
+        'port' => (int) ($_ENV['SMTP_PORT'] ?? 1025),
+        'from' => $_ENV['SMTP_FROM'] ?? 'noreply@iamu.univ-amu.fr',
+    ],
+
+    'app' => [
+        'url' => $_ENV['APP_URL'] ?? 'http://localhost:8085',
+    ],
 ];

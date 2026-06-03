@@ -30,7 +30,7 @@ class UserRepository
     public function findByEmail(string $email): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, email, password_hash, first_name, last_name, is_active, theme
+            'SELECT id, email, password_hash, first_name, last_name, is_active, theme, email_verified_at
              FROM users WHERE email = :email'
         );
         $stmt->execute(['email' => $email]);
@@ -164,4 +164,32 @@ class UserRepository
         $result = $stmt->fetch();
         return $result === false ? null : $result;
     }
+    public function setVerifyToken(int $userId, string $token): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE users SET email_verify_token = :token WHERE id = :id'
+        );
+        $stmt->execute(['token' => $token, 'id' => $userId]);
+    }
+
+    public function verifyEmail(string $token): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE users SET email_verified_at = NOW(), email_verify_token = NULL
+         WHERE email_verify_token = :token AND email_verified_at IS NULL'
+        );
+        $stmt->execute(['token' => $token]);
+        return $stmt->rowCount() > 0;
+    }
+
+    public function isEmailVerified(int $userId): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT email_verified_at FROM users WHERE id = :id'
+        );
+        $stmt->execute(['id' => $userId]);
+        $row = $stmt->fetch();
+        return $row !== false && $row['email_verified_at'] !== null;
+    }
+
 }
