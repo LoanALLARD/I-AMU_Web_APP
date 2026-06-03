@@ -96,9 +96,9 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
             </div>
         <?php else: ?>
             <?php /* Other pages already display their own H1 in .page-header,
-            so the topbar stays uncluttered: brand on the left, tabs +
-            avatar on the right. The empty spacer pushes the right-side
-            group via margin-left:auto on .topbar-tabs. */ ?>
+          so the topbar stays uncluttered: brand on the left, tabs +
+          avatar on the right. The empty spacer pushes the right-side
+          group via margin-left:auto on .topbar-tabs. */ ?>
             <div class="topbar-breadcrumb"></div>
         <?php endif; ?>
 
@@ -183,7 +183,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
 
             <?php if ($page === 'chat'): ?>
                 <?php /* Current environment: session (filtered to one session's
-                 conversations) or free. */ ?>
+               conversations) or free. */ ?>
                 <div class="sidebar-env">
                     <span class="sidebar-env-label<?= ($env['mode'] ?? '') === 'session' ? ' is-session' : '' ?>">
                         <?= htmlspecialchars($env['label'] ?? 'Chat libre') ?>
@@ -240,55 +240,55 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                 <div class="sidebar-conversations" id="convList">
                     <div class="conv-group">
                         <?php /* Scope switch: the "Conversations" header is a
-                         dropdown that flips the list between active and
-                         archived conversations of the current environment.
-                         The scope rides on ?archived=1; the open conversation
-                         is unaffected. */ ?>
+                       dropdown that flips the list between active and
+                       archived conversations of the current environment.
+                       The scope rides on ?archived=1; the open conversation
+                       is unaffected. */ ?>
                         <?php $isSessionEnv = ($env['mode'] ?? 'libre') === 'session'; ?>
                         <?php $scopeBase = !empty($conversation['id']) ? '/chat/' . (int) $conversation['id'] : '/chat'; ?>
                         <?php if ($isSessionEnv): ?>
                             <?php /* Session conversations are driven by the session
-                             lifecycle: no rename, no archive — hence no scope
-                             switch either (a session never has an archive). */ ?>
+                                   lifecycle: no rename, no archive — hence no scope
+                                   switch either (a session never has an archive). */ ?>
                             <span class="conv-group-label">Conversations</span>
                         <?php else: ?>
-                        <div class="conv-scope">
-                            <button type="button" class="conv-scope-toggle" id="convScopeToggle" aria-haspopup="true"
-                                aria-expanded="false">
-                                <span class="conv-group-label"><?= $archivedView ? 'Archivées' : 'Conversations' ?></span>
-                                <svg class="conv-scope-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
-                                    aria-hidden="true">
-                                    <polyline points="6 9 12 15 18 9" />
-                                </svg>
-                            </button>
-                            <div class="conv-scope-menu" id="convScopeMenu" role="menu" hidden>
-                                <a href="<?= htmlspecialchars($scopeBase) ?>"
-                                    class="conv-scope-item<?= !$archivedView ? ' is-current' : '' ?>" role="menuitem">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                            <div class="conv-scope">
+                                <button type="button" class="conv-scope-toggle" id="convScopeToggle" aria-haspopup="true"
+                                    aria-expanded="false">
+                                    <span class="conv-group-label"><?= $archivedView ? 'Archivées' : 'Conversations' ?></span>
+                                    <svg class="conv-scope-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+                                        aria-hidden="true">
+                                        <polyline points="6 9 12 15 18 9" />
                                     </svg>
-                                    Conversations
-                                </a>
-                                <a href="<?= htmlspecialchars($scopeBase) ?>?archived=1"
-                                    class="conv-scope-item<?= $archivedView ? ' is-current' : '' ?>" role="menuitem">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="2" y="3" width="20" height="5" rx="1" />
-                                        <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
-                                        <path d="M10 12h4" />
-                                    </svg>
-                                    Archivées
-                                </a>
+                                </button>
+                                <div class="conv-scope-menu" id="convScopeMenu" role="menu" hidden>
+                                    <a href="<?= htmlspecialchars($scopeBase) ?>"
+                                        class="conv-scope-item<?= !$archivedView ? ' is-current' : '' ?>" role="menuitem">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                        </svg>
+                                        Conversations
+                                    </a>
+                                    <a href="<?= htmlspecialchars($scopeBase) ?>?archived=1"
+                                        class="conv-scope-item<?= $archivedView ? ' is-current' : '' ?>" role="menuitem">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="2" y="3" width="20" height="5" rx="1" />
+                                            <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+                                            <path d="M10 12h4" />
+                                        </svg>
+                                        Archivées
+                                    </a>
+                                </div>
                             </div>
-                        </div>
                         <?php endif; ?>
                         <?php $activeConvId = $conversation['id'] ?? null; ?>
                         <?php /* Renaming is allowed only in the free environment:
-                         session conversations keep their generated name. The
-                         list is homogeneous per environment, so one flag covers
-                         every row shown. */ ?>
+                       session conversations keep their generated name. The
+                       list is homogeneous per environment, so one flag covers
+                       every row shown. */ ?>
                         <?php $canRename = ($env['mode'] ?? 'libre') !== 'session'; ?>
                         <?php foreach (($conversations ?? []) as $c): ?>
                             <div class="conv-row<?= (int) $c['id'] === (int) $activeConvId ? ' active' : '' ?>">
@@ -296,54 +296,54 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                                     <span class="conv-title"><?= htmlspecialchars($c['name']) ?></span>
                                 </a>
                                 <?php if (!$isSessionEnv): ?>
-                                <div class="conv-actions">
-                                    <button type="button" class="conv-menu-btn" aria-haspopup="true" aria-expanded="false"
-                                        aria-label="Actions sur la conversation">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                            <circle cx="12" cy="5" r="1.7" />
-                                            <circle cx="12" cy="12" r="1.7" />
-                                            <circle cx="12" cy="19" r="1.7" />
-                                        </svg>
-                                    </button>
-                                    <div class="conv-menu" role="menu" hidden>
-                                        <?php if (!$archivedView && $canRename): ?>
-                                            <button type="button" class="conv-menu-item" role="menuitem" data-action="rename"
-                                                data-id="<?= (int) $c['id'] ?>"
-                                                data-name="<?= htmlspecialchars($c['name'], ENT_QUOTES) ?>">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M12 20h9" />
-                                                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                                                </svg>
-                                                Renommer
-                                            </button>
-                                        <?php endif; ?>
-                                        <?php if ($archivedView): ?>
-                                            <button type="button" class="conv-menu-item" role="menuitem" data-action="unarchive"
-                                                data-id="<?= (int) $c['id'] ?>">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M3 7v13a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7" />
-                                                    <rect x="1" y="3" width="22" height="4" rx="1" />
-                                                    <path d="M12 17V11" />
-                                                    <polyline points="9 13 12 10 15 13" />
-                                                </svg>
-                                                Restaurer
-                                            </button>
-                                        <?php else: ?>
-                                            <button type="button" class="conv-menu-item" role="menuitem" data-action="archive"
-                                                data-id="<?= (int) $c['id'] ?>">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect x="2" y="3" width="20" height="5" rx="1" />
-                                                    <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
-                                                    <path d="M10 12h4" />
-                                                </svg>
-                                                Archiver
-                                            </button>
-                                        <?php endif; ?>
+                                    <div class="conv-actions">
+                                        <button type="button" class="conv-menu-btn" aria-haspopup="true" aria-expanded="false"
+                                            aria-label="Actions sur la conversation">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                                <circle cx="12" cy="5" r="1.7" />
+                                                <circle cx="12" cy="12" r="1.7" />
+                                                <circle cx="12" cy="19" r="1.7" />
+                                            </svg>
+                                        </button>
+                                        <div class="conv-menu" role="menu" hidden>
+                                                <?php if (!$archivedView && $canRename): ?>
+                                                <button type="button" class="conv-menu-item" role="menuitem" data-action="rename"
+                                                    data-id="<?= (int) $c['id'] ?>"
+                                                    data-name="<?= htmlspecialchars($c['name'], ENT_QUOTES) ?>">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M12 20h9" />
+                                                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                                    </svg>
+                                                    Renommer
+                                                </button>
+                                                <?php endif; ?>
+                                                <?php if ($archivedView): ?>
+                                                <button type="button" class="conv-menu-item" role="menuitem" data-action="unarchive"
+                                                    data-id="<?= (int) $c['id'] ?>">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M3 7v13a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7" />
+                                                        <rect x="1" y="3" width="22" height="4" rx="1" />
+                                                        <path d="M12 17V11" />
+                                                        <polyline points="9 13 12 10 15 13" />
+                                                    </svg>
+                                                    Restaurer
+                                                </button>
+                                                <?php else: ?>
+                                                <button type="button" class="conv-menu-item" role="menuitem" data-action="archive"
+                                                    data-id="<?= (int) $c['id'] ?>">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <rect x="2" y="3" width="20" height="5" rx="1" />
+                                                        <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+                                                        <path d="M10 12h4" />
+                                                    </svg>
+                                                    Archiver
+                                                </button>
+                                                <?php endif; ?>
+                                        </div>
                                     </div>
-                                </div>
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
@@ -356,10 +356,10 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                 </div>
 
                 <?php /* Shared submit targets for the per-conversation kebab
-                 menu. JS fills `id` (and `name` for rename) before submitting,
-                 so we keep a single CSRF-protected form per action instead of
-                 one per row. `current_id` is the open conversation, used to
-                 return there after the action. */ ?>
+               menu. JS fills `id` (and `name` for rename) before submitting,
+               so we keep a single CSRF-protected form per action instead of
+               one per row. `current_id` is the open conversation, used to
+               return there after the action. */ ?>
                 <form method="POST" action="/chat/rename" id="convRenameForm" hidden>
                     <?= csrf_field() ?>
                     <input type="hidden" name="id" value="">

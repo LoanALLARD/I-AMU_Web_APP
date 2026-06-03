@@ -13,6 +13,9 @@ class OllamaAdaptater implements LlmAdaptaterInterface {
         $this->modelName = $modelName;
     }
 
+    /**
+     * @param array<int, int> $context conversation context (Ollama token ids)
+     */
     public function generate(string $message, array $context): string {
         $payload = json_encode([
             "model" => $this->modelName,
