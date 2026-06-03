@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Application\Ports\ModelReadRepositoryInterface;
 use Core\Controller;
 
 /**
@@ -12,13 +13,20 @@ use Core\Controller;
  */
 final class ChatController extends Controller
 {
+    public function __construct(
+        private readonly ModelReadRepositoryInterface $models,
+    ) {
+    }
+
     public function index(): void
     {
         $this->requireAuth();
-
+        $activeModels = $this->models->findAllActive();
         $this->render('pages/homeView', [
-            'user' => $this->currentUser(),
-            'page' => 'chat',
+            'user'   => $this->currentUser(),
+            'page'   => 'chat',
+            'models' => $activeModels,
         ], 'chat');
     }
+
 }

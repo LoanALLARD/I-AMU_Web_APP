@@ -5,18 +5,59 @@
  * composer and the chat-specific scripts.
  *
  * @var array $user  currentUser() snapshot (id, email, first_name, last_name, roles)
+ * @var list<\App\Application\DTOs\ModelMetaView> $models active models from DB
  */
+
+$firstModel = $models[0] ?? null;
+$defaultModelName = $firstModel ? $firstModel->name : 'mistral:latest';
 ?>
 <div class="chat-container">
     <div class="chat-area">
 
         <div class="model-bar">
-            <div class="model-tags">
-                <button class="model-tag active" data-model="mistral:latest">
-                    <span class="model-tag-letter">A</span>
-                    <span class="model-tag-name">mistral:latest</span>
-                    <span class="model-tag-badge">local · ollama</span>
+            <div class="model-selector-wrapper">
+                <button class="model-selector-btn" id="modelSelectorBtn" type="button">
+                    <span class="model-tag-letter" id="modelLetter"><?= strtoupper(substr($defaultModelName, 0, 1)) ?></span>
+                    <span class="model-tag-name" id="modelNameDisplay"><?= htmlspecialchars($defaultModelName) ?></span>
+                    <svg class="model-selector-chevron" id="modelChevron" width="14" height="14" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
                 </button>
+
+                <div class="model-dropdown" id="modelDropdown">
+                    <div class="model-dropdown-header">Modèles disponibles</div>
+                    <?php if (empty($models)): ?>
+                        <div class="model-dropdown-empty">Aucun modèle disponible</div>
+                    <?php else: ?>
+                        <?php foreach ($models as $i => $model): ?>
+                            <button class="model-dropdown-item<?= $i === 0 ? ' active' : '' ?>"
+                                    data-model="<?= htmlspecialchars($model->name) ?>"
+                                    type="button">
+                                <span class="model-dropdown-letter"><?= strtoupper(substr($model->name, 0, 1)) ?></span>
+                                <div class="model-dropdown-info">
+                                    <span class="model-dropdown-name"><?= htmlspecialchars($model->name) ?></span>
+                                    <span class="model-dropdown-meta">
+                                        <?php
+                                        $meta = [];
+                                        if ($model->version) {
+                                            $meta[] = 'v' . $model->version;
+                                        }
+                                        if ($model->contextWindow) {
+                                            $meta[] = number_format($model->contextWindow) . ' ctx';
+                                        }
+                                        echo htmlspecialchars(implode(' · ', $meta) ?: 'local · ollama');
+                                        ?>
+                                    </span>
+                                </div>
+                                <svg class="model-dropdown-check" width="16" height="16" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </button>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
 
@@ -25,7 +66,7 @@
             <div class="empty-state" id="emptyState">
                 <div class="empty-icon">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                         stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
                 </div>
@@ -39,6 +80,7 @@
             </div>
 
         </div>
+
 
         <div class="input-bar">
             <div class="input-wrapper">

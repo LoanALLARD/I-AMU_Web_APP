@@ -84,7 +84,7 @@ $sessionController = new SessionController(
 
 // Chat controllers (Clean Architecture; migrated out of the legacy
 // ServeurFolder Controllers\ namespace).
-$chatController = new ChatController();
+$chatController = new ChatController($modelRepo);
 $llmController  = new LLMController($generateReply);
 
 // Profile page — surfaces account info and acts as the exit point for
