@@ -21,6 +21,13 @@ $roleLabels = [
     'admin'   => 'administrateur',
 ];
 $roleFr = static fn(string $r): string => $roleLabels[$r] ?? $r;
+
+// Current theme choice for the selector ('auto' = follow the OS).
+$themeCur = match ($user['theme'] ?? null) {
+    'LIGHT' => 'light',
+    'DARK'  => 'dark',
+    default => 'auto',
+};
 ?>
 <div class="page-header">
     <div class="page-header-row">
@@ -46,6 +53,19 @@ $roleFr = static fn(string $r): string => $roleLabels[$r] ?? $r;
                     <span class="kv-key">id interne</span>
                     <span class="kv-val mono">#<?= (int) ($user['id'] ?? 0) ?></span>
                 </div>
+            </div>
+
+            <div class="dashboard-card">
+                <h2>Apparence</h2>
+                <p style="color:var(--gray-400);font-size:12px;margin: 0 0 14px;">
+                    Thème de l'interface. « Automatique » suit le réglage de votre appareil.
+                </p>
+                <form method="POST" action="/profile/theme" class="theme-select">
+                    <?= csrf_field() ?>
+                    <button type="submit" name="theme" value="auto" class="theme-opt<?= $themeCur === 'auto' ? ' is-active' : '' ?>">Automatique</button>
+                    <button type="submit" name="theme" value="light" class="theme-opt<?= $themeCur === 'light' ? ' is-active' : '' ?>">Clair</button>
+                    <button type="submit" name="theme" value="dark" class="theme-opt<?= $themeCur === 'dark' ? ' is-active' : '' ?>">Sombre</button>
+                </form>
             </div>
 
             <div class="dashboard-card">

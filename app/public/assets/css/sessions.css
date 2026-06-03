@@ -380,7 +380,7 @@ textarea {
 }
 .session-table tr:last-child td { border-bottom: none; }
 .session-table tbody tr { transition: background .12s; }
-.session-table tbody tr:hover td { background: #f9fbff; }
+.session-table tbody tr:hover td { background: rgba(128, 145, 180, .07); }
 .session-table .cell-actions { text-align: right; white-space: nowrap; }
 .session-table .cell-actions form { display: inline; margin: 0; }
 .session-table .cell-actions > * { margin-left: 4px; }
@@ -1453,3 +1453,38 @@ textarea {
     font-weight: 600;
 }
 .conv-scope-item.is-current svg { color: var(--blue); }
+
+/* =====================================================================
+   Dark-theme component overrides
+   Only the hard-coded colours that the token overrides can't reach.
+   ===================================================================== */
+[data-theme="dark"] .stype-ico.badge-free-study { background: #251c3c; color: #bd9af7; }
+[data-theme="dark"] .stype-ico.badge-lab        { background: #0f2638; color: #5cc4f5; }
+[data-theme="dark"] .stype-ico.badge-exam       { background: #352a14; color: #f3cd86; }
+[data-theme="dark"] .stype-ico.badge-tutorial   { background: var(--blue-light); color: var(--blue); }
+[data-theme="dark"] .session-table .access-code-cell { border-color: rgba(90, 162, 240, .28); }
+[data-theme="dark"] .icon-btn { background: #222838; }
+
+/* ── Appearance / theme selector (profile page) ───────────────────── */
+.theme-select { display: flex; gap: 8px; flex-wrap: wrap; }
+.theme-opt {
+    flex: 1;
+    min-width: 90px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-600);
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-1);
+    padding: 9px 12px;
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
+}
+.theme-opt:hover { border-color: var(--blue); color: var(--blue); }
+.theme-opt.is-active {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: var(--blue-light);
+    box-shadow: var(--shadow-sm);
+}

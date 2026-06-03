@@ -64,6 +64,7 @@ final class AuthService
         $_SESSION['user_first_name'] = (string) $row['first_name'];
         $_SESSION['user_last_name']  = (string) $row['last_name'];
         $_SESSION['roles']           = $this->resolveRoles($userId);
+        $_SESSION['user_theme']      = $row['theme'] ?? null;
         session_regenerate_id(true);
 
         return ['success' => true];
