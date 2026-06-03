@@ -112,7 +112,7 @@ $typeCards = [
                     <p class="fsection-hint">Aucune ressource ne vous appartient. Demandez à un administrateur de département de vous en attribuer une avant de créer une session.</p>
                 <?php else: ?>
                     <select name="resource_id" required>
-                        <option value="">— sélectionnez une ressource —</option>
+                        <option value="">— Sélectionnez une ressource —</option>
                         <?php foreach ($resources as $r): ?>
                             <option value="<?= (int) $r['id'] ?>" <?= $selectedResourceId === (int) $r['id'] ? 'selected' : '' ?>>
                                 <?= htmlspecialchars((string) $r['code']) ?> — <?= htmlspecialchars((string) $r['name']) ?>
