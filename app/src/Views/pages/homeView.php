@@ -106,6 +106,41 @@ $defaultModelName = $firstModel ? $firstModel->name : 'mistral:latest';
     const input = document.getElementById('promptInput');
     const sendBtn = document.getElementById('btnSend');
     const counter = document.getElementById('charCounter');
+    const selectorBtn   = document.getElementById('modelSelectorBtn');
+    const dropdown      = document.getElementById('modelDropdown');
+    const chevron       = document.getElementById('modelChevron');
+    const modelLetter   = document.getElementById('modelLetter');
+    const modelDisplay  = document.getElementById('modelNameDisplay');
+    let   selectedModel = modelDisplay?.textContent?.trim() || 'mistral:latest';
+
+    selectorBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = dropdown.classList.toggle('open');
+        chevron.classList.toggle('rotated', isOpen);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!dropdown?.contains(e.target) && !selectorBtn?.contains(e.target)) {
+            dropdown?.classList.remove('open');
+            chevron?.classList.remove('rotated');
+        }
+    });
+
+    document.querySelectorAll('.model-dropdown-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const model = item.dataset.model;
+            selectedModel = model;
+
+            modelDisplay.textContent = model;
+            modelLetter.textContent  = model.charAt(0).toUpperCase();
+
+            document.querySelectorAll('.model-dropdown-item').forEach(el => el.classList.remove('active'));
+            item.classList.add('active');
+
+            dropdown.classList.remove('open');
+            chevron.classList.remove('rotated');
+        });
+    });
 
     input?.addEventListener('input', () => {
         input.style.height = 'auto';
