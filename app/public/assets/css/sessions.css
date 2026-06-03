@@ -1465,6 +1465,50 @@ textarea {
 [data-theme="dark"] .session-table .access-code-cell { border-color: rgba(90, 162, 240, .28); }
 [data-theme="dark"] .icon-btn { background: #222838; }
 
+/* Popover menus (hard-coded #fff). */
+[data-theme="dark"] .conv-scope-menu,
+[data-theme="dark"] .conv-menu { background: var(--white); box-shadow: 0 10px 30px rgba(0, 0, 0, .55); }
+[data-theme="dark"] .conv-scope-item:hover,
+[data-theme="dark"] .conv-menu a:hover { background: rgba(128, 145, 180, .10); }
+
+/* Type pill badges with hard-coded light tints. */
+[data-theme="dark"] .badge-lab        { background: #0f2638; color: #7dd3fc; border-color: #1f4a66; }
+[data-theme="dark"] .badge-free-study { background: #251c3c; color: #c4b5fd; border-color: #45356a; }
+[data-theme="dark"] .badge-student    { background: #122a1c; color: #6ee7a0; border-color: #1f5236; }
+
+/* Session-type "kind" cards: deeper fills so the light text stays legible. */
+[data-theme="dark"] .kind-card.is-active {
+    background: #1c3a5e;
+    border-color: var(--blue);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .45);
+}
+[data-theme="dark"] .kind-card.is-active .kind-head { color: #eaf2fb; }
+[data-theme="dark"] .kind-card.is-active .kind-desc { color: rgba(234, 242, 251, .82); }
+[data-theme="dark"] .kind-card.kraft.is-active {
+    background: #4b3a16;
+    border-color: #c89a3a;
+}
+[data-theme="dark"] .kind-card.kraft.is-active .kind-head,
+[data-theme="dark"] .kind-card.kraft.is-active .kind-desc { color: #f3cd86; }
+
+/* Danger hovers (hard-coded light red). */
+[data-theme="dark"] .sidebar-logout:hover,
+[data-theme="dark"] .btn-leave-session:hover {
+    color: #f87171;
+    background: #2c1618;
+    border-color: #f87171;
+}
+
+/* Chat code blocks: --gray-800 inverts to a light surface in dark mode. */
+[data-theme="dark"] .msg-content pre  { background: #0d0f17; color: #e2e8f0; }
+[data-theme="dark"] .msg-content code { background: rgba(128, 145, 180, .14); color: #cdd6f4; }
+
+/* Flash alerts (hard-coded light hex in style.css). */
+[data-theme="dark"] .alert-success { background: var(--accept-bg); color: var(--accept); border-color: var(--accept); }
+[data-theme="dark"] .alert-error,
+[data-theme="dark"] .alert-danger  { background: var(--refuse-bg); color: var(--refuse); border-color: var(--refuse); }
+[data-theme="dark"] .alert-info    { background: var(--blue-light); color: var(--blue);   border-color: var(--blue); }
+
 /* ── Appearance / theme selector (profile page) ───────────────────── */
 .theme-select { display: flex; gap: 8px; flex-wrap: wrap; }
 .theme-opt {
