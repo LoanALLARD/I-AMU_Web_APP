@@ -2,22 +2,30 @@
 /**
  * @var list<array<string, mixed>> $sessions  Presentation rows from SessionService::listForTeacher()
  */
+// Type badge class → Lucide icon shown in the tinted square of each row.
+$typeIcon = static fn(string $typeClass): string => [
+    'badge-exam'       => 'lock',
+    'badge-free-study' => 'eye',
+    'badge-lab'        => 'book',
+    'badge-tutorial'   => 'book',
+][$typeClass] ?? 'book';
 ?>
 <div class="page-header">
-    <div class="page-header-row">
-        <h1>Mes sessions</h1>
-        <span class="mono" style="font-size:11px;color:var(--gray-400);"><?= count($sessions) ?> session(s)</span>
+    <div class="page-header-row" style="align-items:center;">
+        <div>
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                <h1>Mes sessions</h1>
+                <span class="mono" style="font-size:11px;color:var(--gray-400);"><?= count($sessions) ?> session(s)</span>
+            </div>
+            <p class="page-sub" style="margin-top:6px;">Créez une session de cours ou d'examen, puis donnez le code d'accès à vos étudiants.</p>
+        </div>
+        <a href="/sessions/create" class="btn primary" style="margin-left:auto;">
+            <?= icon('graduation-cap', '', 14) ?> Nouvelle session
+        </a>
     </div>
-    <p class="page-sub">Créez une session de cours ou d'examen, puis donnez le code d'accès à vos étudiants.</p>
 </div>
 
 <div class="page-body">
-<div class="session-toolbar">
-    <span class="grow"></span>
-    <a href="/sessions/create" class="btn primary">
-        <?= icon('graduation-cap', '', 14) ?> Nouvelle session
-    </a>
-</div>
 
 <?php if ($sessions === []): ?>
     <div class="session-empty">
@@ -30,12 +38,10 @@
         <table class="session-table">
             <thead>
                 <tr>
-                    <th>Libellé</th>
-                    <th>Type</th>
+                    <th>Session</th>
                     <th>Statut</th>
                     <th>Code</th>
-                    <th>Démarrage</th>
-                    <th>Fin</th>
+                    <th>Créneau</th>
                     <th class="cell-actions"><span style="position:absolute;width:1px;height:1px;clip:rect(0 0 0 0);overflow:hidden;">Actions</span></th>
                 </tr>
             </thead>
@@ -43,15 +49,22 @@
                 <?php foreach ($sessions as $s): ?>
                     <tr>
                         <td>
-                            <a href="/sessions/<?= (int) $s['id'] ?>" style="text-decoration:none;font-weight:500;">
-                                <?= htmlspecialchars($s['name']) ?>
+                            <a href="/sessions/<?= (int) $s['id'] ?>" class="session-cell-main">
+                                <span class="stype-ico <?= htmlspecialchars($s['typeClass']) ?>"><?= icon($typeIcon($s['typeClass']), '', 17) ?></span>
+                                <span class="session-cell-txt">
+                                    <b><?= htmlspecialchars($s['name']) ?></b>
+                                    <span><?= htmlspecialchars($s['typeLabel']) ?></span>
+                                </span>
                             </a>
                         </td>
-                        <td><span class="badge <?= htmlspecialchars($s['typeClass']) ?>"><?= htmlspecialchars($s['typeLabel']) ?></span></td>
-                        <td><span class="badge <?= htmlspecialchars($s['statusClass']) ?>"><?= htmlspecialchars($s['statusLabel']) ?></span></td>
-                        <td><code class="access-code-cell"><?= htmlspecialchars($s['accessCode']) ?></code></td>
-                        <td><?= htmlspecialchars($s['startsAtFormatted'] ?? '—') ?></td>
-                        <td><?= htmlspecialchars($s['endsAtFormatted'] ?? '—') ?></td>
+                        <td><span class="badge badge-dot <?= htmlspecialchars($s['statusClass']) ?>"><?= htmlspecialchars($s['statusLabel']) ?></span></td>
+                        <td><code class="access-code-cell"><?= htmlspecialchars($s['accessCode'] !== '' ? $s['accessCode'] : '—') ?></code></td>
+                        <td>
+                            <span class="session-slot">
+                                <?= icon('clock', '', 14) ?>
+                                <?= htmlspecialchars($s['startsAtFormatted'] ?? '—') ?> <span class="arr">→</span> <?= htmlspecialchars($s['endsAtFormatted'] ?? '—') ?>
+                            </span>
+                        </td>
                         <td class="cell-actions">
                             <a href="/sessions/<?= (int) $s['id'] ?>" class="icon-btn" title="Voir">
                                 <?= icon('eye') ?>
@@ -108,7 +121,7 @@
                             <span class="badge <?= htmlspecialchars($s['statusClass']) ?>"><?= htmlspecialchars($s['statusLabel']) ?></span>
                         </div>
                     </div>
-                    <code class="access-code-cell"><?= htmlspecialchars($s['accessCode']) ?></code>
+                    <code class="access-code-cell"><?= htmlspecialchars($s['accessCode'] !== '' ? $s['accessCode'] : '—') ?></code>
                 </div>
                 <div class="session-card-actions">
                     <a href="/sessions/<?= (int) $s['id'] ?>" class="btn sm">Dashboard</a>

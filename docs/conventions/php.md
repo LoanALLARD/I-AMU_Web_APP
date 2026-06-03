@@ -14,7 +14,7 @@
 
 ## 2. Naming Suffixes
 
-- HTTP controller → `*Controller` (`LoginController`).
+- HTTP controller → `*Controller` (`AuthController`).
 - Data access (Model) → `*Repository` (`AiRepository`, `UserRepository`).
 - Application service → `*Service` (`AuthService`).
 - LLM contract → `*Interface` (`LlmAdaptaterInterface`) — the only interface kept.
@@ -41,7 +41,7 @@ Controllers  →  Services  →  Models  →  Data (PDO)
 ## 4. Rules
 
 - Always type arguments and return types (PHP 8.1+).
-- Direct instantiation is fine (`new AuthService()`) — no DI container, no manual wiring graph.
+- Direct instantiation is fine (`new AuthService($pdo)`) — no DI container, no manual wiring graph. A Service that needs the DB takes a `PDO` in its constructor; the Controller passes `Data\Database::getConnection()`.
 - DB access goes through `Data\Database::getConnection()` (singleton) — do not instantiate PDO elsewhere.
 - All SQL lives in a Model (`*Repository`) or a Service — never in a Controller or a View.
 - Always use prepared statements — never concatenate user input into SQL.

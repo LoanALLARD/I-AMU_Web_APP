@@ -3,18 +3,23 @@
 namespace Controllers;
 
 use Core\Controller;
+use Data\Database;
+use Models\PlaceRepository;
 use Services\AuthService;
 
-class LoginController extends Controller
+class AuthController extends Controller
 {
     private AuthService $authService;
+    private PlaceRepository $places;
 
     public function __construct()
     {
-        // MVC wiring: the controller builds its own service, which gets the
-        // shared connection from the Data\Database singleton. This matches
-        // how public/index.php instantiates controllers (`new LoginController()`).
-        $this->authService = new AuthService();
+        // MVC wiring: the controller hands the shared Data\Database singleton
+        // connection to the service it builds. This matches how
+        // public/index.php instantiates controllers (`new AuthController()`).
+        $pdo               = Database::getConnection();
+        $this->authService = new AuthService($pdo);
+        $this->places      = new PlaceRepository($pdo);
     }
 
     /**
@@ -59,7 +64,8 @@ class LoginController extends Controller
             $this->redirect('/chat');
         }
         $this->render('pages/Auth/register', [
-            'titrePage' => 'Inscription'],
+            'titrePage' => 'Inscription',
+            'places'    => $this->places->all()],
          'auth');
     }
 
@@ -79,6 +85,8 @@ class LoginController extends Controller
             'password_confirm' => $this->input('password_confirm', ''),
             'first_name'       => trim($this->input('first_name', '')),
             'last_name'        => trim($this->input('last_name', '')),
+            'place_id'         => $this->input('place_id', ''),
+            'department_id'    => $this->input('department_id', ''),
             'rgpd_consent'     => (bool) $this->input('rgpd_consent', false),
         ];
 
@@ -87,13 +95,15 @@ class LoginController extends Controller
         if (!$result['success']) {
             $this->render('pages/Auth/register', [
                 'titrePage' => 'Inscription',
-                'error'=> $result['error'], 'data'=> $data,],
+                'error'=> $result['error'], 'data'=> $data,
+                'places'=> $this->places->all(),],
                 'auth');
             return;
         }
 
-        $this->flash('success', 'Inscription reussie!');
-        $this->redirect('/login');
+        // register() auto-logs-in the new user, so go straight to the app.
+        $this->flash('success', 'Inscription reussie! Bienvenue.');
+        $this->redirect('/chat');
     }
 
     /**

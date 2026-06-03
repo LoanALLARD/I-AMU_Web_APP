@@ -19,6 +19,14 @@ $user = $user ?? null;
 $page = $page ?? 'other';
 $pageTitle = $pageTitle ?? '';
 $conversation = $conversation ?? null;
+$conversations = $conversations ?? [];
+$env = $env ?? null;
+$archivedView = $archivedView ?? false;
+// "Chat" nav target: stay inside the open session conversation instead of
+// dropping back to free chat.
+$chatHref = (($env['mode'] ?? '') === 'session' && !empty($conversation['id']))
+    ? '/chat/' . (int) $conversation['id']
+    : '/chat';
 $roles = $user['roles'] ?? [];
 $isTeacher = in_array('teacher', $roles, true);
 $isStudent = in_array('student', $roles, true);
@@ -46,10 +54,23 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
     // get hidden behind aggressive browser caching during dev.
     $cssDir = dirname(__DIR__, 3) . '/public/assets/css';
     $v = static fn(string $f): string => '?v=' . (@filemtime("$cssDir/$f") ?: 0);
+    $vendorDir = dirname(__DIR__, 3) . '/public/assets/vendor';
+    $vv = static fn(string $f): string => '?v=' . (@filemtime("$vendorDir/$f") ?: 0);
     ?>
     <link rel="stylesheet" href="/assets/css/style.css<?= $v('style.css') ?>">
     <link rel="stylesheet" href="/assets/css/homeChat.css<?= $v('homeChat.css') ?>">
     <link rel="stylesheet" href="/assets/css/sessions.css<?= $v('sessions.css') ?>">
+    <?php if ($page === 'chat'): ?>
+        <?php /* Markdown rendering for AI replies (live + history). Loaded
+         synchronously in <head> so the chat view's inline script can use
+         marked / DOMPurify / hljs immediately. Vendored under
+         public/assets/vendor (no CDN dependency). */ ?>
+        <link rel="stylesheet"
+            href="/assets/vendor/highlight/styles/github-dark.min.css<?= $vv('highlight/styles/github-dark.min.css') ?>">
+        <script src="/assets/vendor/marked.min.js<?= $vv('marked.min.js') ?>"></script>
+        <script src="/assets/vendor/purify.min.js<?= $vv('purify.min.js') ?>"></script>
+        <script src="/assets/vendor/highlight/highlight.min.js<?= $vv('highlight/highlight.min.js') ?>"></script>
+    <?php endif; ?>
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
 
@@ -83,18 +104,19 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
                     stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="9 18 15 12 9 6" />
                 </svg>
-                <span class="topbar-conv-name" id="convName"><?= htmlspecialchars($conversation['name'] ?? 'Nouvelle conversation') ?></span>
+                <span class="topbar-conv-name"
+                    id="convName"><?= htmlspecialchars($conversation['name'] ?? 'Nouvelle conversation') ?></span>
             </div>
         <?php else: ?>
             <?php /* Other pages already display their own H1 in .page-header,
-             so the topbar stays uncluttered: brand on the left, tabs +
-             avatar on the right. The empty spacer pushes the right-side
-             group via margin-left:auto on .topbar-tabs. */ ?>
+          so the topbar stays uncluttered: brand on the left, tabs +
+          avatar on the right. The empty spacer pushes the right-side
+          group via margin-left:auto on .topbar-tabs. */ ?>
             <div class="topbar-breadcrumb"></div>
         <?php endif; ?>
 
         <div class="topbar-tabs">
-            <a href="/chat" class="topbar-tab<?= $page === 'chat' ? ' active' : '' ?>">
+            <a href="<?= htmlspecialchars($chatHref) ?>" class="topbar-tab<?= $page === 'chat' ? ' active' : '' ?>">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -114,9 +136,11 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
         </div>
 
         <div class="topbar-right">
-            <a href="/profile" class="topbar-user-avatar"
+            <a href="/profile" class="topbar-user"
                 title="<?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?>">
-                <?= htmlspecialchars($initials) ?>
+                <span
+                    class="topbar-user-name"><?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?></span>
+                <span class="topbar-user-avatar"><?= htmlspecialchars($initials) ?></span>
             </a>
         </div>
     </header>
@@ -136,8 +160,8 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
             </button>
 
             <?php /* Drawer header brand — mobile only. On desktop the brand
-     lives in the topbar; inside the drawer it gives the slide-out menu
-     its own identity above the navigation. */ ?>
+lives in the topbar; inside the drawer it gives the slide-out menu
+its own identity above the navigation. */ ?>
             <div class="sidebar-brand">
                 <img src="/assets/img/logo.png" alt="">
                 <div class="sidebar-brand-text">
@@ -147,10 +171,11 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
             </div>
 
             <?php /* Primary navigation — shown inside the drawer on mobile only.
-     On desktop these live as pills in the topbar (.topbar-tabs), so
-     .sidebar-nav stays display:none there to avoid duplication. */ ?>
+On desktop these live as pills in the topbar (.topbar-tabs), so
+.sidebar-nav stays display:none there to avoid duplication. */ ?>
             <nav class="sidebar-nav" aria-label="Navigation principale">
-                <a href="/chat" class="sidebar-nav-link<?= $page === 'chat' ? ' is-active' : '' ?>">
+                <a href="<?= htmlspecialchars($chatHref) ?>"
+                    class="sidebar-nav-link<?= $page === 'chat' ? ' is-active' : '' ?>">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -170,16 +195,41 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
             </nav>
 
             <?php if ($page === 'chat'): ?>
-                <button class="btn-new-chat" id="btnNewChat">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                    Nouvelle conversation
-                </button>
+                <?php /* Current environment: session (filtered to one session's
+               conversations) or free. */ ?>
+                <div class="sidebar-env">
+                    <span class="sidebar-env-label<?= ($env['mode'] ?? '') === 'session' ? ' is-session' : '' ?>">
+                        <?= htmlspecialchars($env['label'] ?? 'Chat libre') ?>
+                    </span>
+                </div>
 
-                <?php if ($isStudent): ?>
+                <form method="POST" action="/chat/new" class="new-chat-form">
+                    <?= csrf_field() ?>
+                    <?php if (!empty($env['sessionId'])): ?>
+                        <input type="hidden" name="session_id" value="<?= (int) $env['sessionId'] ?>">
+                    <?php endif; ?>
+                    <button type="submit" class="btn-new-chat" id="btnNewChat">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        Nouvelle conversation
+                    </button>
+                </form>
+
+                <?php if (($env['mode'] ?? '') === 'session'): ?>
+                    <a href="/chat" class="btn-leave-session"
+                        onclick="return confirm('Quitter la session et revenir au chat libre ? Vos conversations de session restent accessibles en la rejoignant à nouveau.');">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        Quitter la session
+                    </a>
+                <?php elseif ($isStudent): ?>
                     <a href="/sessions/join" class="btn-join-session">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                             stroke-linecap="round" stroke-linejoin="round">
@@ -202,19 +252,142 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
 
                 <div class="sidebar-conversations" id="convList">
                     <div class="conv-group">
-                        <span class="conv-group-label">Conversations</span>
+                        <?php /* Scope switch: the "Conversations" header is a
+                       dropdown that flips the list between active and
+                       archived conversations of the current environment.
+                       The scope rides on ?archived=1; the open conversation
+                       is unaffected. */ ?>
+                        <?php $isSessionEnv = ($env['mode'] ?? 'libre') === 'session'; ?>
+                        <?php $scopeBase = !empty($conversation['id']) ? '/chat/' . (int) $conversation['id'] : '/chat'; ?>
+                        <?php if ($isSessionEnv): ?>
+                            <?php /* Session conversations are driven by the session
+                                   lifecycle: no rename, no archive — hence no scope
+                                   switch either (a session never has an archive). */ ?>
+                            <span class="conv-group-label">Conversations</span>
+                        <?php else: ?>
+                            <div class="conv-scope">
+                                <button type="button" class="conv-scope-toggle" id="convScopeToggle" aria-haspopup="true"
+                                    aria-expanded="false">
+                                    <span class="conv-group-label"><?= $archivedView ? 'Archivées' : 'Conversations' ?></span>
+                                    <svg class="conv-scope-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+                                        aria-hidden="true">
+                                        <polyline points="6 9 12 15 18 9" />
+                                    </svg>
+                                </button>
+                                <div class="conv-scope-menu" id="convScopeMenu" role="menu" hidden>
+                                    <a href="<?= htmlspecialchars($scopeBase) ?>"
+                                        class="conv-scope-item<?= !$archivedView ? ' is-current' : '' ?>" role="menuitem">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                        </svg>
+                                        Conversations
+                                    </a>
+                                    <a href="<?= htmlspecialchars($scopeBase) ?>?archived=1"
+                                        class="conv-scope-item<?= $archivedView ? ' is-current' : '' ?>" role="menuitem">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="2" y="3" width="20" height="5" rx="1" />
+                                            <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+                                            <path d="M10 12h4" />
+                                        </svg>
+                                        Archivées
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                         <?php $activeConvId = $conversation['id'] ?? null; ?>
+                        <?php /* Renaming is allowed only in the free environment:
+                       session conversations keep their generated name. The
+                       list is homogeneous per environment, so one flag covers
+                       every row shown. */ ?>
+                        <?php $canRename = ($env['mode'] ?? 'libre') !== 'session'; ?>
                         <?php foreach (($conversations ?? []) as $c): ?>
-                            <a href="/chat/<?= (int) $c['id'] ?>"
-                                class="conv-item<?= (int) $c['id'] === (int) $activeConvId ? ' active' : '' ?>">
-                                <span class="conv-title"><?= htmlspecialchars($c['name']) ?></span>
-                            </a>
+                            <div class="conv-row<?= (int) $c['id'] === (int) $activeConvId ? ' active' : '' ?>">
+                                <a href="/chat/<?= (int) $c['id'] ?>" class="conv-item">
+                                    <span class="conv-title"><?= htmlspecialchars($c['name']) ?></span>
+                                </a>
+                                <?php if (!$isSessionEnv): ?>
+                                    <div class="conv-actions">
+                                        <button type="button" class="conv-menu-btn" aria-haspopup="true" aria-expanded="false"
+                                            aria-label="Actions sur la conversation">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                                <circle cx="12" cy="5" r="1.7" />
+                                                <circle cx="12" cy="12" r="1.7" />
+                                                <circle cx="12" cy="19" r="1.7" />
+                                            </svg>
+                                        </button>
+                                        <div class="conv-menu" role="menu" hidden>
+                                                <?php if (!$archivedView && $canRename): ?>
+                                                <button type="button" class="conv-menu-item" role="menuitem" data-action="rename"
+                                                    data-id="<?= (int) $c['id'] ?>"
+                                                    data-name="<?= htmlspecialchars($c['name'], ENT_QUOTES) ?>">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M12 20h9" />
+                                                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                                    </svg>
+                                                    Renommer
+                                                </button>
+                                                <?php endif; ?>
+                                                <?php if ($archivedView): ?>
+                                                <button type="button" class="conv-menu-item" role="menuitem" data-action="unarchive"
+                                                    data-id="<?= (int) $c['id'] ?>">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M3 7v13a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7" />
+                                                        <rect x="1" y="3" width="22" height="4" rx="1" />
+                                                        <path d="M12 17V11" />
+                                                        <polyline points="9 13 12 10 15 13" />
+                                                    </svg>
+                                                    Restaurer
+                                                </button>
+                                                <?php else: ?>
+                                                <button type="button" class="conv-menu-item" role="menuitem" data-action="archive"
+                                                    data-id="<?= (int) $c['id'] ?>">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <rect x="2" y="3" width="20" height="5" rx="1" />
+                                                        <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+                                                        <path d="M10 12h4" />
+                                                    </svg>
+                                                    Archiver
+                                                </button>
+                                                <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         <?php endforeach; ?>
                         <?php if (empty($conversations)): ?>
-                            <p class="conv-empty">Aucune conversation pour le moment.</p>
+                            <p class="conv-empty">
+                                <?= $archivedView ? 'Aucune conversation archivée.' : 'Aucune conversation pour le moment.' ?>
+                            </p>
                         <?php endif; ?>
                     </div>
                 </div>
+
+                <?php /* Shared submit targets for the per-conversation kebab
+               menu. JS fills `id` (and `name` for rename) before submitting,
+               so we keep a single CSRF-protected form per action instead of
+               one per row. `current_id` is the open conversation, used to
+               return there after the action. */ ?>
+                <form method="POST" action="/chat/rename" id="convRenameForm" hidden>
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="id" value="">
+                    <input type="hidden" name="name" value="">
+                    <input type="hidden" name="current_id" value="<?= (int) ($conversation['id'] ?? 0) ?>">
+                </form>
+                <form method="POST" action="/chat/archive" id="convArchiveForm" hidden>
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="id" value="">
+                    <input type="hidden" name="current_id" value="<?= (int) ($conversation['id'] ?? 0) ?>">
+                </form>
+                <form method="POST" action="/chat/unarchive" id="convUnarchiveForm" hidden>
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="id" value="">
+                </form>
             <?php endif; ?>
 
             <div class="sidebar-footer">
@@ -293,6 +466,92 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
                 };
                 el.addEventListener('click', dismiss);
                 setTimeout(dismiss, 5000);
+            });
+        })();
+
+        // Conversation sidebar menus: the scope switch (Conversations /
+        // Archivées) and the per-conversation kebab (rename / archive /
+        // unarchive). Kebab actions drive shared hidden forms — we just fill
+        // the id (and name) and submit.
+        (function () {
+            const convList = document.getElementById('convList');
+            const scopeToggle = document.getElementById('convScopeToggle');
+            const scopeMenu = document.getElementById('convScopeMenu');
+            if (!convList && !scopeToggle) return;
+
+            const renameForm = document.getElementById('convRenameForm');
+            const archiveForm = document.getElementById('convArchiveForm');
+            const unarchiveForm = document.getElementById('convUnarchiveForm');
+
+            function closeKebabs(except) {
+                convList?.querySelectorAll('.conv-menu').forEach((menu) => {
+                    if (menu === except) return;
+                    menu.hidden = true;
+                    menu.parentElement.querySelector('.conv-menu-btn')?.setAttribute('aria-expanded', 'false');
+                });
+            }
+            function closeScope() {
+                if (!scopeMenu) return;
+                scopeMenu.hidden = true;
+                scopeToggle?.setAttribute('aria-expanded', 'false');
+            }
+            function closeAll(exceptKebab) {
+                closeKebabs(exceptKebab);
+                closeScope();
+            }
+
+            // Scope dropdown.
+            scopeToggle?.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const willOpen = scopeMenu.hidden;
+                closeKebabs(null);
+                scopeMenu.hidden = !willOpen;
+                scopeToggle.setAttribute('aria-expanded', String(willOpen));
+            });
+
+            // Kebab menus + actions.
+            convList?.addEventListener('click', (e) => {
+                const toggle = e.target.closest('.conv-menu-btn');
+                if (toggle) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const menu = toggle.parentElement.querySelector('.conv-menu');
+                    const willOpen = menu.hidden;
+                    closeAll(willOpen ? menu : null);
+                    menu.hidden = !willOpen;
+                    toggle.setAttribute('aria-expanded', String(willOpen));
+                    return;
+                }
+
+                const item = e.target.closest('.conv-menu-item');
+                if (!item) return;
+                e.preventDefault();
+                closeKebabs(null);
+
+                const id = item.dataset.id;
+                const action = item.dataset.action;
+                if (action === 'rename' && renameForm) {
+                    const next = window.prompt('Nouveau nom de la conversation :', item.dataset.name || '');
+                    if (next === null || next.trim() === '') return;
+                    renameForm.querySelector('[name="id"]').value = id;
+                    renameForm.querySelector('[name="name"]').value = next.trim();
+                    renameForm.submit();
+                } else if (action === 'archive' && archiveForm) {
+                    if (!window.confirm("Archiver cette conversation ? Elle n'apparaîtra plus dans la liste.")) return;
+                    archiveForm.querySelector('[name="id"]').value = id;
+                    archiveForm.submit();
+                } else if (action === 'unarchive' && unarchiveForm) {
+                    unarchiveForm.querySelector('[name="id"]').value = id;
+                    unarchiveForm.submit();
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.conv-actions') && !e.target.closest('.conv-scope')) closeAll(null);
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeAll(null);
             });
         })();
     </script>

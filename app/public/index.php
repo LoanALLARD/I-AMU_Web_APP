@@ -8,9 +8,10 @@
     use Core\Router;
     use Controllers\AccueilController;
     use Controllers\LLMController;
-    use Controllers\LoginController;
+    use Controllers\AuthController;
     use Controllers\SessionController;
     use Controllers\ProfileController;
+    use Controllers\PlaceController;
 
     // routeur 
     $router = new Router();
@@ -18,21 +19,28 @@
     $router->add('GET',  '/',            function() { (new AccueilController())->index(); });
     $router->add('GET',  '/accueil',     function() { (new AccueilController())->index(); });
 
-    $router->add('POST', '/chat',        function() { (new LLMController())->handleChat(); });
+    $router->add('POST', '/chat',         function() { (new LLMController())->handleChat(); });
+    $router->add('POST', '/chat/new',     function() { (new AccueilController())->newChat(); });
+    $router->add('POST', '/chat/rename',    function() { (new AccueilController())->renameChat(); });
+    $router->add('POST', '/chat/archive',   function() { (new AccueilController())->archiveChat(); });
+    $router->add('POST', '/chat/unarchive', function() { (new AccueilController())->unarchiveChat(); });
 
     $uri = $_SERVER['REQUEST_URI'];
     $method = $_SERVER['REQUEST_METHOD'];
 
-    $router->add('GET',  '/login',       function() { (new LoginController())->showLogin(); });
-    $router->add('POST', '/login',       function() { (new LoginController())->login(); });
-    $router->add('GET',  '/register',    function() { (new LoginController())->showRegister(); });
-    $router->add('POST', '/register',    function() { (new LoginController())->register(); });
-    $router->add('GET',  '/logout',      function() { (new LoginController())->logout(); });
-    $router->add('GET',  '/RGPDConsent', function() { (new LoginController())->showRGPD(); });
+    $router->add('GET',  '/login',       function() { (new AuthController())->showLogin(); });
+    $router->add('POST', '/login',       function() { (new AuthController())->login(); });
+    $router->add('GET',  '/register',    function() { (new AuthController())->showRegister(); });
+    $router->add('POST', '/register',    function() { (new AuthController())->register(); });
+    $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
+    $router->add('GET',  '/RGPDConsent', function() { (new AuthController())->showRGPD(); });
+
+    // AJAX: departments of a place, for the registration form's dependent select.
+    $router->add('GET',  '/places/{id}/departments', function($id) { (new PlaceController())->departments($id); });
 
     // --- Chat home + profile (authenticated) --------------------------
     $router->add('GET', '/chat',      function()    { (new AccueilController())->index(); });
-    $router->add('GET', '/chat/{id}', function($id)  { (new AccueilController())->index(); });
+    $router->add('GET', '/chat/{id}', function($id)  { (new AccueilController())->index($id); });
     $router->add('GET', '/profile',   function()    { (new ProfileController())->index(); });
 
     // --- Sessions (teacher) + join (student) --------------------------
@@ -48,6 +56,7 @@
     $router->add('POST', '/sessions/{id}/start',  function($id) { (new SessionController())->start($id); });
     $router->add('POST', '/sessions/{id}/end',    function($id) { (new SessionController())->end($id); });
     $router->add('POST', '/sessions/{id}/cancel', function($id) { (new SessionController())->cancel($id); });
+    $router->add('GET',  '/sessions/{id}/monitor', function($id) { (new SessionController())->monitor($id); });
     $router->add('GET',  '/sessions/{id}',        function($id) { (new SessionController())->dashboard($id); });
 
     $router->compare($uri, $method);

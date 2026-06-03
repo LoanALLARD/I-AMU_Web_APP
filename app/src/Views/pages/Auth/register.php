@@ -60,6 +60,28 @@
                        placeholder="Répétez votre mot de passe" required>
             </div>
 
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="place_id">Lieu</label>
+                    <select id="place_id" name="place_id" required>
+                        <option value="">Choisir un lieu...</option>
+                        <?php foreach ($places ?? [] as $place): ?>
+                            <option value="<?= (int) $place['id'] ?>"
+                                <?= (string) ($data['place_id'] ?? '') === (string) $place['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($place['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="department_id">Département</label>
+                    <select id="department_id" name="department_id" required disabled
+                            data-selected="<?= htmlspecialchars((string) ($data['department_id'] ?? '')) ?>">
+                        <option value="">Choisir d'abord un lieu...</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="rgpd-group">
                 <input type="checkbox" id="rgpd_consent" name="rgpd_consent" value="1" required>
                 <label for="rgpd_consent" class="rgpd-label">
@@ -83,3 +105,9 @@
     </div>
 
 </div>
+
+<?php
+$jsPath = __DIR__ . '/../../../../public/assets/js/register.js';
+$jsVer  = is_file($jsPath) ? filemtime($jsPath) : 0;
+?>
+<script src="/assets/js/register.js?v=<?= $jsVer ?>" defer></script>
