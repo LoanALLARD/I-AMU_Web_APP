@@ -107,11 +107,10 @@ class SessionController extends Controller
             $this->redirect('/sessions/create');
         }
 
-        $this->flash('success', sprintf(
-            "Session « %s » créée. Code d'accès : %s",
-            $session->name(),
-            $session->accessCodeFormatted()
-        ));
+        $code = $session->accessCodeFormatted();
+        $this->flash('success', $code !== null
+            ? sprintf("Session « %s » créée. Code d'accès : %s", $session->name(), $code)
+            : sprintf("Session « %s » créée (brouillon). Le code d'accès sera généré au démarrage.", $session->name()));
         $this->redirect('/sessions/' . $session->id());
     }
 

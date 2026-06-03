@@ -11,9 +11,11 @@
         <div class="dashboard-meta">
             <span class="badge <?= htmlspecialchars($view['typeClass']) ?>"><?= htmlspecialchars($view['typeLabel']) ?></span>
             <span class="badge <?= htmlspecialchars($view['statusClass']) ?>"><?= htmlspecialchars($view['statusLabel']) ?></span>
+            <?php if ($view['accessCode'] !== ''): ?>
             <code class="access-code-cell" style="font-size:13px;color:var(--gray-600);">
                 <?= htmlspecialchars($view['accessCode']) ?>
             </code>
+            <?php endif; ?>
         </div>
     </div>
     <div class="dashboard-actions">
@@ -99,6 +101,7 @@
     </div>
 
     <aside>
+        <?php if ($view['accessCode'] !== ''): ?>
         <div class="dashboard-card">
             <h2>Code d'accès</h2>
             <div class="access-code-display" style="font-size: 38px; margin: 4px 0 12px;">
@@ -113,6 +116,7 @@
                 </button>
             </div>
         </div>
+        <?php endif; ?>
 
         <div class="dashboard-card">
             <h2>Modèles autorisés</h2>

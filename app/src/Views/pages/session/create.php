@@ -75,9 +75,6 @@ $typeCards = [
 
 <form method="POST" action="<?= htmlspecialchars($action) ?>" class="session-form-grid" id="session-form">
     <?= csrf_field() ?>
-    <?php if (!$isEdit): ?>
-        <input type="hidden" name="access_code" value="<?= htmlspecialchars($previewCode) ?>">
-    <?php endif; ?>
 
     <div class="session-form-main">
 
@@ -246,6 +243,7 @@ $typeCards = [
 
     <!-- Right column : access code + preview + preflight -->
     <aside class="session-aside">
+        <?php if ($previewCodeFormatted !== ''): ?>
         <div class="access-card">
             <div class="access-card-label">Code d'accès</div>
             <div class="access-code-display" id="access-code-display">
@@ -260,6 +258,7 @@ $typeCards = [
                 </button>
             </div>
         </div>
+        <?php endif; ?>
 
         <div>
             <div class="fsection-head">
@@ -269,7 +268,9 @@ $typeCards = [
             <div class="preview-card">
                 <div class="preview-card-header">
                     <span class="preview-card-tag" id="preview-tag"><?= htmlspecialchars(strtolower($currentType->value)) ?> / <?= htmlspecialchars($currentType->label()) ?></span>
-                    <span class="preview-card-tag">· <?= htmlspecialchars($previewCodeFormatted) ?></span>
+                    <?php if ($previewCodeFormatted !== ''): ?>
+                        <span class="preview-card-tag">· <?= htmlspecialchars($previewCodeFormatted) ?></span>
+                    <?php endif; ?>
                 </div>
                 <div class="preview-card-name" id="preview-name">— libellé —</div>
                 <div class="preview-card-meta">

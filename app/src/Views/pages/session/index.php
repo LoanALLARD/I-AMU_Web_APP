@@ -49,7 +49,7 @@
                         </td>
                         <td><span class="badge <?= htmlspecialchars($s['typeClass']) ?>"><?= htmlspecialchars($s['typeLabel']) ?></span></td>
                         <td><span class="badge <?= htmlspecialchars($s['statusClass']) ?>"><?= htmlspecialchars($s['statusLabel']) ?></span></td>
-                        <td><code class="access-code-cell"><?= htmlspecialchars($s['accessCode']) ?></code></td>
+                        <td><code class="access-code-cell"><?= htmlspecialchars($s['accessCode'] !== '' ? $s['accessCode'] : '—') ?></code></td>
                         <td><?= htmlspecialchars($s['startsAtFormatted'] ?? '—') ?></td>
                         <td><?= htmlspecialchars($s['endsAtFormatted'] ?? '—') ?></td>
                         <td class="cell-actions">
@@ -108,7 +108,7 @@
                             <span class="badge <?= htmlspecialchars($s['statusClass']) ?>"><?= htmlspecialchars($s['statusLabel']) ?></span>
                         </div>
                     </div>
-                    <code class="access-code-cell"><?= htmlspecialchars($s['accessCode']) ?></code>
+                    <code class="access-code-cell"><?= htmlspecialchars($s['accessCode'] !== '' ? $s['accessCode'] : '—') ?></code>
                 </div>
                 <div class="session-card-actions">
                     <a href="/sessions/<?= (int) $s['id'] ?>" class="btn sm">Dashboard</a>

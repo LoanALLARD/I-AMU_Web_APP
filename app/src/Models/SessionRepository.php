@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Models;
 
 use PDO;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -65,25 +64,30 @@ class SessionRepository
     }
 
     /**
+     * Inserts a session. `access_code` is left to the database trigger
+     * `trg_generate_session_access_code`, which fills it when the status is
+     * SCHEDULED or ACTIVE. The generated value (or null for a draft) is
+     * returned alongside the new id.
+     *
      * @param array<string, scalar|null> $data
+     * @return array{id: int, access_code: ?string}
      */
-    public function insert(array $data): int
+    public function insert(array $data): array
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO sessions
-                (resource_id, name, type, status, access_code, starts_at, ends_at, closed_at,
+                (resource_id, name, type, status, starts_at, ends_at, closed_at,
                  pre_prompt_override, post_prompt_override, instructions, max_input_size)
              VALUES
-                (:resource_id, :name, :type, :status, :access_code, :starts_at, :ends_at, :closed_at,
+                (:resource_id, :name, :type, :status, :starts_at, :ends_at, :closed_at,
                  :pre_prompt_override, :post_prompt_override, :instructions, :max_input_size)
-             RETURNING id'
+             RETURNING id, access_code'
         );
         $stmt->execute([
             'resource_id'          => $data['resource_id'],
             'name'                 => $data['name'],
             'type'                 => $data['type'],
             'status'               => $data['status'],
-            'access_code'          => $data['access_code'],
             'starts_at'            => $data['starts_at'],
             'ends_at'              => $data['ends_at'],
             'closed_at'            => $data['closed_at'],
@@ -93,7 +97,15 @@ class SessionRepository
             'max_input_size'       => $data['max_input_size'],
         ]);
 
-        return (int) $stmt->fetchColumn();
+        /** @var array{id: int|string, access_code: ?string} $row */
+        $row = $stmt->fetch();
+
+        return [
+            'id'          => (int) $row['id'],
+            'access_code' => $row['access_code'] !== null && $row['access_code'] !== ''
+                ? (string) $row['access_code']
+                : null,
+        ];
     }
 
     /**
@@ -160,29 +172,4 @@ class SessionRepository
         }
     }
 
-    public function accessCodeExists(string $code): bool
-    {
-        $stmt = $this->pdo->prepare('SELECT 1 FROM sessions WHERE access_code = :code');
-        $stmt->execute(['code' => $code]);
-
-        return $stmt->fetchColumn() !== false;
-    }
-
-    public function generateUniqueAccessCode(): string
-    {
-        $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        $max      = strlen($alphabet) - 1;
-
-        for ($attempt = 0; $attempt < 20; $attempt++) {
-            $code = '';
-            for ($i = 0; $i < 6; $i++) {
-                $code .= $alphabet[random_int(0, $max)];
-            }
-            if (!$this->accessCodeExists($code)) {
-                return $code;
-            }
-        }
-
-        throw new RuntimeException('Unable to generate a unique access code.');
-    }
 }
