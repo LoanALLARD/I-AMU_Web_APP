@@ -26,6 +26,6 @@ Matches the touched spec: `auth` · `sessions` · `chat` · `supervise` · `admi
 
 ## 4. Rules
 
-- One commit = one coherent slice (may be several per spec).
+- One commit = one coherent slice (maybe several per spec).
 - No co-author trailer by default.
 - Body is optional but, when present, explains the rationale.

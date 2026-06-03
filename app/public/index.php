@@ -90,6 +90,7 @@ $llmController  = new LLMController($generateReply);
 // Profile page — surfaces account info and acts as the exit point for
 // /logout. Renders inside Layout/chat.php (the universal authenticated
 // shell), so the sidebar + topbar wrap the profile cards uniformly.
+$profileCtrl = new Controllers\ProfileController($authService);
 $profileController = new class extends Controller {
     public function show(): void
     {
@@ -119,7 +120,8 @@ $router->add('GET',  '/chat', fn() => $chatController->index());
 $router->add('POST', '/chat', fn() => $llmController->handleChat());
 
 // Profile -------------------------------------------------------------
-$router->add('GET',  '/profile', fn() => $profileController->show());
+$router->add('GET', '/profile', [$profileCtrl, 'show']);
+$router->add('POST', '/profile/deactivate', [$profileCtrl, 'deactivate']);
 
 // Sessions ------------------------------------------------------------
 $router->add('GET',  '/sessions',             fn() => $sessionController->index());

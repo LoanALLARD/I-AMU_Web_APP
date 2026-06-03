@@ -60,14 +60,6 @@ $roles = $user['roles'] ?? [];
             </div>
 
             <div class="dashboard-card">
-                <h2>Données personnelles (RGPD)</h2>
-
-                <p style="font-size:13px;color:var(--gray-500);line-height:1.6;margin:0 0 16px;">
-                    Conformément au Règlement Général sur la Protection des Données (RGPD),
-                    vous disposez d'un droit d'accès, de rectification, d'effacement et de
-                    limitation du traitement de vos données personnelles.
-                </p>
-
                 <div style="background:var(--gray-50, #f9fafb);border:1px solid var(--gray-200, #e5e7eb);border-radius:8px;padding:16px;margin-bottom:16px;">
                     <h3 style="font-size:14px;font-weight:600;margin:0 0 8px;color:var(--gray-700, #374151);">
                         Désactiver mon compte
