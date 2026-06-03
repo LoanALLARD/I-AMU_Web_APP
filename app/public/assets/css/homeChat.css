@@ -125,7 +125,6 @@
 
 .sidebar-search:focus-within {
     border-color: var(--blue);
-    box-shadow: 0 0 0 3px rgba(26, 115, 200, .08);
 }
 
 .sidebar-search svg {
@@ -791,7 +790,6 @@
 
 .input-wrapper:focus-within {
     border-color: var(--blue);
-    box-shadow: 0 0 0 3px rgba(26, 115, 200, .1);
 }
 
 .input-wrapper textarea {
