@@ -16,15 +16,8 @@
     // routeur 
     $router = new Router();
 
-    $router->add('GET','/',function(){
-        $controller = new AccueilController();
-        $controller->index();
-    });
-
-    $router->add('GET','/accueil',function(){
-        $controller = new AccueilController();
-        $controller->index();
-    });
+    $router->add('GET',  '/',            function() { (new AccueilController())->index(); });
+    $router->add('GET',  '/accueil',     function() { (new AccueilController())->index(); });
 
     //L'api doit prendre la forme suivante pour envoyer un prompt 
     // de l'application vers le serveur ollama
@@ -48,43 +41,17 @@
     *
     */
 
-    $router->add('POST','/chat',function(){
-        $controller = new LLMController();
-        $controller->handleChat();
-    });
+    $router->add('POST', '/chat',        function() { (new LLMController())->handleChat(); });
 
     $uri = $_SERVER['REQUEST_URI'];
     $method = $_SERVER['REQUEST_METHOD'];
 
-    $router->add('GET', '/login', function() {
-        $controller = new LoginController();
-        $controller->showLogin();
-    });
-
-    $router->add('POST', '/login', function() {
-        $controller = new LoginController();
-        $controller->login();
-    });
-
-    $router->add('GET', '/register', function() {
-        $controller = new LoginController();
-        $controller->showRegister();
-    });
-
-    $router->add('POST', '/register', function() {
-        $controller = new LoginController();
-        $controller->register();
-    });
-
-    $router->add('GET', '/logout', function() {
-        $controller = new LoginController();
-        $controller->logout();
-    });
-
-    $router->add('GET','/RGPDConsent',function(){
-        $controller = new  LoginController();
-        $controller->showRGPD();
-    });
+    $router->add('GET',  '/login',       function() { (new LoginController())->showLogin(); });
+    $router->add('POST', '/login',       function() { (new LoginController())->login(); });
+    $router->add('GET',  '/register',    function() { (new LoginController())->showRegister(); });
+    $router->add('POST', '/register',    function() { (new LoginController())->register(); });
+    $router->add('GET',  '/logout',      function() { (new LoginController())->logout(); });
+    $router->add('GET',  '/RGPDConsent', function() { (new LoginController())->showRGPD(); });
 
     // --- Chat home + profile (authenticated) --------------------------
     $router->add('GET', '/chat',      function()    { (new AccueilController())->index(); });
