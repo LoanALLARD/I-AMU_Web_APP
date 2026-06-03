@@ -187,8 +187,8 @@ final class AuthService
                     'error'   => 'Le compte est déjà désactivé ou introuvable.',
                 ];
             }
-
             return ['success' => true];
+
         } catch (\Throwable $e) {
             return [
                 'success' => false,
@@ -196,6 +196,41 @@ final class AuthService
             ];
         }
     }
+
+    public function reactivateAccount(string $email, string $password): array
+    {
+        if ($email === '' || $password === '') {
+            return ['success' => false, 'error' => 'Email et mot de passe requis.'];
+        }
+
+        $row = $this->db->query(
+            'SELECT id, password_hash, is_active FROM users WHERE email = :email',
+            ['email' => $email]
+        )->fetch();
+
+        if (!$row || !password_verify($password, (string) $row['password_hash'])) {
+            return ['success' => false, 'error' => 'Identifiants invalides.'];
+        }
+
+        if ($row['is_active']) {
+            return ['success' => false, 'error' => 'Ce compte est déjà actif.'];
+        }
+
+        try {
+            $this->db->query(
+                'UPDATE users SET is_active = TRUE WHERE id = :id',
+                ['id' => (int) $row['id']]
+            );
+
+            return ['success' => true];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error'   => 'Erreur lors de la réactivation.',
+            ];
+        }
+    }
+
 
 
     /**

@@ -50,6 +50,39 @@ class LoginController extends Controller
         $this->redirect('/chat');
     }
 
+    public function reactivate(): void{
+
+        $this->verifyCsrf();
+
+        $email    = trim($this->input('email', ''));
+        $password = $this->input('password', '');
+
+        $result = $this->authService->reactivateAccount($email, $password);
+
+        if (!$result['success']) {
+            $this->render('pages/Auth/reactivate', [
+                'titrePage' => 'Connexion',
+                'error'     => $result['error'],
+                'email'     => $email,
+            ], 'auth');
+            return;
+        }
+
+        $loginResult = $this->authService->login($email, $password);
+
+        if (!$loginResult['success']) {
+            $this->render('pages/Auth/login', [
+                'titrePage' => 'Connexion',
+                'error'     => $loginResult['error'],
+                'email'     => $email,
+            ], 'auth');
+            return;
+        }
+
+        $this->flash('success', 'Votre compte a été réactivé.');
+        $this->redirect('/chat');
+    }
+
     /**
      * Displays the registration form.
      */
