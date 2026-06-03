@@ -10,6 +10,7 @@
  */
 $sessionClosed = $sessionClosed ?? false;
 $closedReason  = $closedReason ?? '';
+$conversation  = $conversation ?? null;
 ?>
 <div class="chat-container">
     <div class="chat-area">
@@ -93,6 +94,10 @@ $closedReason  = $closedReason ?? '';
 </div>
 
 <script>
+    // Set on a session-bound chat (GET /chat/{id}); null on free chat.
+    // Sent to /chat so the server persists each interaction under it.
+    const CHAT_CONVERSATION_ID = <?= json_encode($conversation['id'] ?? null) ?>;
+
     const input = document.getElementById('promptInput');
     const sendBtn = document.getElementById('btnSend');
     const counter = document.getElementById('charCounter');
@@ -156,7 +161,8 @@ $closedReason  = $closedReason ?? '';
                 body: JSON.stringify({
                     model: 'llama3.2:1b',
                     message: message,
-                    context: []
+                    context: [],
+                    conversation_id: CHAT_CONVERSATION_ID
                 })
             });
             const text = await res.text();

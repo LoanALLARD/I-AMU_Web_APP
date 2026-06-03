@@ -53,6 +53,7 @@
     $router->add('POST', '/sessions/{id}/start',  function($id) { (new SessionController())->start($id); });
     $router->add('POST', '/sessions/{id}/end',    function($id) { (new SessionController())->end($id); });
     $router->add('POST', '/sessions/{id}/cancel', function($id) { (new SessionController())->cancel($id); });
+    $router->add('GET',  '/sessions/{id}/monitor', function($id) { (new SessionController())->monitor($id); });
     $router->add('GET',  '/sessions/{id}',        function($id) { (new SessionController())->dashboard($id); });
 
     $router->compare($uri, $method);

@@ -137,6 +137,75 @@ class SessionService
             'canStart'           => $actions['can_start'],
             'canEnd'             => $actions['can_end'],
             'canCancel'          => $actions['can_cancel'],
+            'canMonitor'         => $computed === SessionStatus::Active || $computed === SessionStatus::Ended,
+        ];
+    }
+
+    /**
+     * Read-only supervision view of a session: the enrolled students with
+     * their activity, plus the prompt/response transcript of the selected
+     * student. Returns null when the session is neither active nor ended
+     * (nothing to monitor yet).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function monitor(Session $session, int $studentId = 0): ?array
+    {
+        $computed = $session->computedStatus($this->now());
+        if ($computed !== SessionStatus::Active && $computed !== SessionStatus::Ended) {
+            return null;
+        }
+
+        $sessionId = (int) $session->id();
+
+        $students = array_map(
+            static fn (array $r): array => [
+                'id'           => (int) $r['student_id'],
+                'name'         => trim(((string) $r['first_name']) . ' ' . ((string) $r['last_name'])),
+                'promptCount'  => (int) $r['prompt_count'],
+                'lastActivity' => $r['last_activity'] !== null
+                    ? (new DateTimeImmutable((string) $r['last_activity']))->format('d/m/Y H:i')
+                    : null,
+                'lastModel'    => $r['last_model'] !== null && $r['last_model'] !== '' ? (string) $r['last_model'] : null,
+            ],
+            $this->sessions->monitorStudents($sessionId)
+        );
+
+        $selected = null;
+        if ($studentId > 0) {
+            $name = null;
+            foreach ($students as $s) {
+                if ($s['id'] === $studentId) {
+                    $name = $s['name'];
+                    break;
+                }
+            }
+            if ($name !== null) {
+                $selected = [
+                    'id'         => $studentId,
+                    'name'       => $name,
+                    'transcript' => array_map(
+                        static fn (array $r): array => [
+                            'prompt'   => (string) $r['prompt'],
+                            'response' => $r['response'] !== null ? (string) $r['response'] : '',
+                            'model'    => (string) $r['model_name'],
+                            'sentAt'   => (new DateTimeImmutable((string) $r['sent_at']))->format('d/m/Y H:i'),
+                        ],
+                        $this->sessions->studentTranscript($sessionId, $studentId)
+                    ),
+                ];
+            }
+        }
+
+        return [
+            'id'           => $sessionId,
+            'name'         => $session->name(),
+            'accessCode'   => $session->accessCodeFormatted() ?? '',
+            'statusLabel'  => $computed->label(),
+            'statusClass'  => $computed->badgeClass(),
+            'studentCount' => count($students),
+            'students'     => $students,
+            'selected'     => $selected,
         ];
     }
 

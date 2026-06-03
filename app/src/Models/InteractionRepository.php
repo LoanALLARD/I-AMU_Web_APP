@@ -13,29 +13,32 @@ class InteractionRepository {
     }
 
     /**
-     * @return array<string, mixed>|null
+     * Persists a prompt/response turn. `model_id` is NOT NULL in the schema,
+     * so it must always be provided. Token counts honour the table CHECKs
+     * (input_tokens > 0 or NULL ; output_tokens >= 0 or NULL).
      */
-    public function newInteration(int $conversation_id, string $prompt, string $response, int $input_tokens, int $output_tokens): ?array
-    {
-        $query = $this->pdo->prepare('
-        INSERT INTO interactions (conversation_id,prompt,response,output_tokens) 
-        VALUES (:conversation_id, :prompt, :response, :output_tokens)
-        ');
+    public function newInteration(
+        int $conversation_id,
+        int $model_id,
+        string $prompt,
+        string $response,
+        int $input_tokens,
+        int $output_tokens
+    ): void {
+        $query = $this->pdo->prepare(
+            'INSERT INTO interactions
+                (conversation_id, model_id, prompt, response, input_tokens, output_tokens)
+             VALUES
+                (:conversation_id, :model_id, :prompt, :response, :input_tokens, :output_tokens)'
+        );
 
         $query->execute([
-            'conversation_id'=>$conversation_id,
-            'prompt'=>$prompt,
-            'response'=>$response,
-            // 'input_tokens'=>$input_tokens,
-            'output_tokens'=>$output_tokens
-            ]);
-
-        $result = $query->fetch();
-
-        if ($result === false) {
-            return null;
-        }
-
-        return $result;
+            'conversation_id' => $conversation_id,
+            'model_id'        => $model_id,
+            'prompt'          => $prompt,
+            'response'        => $response,
+            'input_tokens'    => $input_tokens > 0 ? $input_tokens : null,
+            'output_tokens'   => $output_tokens >= 0 ? $output_tokens : null,
+        ]);
     }
 }

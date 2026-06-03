@@ -233,6 +233,28 @@ class SessionController extends Controller
         ]);
     }
 
+    /** GET /sessions/{id}/monitor — read-only supervision of enrolled students. */
+    public function monitor(string $id): void
+    {
+        $this->requireRole('teacher');
+        $session = $this->loadOwned((int) $id);
+
+        $studentId = (int) $this->query('student', 0);
+        $view      = $this->sessions->monitor($session, $studentId);
+
+        if ($view === null) {
+            $this->flash('error', "Le suivi n'est disponible que pour une session en cours ou terminée.");
+            $this->redirect('/sessions/' . (int) $id);
+        }
+
+        $this->render('pages/session/monitor', [
+            'title'      => 'Suivi · ' . $session->name(),
+            'navSection' => 'sessions',
+            'view'       => $view,
+            'user'       => $this->currentUser(),
+        ]);
+    }
+
     /** GET /sessions/join — student form. */
     public function showJoin(): void
     {

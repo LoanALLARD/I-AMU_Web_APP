@@ -19,6 +19,11 @@
         </div>
     </div>
     <div class="dashboard-actions">
+        <?php if (!empty($view['canMonitor'])): ?>
+            <a href="/sessions/<?= (int) $view['id'] ?>/monitor" class="btn primary">
+                <?= icon('user', '', 12) ?> Suivi
+            </a>
+        <?php endif; ?>
         <?php if ($view['canEdit']): ?>
             <a href="/sessions/<?= (int) $view['id'] ?>/edit" class="btn">
                 <?= icon('edit', '', 12) ?> Modifier

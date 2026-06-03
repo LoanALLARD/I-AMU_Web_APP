@@ -172,4 +172,66 @@ class SessionRepository
         }
     }
 
+    /**
+     * Per enrolled student of a session: their conversation, prompt count,
+     * last activity and last-used model. Students with no conversation yet
+     * still appear (LEFT JOINs), with a zero count.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function monitorStudents(int $sessionId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT
+                 u.id           AS student_id,
+                 u.first_name,
+                 u.last_name,
+                 c.id           AS conversation_id,
+                 COUNT(i.id)    AS prompt_count,
+                 MAX(i.sent_at) AS last_activity,
+                 (SELECT m.name
+                    FROM interactions i2
+                    JOIN models m ON m.id = i2.model_id
+                   WHERE i2.conversation_id = c.id
+                   ORDER BY i2.sent_at DESC
+                   LIMIT 1) AS last_model
+               FROM enrollments e
+               JOIN users u ON u.id = e.student_id
+               LEFT JOIN conversations c ON c.user_id = e.student_id AND c.session_id = e.session_id
+               LEFT JOIN interactions i ON i.conversation_id = c.id
+              WHERE e.session_id = :sid
+              GROUP BY u.id, u.first_name, u.last_name, c.id
+              ORDER BY u.last_name, u.first_name'
+        );
+        $stmt->execute(['sid' => $sessionId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
+
+    /**
+     * Prompt/response history of one student for a session (read-only).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function studentTranscript(int $sessionId, int $studentId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT i.prompt, i.response, i.sent_at, m.name AS model_name
+               FROM interactions i
+               JOIN conversations c ON c.id = i.conversation_id
+               JOIN models m ON m.id = i.model_id
+              WHERE c.session_id = :sid AND c.user_id = :uid
+              ORDER BY i.sent_at ASC'
+        );
+        $stmt->execute(['sid' => $sessionId, 'uid' => $studentId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
+
 }
