@@ -55,7 +55,7 @@ final class AuthService
             return [
                 'success' => false,
                 'error' => 'Ce compte est désactivé.',
-                'desactivated' => true,
+                'deactivated' => true,
                 'email' => (string) $row['email']
                 ];
         }
