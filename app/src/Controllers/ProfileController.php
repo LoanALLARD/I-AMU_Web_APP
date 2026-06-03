@@ -18,6 +18,12 @@ class ProfileController extends Controller
 {
     protected  AuthService $auth;
 
+    public function __construct()
+    {
+        $pdo = Database::getConnection();
+        $this->auth = new AuthService($pdo);
+    }
+
     public function index(): void
     {
         $this->requireAuth();
