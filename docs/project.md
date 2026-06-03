@@ -96,10 +96,23 @@ Local URLs: app `http://localhost:8080/`, Adminer `http://localhost:8081/`
 
 ## 8. Accounts & access
 
-- Default admin: `admin` / `Admin` (created by `create_test_admin.php`).
+- **Super administrator** — top-level, stored in its own table
+  `super_administrators` (NOT in `users`, for isolation). The **first**
+  super admin is inserted by a **run-once bootstrap script** (refuses to
+  run if the table is non-empty); no default password is committed. Super
+  admins are **capped in number**, all their actions are **traced**, and
+  they create other admin accounts **by email invitation** only. See
+  [`specs/05-admin-research.md` §A.0](specs/05-admin-research.md).
+- **Department administrator** — a `users` row with a
+  `department_administrators` record; scoped to its own department.
 - Recognised email domains: `@etu.univ-amu.fr` → auto `student` role;
   `@univ-amu.fr` → auto `teacher` role; anything else → no auto role,
-  must be assigned by an admin.
+  must be assigned by an admin. Domains are configurable
+  (`config.domains`) — do not hardcode them.
+- **Department join** — at registration a user enters a **department
+  code** that resolves to `users.department_id`. One user belongs to **at
+  most one department**; researchers and super admins are the exceptions
+  (see §12).
 
 ## 9. Do / don't
 
@@ -149,13 +162,14 @@ focused and its context clean:
 
 Main tables (see [`database/schema/01_schema.sql`](../database/schema/01_schema.sql)):
 
-- `users` — base account. Holds `department_id` (nullable FK to `departments`, `ON DELETE SET NULL`): a user belongs to at most one department. Researchers stay NULL (a researcher is a user but is not attached to a department).
-- `students`, `teachers`, `researchers`, `department_administrators` — vertical inheritance for roles (PK = `users.id`, `ON DELETE CASCADE`). Exclusivity enforced by `enforce_role_exclusivity()` (see [`02_triggers.sql`](../database/schema/02_triggers.sql)): `student` and `researcher` are exclusive; `teacher` + `department_administrator` may coexist.
-- `places`, `departments`, `laboratories`, `super_administrators`.
-- `sessions` (with `status` enum), `resources`, `models` (the LLMs, scoped to a department XOR a resource).
-- `conversations`, `interactions`.
+- `users` — base account. Holds `department_id` (nullable FK to `departments`, `ON DELETE SET NULL`): a user belongs to **at most one** department, joined via a **department code** entered at registration. Researchers stay NULL (a researcher is a user but is not attached to a department). Super admins are not in this table at all (see below). `archive_duration_days` is the per-user conversation archive duration **in days** (`> 0`).
+- `students`, `teachers`, `researchers`, `department_administrators` — vertical inheritance for roles (PK = `users.id`, `ON DELETE CASCADE`). Exclusivity enforced by `enforce_role_exclusivity()` (see [`02_triggers.sql`](../database/schema/02_triggers.sql)): `student` and `researcher` are exclusive; `teacher` + `department_administrator` may coexist. A teacher with `is_specialised = TRUE` is an **habilitated** teacher (set by a department admin) and may import custom models into resources.
+- `super_administrators` — **deliberately separate from `users`** to isolate the highest-privilege accounts if `users` is ever compromised. First row inserted by a run-once script; count is capped; actions are traced. Super admins create department admins by **email invitation** (`department_administrators.invited_by_id`) and own sites/departments/email-domain config.
+- `places`, `departments`, `laboratories`.
+- `sessions` (with `status` enum; `access_code` is **generated when status moves to `SCHEDULED`/`ACTIVE`**, NULL while `DRAFT`), `resources`, `models` (the LLMs, scoped to a department **XOR** a resource — `ck_models_scope`; resource-scoped models cannot be `is_shareable`).
+- `conversations` (`model_id` NOT NULL — **one conversation = one model**; `session_id` NULL = free conversation, otherwise the conversation type is **derived** from the linked session, there is no `type` column), `interactions` (`prompt` + `response` stored together in one row; `user_feedback` is `-1` bad / `0` none / `1` good).
 - `email_domain_configs` (domain → auto-role mapping).
-- Association tables: `teacher_resources`, `student_resources`, `session_models`, `enrollments`, `researcher_authorizations` (researcher ↔ department), `model_department_accesses`.
+- Association tables: `teacher_resources`, `student_resources`, `session_models`, `enrollments`, `researcher_authorizations` (researcher ↔ department, authorized by a **department admin**), `model_department_accesses` (free-mode models a department admin allows outside sessions).
 
 ## 13. Handling an uncovered case
 

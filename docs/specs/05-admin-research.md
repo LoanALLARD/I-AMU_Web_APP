@@ -6,27 +6,100 @@
 - **État POC** : implémenté
 
 Cette spec regroupe deux univers proches : l'**administration** de la
-plateforme (réservée aux admins) et le **dashboard chercheur** (réservé
-aux chercheurs).
+plateforme (deux niveaux d'admins, voir A.0) et le **dashboard chercheur**
+(réservé aux chercheurs).
 
 ---
 
 ## A — Administration
 
-### A.1 Périmètre
+### A.0 Deux niveaux d'administration
 
-Sous-pages accessibles via `/admin/*` pour un user avec le rôle `Admin` :
+L'administration est **hiérarchisée sur deux niveaux**, stockés dans
+**deux tables distinctes** avec des périmètres différents :
+
+| Niveau | Table | Isolation | Périmètre |
+|---|---|---|---|
+| **Super administrateur** | `super_administrators` | **Table totalement séparée de `users`** — un super admin n'est PAS un `users`. Isole le pouvoir maximal en cas de faille dans la table `users`. | Plateforme entière |
+| **Administrateur de département** | `department_administrators` | Vertical inheritance : `id` = `users.id`. C'est un `users` avec un rôle en plus. | Son département uniquement |
+
+> **Pourquoi deux tables ?** Le super admin a les droits les plus
+> sensibles (création de comptes admin, gestion des domaines email
+> autorisés). En le sortant de `users`, une compromission de la table
+> `users` (injection, fuite de hash) **n'expose pas** les comptes super
+> admin. C'est une mesure de défense en profondeur, pas une commodité de
+> modélisation.
+
+#### A.0.1 Super administrateur
+
+- **Bootstrap** : le **premier** super admin est inséré par un **script
+  qui ne s'exécute qu'une seule fois** (idempotent / verrou — refuse de
+  recréer si la table est non vide). Pas de seed rejouable, pas de mot de
+  passe par défaut commité.
+- **Création des autres comptes** : un super admin ne crée jamais un
+  compte directement — il **envoie une invitation par mail**. Le
+  destinataire active son compte via le lien. Cela couvre la création des
+  **administrateurs de département** (cf. `department_administrators.invited_by_id`).
+- **Traçabilité** : **toutes** les actions d'un super admin sont tracées
+  pour pouvoir remonter la chaîne en cas d'erreur ou d'abus (qui a invité
+  qui, qui a créé quel département / site / domaine).
+- **Nombre limité** : le nombre de super admins est **plafonné** (borne
+  dure dans le service de création) pour réduire la surface de risque.
+- **Pouvoirs** :
+  - créer des comptes **administrateur de département** (par invitation) ;
+  - créer des **sites** (`places`) et des **départements** (`departments`) ;
+  - gérer les **domaines email autorisés** par IAMU (`email_domain_configs`).
+
+#### A.0.2 Administrateur de département
+
+Périmètre **borné à son département**. Il peut :
+- **ajouter des modèles** (au département ou aux ressources de son
+  département) ;
+- **gérer les comptes** des élèves et enseignants de son département ;
+- **autoriser les demandes de chercheur** à accéder aux données de son
+  département (`researcher_authorizations.authorized_by_id`) ;
+- **habiliter un compte enseignant** (passer `teachers.is_specialised =
+  TRUE`) pour qu'il puisse importer ses propres modèles d'IA personnalisés
+  dans ses sessions (cf. A.0.3) ;
+- **gérer les modèles autorisés en mode libre** (hors session) pour son
+  département (`model_department_accesses`).
+
+#### A.0.3 Enseignant habilité (`is_specialised`)
+
+Un enseignant **habilité** (flag `teachers.is_specialised`, posé par un
+admin de département) peut **importer des modèles dans ses ressources**.
+Ensuite :
+- les enseignants **de cette ressource** (table `teacher_resources`)
+  peuvent créer des **sessions personnalisées** en choisissant parmi les
+  modèles disponibles : ceux **de la ressource** (`models.resource_id`)
+  **plus** ceux **du département** (`models.department_id` /
+  `model_department_accesses`) ;
+- les sessions sont rejointes via un **code d'accès** (cf. spec 02).
+
+> **Scope d'un modèle** (cf. `ck_models_scope`) — un modèle est rattaché
+> soit à un **département** (`department_id`), soit à une **ressource**
+> (`resource_id`), **jamais aux deux**. Un modèle de ressource ne peut pas
+> être `is_shareable` (`ck_models_shareable`).
+
+### A.1 Périmètre des pages `/admin/*`
+
+Sous-pages accessibles via `/admin/*`, **filtrées par niveau** (super
+admin = tout ; admin département = son périmètre) :
 - **Dashboard** : stats globales (nb users par rôle, total conversations,
   interactions, sessions).
 - **Utilisateurs** : liste paginée, recherche, attribution / retrait de
-  rôles via boutons toggle (badges déjà bien stylés en POC).
+  rôles via boutons toggle (badges déjà bien stylés en POC). L'admin de
+  département ne voit que les comptes de **son** département.
 - **Modèles LLM** : liste + bouton **Synchroniser avec Ollama** (réutilise
   `SyncOllamaModelsService` de la spec 03). **Pas d'ajout manuel** —
   le tag DOIT venir d'Ollama, sinon le chat plante.
 - **Configuration** : lecture seule des sections clés de `config.php`
-  (domaines email, durées RGPD, etc.).
+  (domaines email, durées RGPD, etc.). La gestion **écriture** des
+  domaines email est réservée au super admin.
 
 ### A.2 Domain / Application
+
+**Communs (selon périmètre du caller)** :
 
 | Service | Méthode |
 |---|---|
@@ -37,6 +110,22 @@ Sous-pages accessibles via `/admin/*` pour un user avec le rôle `Admin` :
 | `ToggleLlmModelService` | `execute(int $modelId, bool $active)` |
 | `SyncOllamaModelsService` | (déjà défini en spec 03, branché ici) |
 | `GetConfigOverviewService` | `execute(): ConfigOverviewView` |
+
+**Super admin uniquement** :
+
+| Service | Méthode |
+|---|---|
+| `InviteDepartmentAdminService` | `execute(Email $email, int $departmentId, int $superAdminId)` — envoie l'invitation par mail, trace l'action. |
+| `CreatePlaceService` / `CreateDepartmentService` | `execute(...)` — création de sites / départements. |
+| `ManageEmailDomainService` | `execute(...)` — CRUD des `email_domain_configs`. |
+
+**Admin de département uniquement** (borné à son département) :
+
+| Service | Méthode |
+|---|---|
+| `SetTeacherSpecialisedService` | `execute(int $teacherId, bool $specialised)` — habilite / déshabilite un enseignant (cf. §A.0.3). |
+| `AuthorizeResearcherService` | `execute(int $researcherId, int $departmentId, int $adminId)` — autorise un chercheur sur le département. |
+| `ToggleDepartmentModelAccessService` | `execute(int $modelId, int $departmentId, bool $allowed)` — gère les modèles autorisés en mode libre. |
 
 ### A.3 HTTP — Routes
 

@@ -15,7 +15,7 @@
 | 02 | [Sessions](./02-sessions.md)                    | must-have | Session (CRUD + lifecycle DRAFT→ENDED) |
 | 03 | [Chat & LLM](./03-chat-llm.md)                  | must-have | Conversation, Interaction, LlmProvider, streaming SSE |
 | 04 | [Supervise](./04-supervise.md)                  | nice-to-have | Supervision live, signalement, archive |
-| 05 | [Admin & Research](./05-admin-research.md)      | nice-to-have | Admin (users/models/config), dashboard chercheur |
+| 05 | [Admin & Research](./05-admin-research.md)      | nice-to-have | Admin **2 niveaux** (super admin isolé + admin département), users/models/config, dashboard chercheur |
 | 06 | [RGPD](./06-rgpd.md)                            | must-have | Mention CNIL, 4 droits, journalisation, opposition recherche |
 
 > 📋 Voir aussi [`../design/gap-analysis.md`](../design/gap-analysis.md)
