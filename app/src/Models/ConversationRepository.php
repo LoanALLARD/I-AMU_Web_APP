@@ -17,20 +17,31 @@ class ConversationRepository {
      * for a free-mode conversation. (The `conversations` table has no
      * model_id column — the model is chosen per interaction.)
      */
-    public function newConversation(int $user_id, ?int $session_id, string $name): int
+    public function newConversation(int $user_id,int $model_id, ?int $session_id, string $name)
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO conversations (user_id, session_id, name)
-             VALUES (:user_id, :session_id, :name)
-             RETURNING id'
+            'INSERT INTO conversations (user_id, session_id, model_id, name)
+             VALUES (:user_id, :session_id, :model_id, :name)'
         );
         $stmt->execute([
             'user_id'    => $user_id,
             'session_id' => $session_id,
+            'model_id'   => $model_id,
             'name'       => $name,
         ]);
 
-        return (int) $stmt->fetchColumn();
+        $idGenere = $this->pdo->lastInsertId();
+
+        if (!$idGenere) {
+            return null;
+        }
+
+        $querySelect = $this->pdo->prepare('SELECT * FROM conversations WHERE id = :id');
+        $querySelect->execute(['id' => $idGenere]);
+        
+        $result = $querySelect->fetch();
+
+        return $result ?: null; 
     }
 
     /**

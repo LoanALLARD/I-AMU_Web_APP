@@ -19,7 +19,6 @@ class InteractionRepository {
      */
     public function newInteration(
         int $conversation_id,
-        int $model_id,
         string $prompt,
         string $response,
         int $input_tokens,
@@ -27,14 +26,13 @@ class InteractionRepository {
     ) {
         $query = $this->pdo->prepare(
             'INSERT INTO interactions
-                (conversation_id, model_id, prompt, response, input_tokens, output_tokens)
+                (conversation_id, prompt, response, input_tokens, output_tokens)
              VALUES
-                (:conversation_id, :model_id, :prompt, :response, :input_tokens, :output_tokens)'
+                (:conversation_id, :prompt, :response, :input_tokens, :output_tokens)'
         );
 
         $query->execute([
             'conversation_id' => $conversation_id,
-            'model_id'        => $model_id,
             'prompt'          => $prompt,
             'response'        => $response,
             'input_tokens'    => $input_tokens > 0 ? $input_tokens : null,
