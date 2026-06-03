@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace Services;
 
 use Data\Database;
-use PDO;
-use PDOStatement;
+use Models\UserRepository;
 
 /**
- * Minimal authentication service against the real `users` table.
+ * Authentication service against the real `users` table.
  *
- * Temporary bridge between the legacy login flow (kept on
- * Controllers\LoginController) and the real database introduced by spec 00.
- * To be rewritten on top of UserRepositoryInterface / App\Application
- * once spec 01 (Auth & Account) is properly implemented.
+ * Owns the application logic (input validation, domain -> role mapping,
+ * password hashing/verification, session population). All SQL lives in
+ * UserRepository, which this service drives.
+ *
+ * Known remaining shortcut: the domain -> role mapping is hardcoded in
+ * resolveRoleFromDomain(); it will move to a lookup in `email_domain_configs`
+ * once spec 05 ships the admin UI. The contract here will not change.
  *
  * Schema alignment notes:
  *   - Tables and columns are plural / `id`-based per init-scripts/IAMU_db.sql:
@@ -25,24 +27,12 @@ use PDOStatement;
  */
 final class AuthService
 {
-    private PDO $pdo;
+    private UserRepository $users;
 
     public function __construct()
     {
-        $this->pdo = Database::getConnection();
-    }
-
-    /**
-     * Prepare + execute helper (replaces the former PdoConnection::query()).
-     *
-     * @param array<string, scalar|null> $params
-     */
-    private function run(string $sql, array $params = []): PDOStatement
-    {
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-
-        return $stmt;
+        // Data\Database singleton connection. Matches how the controllers
+        $this->users = new UserRepository(Database::getConnection());
     }
 
     /**
@@ -54,13 +44,9 @@ final class AuthService
             return ['success' => false, 'error' => 'Email et mot de passe requis.'];
         }
 
-        $row = $this->run(
-            'SELECT id, email, password_hash, first_name, last_name, is_active
-             FROM users WHERE email = :email',
-            ['email' => $email]
-        )->fetch();
+        $row = $this->users->findByEmail($email);
 
-        if (!$row || !password_verify($password, (string) $row['password_hash'])) {
+        if ($row === null || !password_verify($password, (string) $row['password_hash'])) {
             return ['success' => false, 'error' => 'Identifiants invalides.'];
         }
 
@@ -70,10 +56,7 @@ final class AuthService
 
         $userId = (int) $row['id'];
 
-        $this->run(
-            'UPDATE users SET last_login_at = NOW() WHERE id = :id',
-            ['id' => $userId]
-        );
+        $this->users->touchLastLogin($userId);
 
         $_SESSION['user_id']         = $userId;
         $_SESSION['user_email']      = (string) $row['email'];
@@ -98,8 +81,9 @@ final class AuthService
      *     Once spec 05 ships an admin UI for `email_domain_configs`, this
      *     lookup will move to the DB; the contract here doesn't change.
      *   - Hashes the password with bcrypt.
-     *   - Wraps `INSERT users` + `INSERT teachers|students` in a single
-     *     transaction so a half-created account can never linger.
+     *   - Delegates persistence to UserRepository::createUserWithRole(),
+     *     which creates the user + role row in a single transaction so a
+     *     half-created account can never linger.
      *
      * Does NOT auto-login: the caller flashes a success message and
      * redirects to /login (LoginController::register already does that).
@@ -117,20 +101,16 @@ final class AuthService
         $rgpdConsent     = (bool)  ($data['rgpd_consent']          ?? false);
 
         // ----- Format validation ------------------------------------
-        if ($email === '' || $password === '' || $firstName === '' || $lastName === '') {
-            return ['success' => false, 'error' => 'Tous les champs sont obligatoires.'];
-        }
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return ['success' => false, 'error' => 'Email invalide.'];
-        }
-        if (strlen($password) < 8) {
-            return ['success' => false, 'error' => 'Le mot de passe doit faire au moins 8 caractères.'];
-        }
-        if ($password !== $passwordConfirm) {
-            return ['success' => false, 'error' => 'Les mots de passe ne correspondent pas.'];
-        }
-        if (!$rgpdConsent) {
-            return ['success' => false, 'error' => 'Vous devez accepter les conditions RGPD pour créer un compte.'];
+        $validationError = $this->validateRegistration(
+            $email,
+            $password,
+            $passwordConfirm,
+            $firstName,
+            $lastName,
+            $rgpdConsent
+        );
+        if ($validationError !== null) {
+            return ['success' => false, 'error' => $validationError];
         }
 
         // ----- Role lookup ------------------------------------------
@@ -143,44 +123,23 @@ final class AuthService
         }
 
         // ----- Email uniqueness -------------------------------------
-        $existing = $this
-            ->run('SELECT 1 FROM users WHERE email = :email', ['email' => $email])
-            ->fetch();
-        if ($existing !== false) {
+        if ($this->users->emailExists($email)) {
             return ['success' => false, 'error' => 'Cet email est déjà utilisé.'];
         }
 
-        // ----- Insert -----------------------------------------------
-        $hash = password_hash($password, PASSWORD_DEFAULT);
-
-        $this->pdo->beginTransaction();
+        // ----- Insert (user + role row, atomically) -----------------
         try {
-            $stmt = $this->run(
-                'INSERT INTO users (email, password_hash, first_name, last_name, consent_at, consent_version)
-                 VALUES (:email, :hash, :fn, :ln, NOW(), :ver)
-                 RETURNING id',
+            $this->users->createUserWithRole(
                 [
-                    'email' => $email,
-                    'hash'  => $hash,
-                    'fn'    => $firstName,
-                    'ln'    => $lastName,
-                    'ver'   => '1.0',
-                ]
+                    'email'           => $email,
+                    'password_hash'   => password_hash($password, PASSWORD_DEFAULT),
+                    'first_name'      => $firstName,
+                    'last_name'       => $lastName,
+                    'consent_version' => '1.0',
+                ],
+                $role
             );
-            $userId = (int) $stmt->fetchColumn();
-
-            // The role table only carries the FK to users.id; default
-            // values are good for is_specialised (false) / title (null) /
-            // student_number (null) — the user can fill them later.
-            if ($role === 'teacher') {
-                $this->run('INSERT INTO teachers (id) VALUES (:id)', ['id' => $userId]);
-            } else {
-                $this->run('INSERT INTO students (id) VALUES (:id)', ['id' => $userId]);
-            }
-
-            $this->pdo->commit();
         } catch (\Throwable $e) {
-            $this->pdo->rollBack();
             return [
                 'success' => false,
                 'error'   => "Erreur lors de l'enregistrement. Merci de réessayer.",
@@ -188,6 +147,37 @@ final class AuthService
         }
 
         return ['success' => true];
+    }
+
+    /**
+     * Validates the registration form input. Returns the (French) error
+     * message to surface to the user, or null when every field is valid.
+     */
+    private function validateRegistration(
+        string $email,
+        string $password,
+        string $passwordConfirm,
+        string $firstName,
+        string $lastName,
+        bool $rgpdConsent
+    ): ?string {
+        if ($email === '' || $password === '' || $firstName === '' || $lastName === '') {
+            return 'Tous les champs sont obligatoires.';
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return 'Email invalide.';
+        }
+        if (strlen($password) < 8) {
+            return 'Le mot de passe doit faire au moins 8 caractères.';
+        }
+        if ($password !== $passwordConfirm) {
+            return 'Les mots de passe ne correspondent pas.';
+        }
+        if (!$rgpdConsent) {
+            return 'Vous devez accepter les conditions RGPD pour créer un compte.';
+        }
+
+        return null;
     }
 
     /**
@@ -236,25 +226,15 @@ final class AuthService
     {
         $roles = [];
 
-        if ($this->existsIn('teachers', $userId)) {
+        if ($this->users->hasRole($userId, 'teachers')) {
             $roles[] = 'teacher';
         }
-        if ($this->existsIn('students', $userId)) {
+        if ($this->users->hasRole($userId, 'students')) {
             $roles[] = 'student';
         }
         // researchers / department_administrators exist on the live
         // schema but their HTTP surface belongs to spec 05.
 
         return $roles;
-    }
-
-    private function existsIn(string $table, int $userId): bool
-    {
-        // Table whitelist enforced by the call sites (teachers/students/...).
-        $row = $this->run(
-            "SELECT 1 FROM {$table} WHERE id = :id",
-            ['id' => $userId]
-        )->fetch();
-        return $row !== false;
     }
 }
