@@ -29,6 +29,14 @@ Les étudiants la rejoignent avec un **code d'accès à 6 caractères**.
 > `session_invite (session_id, student_id, code, used_at)` — cf.
 > [gap-analysis](../design/gap-analysis.md).
 
+> **Quand le code est-il généré ?** — Le code d'accès est **généré
+> automatiquement au moment où la session passe en `SCHEDULED` ou
+> `ACTIVE`**, pas à la création. Une session en `DRAFT` a donc
+> `access_code = NULL` (la colonne est nullable, cf. `01_schema.sql`). On
+> ne génère un code que lorsqu'il y a réellement quelqu'un susceptible de
+> rejoindre — inutile de réserver un code pour un brouillon qui peut être
+> supprimé. Implication : pas de preview de code à la création.
+
 Une session a un **cycle de vie** :
 ```
 DRAFT → SCHEDULED → ACTIVE → ENDED
@@ -167,11 +175,12 @@ final class SessionListView {
 ```
 
 > **Précision sur le code d'accès** — le repository expose
-> `generateUniqueAccessCode()`. Le controller `create` l'appelle pour
-> afficher un code en preview, et le passe en hidden au POST. Le service
-> `CreateSessionService` reçoit ce code candidat ; s'il est encore
-> disponible au moment du save, il est conservé, sinon un nouveau est
-> généré.
+> `generateUniqueAccessCode()`. Il n'est **pas** appelé à la création :
+> une session `DRAFT` n'a pas de code (cf. §1). Le code est généré par
+> `StartSessionService` (passage `ACTIVE`) ou par le service qui planifie
+> la session (passage `SCHEDULED`), juste avant le save, si la session
+> n'en a pas déjà un. La méthode boucle jusqu'à trouver un code libre
+> (collision quasi-nulle).
 
 ## 5. Infrastructure
 
@@ -257,7 +266,10 @@ Table `authorizes` (existante) : `session_id` ↔ `model_id`.
 - ❌ Passer un `array` venant de PDO directement à la vue. Toujours via
   `SessionListView` / `SessionDashboardView`.
 - ❌ Régénérer un nouveau code d'accès à chaque GET sur `/sessions/{id}/edit`
-  (bug remarqué dans le POC). Le code est dans `$session`, c'est tout.
+  (bug remarqué dans le POC). Une fois généré (passage SCHEDULED/ACTIVE),
+  le code est dans `$session`, c'est tout.
+- ❌ Générer le code dès la création / en DRAFT. Le code n'apparaît qu'au
+  passage SCHEDULED ou ACTIVE (cf. §1).
 
 ---
 

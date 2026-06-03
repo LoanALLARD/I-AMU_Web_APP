@@ -9,9 +9,24 @@
 
 Permettre à un utilisateur d'avoir une conversation avec un modèle LLM,
 en streaming (réponse mot par mot), avec :
-- soit un **mode libre** (`type = FREE`, hors session),
-- soit un **mode session** (`type = COURSE` ou `EXAM`, scopé à une session
-  avec ses contraintes : modèles autorisés, pré-prompt, taille max).
+- soit un **mode libre** : la conversation n'est liée à aucune session
+  (`session_id IS NULL`) ;
+- soit un **mode session** : la conversation est liée à une session
+  (`session_id`), avec ses contraintes (modèles autorisés, pré-prompt,
+  taille max).
+
+> **Le type d'une conversation est dérivé, pas stocké.** Il n'y a **pas**
+> de colonne `type` sur `conversations` (cf. `01_schema.sql`). Le type se
+> calcule à la lecture :
+> - `session_id IS NULL` → conversation **libre** ;
+> - sinon → le type de la **session** liée (`sessions.type`).
+>
+> On ne duplique donc jamais le type : la session est l'unique source de
+> vérité, ce qui évite toute dérive entre la conv et sa session.
+
+> **Une conversation = un seul modèle.** `conversations.model_id` est
+> `NOT NULL` et fixé à la création. On ne change pas de modèle en cours de
+> conversation ; pour changer de modèle, on ouvre une nouvelle conversation.
 
 Le tout doit être **agnostique du provider LLM** : Ollama aujourd'hui,
 OpenAI ou Anthropic demain — sans changer le métier.
@@ -38,9 +53,9 @@ final class Conversation
     public function __construct(
         private readonly int $id,
         private string $name,
-        private ConversationType $type,        // FREE / COURSE / EXAM
         private readonly int $userId,
-        private readonly ?int $sessionId,
+        private readonly ?int $sessionId,      // NULL = conversation libre
+        private readonly int $modelId,         // 1 conversation = 1 modèle (fige)
         private bool $isArchived,
         private ?DateTimeImmutable $submittedAt,
         private readonly DateTimeImmutable $createdAt,
@@ -63,7 +78,7 @@ final class Interaction          // 1 interaction = 1 prompt + 1 response
         private int $inputTokens,
         private int $outputTokens,
         private int $latencyMs,
-        private ?int $userFeedback,             // -1, 0, 1
+        private ?int $userFeedback,             // -1 mauvais / 0 rien / 1 bon (NULL = pas noté)
         private TeacherFlag $teacherFlag,       // VO : ok / signalé + raison + commentaire
         private readonly DateTimeImmutable $sentAt,
     ) {}
@@ -93,7 +108,12 @@ final class LlmModel             // métadonnées d'un modèle, pas le LLM lui-m
 
 ### Value Objects
 
-- **`ConversationType`** : enum (`Free`, `Course`, `Exam`).
+- **`ConversationType`** : enum **dérivé** (`Free`, ou la valeur de
+  `SessionType` de la session liée). N'est **pas** persisté sur la
+  conversation — calculé à partir de `session_id` (cf. §1). Sert
+  uniquement à l'affichage / aux règles métier en lecture.
+- **`UserFeedback`** : note d'un échange sur un échange, valeur dans
+  `{-1, 0, 1}` — **mauvais / rien / bon** (cf. `ck_interactions_user_feedback`).
 - **`TeacherFlag`** : `flagged: bool`, `reason: ?string`, `comment: ?string`.
 - **`LlmResponse`** : DTO retourné par le provider (`response: string`,
   `inputTokens: int`, `outputTokens: int`, `latencyMs: int`).
@@ -151,7 +171,7 @@ interface LlmProviderInterface
 
 | Service | Méthode |
 |---|---|
-| `StartConversationService` | `execute(int $userId, string $name, ConversationType, ?int $sessionId): Conversation` |
+| `StartConversationService` | `execute(int $userId, string $name, int $modelId, ?int $sessionId): Conversation` — le type n'est PAS un paramètre : il est dérivé de `$sessionId` (cf. §1). |
 | `SendStudentPromptService` | `execute(SendPromptRequest): Interaction` (mode synchrone) |
 | `StreamStudentPromptService` | `execute(SendPromptRequest, callable $onChunk): Interaction` (mode SSE) |
 | `RateInteractionService` | `execute(int $interactionId, int $userId, int $score)` |
@@ -190,6 +210,14 @@ final class SyncResult {
 - **Cache sync** : `SyncOllamaModelsService` peut être appelé à chaque
   visite du chat ; il garde un timestamp dans un fichier temp et ne
   re-sync que toutes les 5 minutes.
+- **Stockage atomique de l'interaction** : une `interaction` (prompt +
+  response) est **persistée en une seule fois**, après réception de la
+  réponse du modèle. Conséquence directe : **toutes les vérifications
+  (session active, modèle autorisé, longueur ≤ `max_input_size`, examen :
+  pas d'autre conv ouverte) doivent passer AVANT d'appeler le LLM**. On ne
+  veut pas dépenser des tokens sur un prompt qui sera de toute façon
+  rejeté. L'ordre est : valider → appeler le modèle → enregistrer
+  l'interaction complète.
 
 ## 5. Infrastructure
 

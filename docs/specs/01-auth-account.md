@@ -27,7 +27,11 @@ Gérer l'identité de l'utilisateur :
 - En tant qu'**utilisateur**, je veux choisir mon thème / ma densité /
   ma langue (stocké localement).
 - En tant qu'**utilisateur**, je veux régler la **durée d'archivage**
-  de mes conversations (stocké en DB, propre à mon compte).
+  de mes conversations, exprimée **en jours** (colonne
+  `users.archive_duration_days`, stockée en DB, propre à mon compte).
+- En tant qu'**étudiant / enseignant**, je veux **rejoindre mon
+  département** en saisissant un **code département** au moment de
+  l'inscription (cf. §2bis).
 
 > **Domaines email paramétrables** (rapport §2.3.2) — la détection
 > automatique du rôle ne doit **pas** hardcoder `etu.univ-amu.fr` /
@@ -39,6 +43,22 @@ Gérer l'identité de l'utilisateur :
 > ],
 > ```
 > Pour déployer ailleurs qu'à AMU, on modifie la config, pas le code.
+
+## 2bis. Rattachement au département
+
+- **Code département à l'inscription** — l'utilisateur rejoint son
+  département en saisissant un **code département** dans le formulaire
+  d'inscription. Ce code résout vers un `departments.id`, écrit dans
+  `users.department_id`.
+- **Un utilisateur = un seul département** (`users.department_id` est un FK
+  unique, nullable). **Exceptions** :
+  - le **chercheur** n'est rattaché à **aucun** département
+    (`department_id` reste `NULL`) — il demande l'accès aux données d'un ou
+    plusieurs départements via `researcher_authorizations` ;
+  - le **super administrateur** n'est pas un `users` du tout (table
+    séparée `super_administrators`, cf. [spec 05 §A.0](./05-admin-research.md)).
+- Le `RegisterUserService` valide le code : code inconnu / département
+  inactif → erreur de validation, on ne crée pas le compte.
 
 ## 3. Domaine
 
@@ -83,7 +103,9 @@ final class User
 - **`Email`** : valide la forme (`filter_var FILTER_VALIDATE_EMAIL`),
   expose `domain()` pour la détection de rôle.
 - **`UserRole`** : enum (`Student`, `Teacher`, `TeacherSpecialised`,
-  `Researcher`, `Admin`).
+  `Researcher`, `DepartmentAdministrator`). Le **super administrateur**
+  n'est PAS un `UserRole` — il vit hors de `users`, dans sa propre table
+  (cf. [spec 05 §A.0](./05-admin-research.md)).
 - **`GdprConsent`** : `granted: bool`, `at: ?DateTimeImmutable`.
 
 ### Interfaces — `App\Domain\Repositories`
@@ -114,7 +136,7 @@ interface PasswordResetRepositoryInterface
 
 | Service | Méthode | Effet |
 |---|---|---|
-| `RegisterUserService` | `execute(RegisterRequest)` | Crée le User. **Attribue les rôles auto** en lisant `config.domains` (paramétrable, cf. §2) : si l'email matche un domaine de la liste `student`/`teacher`, le rôle est ajouté. Les rôles `researcher` et `teacher_specialised` ne sont jamais auto-attribués (admin uniquement). |
+| `RegisterUserService` | `execute(RegisterRequest)` | Crée le User. **Résout le code département** (cf. §2bis) et écrit `department_id` ; code inconnu / département inactif → erreur. **Attribue les rôles auto** en lisant `config.domains` (paramétrable, cf. §2) : si l'email matche un domaine de la liste `student`/`teacher`, le rôle est ajouté. Les rôles `researcher` et `teacher_specialised` ne sont jamais auto-attribués (admin uniquement). |
 | `LoginService` | `execute(string $email, string $password)` | Vérifie, met à jour `lastLogin`, retourne le User ou lance `InvalidCredentialsException`. |
 | `RequestPasswordResetService` | `execute(Email $email)` | Génère un token, envoie un mail via `MailerInterface`. |
 | `ResetPasswordService` | `execute(string $token, string $newPassword)` | Vérifie le token (TTL 1h), change le mdp, invalide tous les tokens du user. |
@@ -135,6 +157,7 @@ final class RegisterRequest {
         public readonly string $firstName,
         public readonly string $lastName,
         public readonly string $password,        // déjà validé en longueur
+        public readonly string $departmentCode,  // code département (cf. §2bis)
     ) {}
 }
 
@@ -154,8 +177,9 @@ final class AccountOverviewView {
 ## 5. Infrastructure
 
 - `PdoUserRepository` implémente `UserRepositoryInterface`.
-  - Hydrate depuis les tables `"user"`, `student`, `teacher`,
-    `researcher`, `administrator`.
+  - Hydrate depuis les tables `users`, `students`, `teachers`,
+    `researchers`, `department_administrators`. (Le super admin a son
+    propre repository, distinct — il n'est pas dans `users`.)
 - `PdoPasswordResetRepository`.
 - `MailerInterface` (port) + `PhpMailerSender` (adapter SMTP) +
   `LogMailerSender` (dev — écrit dans un fichier log).
@@ -194,21 +218,24 @@ POST  /account/delete         AccountController::delete
 
 ## 7. Base de données
 
-Tables existantes : `"user"`, `student`, `teacher`, `researcher`,
-`administrator`.
+Tables existantes (source de vérité :
+[`01_schema.sql`](../../database/schema/01_schema.sql)) : `users`,
+`students`, `teachers`, `researchers`, `department_administrators`,
+`super_administrators`.
+
+> La durée d'archivage des conversations existe déjà au schéma sous le nom
+> `users.archive_duration_days` (SMALLINT, **en jours**, `> 0`). Ne pas
+> recréer une colonne `conversation_archive_days`.
 
 ### Nouvelles colonnes / tables
 
 ```sql
--- database/migrations/AAAA-MM-DD-user-preferences.sql
-ALTER TABLE "user"
-    ADD COLUMN IF NOT EXISTS conversation_archive_days INT NOT NULL DEFAULT 180;
-
+-- database/migrations/AAAA-MM-DD-password-reset.sql
 CREATE TABLE password_reset (
     token       VARCHAR(64) PRIMARY KEY,
-    user_id     INT NOT NULL REFERENCES "user"(user_id) ON DELETE CASCADE,
-    expires_at  TIMESTAMP NOT NULL,
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    user_id     BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
 
