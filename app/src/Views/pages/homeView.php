@@ -11,7 +11,7 @@
  */
 
 $firstModel = $models[0] ?? null;
-$defaultModelName = $firstModel ? $firstModel->name : 'mistral:latest';
+$defaultModelName = $firstModel ? $firstModel['name'] : 'mistral:latest';
 $sessionClosed = $sessionClosed ?? false;
 $closedReason = $closedReason ?? '';
 $conversation = $conversation ?? null;
@@ -41,19 +41,19 @@ $hasMessages = $messages !== [];
                     <?php else: ?>
                         <?php foreach ($models as $i => $model): ?>
                             <button class="model-dropdown-item<?= $i === 0 ? ' active' : '' ?>"
-                                    data-model="<?= htmlspecialchars($model->name) ?>"
+                                    data-model="<?= htmlspecialchars($model['name']) ?>"
                                     type="button">
-                                <span class="model-dropdown-letter"><?= strtoupper(substr($model->name, 0, 1)) ?></span>
+                                <span class="model-dropdown-letter"><?= strtoupper(substr($model['name'], 0, 1)) ?></span>
                                 <div class="model-dropdown-info">
-                                    <span class="model-dropdown-name"><?= htmlspecialchars($model->name) ?></span>
+                                    <span class="model-dropdown-name"><?= htmlspecialchars($model['name']) ?></span>
                                     <span class="model-dropdown-meta">
                                         <?php
                                         $meta = [];
-                                        if ($model->version) {
-                                            $meta[] = 'v' . $model->version;
+                                        if ($model['version'] ?? null) {
+                                            $meta[] = 'v' . $model['version'];
                                         }
-                                        if ($model->contextWindow) {
-                                            $meta[] = number_format($model->contextWindow) . ' ctx';
+                                        if ($model['context_window'] ?? null) {
+                                            $meta[] = number_format($model['context_window']) . ' ctx';
                                         }
                                         echo htmlspecialchars(implode(' · ', $meta) ?: 'local · ollama');
                                         ?>
@@ -91,7 +91,7 @@ $hasMessages = $messages !== [];
                 <div class="empty-state" id="emptyState">
                     <div class="empty-icon">
                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
-                            stroke-linecap="round" stroke-linejoin="round">
+                             stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
                     </div>
@@ -110,7 +110,7 @@ $hasMessages = $messages !== [];
                         <?php if (!$inSession && in_array('student', $user['roles'] ?? [], true)): ?>
                             <a href="/sessions/join" class="empty-join-link">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round">
+                                     stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
                                     <polyline points="10 17 15 12 10 7" />
                                     <line x1="15" y1="12" x2="3" y2="12" />
@@ -128,7 +128,7 @@ $hasMessages = $messages !== [];
             <?php if ($sessionClosed): ?>
                 <div class="session-closed-banner">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
+                         stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
@@ -137,16 +137,16 @@ $hasMessages = $messages !== [];
             <?php endif; ?>
             <div class="input-wrapper">
                 <textarea id="promptInput"
-                    placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
-                    rows="1" <?= $sessionClosed ? 'disabled' : 'autofocus' ?>></textarea>
+                          placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
+                          rows="1" <?= $sessionClosed ? 'disabled' : 'autofocus' ?>></textarea>
                 <button class="btn-send" id="btnSend" disabled title="Envoyer">
                     <svg class="icon-send" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                         stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13" />
                         <polygon points="22 2 15 22 11 13 2 9 22 2" />
                     </svg>
                     <svg class="icon-stop" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"
-                        aria-hidden="true">
+                         aria-hidden="true">
                         <rect x="6" y="6" width="12" height="12" rx="2" />
                     </svg>
                 </button>
@@ -317,7 +317,7 @@ $hasMessages = $messages !== [];
         const aiMsg = document.createElement('div');
         aiMsg.className = 'msg msg-ai';
         aiMsg.innerHTML = `
-            <div class="msg-meta"><span class="msg-model">llama3.2:1b</span></div>
+            <div class="msg-meta"><span class="msg-model">${escapeHtml(selectedModel)}</span></div>
             <div class="msg-content"><span class="typing-indicator"><span></span><span></span><span></span></span></div>
         `;
         messagesEl.appendChild(aiMsg);
@@ -333,42 +333,39 @@ $hasMessages = $messages !== [];
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: 'llama3.2:1b',
+                    model: selectedModel,
                     message: message,
                     context: [],
                     conversation_id: CHAT_CONVERSATION_ID
                 }),
                 signal: currentAbort.signal
             });
-            const data = await res.json();
-
-            const endTime = performance.now();
-            const durationStr = ((endTime - startTime) / 1000).toFixed(2) + 's';
 
             const text = await res.text();
-            console.log("RAW RESPONSE:", text);
-
             let data;
             try {
                 data = JSON.parse(text);
             } catch (e) {
                 console.error("Response n'est pas du JSON valide", text);
+                aiMsg.querySelector('.msg-content').innerHTML =
+                    '<p class="msg-error">Réponse invalide du serveur.</p>';
                 return;
             }
 
+            const endTime = performance.now();
+            const durationStr = ((endTime - startTime) / 1000).toFixed(2) + 's';
+
             const parsed = typeof data.response === 'string'
-                ? JSON.parse(data.response)
+                ? (() => { try { return JSON.parse(data.response); } catch { return null; } })()
                 : data.response;
 
-            const inputTokens = parsed.prompt_eval_count || data.prompt_eval_count || 0;
-            const outputTokens = parsed.eval_count || data.eval_count || 0;
-            const totalTokens = inputTokens + outputTokens;
+            const reply = parsed?.response || parsed?.message?.content || data.response || 'Pas de réponse.';
+            const inputTokens  = parsed?.prompt_eval_count || data.prompt_eval_count || 0;
+            const outputTokens = parsed?.eval_count || data.eval_count || 0;
+            const totalTokens  = inputTokens + outputTokens;
 
-            aiMsg.querySelector('.msg-content').innerHTML =
-                `<p>${escapeHtml(parsed.response || parsed.message?.content || data.response || 'Pas de réponse.')}</p>`;
+            renderMarkdown(typeof reply === 'string' ? reply : String(reply), aiMsg.querySelector('.msg-content'));
 
-            aiMsg.innerHTML += `
-            renderMarkdown(parsed.response || 'Pas de réponse.', aiMsg.querySelector('.msg-content'));
             aiMsg.insertAdjacentHTML('beforeend', `
                 <div class="msg-actions">
                     <button class="msg-action" onclick="copyMsg(this)">
@@ -382,11 +379,12 @@ $hasMessages = $messages !== [];
                     <span class="msg-stat" title="${inputTokens} entrée + ${outputTokens} sortie">
                         ${totalTokens} tokens
                     </span>
-                </div>`;
+                </div>
+            `);
         } catch (err) {
             aiMsg.querySelector('.msg-content').innerHTML = err.name === 'AbortError'
-                ? `<p class="msg-error">Génération interrompue.</p>`
-                : `<p class="msg-error">Erreur de connexion au modèle.</p>`;
+                ? '<p class="msg-error">Génération interrompue.</p>'
+                : '<p class="msg-error">Erreur de connexion au modèle.</p>';
         } finally {
             currentAbort = null;
             setSending(false);
