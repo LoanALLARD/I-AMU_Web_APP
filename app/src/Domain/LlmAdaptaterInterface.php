@@ -8,4 +8,8 @@ interface LlmAdaptaterInterface {
      * spécifique à l'API cible, l'exécute, et renvoie une chaîne standard.
      */
     public function generate(string $message, array $context): string;
+
+    public function formatMetadata(object $response);
+
+    public function readContextFromMetadata(array $metaDataRaw) : array;
 }

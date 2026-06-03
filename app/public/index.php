@@ -2,7 +2,6 @@
     // Hand-written autoloader (runtime). Composer's vendor/autoload.php
     // is reserved for dev tools (PHPStan, PHPUnit, PHPCS).
     
-    //require dirname(__DIR__) . '/autoload.php';
     require dirname(__DIR__) . '/src/bootstrap.php';
 
     session_start();

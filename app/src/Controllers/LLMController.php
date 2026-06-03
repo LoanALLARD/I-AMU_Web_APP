@@ -30,9 +30,8 @@ class LLMController{
             return;
         }
 
-        $modelName = $data['model'];     // "llama3.2:1b"
+        $modelName = $data['model'];     
         $userMessage = $data['message']; 
-        $context = $data['context'] ?? [];
         $user_email = $data['user_email'] ?? null;
         $conversation_id = $data['conversation_id'] ?? null;
 
@@ -75,12 +74,13 @@ class LLMController{
                 $aiData['id'],
                 $nameConversation
             );
+            $context = [];
         } else {
             // else recover the conversation and check if it's own by the same user
             $conversationData = $conversationRepository->getConversationByUserId(   
                 $userData['id'],
                 $conversation_id,
-            );   
+            );               
         }                                                           
                 
         if ($conversationData == null){
@@ -102,6 +102,13 @@ class LLMController{
             $adapter = null;
         }
 
+        // read from the database all the context of the conversation
+        $metadata = $conversationRepository->getContextByConversationIdAndUserId($conversationData['id'],$userData['id']);
+        // then translate it trought the adapter of the api used
+        if ($metadata){
+            $context = $adapter->readContextFromMetadata($metadata);
+        }
+        
         $ai = new Ai (
             $id = $aiData["id"],
             $department_id = $aiData["department_id"],
@@ -116,13 +123,6 @@ class LLMController{
             $aiData["api_url"],
             $adapter,
         );
-
-        $conversation = new Conversation(
-            $userData['id'],
-            1,
-            $nameConversation
-        );
-
         $responseRaw = $ai->ask($userMessage, $context);
         $response = json_decode($responseRaw);
 
@@ -136,11 +136,13 @@ class LLMController{
         if ($response != false){
             $interaction = new InteractionRepository($pdo);
             $output_tokens = count($response->context);
-            $interaction->newInteration($conversationData['id'],$userMessage,$response->response,200,$output_tokens);
+            $interactionData = $interaction->newInteration($conversationData['id'],$userMessage,$response->response,200,$output_tokens);
+            $meta_data = $adapter->formatMetadata($response);
+            $var=$interaction->setContext($meta_data,$interactionData['id']);
         }
 
         header('Content-Type: application/json');
-        echo json_encode(['response' => $response]);
+        echo json_encode(['response' => $response->response]);
         
     }
 }

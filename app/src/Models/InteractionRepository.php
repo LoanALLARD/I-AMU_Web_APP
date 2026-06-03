@@ -30,12 +30,36 @@ class InteractionRepository {
             'output_tokens'=>$output_tokens
             ]);
 
-        $result = $query->fetch();
+        $idGenere = $this->pdo->lastInsertId();
 
-        if ($result === false) {
+        if (!$idGenere) {
             return null;
         }
 
-        return $result;
+        $querySelect = $this->pdo->prepare('SELECT * FROM interactions WHERE id = :id');
+        $querySelect->execute(['id' => $idGenere]);
+        
+        $result = $querySelect->fetch();
+
+        return $result ?: null; 
     }
+
+    public function setContext(string $metadata, int $interaction_id){
+        $query = $this->pdo->prepare('
+            UPDATE interactions set api_metadata = :metadata where id = :id
+        ');
+        
+        $query->execute([
+            'metadata' => $metadata,
+            'id'       => $interaction_id
+        ]);
+
+        $idGenere = $this->pdo->lastInsertId();
+
+            if (!$idGenere) {
+                return null;
+            }
+            
+        return TRUE;
+    }   
 }

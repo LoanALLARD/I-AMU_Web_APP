@@ -64,7 +64,34 @@ class ConversationRepository {
 
         return $result;
     }
+    /**
+     * @return array<int>|null
+     */
+    public function getContextByConversationIdAndUserId(int $conversation_id, int $user_id){
+        $query = $this->pdo->prepare('
+            select i.api_metadata
+            from interactions i 
+            join conversations c on c.id = i.conversation_id
+            where c.user_id = :user_id
+            and c.id = :conversation_id
+            and i.api_metadata IS NOT NULL 
+            order by i.id desc
+            limit 1;
+        ');
 
+        $query->execute([
+            'user_id'=> $user_id,
+            'conversation_id'=>$conversation_id
+        ]);
+
+        $result = $query->fetch(PDO::FETCH_ASSOC); 
+
+        if ($result === false) {
+            return null;
+        }
+
+        return $result;
+    }
     /**
      * Id of the (first) conversation a user already has for a session, or null.
      * Used to keep "join session" idempotent.
