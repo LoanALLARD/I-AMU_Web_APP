@@ -2,16 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\ValueObjects;
+namespace Domain;
 
 /**
- * Type of a session.
- *
- * Mirrors 1:1 the `session_type` PostgreSQL enum:
- *   - EXAM        — timed exam, no history, single allowed model, kraft UI
- *   - TUTORIAL    — TD-style guided session
- *   - LAB         — lab/practical work
- *   - FREE_STUDY  — open-ended exploration (sandbox)
+ * Pedagogical type of a session. String-backed to map to `sessions.type`.
  */
 enum SessionType: string
 {
@@ -20,9 +14,6 @@ enum SessionType: string
     case Lab       = 'LAB';
     case FreeStudy = 'FREE_STUDY';
 
-    /**
-     * Returns the user-facing French label.
-     */
     public function label(): string
     {
         return match ($this) {
@@ -33,19 +24,11 @@ enum SessionType: string
         };
     }
 
-    /**
-     * CSS class used by view badges. Matches the `.badge-*` declarations
-     * in `sessions.css`.
-     */
     public function badgeClass(): string
     {
         return 'badge-' . strtolower(str_replace('_', '-', $this->value));
     }
 
-    /**
-     * True for the only session type that triggers the kraft visual
-     * lockdown on the student side (cf. spec 02 §1).
-     */
     public function isExam(): bool
     {
         return $this === self::Exam;

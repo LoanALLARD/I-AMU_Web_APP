@@ -2,64 +2,34 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace Controllers;
 
-use App\Application\Ports\ModelReadRepositoryInterface;
-use App\Application\Ports\ResourceReadRepositoryInterface;
-use App\Application\Services\CancelSessionService;
-use App\Application\Services\CreateSessionService;
-use App\Application\Services\EndSessionService;
-use App\Application\Services\GetSessionDashboardService;
-use App\Application\Services\JoinSessionService;
-use App\Application\Services\ListMySessionsService;
-use App\Application\Services\StartSessionService;
-use App\Application\Services\UpdateSessionService;
-use App\Domain\Exceptions\SessionAlreadyEndedException;
-use App\Domain\Exceptions\SessionAlreadyStartedException;
-use App\Domain\Exceptions\SessionCancelledException;
-use App\Domain\Exceptions\SessionNotEditableException;
-use App\Domain\Exceptions\SessionNotFoundException;
-use App\Domain\Repositories\SessionRepositoryInterface;
-use App\Http\Forms\CreateSessionForm;
 use Core\Controller;
+use Data\Database;
+use Domain\SessionException;
+use Services\CreateSessionForm;
+use Services\SessionService;
+use Throwable;
 
 /**
- * Teacher-facing HTTP entry point for the Session aggregate.
+ * Teacher- and student-facing HTTP entry point for the Session feature.
  *
- * Every mutation goes through a corresponding Application service, every
- * read through a view-model. The controller's only jobs are: auth/CSRF
- * guarding, request validation (delegated to CreateSessionForm), mapping
- * domain exceptions to flash + redirect, and rendering.
- *
- * Resource ownership: `sessions` no longer carries `teacher_id` directly —
- * the owning teacher is `resources.owner_id`. The controller enforces this
- * invariant when CREATING a session (the requested resource must belong to
- * the current teacher) and trusts the repository to surface the derived
- * teacher_id when LOADING a session for edit/start/end/cancel/dashboard.
+ * MVC style: the controller reads HTTP input, delegates every rule to
+ * SessionService, and renders a view with plain arrays. It owns only the
+ * cross-cutting concerns: auth/CSRF guards, ownership checks, mapping domain
+ * exceptions to flash + redirect, and old-input retention on validation error.
  */
-final class SessionController extends Controller
+class SessionController extends Controller
 {
-    public function __construct(
-        private readonly SessionRepositoryInterface $sessions,
-        private readonly ModelReadRepositoryInterface $models,
-        private readonly ResourceReadRepositoryInterface $resources,
-        private readonly CreateSessionService $createSession,
-        private readonly UpdateSessionService $updateSession,
-        private readonly StartSessionService $startSession,
-        private readonly EndSessionService $endSession,
-        private readonly CancelSessionService $cancelSession,
-        private readonly JoinSessionService $joinSession,
-        private readonly ListMySessionsService $listMySessions,
-        private readonly GetSessionDashboardService $getDashboard,
-    ) {
+    private SessionService $sessions;
+
+    public function __construct()
+    {
+        $this->sessions = new SessionService(Database::getConnection());
     }
 
     /**
-     * Every session page renders inside Layout/chat.php (the universal
-     * authenticated shell: sidebar + topbar). The override injects the
-     * variables that shell expects (page flag + current user + page
-     * title for the topbar breadcrumb) without forcing every action to
-     * repeat them.
+     * Session pages render inside Layout/chat.php (the authenticated shell).
      *
      * @param array<string, mixed> $data
      */
@@ -71,80 +41,67 @@ final class SessionController extends Controller
         parent::render($template, $data, $layout);
     }
 
-    /**
-     * GET /sessions — teacher's list.
-     */
+    /** GET /sessions — teacher's list. */
     public function index(): void
     {
         $this->requireRole('teacher');
-        $user  = $this->currentUser();
-        $views = $this->listMySessions->execute($user['id']);
+        $user = $this->currentUser();
 
         $this->render('pages/session/index', [
-            'title'       => 'Mes sessions',
-            'breadcrumb'  => 'sessions',
-            'navSection'  => 'sessions',
-            'sessions'    => $views,
-            'user'        => $user,
+            'title'      => 'Mes sessions',
+            'navSection' => 'sessions',
+            'sessions'   => $this->sessions->listForTeacher((int) ($user['id'] ?? 0)),
+            'user'       => $user,
         ]);
     }
 
-    /**
-     * GET /sessions/create — create form.
-     */
+    /** GET /sessions/create — create form. */
     public function create(): void
     {
         $this->requireRole('teacher');
-
-        $user            = $this->currentUser();
-        $models          = $this->models->findAllActive();
-        $resources       = $this->resources->findAllByOwner($user['id']);
-        $previewCode     = $this->sessions->generateUniqueAccessCode();
+        $user = $this->currentUser();
+        $data = $this->sessions->createFormData((int) ($user['id'] ?? 0));
 
         $this->render('pages/session/create', [
-            'title'              => 'Nouvelle session',
-            'breadcrumb'         => 'sessions / nouvelle',
-            'navSection'         => 'sessions',
-            'mode'               => 'create',
-            'session'            => null,
-            'models'             => $models,
-            'resources'          => $resources,
-            'authorizedModelIds' => [],
-            'previewCode'        => $previewCode,
-            'user'               => $user,
-            'oldInput'           => $this->popOldInput(),
+            'title'                => 'Nouvelle session',
+            'navSection'           => 'sessions',
+            'mode'                 => 'create',
+            'session'              => null,
+            'models'               => $data['models'],
+            'resources'            => $data['resources'],
+            'authorizedModelIds'   => [],
+            'previewCode'          => $data['previewCode'],
+            'previewCodeFormatted' => $data['previewCodeFormatted'],
+            'user'                 => $user,
+            'oldInput'             => $this->popOldInput(),
         ]);
     }
 
-    /**
-     * POST /sessions/store — create handler.
-     */
+    /** POST /sessions/store — create handler. */
     public function store(): void
     {
         $this->requireRole('teacher');
         $this->verifyCsrf();
+        $user = $this->currentUser();
 
-        $user   = $this->currentUser();
-        $result = CreateSessionForm::fromPost($_POST);
-        if ($result['errors'] !== []) {
-            foreach ($result['errors'] as $e) {
-                $this->flash('error', $e);
+        $form = CreateSessionForm::fromPost($_POST);
+        if ($form['errors'] !== []) {
+            foreach ($form['errors'] as $error) {
+                $this->flash('error', $error);
             }
             $this->keepOldInput($_POST);
             $this->redirect('/sessions/create');
         }
 
-        // Ownership: the chosen resource MUST belong to the current teacher.
-        $resource = $this->resources->findById($result['request']->resourceId);
-        if ($resource === null || $resource->ownerId !== $user['id']) {
-            $this->flash('error', "Ressource introuvable ou inaccessible.");
+        if (!$this->sessions->resourceBelongsTo((int) $form['data']['resourceId'], (int) ($user['id'] ?? 0))) {
+            $this->flash('error', 'Ressource introuvable ou inaccessible.');
             $this->keepOldInput($_POST);
             $this->redirect('/sessions/create');
         }
 
         try {
-            $session = $this->createSession->execute($result['request'], $user['id']);
-        } catch (\Throwable $e) {
+            $session = $this->sessions->create($form['data'], (int) ($user['id'] ?? 0));
+        } catch (Throwable $e) {
             $this->flash('error', $e->getMessage());
             $this->keepOldInput($_POST);
             $this->redirect('/sessions/create');
@@ -153,78 +110,55 @@ final class SessionController extends Controller
         $this->flash('success', sprintf(
             "Session « %s » créée. Code d'accès : %s",
             $session->name(),
-            $session->accessCode()->formatted()
+            $session->accessCodeFormatted()
         ));
         $this->redirect('/sessions/' . $session->id());
     }
 
-    /**
-     * GET /sessions/{id}/edit — edit form.
-     */
+    /** GET /sessions/{id}/edit — edit form. */
     public function edit(string $id): void
     {
         $this->requireRole('teacher');
-        $sessionId = (int) $id;
+        $session = $this->loadOwned((int) $id);
 
-        $session = $this->sessions->findById($sessionId);
-        if ($session === null) {
-            $this->flash('error', "Session introuvable.");
-            $this->redirect('/sessions');
-        }
-        if (!$this->ownsSession($session->teacherId())) {
-            $this->forbidden();
-        }
-
-        $user               = $this->currentUser();
-        $models             = $this->models->findAllActive();
-        $resources          = $this->resources->findAllByOwner($user['id']);
-        $authorizedModelIds = $this->sessions->authorizedModelIdsOf($sessionId);
+        $user = $this->currentUser();
+        $data = $this->sessions->editFormData($session, (int) ($user['id'] ?? 0));
 
         $this->render('pages/session/create', [
-            'title'              => 'Modifier la session',
-            'breadcrumb'         => 'sessions / modifier',
-            'navSection'         => 'sessions',
-            'mode'               => 'edit',
-            'session'            => $session,
-            'models'             => $models,
-            'resources'          => $resources,
-            'authorizedModelIds' => $authorizedModelIds,
-            'previewCode'        => $session->accessCode(),
-            'user'               => $user,
-            'oldInput'           => $this->popOldInput(),
+            'title'                => 'Modifier la session',
+            'navSection'           => 'sessions',
+            'mode'                 => 'edit',
+            'session'              => $session,
+            'models'               => $data['models'],
+            'resources'            => $data['resources'],
+            'authorizedModelIds'   => $data['authorizedModelIds'],
+            'previewCode'          => $data['previewCode'],
+            'previewCodeFormatted' => $data['previewCodeFormatted'],
+            'user'                 => $user,
+            'oldInput'             => $this->popOldInput(),
         ]);
     }
 
-    /**
-     * POST /sessions/{id}/update — edit handler.
-     */
+    /** POST /sessions/{id}/update — edit handler. */
     public function update(string $id): void
     {
         $this->requireRole('teacher');
         $this->verifyCsrf();
         $sessionId = (int) $id;
+        $this->loadOwned($sessionId);
 
-        $existing = $this->sessions->findById($sessionId);
-        if ($existing === null) {
-            $this->flash('error', "Session introuvable.");
-            $this->redirect('/sessions');
-        }
-        if (!$this->ownsSession($existing->teacherId())) {
-            $this->forbidden();
-        }
-
-        $result = CreateSessionForm::fromPostForUpdate($_POST);
-        if ($result['errors'] !== []) {
-            foreach ($result['errors'] as $e) {
-                $this->flash('error', $e);
+        $form = CreateSessionForm::fromPostForUpdate($_POST);
+        if ($form['errors'] !== []) {
+            foreach ($form['errors'] as $error) {
+                $this->flash('error', $error);
             }
             $this->keepOldInput($_POST);
             $this->redirect('/sessions/' . $sessionId . '/edit');
         }
 
         try {
-            $this->updateSession->execute($sessionId, $result['request']);
-        } catch (SessionNotEditableException | SessionNotFoundException $e) {
+            $this->sessions->update($sessionId, $form['data']);
+        } catch (SessionException $e) {
             $this->flash('error', $e->getMessage());
             $this->redirect('/sessions');
         }
@@ -233,149 +167,126 @@ final class SessionController extends Controller
         $this->redirect('/sessions/' . $sessionId);
     }
 
-    /**
-     * POST /sessions/{id}/start
-     */
+    /** POST /sessions/{id}/start */
     public function start(string $id): void
     {
         $this->requireRole('teacher');
         $this->verifyCsrf();
         $sessionId = (int) $id;
-        $this->guardOwnership($sessionId);
+        $this->loadOwned($sessionId);
 
         try {
-            $this->startSession->execute($sessionId);
+            $this->sessions->start($sessionId);
             $this->flash('success', 'Session démarrée.');
-        } catch (SessionAlreadyStartedException | SessionAlreadyEndedException | SessionCancelledException | SessionNotFoundException $e) {
+        } catch (SessionException $e) {
             $this->flash('error', $e->getMessage());
         }
         $this->redirect('/sessions/' . $sessionId);
     }
 
-    /**
-     * POST /sessions/{id}/end
-     */
+    /** POST /sessions/{id}/end */
     public function end(string $id): void
     {
         $this->requireRole('teacher');
         $this->verifyCsrf();
         $sessionId = (int) $id;
-        $this->guardOwnership($sessionId);
+        $this->loadOwned($sessionId);
 
         try {
-            $this->endSession->execute($sessionId);
+            $this->sessions->end($sessionId);
             $this->flash('success', 'Session terminée.');
-        } catch (SessionAlreadyEndedException | SessionCancelledException | SessionNotFoundException $e) {
+        } catch (SessionException $e) {
             $this->flash('error', $e->getMessage());
         }
         $this->redirect('/sessions/' . $sessionId);
     }
 
-    /**
-     * POST /sessions/{id}/cancel
-     */
+    /** POST /sessions/{id}/cancel */
     public function cancel(string $id): void
     {
         $this->requireRole('teacher');
         $this->verifyCsrf();
         $sessionId = (int) $id;
-        $this->guardOwnership($sessionId);
+        $this->loadOwned($sessionId);
 
         try {
-            $this->cancelSession->execute($sessionId);
+            $this->sessions->cancel($sessionId);
             $this->flash('success', 'Session annulée.');
-        } catch (SessionAlreadyEndedException | SessionCancelledException | SessionNotFoundException $e) {
+        } catch (SessionException $e) {
             $this->flash('error', $e->getMessage());
         }
         $this->redirect('/sessions/' . $sessionId);
     }
 
-    /**
-     * GET /sessions/{id} — dashboard.
-     */
+    /** GET /sessions/{id} — dashboard. */
     public function dashboard(string $id): void
     {
         $this->requireRole('teacher');
-        $sessionId = (int) $id;
+        $session = $this->loadOwned((int) $id);
 
-        $entity = $this->sessions->findById($sessionId);
-        if ($entity === null) {
-            $this->flash('error', "Session introuvable.");
-            $this->redirect('/sessions');
-        }
-        if (!$this->ownsSession($entity->teacherId())) {
-            $this->forbidden();
-        }
-
-        $view = $this->getDashboard->execute($sessionId);
+        $view = $this->sessions->dashboard($session);
 
         $this->render('pages/session/dashboard', [
-            'title'        => $view->name,
-            'breadcrumb'   => 'sessions / ' . $view->accessCode,
-            'navSection'   => 'sessions',
-            'view'         => $view,
-            'user'         => $this->currentUser(),
+            'title'      => $view['name'],
+            'navSection' => 'sessions',
+            'view'       => $view,
+            'user'       => $this->currentUser(),
         ]);
     }
 
-    /**
-     * GET /sessions/join — student-facing form to enter an access code.
-     */
+    /** GET /sessions/join — student form. */
     public function showJoin(): void
     {
         $this->requireRole('student');
-
         $this->render('pages/session/join', [
-            'title'      => 'Rejoindre une session',
-            'breadcrumb' => 'sessions / rejoindre',
+            'title' => 'Rejoindre une session',
         ]);
     }
 
-    /**
-     * POST /sessions/join — student joins, gets enrolled and lands in the
-     * session-bound conversation. Idempotent (see JoinSessionService).
-     */
+    /** POST /sessions/join — student joins and lands in the conversation. */
     public function join(): void
     {
         $this->requireRole('student');
         $this->verifyCsrf();
 
         $rawCode = (string) $this->input('access_code', '');
-        $userId  = $this->currentUser()['id'];
+        $user    = $this->currentUser();
 
         try {
-            $result = $this->joinSession->execute($rawCode, $userId);
-        } catch (\Throwable $e) {
+            $result = $this->sessions->join($rawCode, (int) ($user['id'] ?? 0));
+        } catch (Throwable $e) {
             $this->flash('error', $e->getMessage());
             $this->redirect('/sessions/join');
         }
 
-        $this->flash('success', $result->alreadyJoined
-            ? "Vous êtes déjà inscrit à « {$result->sessionName} » — voici votre conversation."
-            : "Vous avez rejoint la session « {$result->sessionName} ».");
-        $this->redirect('/chat/' . $result->conversationId);
+        $this->flash('success', $result['alreadyJoined']
+            ? "Vous êtes déjà inscrit à « {$result['sessionName']} » — voici votre conversation."
+            : "Vous avez rejoint la session « {$result['sessionName']} ».");
+        $this->redirect('/chat/' . $result['conversationId']);
     }
 
     // ----------------------------------------------------------------
     // Helpers
     // ----------------------------------------------------------------
 
-    private function ownsSession(?int $teacherId): bool
+    /**
+     * Loads a session, redirecting on miss and 403-ing if it is not owned by
+     * the current teacher. Returns the (owned) session on success.
+     */
+    private function loadOwned(int $sessionId): \Domain\Session
     {
-        $user = $this->currentUser();
-        return $user !== null && $teacherId !== null && $user['id'] === $teacherId;
-    }
-
-    private function guardOwnership(int $sessionId): void
-    {
-        $existing = $this->sessions->findById($sessionId);
-        if ($existing === null) {
-            $this->flash('error', "Session introuvable.");
+        $session = $this->sessions->find($sessionId);
+        if ($session === null) {
+            $this->flash('error', 'Session introuvable.');
             $this->redirect('/sessions');
         }
-        if (!$this->ownsSession($existing->teacherId())) {
+
+        $user = $this->currentUser();
+        if ($user === null || $session->teacherId() === null || (int) $user['id'] !== $session->teacherId()) {
             $this->forbidden();
         }
+
+        return $session;
     }
 
     private function forbidden(): never
@@ -384,7 +295,7 @@ final class SessionController extends Controller
         $this->render('pages/error', [
             'title'   => 'Accès refusé',
             'code'    => 403,
-            'message' => "Cette session ne vous appartient pas.",
+            'message' => 'Cette session ne vous appartient pas.',
         ]);
         exit;
     }
@@ -405,6 +316,7 @@ final class SessionController extends Controller
     {
         $old = $_SESSION['_old_input'] ?? [];
         unset($_SESSION['_old_input']);
+
         return is_array($old) ? $old : [];
     }
 }

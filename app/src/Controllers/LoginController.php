@@ -7,14 +7,14 @@ use Services\AuthService;
 
 class LoginController extends Controller
 {
-    public function __construct(
-        private readonly AuthService $authService,
-    ) {
-        // AuthService is injected from public/index.php where the DI graph
-        // is assembled (PdoConnection -> AuthService -> LoginController).
-        // Do NOT swap this back to a no-arg constructor + `new AuthService()`
-        // — AuthService now requires a PdoConnection to talk to the users
-        // table, so a no-arg new throws ArgumentCountError at first request.
+    private AuthService $authService;
+
+    public function __construct()
+    {
+        // MVC wiring: the controller builds its own service, which gets the
+        // shared connection from the Data\Database singleton. This matches
+        // how public/index.php instantiates controllers (`new LoginController()`).
+        $this->authService = new AuthService();
     }
 
     /**

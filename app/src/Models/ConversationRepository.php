@@ -62,6 +62,22 @@ class ConversationRepository {
             return null;
         }
 
-        return $result; 
+        return $result;
+    }
+
+    /**
+     * Id of the (first) conversation a user already has for a session, or null.
+     * Used to keep "join session" idempotent.
+     */
+    public function findIdByUserAndSession(int $userId, int $sessionId): ?int
+    {
+        $query = $this->pdo->prepare('
+        SELECT id FROM conversations WHERE user_id = :u AND session_id = :s ORDER BY id LIMIT 1
+        ');
+
+        $query->execute(['u' => $userId, 's' => $sessionId]);
+        $id = $query->fetchColumn();
+
+        return $id === false ? null : (int) $id;
     }
 }

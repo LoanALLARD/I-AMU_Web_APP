@@ -13,5 +13,5 @@ try {
 
 // Global view helpers (icon(), csrf_field()) — required by every page,
 // loaded here so views never have to import the underlying namespaces.
-// require_once __DIR__ . '/Helpers/icons.php';
-// require_once __DIR__ . '/Helpers/csrf.php';
+require_once __DIR__ . '/Helpers/icons.php';
+require_once __DIR__ . '/Helpers/csrf.php';

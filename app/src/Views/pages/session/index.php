@@ -1,6 +1,6 @@
 <?php
 /**
- * @var \App\Application\DTOs\SessionListView[] $sessions
+ * @var list<array<string, mixed>> $sessions  Presentation rows from SessionService::listForTeacher()
  */
 ?>
 <div class="page-header">
@@ -43,34 +43,34 @@
                 <?php foreach ($sessions as $s): ?>
                     <tr>
                         <td>
-                            <a href="/sessions/<?= (int) $s->id ?>" style="text-decoration:none;font-weight:500;">
-                                <?= htmlspecialchars($s->name) ?>
+                            <a href="/sessions/<?= (int) $s['id'] ?>" style="text-decoration:none;font-weight:500;">
+                                <?= htmlspecialchars($s['name']) ?>
                             </a>
                         </td>
-                        <td><span class="badge <?= htmlspecialchars($s->typeClass) ?>"><?= htmlspecialchars($s->typeLabel) ?></span></td>
-                        <td><span class="badge <?= htmlspecialchars($s->statusClass) ?>"><?= htmlspecialchars($s->statusLabel) ?></span></td>
-                        <td><code class="access-code-cell"><?= htmlspecialchars($s->accessCode) ?></code></td>
-                        <td><?= htmlspecialchars($s->startsAtFormatted ?? '—') ?></td>
-                        <td><?= htmlspecialchars($s->endsAtFormatted ?? '—') ?></td>
+                        <td><span class="badge <?= htmlspecialchars($s['typeClass']) ?>"><?= htmlspecialchars($s['typeLabel']) ?></span></td>
+                        <td><span class="badge <?= htmlspecialchars($s['statusClass']) ?>"><?= htmlspecialchars($s['statusLabel']) ?></span></td>
+                        <td><code class="access-code-cell"><?= htmlspecialchars($s['accessCode']) ?></code></td>
+                        <td><?= htmlspecialchars($s['startsAtFormatted'] ?? '—') ?></td>
+                        <td><?= htmlspecialchars($s['endsAtFormatted'] ?? '—') ?></td>
                         <td class="cell-actions">
-                            <a href="/sessions/<?= (int) $s->id ?>" class="icon-btn" title="Voir">
+                            <a href="/sessions/<?= (int) $s['id'] ?>" class="icon-btn" title="Voir">
                                 <?= icon('eye') ?>
                             </a>
-                            <?php if ($s->canEdit): ?>
-                                <a href="/sessions/<?= (int) $s->id ?>/edit" class="icon-btn" title="Modifier">
+                            <?php if ($s['canEdit']): ?>
+                                <a href="/sessions/<?= (int) $s['id'] ?>/edit" class="icon-btn" title="Modifier">
                                     <?= icon('edit') ?>
                                 </a>
                             <?php endif; ?>
-                            <?php if ($s->canStart): ?>
-                                <form method="POST" action="/sessions/<?= (int) $s->id ?>/start">
+                            <?php if ($s['canStart']): ?>
+                                <form method="POST" action="/sessions/<?= (int) $s['id'] ?>/start">
                                     <?= csrf_field() ?>
                                     <button type="submit" class="icon-btn success" title="Démarrer">
                                         <?= icon('play') ?>
                                     </button>
                                 </form>
                             <?php endif; ?>
-                            <?php if ($s->canEnd): ?>
-                                <form method="POST" action="/sessions/<?= (int) $s->id ?>/end"
+                            <?php if ($s['canEnd']): ?>
+                                <form method="POST" action="/sessions/<?= (int) $s['id'] ?>/end"
                                       onsubmit="return confirm('Terminer cette session maintenant ?')">
                                     <?= csrf_field() ?>
                                     <button type="submit" class="icon-btn warning" title="Terminer">
@@ -78,8 +78,8 @@
                                     </button>
                                 </form>
                             <?php endif; ?>
-                            <?php if ($s->canCancel): ?>
-                                <form method="POST" action="/sessions/<?= (int) $s->id ?>/cancel"
+                            <?php if ($s['canCancel']): ?>
+                                <form method="POST" action="/sessions/<?= (int) $s['id'] ?>/cancel"
                                       onsubmit="return confirm('Annuler cette session ?')">
                                     <?= csrf_field() ?>
                                     <button type="submit" class="icon-btn danger" title="Annuler">
@@ -100,29 +100,29 @@
             <article class="session-card">
                 <div class="session-card-head">
                     <div>
-                        <a href="/sessions/<?= (int) $s->id ?>" class="session-card-title" style="text-decoration:none;">
-                            <?= htmlspecialchars($s->name) ?>
+                        <a href="/sessions/<?= (int) $s['id'] ?>" class="session-card-title" style="text-decoration:none;">
+                            <?= htmlspecialchars($s['name']) ?>
                         </a>
                         <div class="session-card-meta">
-                            <span class="badge <?= htmlspecialchars($s->typeClass) ?>"><?= htmlspecialchars($s->typeLabel) ?></span>
-                            <span class="badge <?= htmlspecialchars($s->statusClass) ?>"><?= htmlspecialchars($s->statusLabel) ?></span>
+                            <span class="badge <?= htmlspecialchars($s['typeClass']) ?>"><?= htmlspecialchars($s['typeLabel']) ?></span>
+                            <span class="badge <?= htmlspecialchars($s['statusClass']) ?>"><?= htmlspecialchars($s['statusLabel']) ?></span>
                         </div>
                     </div>
-                    <code class="access-code-cell"><?= htmlspecialchars($s->accessCode) ?></code>
+                    <code class="access-code-cell"><?= htmlspecialchars($s['accessCode']) ?></code>
                 </div>
                 <div class="session-card-actions">
-                    <a href="/sessions/<?= (int) $s->id ?>" class="btn sm">Dashboard</a>
-                    <?php if ($s->canEdit): ?>
-                        <a href="/sessions/<?= (int) $s->id ?>/edit" class="btn sm">Modifier</a>
+                    <a href="/sessions/<?= (int) $s['id'] ?>" class="btn sm">Dashboard</a>
+                    <?php if ($s['canEdit']): ?>
+                        <a href="/sessions/<?= (int) $s['id'] ?>/edit" class="btn sm">Modifier</a>
                     <?php endif; ?>
-                    <?php if ($s->canStart): ?>
-                        <form method="POST" action="/sessions/<?= (int) $s->id ?>/start">
+                    <?php if ($s['canStart']): ?>
+                        <form method="POST" action="/sessions/<?= (int) $s['id'] ?>/start">
                             <?= csrf_field() ?>
                             <button class="btn sm success">Démarrer</button>
                         </form>
                     <?php endif; ?>
-                    <?php if ($s->canEnd): ?>
-                        <form method="POST" action="/sessions/<?= (int) $s->id ?>/end">
+                    <?php if ($s['canEnd']): ?>
+                        <form method="POST" action="/sessions/<?= (int) $s['id'] ?>/end">
                             <?= csrf_field() ?>
                             <button class="btn sm">Terminer</button>
                         </form>

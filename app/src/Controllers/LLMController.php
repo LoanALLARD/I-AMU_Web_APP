@@ -17,7 +17,7 @@ class LLMController{
 
     public function handleChat(){
 
-        // raw data of the requeste
+        // raw data of the request
         $jsonRaw = file_get_contents('php://input');
 
         // Transaltion of the raw data to a associative array  
