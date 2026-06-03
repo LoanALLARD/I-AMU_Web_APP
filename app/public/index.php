@@ -37,6 +37,7 @@ use App\Infrastructure\Persistence\PdoModelRepository;
 use App\Infrastructure\Persistence\PdoResourceRepository;
 use App\Infrastructure\Persistence\PdoSessionRepository;
 use Controllers\LoginController;
+use Controllers\ProfileController;
 use Core\Controller;
 use Core\Router;
 use Services\AuthService;

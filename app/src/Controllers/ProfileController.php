@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Http\Controllers;
+namespace Controllers;
 
 use Core\Controller;
 use Services\AuthService;
