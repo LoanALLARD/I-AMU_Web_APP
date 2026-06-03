@@ -35,7 +35,9 @@
 - ❌ Pas d'architecture hexagonale complète, pas de couche `Application/`
   ni `Infrastructure/`, pas de dossier `Ports/`.
 - ❌ Pas de conteneur d'injection ni de câblage manuel exhaustif :
-  l'instanciation directe (`new AuthService()`) est **assumée**.
+  l'instanciation directe (`new AuthService($pdo)`) est **assumée**. Le
+  Controller passe la connexion `Data\Database::getConnection()` au Service,
+  qui ne la récupère jamais lui-même (uniformité + testabilité).
 - ❌ Pas d'ORM (Doctrine, Eloquent) — PDO direct dans les Models.
 - ❌ Pas de DTO ni de ViewModel systématiques — les vues reçoivent des
   tableaux simples ou des entités du Domain.
@@ -117,7 +119,7 @@ class AuthController extends Controller
 
     public function __construct()
     {
-        $this->authService = new AuthService();      // instanciation directe assumée
+        $this->authService = new AuthService(Database::getConnection());
     }
 
     public function login(): void
@@ -426,7 +428,7 @@ Un Service regroupe la logique d'un domaine fonctionnel et renvoie un
 résultat exploitable par le Controller (souvent un tableau de statut).
 
 ```php
-$result = (new AuthService())->login($email, $password);
+$result = (new AuthService(Database::getConnection()))->login($email, $password);
 // ['success' => true] | ['success' => false, 'error' => '...']
 ```
 

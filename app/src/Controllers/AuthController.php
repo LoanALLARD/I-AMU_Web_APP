@@ -14,11 +14,12 @@ class AuthController extends Controller
 
     public function __construct()
     {
-        // MVC wiring: the controller builds its own service, which gets the
-        // shared connection from the Data\Database singleton. This matches
-        // how public/index.php instantiates controllers (`new AuthController()`).
-        $this->authService = new AuthService();
-        $this->places      = new PlaceRepository(Database::getConnection());
+        // MVC wiring: the controller hands the shared Data\Database singleton
+        // connection to the service it builds. This matches how
+        // public/index.php instantiates controllers (`new AuthController()`).
+        $pdo               = Database::getConnection();
+        $this->authService = new AuthService($pdo);
+        $this->places      = new PlaceRepository($pdo);
     }
 
     /**

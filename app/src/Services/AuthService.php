@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Services;
 
-use Data\Database;
 use Models\EmailDomainRepository;
 use Models\PlaceRepository;
 use Models\UserRepository;
+use PDO;
 
 /**
  * Authentication service against the real `users` table.
@@ -29,10 +29,8 @@ final class AuthService
     private PlaceRepository $places;
     private EmailDomainRepository $emailDomains;
 
-    public function __construct()
+    public function __construct(PDO $pdo)
     {
-        // Data\Database singleton connection. Matches how the controllers
-        $pdo                = Database::getConnection();
         $this->users        = new UserRepository($pdo);
         $this->places       = new PlaceRepository($pdo);
         $this->emailDomains = new EmailDomainRepository($pdo);
