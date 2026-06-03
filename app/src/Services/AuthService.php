@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Services;
 
 use Data\Database;
+use Models\PlaceRepository;
 use Models\UserRepository;
 
 /**
@@ -28,11 +29,14 @@ use Models\UserRepository;
 final class AuthService
 {
     private UserRepository $users;
+    private PlaceRepository $places;
 
     public function __construct()
     {
         // Data\Database singleton connection. Matches how the controllers
-        $this->users = new UserRepository(Database::getConnection());
+        $pdo          = Database::getConnection();
+        $this->users  = new UserRepository($pdo);
+        $this->places = new PlaceRepository($pdo);
     }
 
     /**
@@ -98,6 +102,8 @@ final class AuthService
         $passwordConfirm = (string) ($data['password_confirm']     ?? '');
         $firstName       = trim((string) ($data['first_name']      ?? ''));
         $lastName        = trim((string) ($data['last_name']       ?? ''));
+        $placeId         = (int) ($data['place_id']                ?? 0);
+        $departmentId    = (int) ($data['department_id']           ?? 0);
         $rgpdConsent     = (bool)  ($data['rgpd_consent']          ?? false);
 
         // ----- Format validation ------------------------------------
@@ -111,6 +117,16 @@ final class AuthService
         );
         if ($validationError !== null) {
             return ['success' => false, 'error' => $validationError];
+        }
+
+        // ----- Place / department --------------------------------------
+        // The dependent select is filled by client-side JS, so we re-check
+        // server-side that the department exists and belongs to the place.
+        if ($placeId === 0 || $departmentId === 0) {
+            return ['success' => false, 'error' => 'Veuillez choisir un lieu et un département.'];
+        }
+        if (!$this->places->departmentBelongsToPlace($departmentId, $placeId)) {
+            return ['success' => false, 'error' => 'Le département sélectionné est invalide.'];
         }
 
         // ----- Role lookup ------------------------------------------
@@ -135,6 +151,7 @@ final class AuthService
                     'password_hash'   => password_hash($password, PASSWORD_DEFAULT),
                     'first_name'      => $firstName,
                     'last_name'       => $lastName,
+                    'department_id'   => $departmentId,
                     'consent_version' => '1.0',
                 ],
                 $role

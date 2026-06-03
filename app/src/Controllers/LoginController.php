@@ -3,11 +3,14 @@
 namespace Controllers;
 
 use Core\Controller;
+use Data\Database;
+use Models\PlaceRepository;
 use Services\AuthService;
 
 class LoginController extends Controller
 {
     private AuthService $authService;
+    private PlaceRepository $places;
 
     public function __construct()
     {
@@ -15,6 +18,7 @@ class LoginController extends Controller
         // shared connection from the Data\Database singleton. This matches
         // how public/index.php instantiates controllers (`new LoginController()`).
         $this->authService = new AuthService();
+        $this->places      = new PlaceRepository(Database::getConnection());
     }
 
     /**
@@ -59,7 +63,8 @@ class LoginController extends Controller
             $this->redirect('/chat');
         }
         $this->render('pages/Auth/register', [
-            'titrePage' => 'Inscription'],
+            'titrePage' => 'Inscription',
+            'places'    => $this->places->all()],
          'auth');
     }
 
@@ -79,6 +84,8 @@ class LoginController extends Controller
             'password_confirm' => $this->input('password_confirm', ''),
             'first_name'       => trim($this->input('first_name', '')),
             'last_name'        => trim($this->input('last_name', '')),
+            'place_id'         => $this->input('place_id', ''),
+            'department_id'    => $this->input('department_id', ''),
             'rgpd_consent'     => (bool) $this->input('rgpd_consent', false),
         ];
 
@@ -87,7 +94,8 @@ class LoginController extends Controller
         if (!$result['success']) {
             $this->render('pages/Auth/register', [
                 'titrePage' => 'Inscription',
-                'error'=> $result['error'], 'data'=> $data,],
+                'error'=> $result['error'], 'data'=> $data,
+                'places'=> $this->places->all(),],
                 'auth');
             return;
         }

@@ -12,6 +12,7 @@
     use Controllers\LoginController;
     use Controllers\SessionController;
     use Controllers\ProfileController;
+    use Controllers\PlaceController;
 
     // routeur 
     $router = new Router();
@@ -30,6 +31,9 @@
     $router->add('POST', '/register',    function() { (new LoginController())->register(); });
     $router->add('GET',  '/logout',      function() { (new LoginController())->logout(); });
     $router->add('GET',  '/RGPDConsent', function() { (new LoginController())->showRGPD(); });
+
+    // AJAX: departments of a place, for the registration form's dependent select.
+    $router->add('GET',  '/places/{id}/departments', function($id) { (new PlaceController())->departments($id); });
 
     // --- Chat home + profile (authenticated) --------------------------
     $router->add('GET', '/chat',      function()    { (new AccueilController())->index(); });

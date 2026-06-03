@@ -83,6 +83,7 @@ class UserRepository
      *     password_hash: string,
      *     first_name: string,
      *     last_name: string,
+     *     department_id: int,
      *     consent_version: string
      * } $user
      * @param 'teacher'|'student' $role
@@ -94,16 +95,17 @@ class UserRepository
         $this->pdo->beginTransaction();
         try {
             $stmt = $this->pdo->prepare(
-                'INSERT INTO users (email, password_hash, first_name, last_name, consent_at, consent_version)
-                 VALUES (:email, :hash, :fn, :ln, NOW(), :ver)
+                'INSERT INTO users (email, password_hash, first_name, last_name, department_id, consent_at, consent_version)
+                 VALUES (:email, :hash, :fn, :ln, :department_id, NOW(), :ver)
                  RETURNING id'
             );
             $stmt->execute([
-                'email' => $user['email'],
-                'hash'  => $user['password_hash'],
-                'fn'    => $user['first_name'],
-                'ln'    => $user['last_name'],
-                'ver'   => $user['consent_version'],
+                'email'         => $user['email'],
+                'hash'          => $user['password_hash'],
+                'fn'            => $user['first_name'],
+                'ln'            => $user['last_name'],
+                'department_id' => $user['department_id'],
+                'ver'           => $user['consent_version'],
             ]);
             $userId = (int) $stmt->fetchColumn();
 
