@@ -32,7 +32,7 @@ class LLMController{
 
         $modelName = $data['model'];     // "llama3.2:1b"
         $userMessage = $data['message']; 
-        // $context = $data['context'] ?? [];
+        $context = $data['context'] ?? [];
         $user_email = $data['user_email'] ?? null;
         $conversation_id = $data['conversation_id'] ?? null;
 
@@ -67,7 +67,8 @@ class LLMController{
 
         $conversationRepository = new ConversationRepository($pdo);
         $nameConversation = "nouvelle conversation";
-        if ($conversation_id == null) {                                     // If the conversation isn't given create new one
+        if ($conversation_id == null) { 
+            // If the conversation isn't given create new one
             $conversationData = $conversationRepository->newConversation(
                 $userData['id'],
                 1,
@@ -133,10 +134,9 @@ class LLMController{
         }
 
         if ($response != false){
-
             $interaction = new InteractionRepository($pdo);
             $output_tokens = count($response->context);
-            $interaction->newInteration($ai->getId(),$conversationData['id'],$userMessage,$response->response,200,$output_tokens);
+            $interaction->newInteration($conversationData['id'],$userMessage,$response->response,200,$output_tokens);
         }
 
         header('Content-Type: application/json');
