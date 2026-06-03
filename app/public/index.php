@@ -10,6 +10,7 @@
     use Controllers\AccueilController;
     use Controllers\LLMController;
     use Controllers\LoginController;
+    use Controllers\SessionController;
 
     // routeur 
     $router = new Router();
@@ -83,6 +84,21 @@
         $controller = new  LoginController();
         $controller->showRGPD();
     });
+
+    // --- Sessions (teacher) + join (student) --------------------------
+    // Literal routes are registered before the `{id}` wildcard so they win.
+    $router->add('GET',  '/sessions',         function() { (new SessionController())->index(); });
+    $router->add('GET',  '/sessions/create',  function() { (new SessionController())->create(); });
+    $router->add('POST', '/sessions/store',   function() { (new SessionController())->store(); });
+    $router->add('GET',  '/sessions/join',    function() { (new SessionController())->showJoin(); });
+    $router->add('POST', '/sessions/join',    function() { (new SessionController())->join(); });
+
+    $router->add('GET',  '/sessions/{id}/edit',   function($id) { (new SessionController())->edit($id); });
+    $router->add('POST', '/sessions/{id}/update', function($id) { (new SessionController())->update($id); });
+    $router->add('POST', '/sessions/{id}/start',  function($id) { (new SessionController())->start($id); });
+    $router->add('POST', '/sessions/{id}/end',    function($id) { (new SessionController())->end($id); });
+    $router->add('POST', '/sessions/{id}/cancel', function($id) { (new SessionController())->cancel($id); });
+    $router->add('GET',  '/sessions/{id}',        function($id) { (new SessionController())->dashboard($id); });
 
     $router->compare($uri, $method);
 ?>

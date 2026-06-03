@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Services;
 
-use App\Infrastructure\Persistence\PdoConnection;
+use Data\Database;
+use PDO;
+use PDOStatement;
 
 /**
  * Minimal authentication service against the real `users` table.
@@ -23,9 +25,24 @@ use App\Infrastructure\Persistence\PdoConnection;
  */
 final class AuthService
 {
-    public function __construct(
-        private readonly PdoConnection $db,
-    ) {
+    private PDO $pdo;
+
+    public function __construct()
+    {
+        $this->pdo = Database::getConnection();
+    }
+
+    /**
+     * Prepare + execute helper (replaces the former PdoConnection::query()).
+     *
+     * @param array<string, scalar|null> $params
+     */
+    private function run(string $sql, array $params = []): PDOStatement
+    {
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt;
     }
 
     /**
@@ -37,7 +54,7 @@ final class AuthService
             return ['success' => false, 'error' => 'Email et mot de passe requis.'];
         }
 
-        $row = $this->db->query(
+        $row = $this->run(
             'SELECT id, email, password_hash, first_name, last_name, is_active
              FROM users WHERE email = :email',
             ['email' => $email]
@@ -53,7 +70,7 @@ final class AuthService
 
         $userId = (int) $row['id'];
 
-        $this->db->query(
+        $this->run(
             'UPDATE users SET last_login_at = NOW() WHERE id = :id',
             ['id' => $userId]
         );
@@ -126,8 +143,8 @@ final class AuthService
         }
 
         // ----- Email uniqueness -------------------------------------
-        $existing = $this->db
-            ->query('SELECT 1 FROM users WHERE email = :email', ['email' => $email])
+        $existing = $this
+            ->run('SELECT 1 FROM users WHERE email = :email', ['email' => $email])
             ->fetch();
         if ($existing !== false) {
             return ['success' => false, 'error' => 'Cet email est déjà utilisé.'];
@@ -136,9 +153,9 @@ final class AuthService
         // ----- Insert -----------------------------------------------
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
-        $this->db->beginTransaction();
+        $this->pdo->beginTransaction();
         try {
-            $stmt = $this->db->query(
+            $stmt = $this->run(
                 'INSERT INTO users (email, password_hash, first_name, last_name, consent_at, consent_version)
                  VALUES (:email, :hash, :fn, :ln, NOW(), :ver)
                  RETURNING id',
@@ -156,14 +173,14 @@ final class AuthService
             // values are good for is_specialised (false) / title (null) /
             // student_number (null) — the user can fill them later.
             if ($role === 'teacher') {
-                $this->db->query('INSERT INTO teachers (id) VALUES (:id)', ['id' => $userId]);
+                $this->run('INSERT INTO teachers (id) VALUES (:id)', ['id' => $userId]);
             } else {
-                $this->db->query('INSERT INTO students (id) VALUES (:id)', ['id' => $userId]);
+                $this->run('INSERT INTO students (id) VALUES (:id)', ['id' => $userId]);
             }
 
-            $this->db->commit();
+            $this->pdo->commit();
         } catch (\Throwable $e) {
-            $this->db->rollback();
+            $this->pdo->rollBack();
             return [
                 'success' => false,
                 'error'   => "Erreur lors de l'enregistrement. Merci de réessayer.",
@@ -234,7 +251,7 @@ final class AuthService
     private function existsIn(string $table, int $userId): bool
     {
         // Table whitelist enforced by the call sites (teachers/students/...).
-        $row = $this->db->query(
+        $row = $this->run(
             "SELECT 1 FROM {$table} WHERE id = :id",
             ['id' => $userId]
         )->fetch();

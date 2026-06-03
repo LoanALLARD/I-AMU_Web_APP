@@ -17,7 +17,11 @@ class AiRepository{
         $this->pdo = $pdo;
     }
 
-    public function getModelByName(string $name_AI){
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getModelByName(string $name_AI): ?array
+    {
         $query = $this->pdo->prepare('
         SELECT * FROM models where name = :name
         ');
@@ -31,5 +35,53 @@ class AiRepository{
         }
 
         return $result;
+    }
+
+    /**
+     * Active models, for the session create/edit model picker.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAllActive(): array
+    {
+        $query = $this->pdo->prepare('SELECT id, name, version, context_window, is_active FROM models WHERE is_active = :a ORDER BY name');
+        $query->bindValue(':a', true, PDO::PARAM_BOOL);
+        $query->execute();
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $query->fetchAll();
+
+        return $rows;
+    }
+
+    /**
+     * Models matching the given ids, for the session dashboard.
+     *
+     * @param list<int> $ids
+     * @return list<array<string, mixed>>
+     */
+    public function findByIds(array $ids): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if ($ids === []) {
+            return [];
+        }
+
+        $placeholders = [];
+        $params       = [];
+        foreach ($ids as $i => $id) {
+            $key            = ':id' . $i;
+            $placeholders[] = $key;
+            $params[$key]   = $id;
+        }
+
+        $sql   = 'SELECT id, name, version, context_window, is_active FROM models WHERE id IN (' . implode(', ', $placeholders) . ') ORDER BY name';
+        $query = $this->pdo->prepare($sql);
+        $query->execute($params);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $query->fetchAll();
+
+        return $rows;
     }
 }
