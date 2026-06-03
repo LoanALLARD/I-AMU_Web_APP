@@ -114,6 +114,7 @@ $router->add('POST', '/login',        fn() => (new LoginController($authService)
 $router->add('GET',  '/register',     fn() => (new LoginController($authService))->showRegister());
 $router->add('POST', '/register',     fn() => (new LoginController($authService))->register());
 $router->add('GET',  '/logout',       fn() => (new LoginController($authService))->logout());
+$router->add('POST', '/reactivate',  fn() => (new LoginController($authService))->reactivate());
 $router->add('GET',  '/RGPDConsent',  fn() => (new LoginController($authService))->showRGPD());
 
 // Chat — authenticated shell (GET) + LLM round-trip endpoint (POST) ---

@@ -32,7 +32,7 @@
                     Vous avez précédemment désactivé votre compte.
                     Souhaitez-vous le réactiver pour retrouver l'accès ?
                 </p>
-                <form method="POST" action="/chat">
+                <form method="POST" action="/reactivate">
                     <?= csrf_field() ?>
                     <input type="hidden" name="email" value="<?= htmlspecialchars($email ?? '') ?>">
                     <input type="hidden" name="password" id="reactivate-password" value="">
