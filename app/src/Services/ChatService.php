@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Domain\Session;
 use Domain\SessionStatus;
 use Models\ConversationRepository;
+use Models\InteractionRepository;
 use Models\SessionRepository;
 use PDO;
 use RuntimeException;
@@ -23,11 +24,13 @@ class ChatService
 {
     private ConversationRepository $conversations;
     private SessionRepository $sessions;
+    private InteractionRepository $interactions;
 
     public function __construct(PDO $pdo)
     {
         $this->conversations = new ConversationRepository($pdo);
         $this->sessions      = new SessionRepository($pdo);
+        $this->interactions  = new InteractionRepository($pdo);
     }
 
     /**
@@ -87,9 +90,24 @@ class ChatService
             $rows     = $this->conversations->listFreeByUser($userId, $archived);
         }
 
+        // Past prompt/response turns of the open conversation, so the chat
+        // re-displays its history instead of an empty thread on reload.
+        $messages = [];
+        if ($conversation !== null) {
+            $messages = array_map(
+                static fn (array $m): array => [
+                    'prompt'   => (string) $m['prompt'],
+                    'response' => (string) $m['response'],
+                    'model'    => (string) ($m['model_name'] ?? ''),
+                ],
+                $this->interactions->listByConversation((int) $conversation['id'])
+            );
+        }
+
         return [
             'notFound'      => false,
             'conversation'  => $conversation,
+            'messages'      => $messages,
             'conversations' => array_map(
                 static fn (array $c): array => [
                     'id'          => (int) $c['id'],

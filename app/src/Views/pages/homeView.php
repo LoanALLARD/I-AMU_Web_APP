@@ -13,6 +13,8 @@ $closedReason  = $closedReason ?? '';
 $conversation  = $conversation ?? null;
 $env           = $env ?? null;
 $inSession     = ($env['mode'] ?? 'libre') === 'session';
+$messages      = $messages ?? [];
+$hasMessages   = $messages !== [];
 ?>
 <div class="chat-container">
     <div class="chat-area">
@@ -29,6 +31,20 @@ $inSession     = ($env['mode'] ?? 'libre') === 'session';
 
         <div class="messages" id="messages">
 
+            <?php if ($hasMessages): ?>
+                <?php /* Server-rendered history: mirrors the DOM the live
+                  composer builds, so a reloaded thread is indistinguishable
+                  from a fresh exchange. */ ?>
+                <?php foreach ($messages as $m): ?>
+                    <div class="msg msg-user">
+                        <div class="msg-content"><?= htmlspecialchars($m['prompt']) ?></div>
+                    </div>
+                    <div class="msg msg-ai">
+                        <div class="msg-meta"><span class="msg-model"><?= htmlspecialchars($m['model']) ?></span></div>
+                        <div class="msg-content"><p><?= htmlspecialchars($m['response']) ?></p></div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
             <div class="empty-state" id="emptyState">
                 <div class="empty-icon">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -60,6 +76,7 @@ $inSession     = ($env['mode'] ?? 'libre') === 'session';
                     <?php endif; ?>
                 <?php endif; ?>
             </div>
+            <?php endif; ?>
 
         </div>
 
@@ -103,6 +120,13 @@ $inSession     = ($env['mode'] ?? 'libre') === 'session';
     const input = document.getElementById('promptInput');
     const sendBtn = document.getElementById('btnSend');
     const counter = document.getElementById('charCounter');
+
+    // On load, jump to the latest message so a reopened thread starts at the
+    // bottom instead of the top.
+    (function () {
+        const m = document.getElementById('messages');
+        if (m) m.scrollTop = m.scrollHeight;
+    })();
 
     input?.addEventListener('input', () => {
         input.style.height = 'auto';

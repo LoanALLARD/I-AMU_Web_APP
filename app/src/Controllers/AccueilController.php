@@ -44,6 +44,7 @@ class AccueilController extends Controller
             'page'          => 'chat',
             'conversation'  => $env['conversation'],
             'conversations' => $env['conversations'],
+            'messages'      => $env['messages'],
             'sessionClosed' => $env['sessionClosed'],
             'closedReason'  => $env['closedReason'],
             'env'           => $env['env'],

@@ -41,4 +41,29 @@ class InteractionRepository {
             'output_tokens'   => $output_tokens >= 0 ? $output_tokens : null,
         ]);
     }
+
+    /**
+     * Full prompt/response history of a conversation, oldest first, with the
+     * model name of each turn. Ownership is enforced by the caller: the chat
+     * environment only asks for messages of a conversation it has already
+     * resolved as belonging to the user.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listByConversation(int $conversationId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT i.prompt, i.response, i.sent_at, m.name AS model_name
+               FROM interactions i
+               JOIN models m ON m.id = i.model_id
+              WHERE i.conversation_id = :cid
+              ORDER BY i.sent_at ASC, i.id ASC'
+        );
+        $stmt->execute(['cid' => $conversationId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
 }
