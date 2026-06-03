@@ -244,7 +244,14 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                          archived conversations of the current environment.
                          The scope rides on ?archived=1; the open conversation
                          is unaffected. */ ?>
+                        <?php $isSessionEnv = ($env['mode'] ?? 'libre') === 'session'; ?>
                         <?php $scopeBase = !empty($conversation['id']) ? '/chat/' . (int) $conversation['id'] : '/chat'; ?>
+                        <?php if ($isSessionEnv): ?>
+                            <?php /* Session conversations are driven by the session
+                             lifecycle: no rename, no archive — hence no scope
+                             switch either (a session never has an archive). */ ?>
+                            <span class="conv-group-label">Conversations</span>
+                        <?php else: ?>
                         <div class="conv-scope">
                             <button type="button" class="conv-scope-toggle" id="convScopeToggle" aria-haspopup="true"
                                 aria-expanded="false">
@@ -276,6 +283,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                                 </a>
                             </div>
                         </div>
+                        <?php endif; ?>
                         <?php $activeConvId = $conversation['id'] ?? null; ?>
                         <?php /* Renaming is allowed only in the free environment:
                          session conversations keep their generated name. The
@@ -287,6 +295,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                                 <a href="/chat/<?= (int) $c['id'] ?>" class="conv-item">
                                     <span class="conv-title"><?= htmlspecialchars($c['name']) ?></span>
                                 </a>
+                                <?php if (!$isSessionEnv): ?>
                                 <div class="conv-actions">
                                     <button type="button" class="conv-menu-btn" aria-haspopup="true" aria-expanded="false"
                                         aria-label="Actions sur la conversation">
@@ -335,6 +344,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                                         <?php endif; ?>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                         <?php if (empty($conversations)): ?>

@@ -166,11 +166,12 @@ class ChatService
     }
 
     /**
-     * Archives a conversation the user owns and returns where the chat shell
-     * should land next: the environment of the archived conversation plus the
-     * id of the most recent remaining conversation there (null when none).
+     * Archives a free-mode conversation the user owns and returns the id of
+     * the most recent remaining free conversation (null when none), so the
+     * chat shell can land somewhere sensible. Session conversations are
+     * managed by the session lifecycle and cannot be archived.
      *
-     * @return array{sessionId: int|null, next: int|null}
+     * @return array{next: int|null}
      */
     public function archive(int $userId, int $conversationId): array
     {
@@ -178,17 +179,16 @@ class ChatService
         if ($row === null) {
             throw new RuntimeException('Conversation introuvable.');
         }
+        if ($row['session_id'] !== null) {
+            throw new RuntimeException('Une conversation de session ne peut pas être archivée.');
+        }
 
-        $sessionId = $row['session_id'] !== null ? (int) $row['session_id'] : null;
         $this->conversations->archive($userId, $conversationId);
 
-        $remaining = $sessionId !== null
-            ? $this->conversations->listByUserAndSession($userId, $sessionId)
-            : $this->conversations->listFreeByUser($userId);
+        $remaining = $this->conversations->listFreeByUser($userId);
+        $next      = $remaining !== [] ? (int) $remaining[0]['id'] : null;
 
-        $next = $remaining !== [] ? (int) $remaining[0]['id'] : null;
-
-        return ['sessionId' => $sessionId, 'next' => $next];
+        return ['next' => $next];
     }
 
     /**
