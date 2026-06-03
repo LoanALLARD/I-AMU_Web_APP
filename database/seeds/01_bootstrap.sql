@@ -17,3 +17,5 @@ INSERT into departments(id, place_id,name, description) VALUES (12,2,'departemen
 INSERT into resources (id,owner_id,department_id,code,name,description,semester) VALUES (1,24,12,'code','dev','ressources pour le dev de l outils','s3');
 -- MODELS
 INSERT into models (id,department_id,resource_id,name,version,provider,max_tokens,context_window,api_url,adapter)VALUES (1,12,NULL,'llama3.2:1b','V1','meta',100000,128000,'http://i-amu_web_app-ollama2-1:11434/api/generate','ollama');
+-- SESSIONS
+INSERT into sessions (resource_id,name) VALUES (1,'session_evan_test');

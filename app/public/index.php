@@ -1,144 +1,63 @@
 <?php
+    // Hand-written autoloader (runtime). Composer's vendor/autoload.php
+    // is reserved for dev tools (PHPStan, PHPUnit, PHPCS).
+    
+    require dirname(__DIR__) . '/src/bootstrap.php';
 
-/**
- * Front controller.
- *
- * Responsibilities:
- *   1. Load Dotenv + Composer autoloader (via src/bootstrap.php).
- *   2. Build the dependency graph (config → infrastructure → services →
- *      controllers).
- *   3. Register routes and dispatch the current request.
- *
- * Manual DI on purpose: the project rule (cf. CLAUDE.md §3) forbids an
- * automatic container.
- */
+    session_start();
+    use Core\Router;
+    use Controllers\AccueilController;
+    use Controllers\LLMController;
+    use Controllers\AuthController;
+    use Controllers\SessionController;
+    use Controllers\ProfileController;
+    use Controllers\PlaceController;
 
-require dirname(__DIR__) . '/src/bootstrap.php';
+    // routeur 
+    $router = new Router();
 
-session_start();
+    $router->add('GET',  '/',            function() { (new AccueilController())->index(); });
+    $router->add('GET',  '/accueil',     function() { (new AccueilController())->index(); });
 
-use App\Application\Services\CancelSessionService;
-use App\Application\Services\CreateSessionService;
-use App\Application\Services\EndSessionService;
-use App\Application\Services\GetSessionDashboardService;
-use App\Application\Services\JoinSessionService;
-use App\Application\Services\ListMySessionsService;
-use App\Application\Services\GenerateReplyService;
-use App\Application\Services\StartSessionService;
-use App\Application\Services\UpdateSessionService;
-use App\Http\Controllers\ChatController;
-use App\Http\Controllers\LLMController;
-use App\Http\Controllers\SessionController;
-use App\Infrastructure\Clock\SystemClock;
-use App\Infrastructure\Llm\LlmProviderFactory;
-use App\Infrastructure\Persistence\PdoConnection;
-use App\Infrastructure\Persistence\PdoLlmModelRepository;
-use App\Infrastructure\Persistence\PdoModelRepository;
-use App\Infrastructure\Persistence\PdoResourceRepository;
-use App\Infrastructure\Persistence\PdoSessionRepository;
-use Controllers\LoginController;
-use Controllers\ProfileController;
-use Core\Controller;
-use Core\Router;
-use Services\AuthService;
+    $router->add('POST', '/chat',         function() { (new LLMController())->handleChat(); });
+    $router->add('POST', '/chat/new',     function() { (new AccueilController())->newChat(); });
+    $router->add('POST', '/chat/rename',    function() { (new AccueilController())->renameChat(); });
+    $router->add('POST', '/chat/archive',   function() { (new AccueilController())->archiveChat(); });
+    $router->add('POST', '/chat/unarchive', function() { (new AccueilController())->unarchiveChat(); });
 
-// ─── Infrastructure (built once per request) ────────────────────────
-$config      = require dirname(__DIR__) . '/src/Config/config.php';
-$db          = new PdoConnection($config['database']);
-$clock       = new SystemClock();
-$authService = new AuthService($db);
+    $uri = $_SERVER['REQUEST_URI'];
+    $method = $_SERVER['REQUEST_METHOD'];
 
-// ─── Repositories ───────────────────────────────────────────────────
-$sessionRepo  = new PdoSessionRepository($db);
-$modelRepo    = new PdoModelRepository($db);
-$resourceRepo = new PdoResourceRepository($db);
-$llmModelRepo = new PdoLlmModelRepository($db);
+    $router->add('GET',  '/login',       function() { (new AuthController())->showLogin(); });
+    $router->add('POST', '/login',       function() { (new AuthController())->login(); });
+    $router->add('GET',  '/register',    function() { (new AuthController())->showRegister(); });
+    $router->add('POST', '/register',    function() { (new AuthController())->register(); });
+    $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
+    $router->add('GET',  '/RGPDConsent', function() { (new AuthController())->showRGPD(); });
 
-// ─── Application services (use-cases) ───────────────────────────────
-$createSession   = new CreateSessionService($sessionRepo, $clock);
-$updateSession   = new UpdateSessionService($sessionRepo, $clock);
-$startSession    = new StartSessionService($sessionRepo, $clock);
-$endSession      = new EndSessionService($sessionRepo, $clock);
-$cancelSession   = new CancelSessionService($sessionRepo, $clock);
-$joinSession     = new JoinSessionService($sessionRepo, $clock);
-$listMySessions  = new ListMySessionsService($sessionRepo, $clock);
-$getDashboard    = new GetSessionDashboardService($sessionRepo, $modelRepo, $clock);
+    // AJAX: departments of a place, for the registration form's dependent select.
+    $router->add('GET',  '/places/{id}/departments', function($id) { (new PlaceController())->departments($id); });
 
-// Chat / LLM use-case: resolve a model by name then delegate to its
-// provider. The factory is the only place that instantiates an adapter.
-$generateReply   = new GenerateReplyService($llmModelRepo, new LlmProviderFactory());
+    // --- Chat home + profile (authenticated) --------------------------
+    $router->add('GET', '/chat',      function()    { (new AccueilController())->index(); });
+    $router->add('GET', '/chat/{id}', function($id)  { (new AccueilController())->index($id); });
+    $router->add('GET', '/profile',   function()    { (new ProfileController())->index(); });
 
-// ─── Controllers ────────────────────────────────────────────────────
-$sessionController = new SessionController(
-    sessions:        $sessionRepo,
-    models:          $modelRepo,
-    resources:       $resourceRepo,
-    createSession:   $createSession,
-    updateSession:   $updateSession,
-    startSession:    $startSession,
-    endSession:      $endSession,
-    cancelSession:   $cancelSession,
-    joinSession:     $joinSession,
-    listMySessions:  $listMySessions,
-    getDashboard:    $getDashboard,
-);
+    // --- Sessions (teacher) + join (student) --------------------------
+    // Literal routes are registered before the `{id}` wildcard so they win.
+    $router->add('GET',  '/sessions',         function() { (new SessionController())->index(); });
+    $router->add('GET',  '/sessions/create',  function() { (new SessionController())->create(); });
+    $router->add('POST', '/sessions/store',   function() { (new SessionController())->store(); });
+    $router->add('GET',  '/sessions/join',    function() { (new SessionController())->showJoin(); });
+    $router->add('POST', '/sessions/join',    function() { (new SessionController())->join(); });
 
-// Chat controllers (Clean Architecture; migrated out of the legacy
-// ServeurFolder Controllers\ namespace).
-$chatController = new ChatController($modelRepo);
-$llmController  = new LLMController($generateReply);
+    $router->add('GET',  '/sessions/{id}/edit',   function($id) { (new SessionController())->edit($id); });
+    $router->add('POST', '/sessions/{id}/update', function($id) { (new SessionController())->update($id); });
+    $router->add('POST', '/sessions/{id}/start',  function($id) { (new SessionController())->start($id); });
+    $router->add('POST', '/sessions/{id}/end',    function($id) { (new SessionController())->end($id); });
+    $router->add('POST', '/sessions/{id}/cancel', function($id) { (new SessionController())->cancel($id); });
+    $router->add('GET',  '/sessions/{id}/monitor', function($id) { (new SessionController())->monitor($id); });
+    $router->add('GET',  '/sessions/{id}',        function($id) { (new SessionController())->dashboard($id); });
 
-// Profile page — surfaces account info and acts as the exit point for
-// /logout. Renders inside Layout/chat.php (the universal authenticated
-// shell), so the sidebar + topbar wrap the profile cards uniformly.
-$profileCtrl = new Controllers\ProfileController($authService);
-$profileController = new class extends Controller {
-    public function show(): void
-    {
-        $this->requireAuth();
-        $this->render('pages/profile/index', [
-            'page'      => 'profile',
-            'pageTitle' => 'Mon profil',
-            'user'      => $this->currentUser(),
-        ], 'chat');
-    }
-};
-
-// ─── Router ─────────────────────────────────────────────────────────
-$router = new Router();
-
-// Auth ----------------------------------------------------------------
-$router->add('GET',  '/',             fn() => (new LoginController($authService))->showLogin());
-$router->add('GET',  '/login',        fn() => (new LoginController($authService))->showLogin());
-$router->add('POST', '/login',        fn() => (new LoginController($authService))->login());
-$router->add('GET',  '/register',     fn() => (new LoginController($authService))->showRegister());
-$router->add('POST', '/register',     fn() => (new LoginController($authService))->register());
-$router->add('GET',  '/logout',       fn() => (new LoginController($authService))->logout());
-$router->add('POST', '/reactivate',  fn() => (new LoginController($authService))->reactivate());
-$router->add('GET',  '/RGPDConsent',  fn() => (new LoginController($authService))->showRGPD());
-
-// Chat — authenticated shell (GET) + LLM round-trip endpoint (POST) ---
-$router->add('GET',  '/chat', fn() => $chatController->index());
-$router->add('POST', '/chat', fn() => $llmController->handleChat());
-
-// Profile -------------------------------------------------------------
-$router->add('GET', '/profile', [$profileCtrl, 'show']);
-$router->add('POST', '/profile/deactivate', [$profileCtrl, 'deactivate']);
-
-// Sessions ------------------------------------------------------------
-$router->add('GET',  '/sessions',             fn() => $sessionController->index());
-$router->add('GET',  '/sessions/create',      fn() => $sessionController->create());
-$router->add('POST', '/sessions/store',       fn() => $sessionController->store());
-$router->add('POST', '/sessions/join',        fn() => $sessionController->join());
-$router->add('GET',  '/sessions/{id}',        fn(string $id) => $sessionController->dashboard($id));
-$router->add('GET',  '/sessions/{id}/edit',   fn(string $id) => $sessionController->edit($id));
-$router->add('POST', '/sessions/{id}/update', fn(string $id) => $sessionController->update($id));
-$router->add('POST', '/sessions/{id}/start',  fn(string $id) => $sessionController->start($id));
-$router->add('POST', '/sessions/{id}/end',    fn(string $id) => $sessionController->end($id));
-$router->add('POST', '/sessions/{id}/cancel', fn(string $id) => $sessionController->cancel($id));
-
-// ─── Dispatch ───────────────────────────────────────────────────────
-$router->dispatch(
-    $_SERVER['REQUEST_URI']    ?? '/',
-    $_SERVER['REQUEST_METHOD'] ?? 'GET'
-);
+    $router->compare($uri, $method);
+?>

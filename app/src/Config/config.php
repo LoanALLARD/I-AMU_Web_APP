@@ -27,4 +27,9 @@ return [
         'user'     => $dbUser,
         'password' => $dbPassword,
     ],
+
+    // Application timezone. PostgreSQL stores timestamptz in UTC; the PHP
+    // runtime and the DB connection are both pinned to this zone so stored
+    // instants are entered and displayed in local (AMU = France) time.
+    'timezone' => $_ENV['APP_TIMEZONE'] ?? 'Europe/Paris',
 ];

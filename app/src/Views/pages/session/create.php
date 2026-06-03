@@ -9,16 +9,17 @@
  *   - single max_input_size cap (the 3-token-cap design was dropped)
  *   - pre_prompt_override (was system_prompt_override)
  *
- * @var string                                       $mode               'create' | 'edit'
- * @var \App\Domain\Entities\Session|null            $session            Existing entity in edit mode
- * @var \App\Application\DTOs\ModelMetaView[]        $models             All active LLM models
- * @var \App\Application\DTOs\ResourceMetaView[]     $resources          Resources owned by the teacher
- * @var int[]                                        $authorizedModelIds Pre-checked model ids (edit mode)
- * @var \App\Domain\ValueObjects\AccessCode          $previewCode        Code displayed in the right column
- * @var array<string,mixed>                          $oldInput           Re-fill values on validation error
+ * @var string                       $mode                 'create' | 'edit'
+ * @var \Domain\Session|null         $session              Existing entity in edit mode
+ * @var list<array<string,mixed>>    $models               All active LLM models
+ * @var list<array<string,mixed>>    $resources            Resources owned by the teacher
+ * @var int[]                        $authorizedModelIds   Pre-checked model ids (edit mode)
+ * @var string                       $previewCode          Raw 6-char code (right column)
+ * @var string                       $previewCodeFormatted Code formatted as XXX-XXX
+ * @var array<string,mixed>          $oldInput             Re-fill values on validation error
  */
 
-use App\Domain\ValueObjects\SessionType;
+use Domain\SessionType;
 
 $isEdit = $mode === 'edit';
 $action = $isEdit ? '/sessions/' . $session->id() . '/update' : '/sessions/store';
@@ -74,9 +75,6 @@ $typeCards = [
 
 <form method="POST" action="<?= htmlspecialchars($action) ?>" class="session-form-grid" id="session-form">
     <?= csrf_field() ?>
-    <?php if (!$isEdit): ?>
-        <input type="hidden" name="access_code" value="<?= htmlspecialchars($previewCode->value) ?>">
-    <?php endif; ?>
 
     <div class="session-form-main">
 
@@ -114,10 +112,10 @@ $typeCards = [
                     <p class="fsection-hint">Aucune ressource ne vous appartient. Demandez à un administrateur de département de vous en attribuer une avant de créer une session.</p>
                 <?php else: ?>
                     <select name="resource_id" required>
-                        <option value="">— sélectionnez une ressource —</option>
+                        <option value="">— Sélectionnez une ressource —</option>
                         <?php foreach ($resources as $r): ?>
-                            <option value="<?= (int) $r->id ?>" <?= $selectedResourceId === $r->id ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($r->code) ?> — <?= htmlspecialchars($r->name) ?>
+                            <option value="<?= (int) $r['id'] ?>" <?= $selectedResourceId === (int) $r['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars((string) $r['code']) ?> — <?= htmlspecialchars((string) $r['name']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -169,15 +167,15 @@ $typeCards = [
             <p class="fsection-hint">3 max recommandés. Les modèles non cochés sont invisibles côté étudiant.</p>
             <div class="models-list">
                 <?php foreach ($models as $i => $m):
-                    $checked = in_array($m->id, $authorizedModelIds, true) || (!$isEdit && $i < 2);
+                    $checked = in_array((int) $m['id'], $authorizedModelIds, true) || (!$isEdit && $i < 2);
                 ?>
                     <label class="model-row <?= $checked ? 'is-checked' : 'is-unchecked' ?>">
-                        <input type="checkbox" name="models[]" value="<?= (int) $m->id ?>" <?= $checked ? 'checked' : '' ?>>
-                        <span class="model-name"><?= htmlspecialchars($m->name) ?></span>
+                        <input type="checkbox" name="models[]" value="<?= (int) $m['id'] ?>" <?= $checked ? 'checked' : '' ?>>
+                        <span class="model-name"><?= htmlspecialchars((string) $m['name']) ?></span>
                         <span class="model-version">
-                            <?= htmlspecialchars($m->version ?? '—') ?>
-                            <?php if ($m->contextWindow): ?>
-                                · ctx <?= number_format((float) $m->contextWindow / 1000, 0) ?>k
+                            <?= htmlspecialchars((string) ($m['version'] ?? '—')) ?>
+                            <?php if (!empty($m['contextWindow'])): ?>
+                                · ctx <?= number_format((float) $m['contextWindow'] / 1000, 0) ?>k
                             <?php endif; ?>
                         </span>
                     </label>
@@ -245,20 +243,22 @@ $typeCards = [
 
     <!-- Right column : access code + preview + preflight -->
     <aside class="session-aside">
+        <?php if ($previewCodeFormatted !== ''): ?>
         <div class="access-card">
             <div class="access-card-label">Code d'accès</div>
             <div class="access-code-display" id="access-code-display">
-                <?= htmlspecialchars($previewCode->formatted()) ?>
+                <?= htmlspecialchars($previewCodeFormatted) ?>
             </div>
             <div class="access-card-actions">
                 <button type="button" class="btn bordered" id="btn-copy-code">
-                    <?= icon('copy', '', 11) ?> copier
+                    <?= icon('copy', '', 11) ?> Copier
                 </button>
                 <button type="button" class="btn bordered" id="btn-fullscreen-code">
-                    <?= icon('eye', '', 11) ?> plein écran
+                    <?= icon('eye', '', 11) ?> Plein écran
                 </button>
             </div>
         </div>
+        <?php endif; ?>
 
         <div>
             <div class="fsection-head">
@@ -268,7 +268,9 @@ $typeCards = [
             <div class="preview-card">
                 <div class="preview-card-header">
                     <span class="preview-card-tag" id="preview-tag"><?= htmlspecialchars(strtolower($currentType->value)) ?> / <?= htmlspecialchars($currentType->label()) ?></span>
-                    <span class="preview-card-tag">· <?= htmlspecialchars($previewCode->formatted()) ?></span>
+                    <?php if ($previewCodeFormatted !== ''): ?>
+                        <span class="preview-card-tag">· <?= htmlspecialchars($previewCodeFormatted) ?></span>
+                    <?php endif; ?>
                 </div>
                 <div class="preview-card-name" id="preview-name">— libellé —</div>
                 <div class="preview-card-meta">
@@ -317,7 +319,7 @@ $typeCards = [
 
 <script>
     window.__IAMU_SESSION_FORM__ = {
-        code: <?= json_encode($previewCode->formatted()) ?>
+        code: <?= json_encode($previewCodeFormatted) ?>
     };
 </script>
 <?php

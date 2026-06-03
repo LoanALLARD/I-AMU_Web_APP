@@ -12,6 +12,15 @@ $initials = strtoupper(
     . substr($user['last_name']  ?? '·', 0, 1)
 );
 $roles = $user['roles'] ?? [];
+
+// French UI labels for roles — the badge text is uppercased by CSS, so
+// 'étudiant' renders as 'ÉTUDIANT'. Unknown roles fall back to their key.
+$roleLabels = [
+    'student' => 'étudiant',
+    'teacher' => 'enseignant',
+    'admin'   => 'administrateur',
+];
+$roleFr = static fn(string $r): string => $roleLabels[$r] ?? $r;
 ?>
 <div class="page-header">
     <div class="page-header-row">
@@ -37,19 +46,6 @@ $roles = $user['roles'] ?? [];
                     <span class="kv-key">id interne</span>
                     <span class="kv-val mono">#<?= (int) ($user['id'] ?? 0) ?></span>
                 </div>
-            </div>
-
-            <div class="dashboard-card">
-                <h2>Rôles</h2>
-                <?php if ($roles === []): ?>
-                    <p style="color:var(--gray-400);font-size:12px;">Aucun rôle attribué.</p>
-                <?php else: ?>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                        <?php foreach ($roles as $role): ?>
-                            <span class="badge badge-<?= htmlspecialchars($role) ?>"><?= htmlspecialchars($role) ?></span>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
             </div>
 
             <div class="dashboard-card">
@@ -102,9 +98,15 @@ $roles = $user['roles'] ?? [];
                     <?= htmlspecialchars($initials) ?>
                 </div>
                 <div style="font-weight:600;font-size:16px;"><?= htmlspecialchars($displayName) ?></div>
-                <div class="mono" style="font-size:11px;color:var(--gray-400);margin-top:4px;">
-                    <?= htmlspecialchars(implode(' · ', $roles) ?: 'aucun rôle') ?>
-                </div>
+                <?php if ($roles !== []): ?>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px;">
+                        <?php foreach ($roles as $role): ?>
+                            <span class="badge badge-<?= htmlspecialchars($role) ?>"><?= htmlspecialchars($roleFr($role)) ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="mono" style="font-size:11px;color:var(--gray-400);margin-top:8px;">aucun rôle</div>
+                <?php endif; ?>
             </div>
         </aside>
 

@@ -13,11 +13,13 @@ concurrency:
 
 jobs:
     # ────────────────────────────────────────────────────────────────
-    # PHP quality: lint + PHPStan (level 6) + PHPCS (PSR-12) + PHPUnit
-    # All tools live under app/ (composer.json, phpstan.neon, …).
+    # PHP static analysis: lint + PHPStan (level 6) + PHPCS (PSR-12).
+    # Kept separate from the `tests` job so static-analysis debt and the
+    # test outcome surface as two independent checks — a red PHPStan no
+    # longer hides (or skips) the PHPUnit result. Tools live under app/.
     # ────────────────────────────────────────────────────────────────
     quality:
-        name: PHP quality (lint, phpstan, phpcs, phpunit)
+        name: PHP quality (lint, phpstan, phpcs)
         runs-on: ubuntu-latest
 
         defaults:
@@ -65,10 +67,47 @@ jobs:
               continue-on-error: true
               run: vendor/bin/phpcs --report=full
 
+    # ────────────────────────────────────────────────────────────────
+    # PHP tests: PHPUnit (unit + integration suites under app/tests).
+    # A standalone job so the test result is a check of its own,
+    # independent from the static-analysis job above — a failing test
+    # turns this red on its own, and PHPStan debt never skips it.
+    # ────────────────────────────────────────────────────────────────
+    tests:
+        name: PHP tests (phpunit)
+        runs-on: ubuntu-latest
+
+        defaults:
+            run:
+                working-directory: app
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup PHP 8.3
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: "8.3"
+                  extensions: pdo, pdo_pgsql, curl, mbstring, json
+                  tools: composer:v2
+                  coverage: none
+
+            - name: Resolve composer cache directory
+              id: composer-cache
+              run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+            - name: Cache composer dependencies
+              uses: actions/cache@v4
+              with:
+                  path: ${{ steps.composer-cache.outputs.dir }}
+                  key: ${{ runner.os }}-composer-${{ hashFiles('app/composer.lock') }}
+                  restore-keys: ${{ runner.os }}-composer-
+
+            - name: Install dev dependencies
+              run: composer install --prefer-dist --no-progress --no-interaction
+
             - name: PHPUnit
-              # PHPUnit returns 0 with "No tests executed." when the suites
-              # are empty, so this stays green until the first real test
-              # lands.
               run: vendor/bin/phpunit --display-warnings
 
     # ────────────────────────────────────────────────────────────────
