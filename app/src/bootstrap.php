@@ -16,6 +16,11 @@ try {
     die("Erreur lors du chargement du fichier .env : " . $e->getMessage());
 }
 
+// Pin the PHP runtime to the app timezone so datetime-local form inputs are
+// read as local time and `new DateTimeImmutable('now')` is local. The DB
+// connection is pinned to the same zone in Data\Database.
+date_default_timezone_set($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
+
 // Global view helpers (icon(), csrf_field()) — required by every page,
 // loaded here so views never have to import the underlying namespaces.
 require_once __DIR__ . '/Helpers/icons.php';
