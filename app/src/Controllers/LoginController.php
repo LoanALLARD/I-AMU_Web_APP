@@ -92,8 +92,9 @@ class LoginController extends Controller
             return;
         }
 
-        $this->flash('success', 'Inscription reussie!');
-        $this->redirect('/login');
+        // register() auto-logs-in the new user, so go straight to the app.
+        $this->flash('success', 'Inscription reussie! Bienvenue.');
+        $this->redirect('/chat');
     }
 
     /**

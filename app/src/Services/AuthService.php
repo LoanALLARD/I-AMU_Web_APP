@@ -85,8 +85,8 @@ final class AuthService
      *     which creates the user + role row in a single transaction so a
      *     half-created account can never linger.
      *
-     * Does NOT auto-login: the caller flashes a success message and
-     * redirects to /login (LoginController::register already does that).
+     * On success the new user is auto-logged-in (the session is populated
+     * via login()), so the caller can redirect straight to the app.
      *
      * @param array<string, mixed> $data
      * @return array{success: true} | array{success: false, error: string}
@@ -146,7 +146,10 @@ final class AuthService
             ];
         }
 
-        return ['success' => true];
+        // Auto-login: reuse login() so the session is populated through the
+        // single code path (roles, session_regenerate_id). The plaintext
+        // password is still available here, before it goes out of scope.
+        return $this->login($email, $password);
     }
 
     /**
