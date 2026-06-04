@@ -1,3 +1,7 @@
+-- pgcrypto provides crypt()/gen_salt('bf'), used below to hash dev passwords
+-- in a format password_verify() accepts. Dev-only: production hashes in PHP
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 INSERT INTO places (name, address, city, zip_code) VALUES
     ('Campus de Luminy',       '163 Avenue de Luminy',   'Marseille', '13288'),
     ('Campus Saint-Charles',   '3 Place Victor Hugo',    'Marseille', '13003');
@@ -13,27 +17,27 @@ INSERT INTO laboratories (code, name, address, email) VALUES
      '163 Avenue de Luminy', 'contact@lis-lab.fr');
 
 INSERT INTO super_administrators (email, password_hash, first_name, last_name) VALUES
-    ('admin@univ-amu.fr', 'CHANGE_ME', 'Admin', 'Principal');
+    ('admin@univ-amu.fr', crypt('password', gen_salt('bf')), 'Admin', 'Principal');
 
 
 INSERT INTO users (department_id, email, password_hash, first_name, last_name, is_active, theme) VALUES
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'jean.martin@univ-amu.fr',       'CHANGE_ME', 'Jean',     'Martin',    TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'marie.dupont@univ-amu.fr',      'CHANGE_ME', 'Marie',    'Dupont',    TRUE, 'DARK'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'paul.bernard@univ-amu.fr',      'CHANGE_ME', 'Paul',     'Bernard',   TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'sophie.leroy@univ-amu.fr',      'CHANGE_ME', 'Sophie',   'Leroy',     TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'luc.moreau@univ-amu.fr',        'CHANGE_ME', 'Luc',      'Moreau',    TRUE, 'DARK'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'claire.petit@univ-amu.fr',      'CHANGE_ME', 'Claire',   'Petit',     TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'alice.durand@etu.univ-amu.fr',  'CHANGE_ME', 'Alice',    'Durand',    TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'thomas.roux@etu.univ-amu.fr',   'CHANGE_ME', 'Thomas',   'Roux',      TRUE, 'DARK'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'emma.blanc@etu.univ-amu.fr',    'CHANGE_ME', 'Emma',     'Blanc',     TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'hugo.noir@etu.univ-amu.fr',     'CHANGE_ME', 'Hugo',     'Noir',      TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'lea.vert@etu.univ-amu.fr',      'CHANGE_ME', 'Lea',      'Vert',      TRUE, 'DARK'),
-    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'nathan.gris@etu.univ-amu.fr',   'CHANGE_ME', 'Nathan',   'Gris',      TRUE, 'LIGHT'),
-    (NULL,                                                       'chercheur1@univ-amu.fr',        'CHANGE_ME', 'Pierre',   'Curie',     TRUE, 'LIGHT'),
-    (NULL,                                                       'chercheur2@univ-amu.fr',        'CHANGE_ME', 'Henri',    'Poincare',  TRUE, 'DARK'),
-    (NULL,                                                       'orphan@univ-amu.fr',            'CHANGE_ME', 'Sans',     'Role',      TRUE, NULL),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'admin.info@univ-amu.fr',        'CHANGE_ME', 'Admin',    'Info',      TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'admin.maths@univ-amu.fr',       'CHANGE_ME', 'Admin',    'Maths',     TRUE, 'LIGHT');
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'jean.martin@univ-amu.fr',       crypt('password', gen_salt('bf')), 'Jean',     'Martin',    TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'marie.dupont@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Marie',    'Dupont',    TRUE, 'DARK'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'paul.bernard@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Paul',     'Bernard',   TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'sophie.leroy@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Sophie',   'Leroy',     TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'luc.moreau@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Luc',      'Moreau',    TRUE, 'DARK'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'claire.petit@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Claire',   'Petit',     TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'alice.durand@etu.univ-amu.fr',  crypt('password', gen_salt('bf')), 'Alice',    'Durand',    TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'thomas.roux@etu.univ-amu.fr',   crypt('password', gen_salt('bf')), 'Thomas',   'Roux',      TRUE, 'DARK'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'emma.blanc@etu.univ-amu.fr',    crypt('password', gen_salt('bf')), 'Emma',     'Blanc',     TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'hugo.noir@etu.univ-amu.fr',     crypt('password', gen_salt('bf')), 'Hugo',     'Noir',      TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'lea.vert@etu.univ-amu.fr',      crypt('password', gen_salt('bf')), 'Lea',      'Vert',      TRUE, 'DARK'),
+    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'nathan.gris@etu.univ-amu.fr',   crypt('password', gen_salt('bf')), 'Nathan',   'Gris',      TRUE, 'LIGHT'),
+    (NULL,                                                       'chercheur1@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Pierre',   'Curie',     TRUE, 'LIGHT'),
+    (NULL,                                                       'chercheur2@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Henri',    'Poincare',  TRUE, 'DARK'),
+    (NULL,                                                       'orphan@univ-amu.fr',            crypt('password', gen_salt('bf')), 'Sans',     'Role',      TRUE, NULL),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'admin.info@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Admin',    'Info',      TRUE, 'LIGHT'),
+    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'admin.maths@univ-amu.fr',       crypt('password', gen_salt('bf')), 'Admin',    'Maths',     TRUE, 'LIGHT');
 
 INSERT INTO teachers (id, is_specialised, title) VALUES
     ((SELECT id FROM users WHERE email = 'jean.martin@univ-amu.fr'),  TRUE,  'Professeur'),
