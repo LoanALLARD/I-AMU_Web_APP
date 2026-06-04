@@ -70,13 +70,10 @@ $themeCur = match ($user['theme'] ?? null) {
 
 
             <div class="profile-card">
-                <h2>Sécurité</h2>
+                <h2>Compte et donnée</h2>
                 <a href="/logout" class="btn danger">
                     <?= icon('lock', '', 12) ?> Se déconnecter
                 </a>
-            </div>
-
-            <div class="profile-card">
                 <div class="profile-info-box">
                     <h3>Désactiver mon compte</h3>
                     <p>
@@ -104,6 +101,7 @@ $themeCur = match ($user['theme'] ?? null) {
                         Le responsable de traitement traitera votre requête dans un délai de 30 jours
                         conformément à l'article 17 du RGPD.
                     </p>
+                    <a href="/rgpd" class="rgpd-link">Consulter les mentions d'information RGPD</a>
                 </div>
             </div>
         </div>
@@ -137,7 +135,6 @@ $themeCur = match ($user['theme'] ?? null) {
             <li>Vos données seront conservées à des fins de recherche</li>
             <li>Pour supprimer vos données, contactez <strong>dpo@univ-amu.fr</strong></li>
         </ul>
-        <a href="/rgpd" class="rgpd-link">Consulter les mentions d'information RGPD</a>
 
         <form method="POST" action="/profile/deactivate" class="modal-actions">
             <?= csrf_field() ?>

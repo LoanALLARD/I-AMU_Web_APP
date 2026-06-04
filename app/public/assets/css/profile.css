@@ -137,6 +137,17 @@
     background: #991b1b;
 }
 
+.profile-info-box .rgpd-link {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--blue);
+    text-decoration: none;
+}
+
+.profile-info-box .rgpd-link:hover {
+    text-decoration: underline;
+}
+
 .profile-info-box {
     padding: 16px;
     margin-bottom: 16px;
