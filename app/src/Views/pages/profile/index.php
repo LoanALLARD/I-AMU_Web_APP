@@ -99,7 +99,7 @@ $themeCur = match ($user['theme'] ?? null) {
                 </p>
                 <div class="dpo-block">
                     <a href="mailto:dpo@univ-amu.fr" class="dpo-link">
-                        <?= icon('mail', '', 12) ?> dpo@univ-amu.fr
+                        dpo@univ-amu.fr
                     </a>
                     <p class="dpo-hint">
                         Précisez votre nom, prénom et adresse email universitaire.
