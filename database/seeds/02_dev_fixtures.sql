@@ -113,7 +113,7 @@ INSERT INTO models (department_id, resource_id, name, version, provider,
                     max_tokens, context_window, api_url, adapter, is_shareable) VALUES
     ((SELECT id FROM departments WHERE name = 'Informatique'),
      NULL,
-     'llama3', '8b', 'ollama', 4096, 8192,
+     'llama3.2:1b', '8b', 'ollama', 4096, 8192,
      'http://host.docker.internal:11434', 'ollama', TRUE),
     (NULL,
      (SELECT id FROM resources WHERE code = 'INF202'),
@@ -121,7 +121,7 @@ INSERT INTO models (department_id, resource_id, name, version, provider,
      'http://host.docker.internal:11434', 'ollama', FALSE);
 
 INSERT INTO model_department_accesses (model_id, department_id) VALUES
-    ((SELECT id FROM models WHERE name = 'llama3'),
+    ((SELECT id FROM models WHERE name = 'llama3.2:1b'),
      (SELECT id FROM departments WHERE name = 'Mathematiques'));
 
 INSERT INTO sessions (resource_id, name, status, starts_at, ends_at, type,
@@ -161,13 +161,13 @@ UPDATE sessions
  WHERE name = 'TP Algo - archive';
 
 INSERT INTO session_models (model_id, session_id) VALUES
-    ((SELECT id FROM models WHERE name = 'llama3'),
+    ((SELECT id FROM models WHERE name = 'llama3.2:1b'),
      (SELECT id FROM sessions WHERE name = 'TP Algo - seance 1')),
     ((SELECT id FROM models WHERE name = 'mistral'),
      (SELECT id FROM sessions WHERE name = 'Examen BDD - blanc')),
     ((SELECT id FROM models WHERE name = 'mistral'),
      (SELECT id FROM sessions WHERE name = 'TD BDD - en cours')),
-    ((SELECT id FROM models WHERE name = 'llama3'),
+    ((SELECT id FROM models WHERE name = 'llama3.2:1b'),
      (SELECT id FROM sessions WHERE name = 'TP Algo - archive'));
 
 INSERT INTO enrollments (student_id, session_id) VALUES
@@ -200,11 +200,11 @@ INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
      'TD jointures - Hugo'),
     ((SELECT id FROM users WHERE email = 'alice.durand@etu.univ-amu.fr'),
      (SELECT id FROM sessions WHERE name = 'TP Algo - archive'),
-     (SELECT id FROM models WHERE name = 'llama3'),
+     (SELECT id FROM models WHERE name = 'llama3.2:1b'),
      'TP archive - Alice'),
     ((SELECT id FROM users WHERE email = 'orphan@univ-amu.fr'),
      NULL,
-     (SELECT id FROM models WHERE name = 'llama3'),
+     (SELECT id FROM models WHERE name = 'llama3.2:1b'),
      'Discussion libre');
 
 INSERT INTO interactions (conversation_id, prompt, response,
