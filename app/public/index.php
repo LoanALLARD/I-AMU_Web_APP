@@ -49,7 +49,9 @@
     $router->add('POST', '/profile/deactivate',  function()     { (new ProfileController())->deactivate(); });
 
     // --- Department-admin console (department_admin role) --------------
-    $router->add('GET', '/admin',     function()    { (new AdminController())->index(); });
+    $router->add('GET',  '/admin',                         function() { (new AdminController())->index(); });
+    $router->add('POST', '/admin/researchers/approve',     function() { (new AdminController())->approveResearcher(); });
+    $router->add('POST', '/admin/researchers/reject',      function() { (new AdminController())->rejectResearcher(); });
 
 // --- Sessions (teacher) + join (student) --------------------------
     // Literal routes are registered before the `{id}` wildcard so they win.

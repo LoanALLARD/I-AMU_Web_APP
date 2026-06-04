@@ -1,0 +1,58 @@
+/* Department-admin console (pages/admin/*). Reuses tokens from style.css. */
+
+.admin-section { max-width: 1040px; margin: 0 auto 24px; }
+
+.admin-identity {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--white, #fff); border: 1px solid var(--gray-200, #e5e7eb);
+    border-radius: 12px; padding: 14px 16px;
+}
+.admin-identity-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--blue-light, #eff6ff); color: var(--blue, #2563eb); flex: none;
+}
+.admin-identity-name { font-size: 14px; }
+.admin-identity-meta { font-size: 12px; color: var(--gray-400, #9ca3af); margin-top: 2px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+
+.admin-pending {
+    background: var(--gold-light, #fef9e7);
+    border: 1px solid var(--gold, #f1c40f);
+    border-radius: 12px; padding: 16px 18px;
+}
+.admin-pending h2 { font-size: 15px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+
+.admin-pending-row {
+    background: var(--white, #fff);
+    border: 1px solid var(--gray-200, #e5e7eb); border-radius: 8px; margin-bottom: 8px;
+    overflow: hidden;
+}
+.admin-pending-row:last-child { margin-bottom: 0; }
+.admin-pending-row > summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 12px; cursor: pointer; list-style: none;
+}
+.admin-pending-row > summary::-webkit-details-marker { display: none; }
+.admin-pending-row .who { font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.admin-pending-row .who small { color: var(--gray-400, #9ca3af); font-size: 12px; }
+.admin-pending-row .chevron { transition: transform .15s ease; color: var(--blue, #2563eb); display: inline-flex; }
+.admin-pending-row[open] .chevron { transform: rotate(90deg); }
+.admin-pending-row .reveal {
+    font-size: 12px; font-weight: 600; color: var(--blue, #2563eb);
+    display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+}
+.admin-pending-row[open] .reveal .reveal-open { display: none; }
+.admin-pending-row:not([open]) .reveal .reveal-close { display: none; }
+
+.admin-pending-detail {
+    padding: 12px 14px 14px; border-top: 1px solid var(--gray-100, #f3f4f6);
+    background: var(--gray-50, #fafafa); font-size: 13px;
+}
+.admin-pending-detail dl { display: grid; grid-template-columns: 130px 1fr; gap: 6px 12px; margin: 0; }
+.admin-pending-detail dt { color: var(--gray-400, #9ca3af); font-weight: 600; }
+.admin-pending-detail dd { margin: 0; color: var(--gray-800, #1f2937); }
+.admin-pending-detail .request-text { white-space: pre-line; }
+.admin-pending-detail .no-message { color: var(--gray-300, #d1d5db); font-style: italic; }
+
+.admin-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+.admin-actions form { margin: 0; }
