@@ -39,7 +39,8 @@ body.auth-body {
 }
 .deactivate-account-msg button{
     width:100%;
-    background: #2563eb; }
+    background: #2563eb;
+}
 
 .card-header {
     background: var(--blue);
