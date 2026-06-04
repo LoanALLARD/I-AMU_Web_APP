@@ -1509,6 +1509,23 @@ textarea {
 [data-theme="dark"] .alert-danger  { background: var(--refuse-bg); color: var(--refuse); border-color: var(--refuse); }
 [data-theme="dark"] .alert-info    { background: var(--blue-light); color: var(--blue);   border-color: var(--blue); }
 
+/* Model selector (chat): the hover falls back to a light #fafafa, and the
+   letter squares use --gray-800 which inverts to a light surface. */
+[data-theme="dark"] .model-selector-btn:hover {
+    background: rgba(128, 145, 180, .10);
+    border-color: var(--gray-400);
+}
+[data-theme="dark"] .model-tag-letter,
+[data-theme="dark"] .model-dropdown-letter {
+    background: var(--blue-light);
+    color: var(--blue);
+}
+[data-theme="dark"] .model-dropdown-item.active .model-dropdown-letter {
+    background: var(--blue);
+    color: #08111f;
+}
+[data-theme="dark"] .model-dropdown-item:hover { background: rgba(128, 145, 180, .10); }
+
 /* ── Appearance / theme selector (profile page) ───────────────────── */
 .theme-select { display: flex; gap: 8px; flex-wrap: wrap; }
 .theme-opt {
