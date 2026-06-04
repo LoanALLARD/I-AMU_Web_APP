@@ -114,7 +114,7 @@ INSERT INTO models (department_id, resource_id, name, version, provider,
     ((SELECT id FROM departments WHERE name = 'Informatique'),
      NULL,
      'llama3.2:1b', '8b', 'ollama', 4096, 8192,
-     'http://host.docker.internal:11434', 'ollama', TRUE),
+     'http://i-amu_web_app-ollama2-1:11434/api/generate', 'ollama', TRUE),
     (NULL,
      (SELECT id FROM resources WHERE code = 'INF202'),
      'mistral', '7b', 'ollama', 4096, 8192,
@@ -322,16 +322,16 @@ INSERT INTO resources (owner_id, department_id, code, name, description, semeste
     ((SELECT id FROM users WHERE email = 'evan@gmail.com'),
      (SELECT id FROM departments WHERE name = 'departement informatique'),
      'code', 'dev', 'ressources pour le dev de l outils', 's3');
-INSERT INTO models (department_id, resource_id, name, version, provider, max_tokens, context_window, api_url, adapter) VALUES
-    ((SELECT id FROM departments WHERE name = 'departement informatique'),
-     NULL, 'llama3.2:1b', 'V1', 'meta', 100000, 128000,
-     'http://i-amu_web_app-ollama2-1:11434/api/generate', 'ollama');
-INSERT INTO sessions (resource_id, name) VALUES
-    ((SELECT id FROM resources WHERE code = 'code'), 'session de dev');
-INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
-    ((SELECT id FROM users WHERE email = 'evan@gmail.com'),
-     (SELECT id FROM sessions WHERE name = 'session de dev'),
-     (SELECT id FROM models
-        WHERE name = 'llama3.2:1b'
-          AND department_id = (SELECT id FROM departments WHERE name = 'departement informatique')),
-     'testconv');
+-- INSERT INTO models (department_id, resource_id, name, version, provider, max_tokens, context_window, api_url, adapter) VALUES
+--     ((SELECT id FROM departments WHERE name = 'departement informatique'),
+--      NULL, 'llama3.2:1b', 'V1', 'meta', 100000, 128000,
+--      'http://i-amu_web_app-ollama2-1:11434/api/generate', 'ollama');
+-- INSERT INTO sessions (resource_id, name) VALUES
+--     ((SELECT id FROM resources WHERE code = 'code'), 'session de dev');
+-- INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
+--     ((SELECT id FROM users WHERE email = 'evan@gmail.com'),
+--      (SELECT id FROM sessions WHERE name = 'session de dev'),
+--      (SELECT id FROM models
+--         WHERE name = 'llama3.2:1b'
+--           AND department_id = (SELECT id FROM departments WHERE name = 'departement informatique')),
+--      'testconv');
