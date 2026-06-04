@@ -184,10 +184,11 @@ INSERT INTO enrollments (student_id, session_id) VALUES
     ((SELECT id FROM users WHERE email = 'alice.durand@etu.univ-amu.fr'),
      (SELECT id FROM sessions WHERE name = 'TP Algo - archive'));
 
-INSERT INTO researcher_authorizations (researcher_id, department_id, authorized_by_id) VALUES
+INSERT INTO researcher_authorizations (researcher_id, department_id, authorized_by_id, authorized_at) VALUES
     ((SELECT id FROM users WHERE email = 'chercheur1@univ-amu.fr'),
      (SELECT id FROM departments WHERE name = 'Informatique'),
-     (SELECT id FROM users WHERE email = 'admin.info@univ-amu.fr'));
+     (SELECT id FROM users WHERE email = 'admin.info@univ-amu.fr'),
+     NOW());
 
 INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
     ((SELECT id FROM users WHERE email = 'emma.blanc@etu.univ-amu.fr'),
