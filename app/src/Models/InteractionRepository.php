@@ -65,7 +65,8 @@ class InteractionRepository {
         $stmt = $this->pdo->prepare(
             'SELECT i.prompt, i.response, i.sent_at, m.name AS model_name
                FROM interactions i
-               JOIN models m ON m.id = i.model_id
+               JOIN conversations c ON c.id = i.conversation_id
+               JOIN models m ON m.id = c.model_id
               WHERE i.conversation_id = :cid
               ORDER BY i.sent_at ASC, i.id ASC'
         );
@@ -95,4 +96,20 @@ class InteractionRepository {
             
         return TRUE;
     }   
+
+    /**
+     * @return array<array<string, mixed>>
+     */
+    public function getInteractionsByConversationId(int $conversation_id): array
+    {
+        $query = $this->pdo->prepare('
+        SELECT * FROM interactions where conversation_id = :conversation_id
+        ');
+
+        $query->execute([
+            'conversation_id'=>$conversation_id
+        ]);
+
+        return $query->fetchAll();
+    }
 }

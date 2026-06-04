@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Controllers;
 
 use Core\Controller;
-use Data\Database;
 use Services\ChatService;
+use Models\ConversationRepository;
+use Models\InteractionRepository;
+use Data\Database;
 
 /**
  * Authenticated chat shell, routed from `/`, `/accueil`, `/chat` and
@@ -38,13 +40,37 @@ class AccueilController extends Controller
             $this->flash('error', 'Conversation introuvable.');
             $this->redirect('/chat');
         }
+        $pdo = Database::getConnection();
+
+        $conversationRepo = new ConversationRepository($pdo);
+        $interactionRepo   = new InteractionRepository($pdo);
+
+        $conversation = null;
+        $interactions = [];
+
+        if ($conversationId !== null) {
+            $conversation = $conversationRepo->getConversationByUserIdAndConversationId(
+                $user['id'],
+                (int) $conversationId
+            );
+
+            if ($conversation === null) {
+                $this->flash('error', 'Conversation introuvable');
+                $this->redirect('/chat');
+            }
+        }
+
+        $conversations = array_map(
+            static fn ($v) => ['id' => $v['id'], 'name' => $v['name']],
+            $conversationRepo->getConversationsByUserId($user['id'])
+        );
 
         $this->render('pages/homeView', [
             'user'          => $user,
             'page'          => 'chat',
             'conversation'  => $env['conversation'],
             'conversations' => $env['conversations'],
-            'messages'      => $env['messages'],
+            'messages'  => $env['messages'],
             'sessionClosed' => $env['sessionClosed'],
             'closedReason'  => $env['closedReason'],
             'env'           => $env['env'],

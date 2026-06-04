@@ -29,8 +29,12 @@ class LLMController{
             return;
         }
 
-        $modelName = $data['model'];     
-        $userMessage = $data['message'];
+        $modelName = $data['model'];     // "llama3.2:1b"
+        $userMessage = $data['message']; 
+        // $context = $data['context'] ?? [];
+        //$user_email = $data['user_email'] ?? null;
+        $context = [];
+
         $conversation_id = $data['conversation_id'] ?? null;
         // Identify the user from the authenticated session (set at login),
         // never from the client payload. No email lookup needed.
@@ -62,17 +66,18 @@ class LLMController{
         // Free chat (no id) runs without persistence.
         $conversationData = null;
         $conversationRepository = new ConversationRepository($pdo);
-        if ($conversation_id == null) {
+        $nameConversation = mb_substr($userMessage, 0, 40);
+        if ($conversation_id == null) {                                     // If the conversation isn't given create new one
             $conversationData = $conversationRepository->newConversation(
                 $userId,
-                1,
-                $aiData['id'],
-                "nouvelle conversation"
+                (int) $aiData['id'],
+                null,
+                $nameConversation
             );
             $context = [];
         } else {
             // else recover the conversation and check if it's own by the same user
-            $conversationData = $conversationRepository->getConversationByUserId(   
+            $conversationData = $conversationRepository->getConversationByUserIdAndConversationId(   
                 $userId,
                 $conversation_id,
             );               
@@ -148,7 +153,11 @@ class LLMController{
         }
 
         header('Content-Type: application/json');
-        echo json_encode(['response' => $response->response]);
+        echo json_encode([
+            'response'          => $response,
+            'conversation_id'   => $conversationData['id'],
+            'conversation_name' => $conversationData['name'],
+        ]);
         
     }
 }

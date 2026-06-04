@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Application\Ports\ClockInterface;
-use App\Application\Ports\ConversationRepositoryInterface;
 use App\Domain\Repositories\SessionRepositoryInterface;
 use App\Domain\ValueObjects\SessionStatus;
 use Core\Controller;
+use Models\ConversationRepository;
 
 /**
  * Renders the authenticated chat home (the conversation shell). The
@@ -68,8 +67,8 @@ final class ChatController extends Controller
         }
 
         $conversations = array_map(
-            static fn ($v) => ['id' => $v->id, 'name' => $v->name],
-            $this->conversations->findRecentByUser($user['id'])
+            static fn ($v) => ['id' => $v['id'], 'name' => $v['name']],
+            $this->conversations->getConversationsByUserId($user['id'])
         );
 
         $this->render('pages/homeView', [

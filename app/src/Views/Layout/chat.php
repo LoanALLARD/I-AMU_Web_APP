@@ -20,6 +20,7 @@ $page = $page ?? 'other';
 $pageTitle = $pageTitle ?? '';
 $conversation = $conversation ?? null;
 $conversations = $conversations ?? [];
+
 $env = $env ?? null;
 $archivedView = $archivedView ?? false;
 // "Chat" nav target: stay inside the open session conversation instead of
@@ -572,6 +573,43 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                 if (e.key === 'Escape') closeAll(null);
             });
         })();
+
+        function addConvToSidebar(id, name) {
+            const convList = document.getElementById('convList');
+            if (!convList) return;
+
+            // Ne pas dupliquer si elle existe déjà
+            if (convList.querySelector(`a[href="/chat/${id}"]`)) return;
+
+            const group = convList.querySelector('.conv-group');
+            if (!group) return;
+
+            // Désactiver la conv active actuelle
+            group.querySelectorAll('.conv-row.active')
+                .forEach(el => el.classList.remove('active'));
+
+            // Créer et insérer la nouvelle conv en haut de la liste
+            const a = document.createElement('a');
+            a.href      = `/chat/${id}`;
+            a.className = 'conv-row active';
+            row.innerHTML = `
+                <a href="/chat/${id}" class="conv-item">
+                    <span class="conv-title">${escapeHtml(name)}</span>
+                </a>
+            `;
+            const firstRow = group.querySelector('.conv-row');
+            const scope    = group.querySelector('.conv-scope, .conv-group-label');
+            if (firstRow) {
+                group.insertBefore(row, firstRow);
+            } else if (scope) {
+                scope.after(row);
+            } else {
+                group.prepend(row);
+            }
+            // Insérer après le label de groupe
+            const label = group.querySelector('.conv-group-label');
+            label ? label.after(a) : group.prepend(a);
+        }
     </script>
 
 </body>
