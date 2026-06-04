@@ -74,35 +74,30 @@ $themeCur = match ($user['theme'] ?? null) {
                 <a href="/logout" class="btn danger">
                     <?= icon('lock', '', 12) ?> Se déconnecter
                 </a>
-                <div class="profile-info-box">
-                    <h3>Désactiver mon compte</h3>
-                    <p>
-                        La désactivation rend votre compte inaccessible. Vous ne pourrez plus
-                        vous connecter tant qu'un administrateur n'aura pas réactivé votre compte.
-                    </p>
-                    <button type="button" class="btn danger" id="btn-deactivate-account">
-                        <?= icon('user-x', '', 12) ?> Désactiver mon compte
-                    </button>
-                </div>
+                <h3>Désactiver mon compte</h3>
+                <p>
+                    La désactivation rend votre compte inaccessible. Vous ne pourrez plus
+                    vous connecter tant qu'un administrateur n'aura pas réactivé votre compte.
+                </p>
+                <button type="button" class="btn danger" id="btn-deactivate-account">
+                    <?= icon('user-x', '', 12) ?> Désactiver mon compte
+                </button>
 
-
-                <div class="profile-info-box">
-                    <h3>Suppression de vos données</h3>
-                    <p>
-                        Pour exercer votre droit à l'effacement et demander la suppression
-                        définitive de vos données personnelles, veuillez envoyer votre demande
-                        par email à l'adresse suivante :
-                    </p>
-                    <p>
-                        <a href="mailto:dpo@univ-amu.fr" class="dpo-link">dpo@univ-amu.fr</a>
-                    </p>
-                    <p class="dpo-hint">
-                        Précisez votre nom, prénom et adresse email universitaire dans votre demande.
-                        Le responsable de traitement traitera votre requête dans un délai de 30 jours
-                        conformément à l'article 17 du RGPD.
-                    </p>
-                    <a href="/rgpd" class="rgpd-link">Consulter les mentions d'information RGPD</a>
-                </div>
+                <h3>Suppression de vos données</h3>
+                <p>
+                    Pour exercer votre droit à l'effacement et demander la suppression
+                    définitive de vos données personnelles, veuillez envoyer votre demande
+                    par email à l'adresse suivante :
+                </p>
+                <p>
+                    <a href="mailto:dpo@univ-amu.fr" class="dpo-link">dpo@univ-amu.fr</a>
+                </p>
+                <p class="dpo-hint">
+                    Précisez votre nom, prénom et adresse email universitaire dans votre demande.
+                    Le responsable de traitement traitera votre requête dans un délai de 30 jours
+                    conformément à l'article 17 du RGPD.
+                </p>
+                <a href="/RGPDConsent" class="rgpd-link">Consulter les mentions d'information RGPD</a>
             </div>
         </div>
 
