@@ -80,6 +80,8 @@ $themePref = match ($user['theme'] ?? null) {
     <link rel="stylesheet" href="/assets/css/style.css<?= $v('style.css') ?>">
     <link rel="stylesheet" href="/assets/css/homeChat.css<?= $v('homeChat.css') ?>">
     <link rel="stylesheet" href="/assets/css/sessions.css<?= $v('sessions.css') ?>">
+    <?php $jsDir = dirname(__DIR__, 3) . '/public/assets/js'; ?>
+    <script src="/assets/js/clipboard.js<?= '?v=' . (@filemtime("$jsDir/clipboard.js") ?: 0) ?>" defer></script>
     <?php if ($page === 'chat'): ?>
         <?php /* Markdown rendering for AI replies (live + history). Loaded
          synchronously in <head> so the chat view's inline script can use

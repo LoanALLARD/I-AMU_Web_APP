@@ -227,7 +227,7 @@ $hasMessages = $messages !== [];
             btn.textContent = 'Copier';
             btn.addEventListener('click', () => {
                 const code = pre.querySelector('code') || pre;
-                navigator.clipboard.writeText(code.textContent).then(() => {
+                window.copyToClipboard(code.textContent).then(() => {
                     btn.textContent = 'Copié';
                     btn.classList.add('is-copied');
                     setTimeout(() => {
@@ -409,7 +409,7 @@ $hasMessages = $messages !== [];
 
     function copyMsg(btn) {
         const text = btn.closest('.msg').querySelector('.msg-content').textContent;
-        navigator.clipboard.writeText(text);
+        window.copyToClipboard(text);
         const original = btn.innerHTML;
         btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> copié`;
         setTimeout(() => btn.innerHTML = original, 1500);

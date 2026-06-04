@@ -118,7 +118,8 @@
                     <?= htmlspecialchars($view['accessCode']) ?>
                 </div>
                 <div class="access-card-actions">
-                    <button type="button" class="btn bordered" id="btn-copy-code">
+                    <button type="button" class="btn bordered"
+                            data-copy="<?= htmlspecialchars($view['accessCode']) ?>" data-copy-feedback="text">
                         <?= icon('copy', '', 11) ?> Copier
                     </button>
                     <button type="button" class="btn bordered" id="btn-fullscreen-code">
