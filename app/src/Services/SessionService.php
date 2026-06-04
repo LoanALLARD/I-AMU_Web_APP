@@ -52,6 +52,117 @@ class SessionService
         return $resource !== null && (int) $resource['owner_id'] === $teacherId;
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function enrolledStudents(int $sessionId): array
+    {
+        return $this->sessions->enrolledStudents($sessionId);
+    }
+
+    /**
+     * Research export of a whole session: the session header plus every
+     * enrolled student, their conversations and the interactions of each.
+     * Identity is included on purpose (no platform-side anonymisation —
+     * cf. spec 06). Authorisation is the controller's job.
+     *
+     * $options filters the output:
+     *   - excludeIds: list<int> students to leave out,
+     *   - includePrompts / includeResponses: bool (default true).
+     *
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
+     */
+    public function exportSessionData(Session $session, array $options = []): array
+    {
+        $excludeIds       = is_array($options['excludeIds'] ?? null) ? $options['excludeIds'] : [];
+        $includePrompts   = ($options['includePrompts']   ?? true) !== false;
+        $includeResponses = ($options['includeResponses'] ?? true) !== false;
+        $excluded         = array_fill_keys(array_map('intval', $excludeIds), true);
+
+        $sessionId = (int) $session->id();
+
+        $students = [];
+        foreach ($this->sessions->exportRows($sessionId) as $r) {
+            $sid = (int) $r['student_id'];
+            if (isset($excluded[$sid])) {
+                continue; // student excluded by the teacher
+            }
+            if (!isset($students[$sid])) {
+                $students[$sid] = [
+                    'student_id'     => $sid,
+                    'first_name'     => $r['first_name'],
+                    'last_name'      => $r['last_name'],
+                    'email'          => $r['email'],
+                    'student_number' => $r['student_number'],
+                    'conversations'  => [],
+                ];
+            }
+
+            if ($r['conversation_id'] === null) {
+                continue; // enrolled student with no conversation yet
+            }
+
+            $cid = (int) $r['conversation_id'];
+            if (!isset($students[$sid]['conversations'][$cid])) {
+                $students[$sid]['conversations'][$cid] = [
+                    'id'           => $cid,
+                    'name'         => $r['conversation_name'],
+                    'created_at'   => $r['conversation_created'],
+                    'is_archived'  => (bool) $r['is_archived'],
+                    'interactions' => [],
+                ];
+            }
+
+            if ($r['interaction_id'] !== null) {
+                $turn = ['id' => (int) $r['interaction_id']];
+                if ($includePrompts) {
+                    $turn['prompt'] = $r['prompt'];
+                }
+                if ($includeResponses) {
+                    $turn['response'] = $r['response'];
+                }
+                $turn['model']         = $r['model_name'];
+                $turn['input_tokens']  = $r['input_tokens']  !== null ? (int) $r['input_tokens']  : null;
+                $turn['output_tokens'] = $r['output_tokens'] !== null ? (int) $r['output_tokens'] : null;
+                $turn['latency']       = $r['latency']       !== null ? (int) $r['latency']       : null;
+                $turn['user_feedback'] = $r['user_feedback'] !== null ? (int) $r['user_feedback'] : null;
+                $turn['sent_at']       = $r['sent_at'];
+
+                $students[$sid]['conversations'][$cid]['interactions'][] = $turn;
+            }
+        }
+
+        // Drop the assoc keys used for grouping -> plain lists.
+        $studentsList = array_values(array_map(
+            static function (array $s): array {
+                $s['conversations'] = array_values($s['conversations']);
+                return $s;
+            },
+            $students
+        ));
+
+        return [
+            'session' => [
+                'id'          => $sessionId,
+                'name'        => $session->name(),
+                'type'        => $session->type()->value,
+                'status'      => $session->status()->value,
+                'access_code' => $session->accessCode(),
+                'starts_at'   => $session->startsAt()?->format('c'),
+                'ends_at'     => $session->endsAt()?->format('c'),
+            ],
+            'exported_at'   => $this->now()->format('c'),
+            'filters'       => [
+                'excluded_student_ids' => array_values(array_map('intval', $excludeIds)),
+                'include_prompts'      => $includePrompts,
+                'include_responses'    => $includeResponses,
+            ],
+            'student_count' => count($studentsList),
+            'students'      => $studentsList,
+        ];
+    }
+
     // ----------------------------------------------------------------
     // Reads for views
     // ----------------------------------------------------------------

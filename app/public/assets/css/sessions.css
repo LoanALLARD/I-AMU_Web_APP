@@ -602,6 +602,7 @@ textarea {
     letter-spacing: .06em;
     margin: 12px 0 14px;
     line-height: 1;
+    text-align: center;
     font-variant-numeric: tabular-nums;
     color: var(--blue);
     text-shadow: 0 2px 8px rgba(26,115,200,.15);
@@ -728,9 +729,11 @@ textarea {
 }
 .code-overlay-value {
     font-family: var(--font-mono);
-    font-size: clamp(96px, 25vw, 240px);
+    font-size: min(18vw, 240px);   /* scales down on phones; no longer forced to 96px+ */
     font-weight: 700;
-    letter-spacing: .04em;
+    letter-spacing: .02em;
+    white-space: nowrap;           /* keep the code on one line (no "VL0-/E2D" wrap) */
+    max-width: 96vw;
     color: var(--white);
     text-shadow: 0 8px 32px rgba(0,0,0,.3);
 }

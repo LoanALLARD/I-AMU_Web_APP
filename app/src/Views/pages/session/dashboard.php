@@ -25,6 +25,9 @@
             <a href="/sessions/<?= (int) $view['id'] ?>/monitor" class="btn primary">
                 <?= icon('user', '', 12) ?> Suivi
             </a>
+            <button type="button" class="btn" id="btn-open-export">
+                <?= icon('archive', '', 12) ?> Exporter (JSON)
+            </button>
         <?php endif; ?>
         <?php if ($view['canEdit']): ?>
             <a href="/sessions/<?= (int) $view['id'] ?>/edit" class="btn">
@@ -144,6 +147,83 @@
         </div>
     </aside>
 </div>
+
+<?php $students = $students ?? []; ?>
+<div id="modal-export"
+    style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+    <div
+        style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:24px 28px;max-width:520px;width:92%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+        <h2 style="margin:0 0 6px;font-size:18px;color:var(--gray-800);">Exporter les données (JSON)</h2>
+        <p style="font-size:12px;color:var(--gray-500);margin:0 0 18px;line-height:1.5;">
+            Par défaut, l'intégralité des données de la session est exportée. Ajustez ci-dessous.
+        </p>
+
+        <form method="GET" action="/sessions/<?= (int) $view['id'] ?>/export">
+            <input type="hidden" name="configured" value="1">
+
+            <fieldset style="border:1px solid var(--gray-200);border-radius:8px;padding:10px 14px;margin:0 0 14px;">
+                <legend style="font-size:12px;font-weight:600;color:var(--gray-600);padding:0 6px;">Contenu</legend>
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-800);padding:4px 0;">
+                    <input type="checkbox" name="include_prompts" checked> Prompts des étudiants
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-800);padding:4px 0;">
+                    <input type="checkbox" name="include_responses" checked> Réponses du LLM
+                </label>
+            </fieldset>
+
+            <fieldset style="border:1px solid var(--gray-200);border-radius:8px;padding:10px 14px;margin:0 0 18px;">
+                <legend style="font-size:12px;font-weight:600;color:var(--gray-600);padding:0 6px;">Étudiants</legend>
+                <?php if ($students === []): ?>
+                    <p style="font-size:12px;color:var(--gray-400);margin:0;">Aucun étudiant inscrit.</p>
+                <?php else: ?>
+                    <p style="font-size:11px;color:var(--gray-400);margin:0 0 8px;">Cochez ceux à <strong>exclure</strong> de
+                        l'export.</p>
+                    <div style="display:flex;flex-direction:column;gap:2px;max-height:200px;overflow-y:auto;">
+                        <?php foreach ($students as $st): ?>
+                            <label
+                                style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-800);padding:3px 0;">
+                                <input type="checkbox" name="exclude_ids[]" value="<?= (int) $st['id'] ?>">
+                                <?= htmlspecialchars(trim(($st['last_name'] ?? '') . ' ' . ($st['first_name'] ?? ''))) ?>
+                                <?php if (!empty($st['student_number'])): ?>
+                                    <span class="mono"
+                                        style="font-size:11px;color:var(--gray-400);">#<?= htmlspecialchars((string) $st['student_number']) ?></span>
+                                <?php endif; ?>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </fieldset>
+
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button type="button" class="btn" id="btn-cancel-export"
+                    style="background:var(--gray-100);color:var(--gray-700);">Annuler</button>
+                <button type="submit" class="btn primary"><?= icon('archive', '', 12) ?> Télécharger</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const open = document.getElementById('btn-open-export');
+        const modal = document.getElementById('modal-export');
+        const cancel = document.getElementById('btn-cancel-export');
+        if (!open || !modal) return;
+
+        const show = () => { modal.style.display = 'flex'; };
+        const hide = () => { modal.style.display = 'none'; };
+
+        open.addEventListener('click', show);
+        cancel?.addEventListener('click', hide);
+        modal.addEventListener('click', (e) => { if (e.target === modal) hide(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.style.display === 'flex') hide();
+        });
+        // The download response keeps the current page; close the modal shortly
+        // after submit for a clean return.
+        modal.querySelector('form')?.addEventListener('submit', () => setTimeout(hide, 400));
+    })();
+</script>
 
 <script>
     window.__IAMU_SESSION_DASHBOARD__ = {
