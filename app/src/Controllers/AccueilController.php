@@ -34,6 +34,14 @@ class AccueilController extends Controller
         $conversationId = $id !== null && $id !== '' ? (int) $id : null;
         $archived       = $this->query('archived') === '1';
         $env            = $this->chat->environment((int) $user['id'], $conversationId, $archived);
+        $models = [];
+        try {
+            $pdo = Database::getConnection();
+            $aiRepository = new \Models\AiRepository($pdo);
+            $models = $aiRepository->findAllActive();
+        } catch (\Throwable $e) {
+            error_log('Impossible de charger les modèles : ' . $e->getMessage());
+        }
 
         if (!empty($env['notFound'])) {
             $this->flash('error', 'Conversation introuvable.');
@@ -43,8 +51,10 @@ class AccueilController extends Controller
         $this->render('pages/homeView', [
             'user'          => $user,
             'page'          => 'chat',
+            'models'        => $models,
             'conversation'  => $env['conversation'],
             'conversations' => $env['conversations'],
+            'messages'      => $env['messages'],
             'sessionClosed' => $env['sessionClosed'],
             'closedReason'  => $env['closedReason'],
             'env'           => $env['env'],

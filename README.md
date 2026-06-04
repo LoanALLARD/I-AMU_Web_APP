@@ -122,19 +122,30 @@ Lorsqu'une demande de chat est émise, le flux suit les étapes suivantes :
 
 ## Utilisation (Exemple de Requête)
 
-Tu peux tester l'endpoint de l'application en envoyant du JSON brut via une commande `curl` dans ton terminal :
+Connexion a l'application depuis le terminal.
+Il faut une session, pour ce faire créez un fichier `cookies.txt` puis faite la commande suivante pour vous connecter.
+```bash
+curl -X POST http://localhost:8085/login   
+     -H "Content-Type: application/json"   
+     -c cookies.txt   
+     -d '{"email": "prenom.nom@etu.univ-amu.fr", "password": "votre_mdp"}'
+```
+
+Tester l'endpoint de l'application en envoyant du JSON brut via une commande `curl` dans ton terminal :
 
 ```bash
 curl -X POST http://localhost:8085/chat \
   -H "Content-Type: application/json" \
+  -b cookies.txt \
   -d '{
     "model" : "llama3.2:1b",
     "message" : "Présente toi",
-    "context" : [],
-    "user_email" : "evan@gmail.com",
     "conversation_id" : 1 
   }'
 ```
+Le champ `conversation_id` est facultatif, l'id renseigner doit etre une id associé à l'utilisateur connecté.
+
+
 Si vous avez déjà utilisé l'application, il se peut que vous aillez besoin de racharger les images des conteneur docker. Pour ce faire faite : 
 ```bash
 docker compose up --build -d

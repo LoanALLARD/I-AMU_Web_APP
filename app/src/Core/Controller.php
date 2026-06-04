@@ -197,6 +197,7 @@ abstract class Controller
             'first_name' => (string) ($_SESSION['user_first_name'] ?? ''),
             'last_name' => (string) ($_SESSION['user_last_name'] ?? ''),
             'roles' => $_SESSION['roles'] ?? [],
+            'theme' => $_SESSION['user_theme'] ?? null,
         ];
     }
 

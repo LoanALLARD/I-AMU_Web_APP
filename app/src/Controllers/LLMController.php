@@ -4,11 +4,13 @@ namespace Controllers;
 
 use Data\Database;
 
+use Domain\Conversation;
 use Domain\Ai;
 use Domain\OllamaAdaptater;
 
 use Models\AiRepository;
 use Models\InteractionRepository;
+use Models\UserRepository;
 use Models\ConversationRepository;
 
 class LLMController{
@@ -20,7 +22,6 @@ class LLMController{
 
         // Transaltion of the raw data to a associative array  
         $data = json_decode($jsonRaw, true);
-
         if (!$data || !isset($data['model']) || !isset($data['message'])) {
             header('Content-Type: application/json');
             http_response_code(400);
@@ -28,14 +29,14 @@ class LLMController{
             return;
         }
 
-        $modelName = $data['model'];     // "llama3.2:1b"
-        $userMessage = $data['message']; 
-        $context = $data['context'] ?? [];
+        $modelName = $data['model'];     
+        $userMessage = $data['message'];
         $conversation_id = $data['conversation_id'] ?? null;
         // Identify the user from the authenticated session (set at login),
         // never from the client payload. No email lookup needed.
         $userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
-
+        // $userId = 1;
+        
         if ($userId <= 0) {
             header('Content-Type: application/json');
             http_response_code(401);
@@ -60,20 +61,32 @@ class LLMController{
         // it (with an ownership check) so the interaction can be persisted.
         // Free chat (no id) runs without persistence.
         $conversationData = null;
-        if ($conversation_id !== null) {
-            $conversationRepository = new ConversationRepository($pdo);
-            $conversationData = $conversationRepository->getConversationByUserId(
+        $conversationRepository = new ConversationRepository($pdo);
+        if ($conversation_id == null) {
+            $conversationData = $conversationRepository->newConversation(
                 $userId,
-                (int) $conversation_id,
+                (int) $aiData['id'],
+                null,
+                "nouvelle conversation"
             );
+            $context = [];
+        } else {
+            // else recover the conversation and check if it's own by the same user
+            $conversationData = $conversationRepository->getConversationByUserId(   
+                $userId,
+                $conversation_id,
+            );               
+        }                                                           
+                
+        if ($conversationData == null){
+            header('Content-Type: application/json');
+            http_response_code(404);
+            echo json_encode(['error' => "this user has no conversation corresponding with id :". $conversation_id ]);
+            // throw new \Exception ("Error, this user has no conversation corresponding");
+            return;
+        }    
 
-            if ($conversationData === null) {
-                header('Content-Type: application/json');
-                http_response_code(404);
-                echo json_encode(['error' => "Conversation introuvable pour cet utilisateur (id : " . $conversation_id . ")."]);
-                return;
-            }
-        }
+        $metadata = $conversationRepository->getContextByConversationIdAndUserId($conversationData['id'], $userId);
 
         switch ($aiData["adapter"]) {
         case "ollama":
@@ -84,8 +97,17 @@ class LLMController{
             break;
         default:
             $adapter = null;
+            return;
+            break;
         }
 
+        // read from the database all the context of the conversation
+        $metadata = $conversationRepository->getContextByConversationIdAndUserId($conversationData['id'],$userId);
+        // then translate it trought the adapter of the api used
+        if ($metadata){
+            $context = $adapter->readContextFromMetadata($metadata);
+        }
+        
         $ai = new Ai (
             $id = $aiData["id"],
             $department_id = $aiData["department_id"],
@@ -100,7 +122,6 @@ class LLMController{
             $aiData["api_url"],
             $adapter,
         );
-
         $responseRaw = $ai->ask($userMessage, $context);
         $response = json_decode($responseRaw);
 
@@ -114,19 +135,26 @@ class LLMController{
         // Persist the interaction only for a session-bound conversation.
         if ($conversationData !== null && $response !== false && isset($response->response)) {
             $interaction = new InteractionRepository($pdo);
-            $output_tokens = isset($response->context) && is_array($response->context) ? count($response->context) : 0;
-            $interaction->newInteration(
+            $input_tokens  = isset($response->prompt_eval_count) ? (int) $response->prompt_eval_count : null;
+            $output_tokens = isset($response->eval_count) ? (int) $response->eval_count : null;
+
+            $interactionData = $interaction->newInteration(
                 (int) $conversationData['id'],
-                (int) $aiData['id'],
                 $userMessage,
                 (string) $response->response,
-                200,
+                $input_tokens,
                 $output_tokens
             );
+            $meta_data = $adapter->formatMetadata($response);
+            $var=$interaction->setContext($meta_data,$interactionData['id']);
         }
 
         header('Content-Type: application/json');
-        echo json_encode(['response' => $response]);
+        echo json_encode([
+            'response'          => $response->response,
+            'prompt_eval_count' => $response->prompt_eval_count ?? null,
+            'eval_count'        => $response->eval_count ?? null,
+        ]);
         
     }
 }

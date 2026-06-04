@@ -19,9 +19,30 @@
 
     <div class="card-body">
 
-        <?php if (!empty($error)): ?>
+        <?php if (!empty($error) && empty($deactivated)): ?>
             <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
+
+        <?php if (!empty($deactivated)): ?>
+            <div class="alert alert-error" style="margin-bottom:0;">
+                <?= htmlspecialchars($error) ?>
+            </div>
+            <div style="background:var(--blue-50, #eff6ff);border:1px solid var(--blue-200, #bfdbfe);border-radius:8px;padding:14px 16px;margin-top:12px;margin-bottom:16px;">
+                <p style="font-size:13px;color:var(--blue-800, #1e40af);line-height:1.5;margin:0 0 12px;">
+                    Vous avez précédemment désactivé votre compte.
+                    Souhaitez-vous le réactiver pour retrouver l'accès ?
+                </p>
+                <form method="POST" action="/reactivate">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="email" value="<?= htmlspecialchars($email ?? '') ?>">
+                    <input type="hidden" name="password" id="reactivate-password" value="">
+                    <button type="submit" class="btn-submit" id="btn-reactivate" style="width:100%;background:var(--blue-600, #2563eb);">
+                        Réactiver mon compte
+                    </button>
+                </form>
+            </div>
+        <?php endif; ?>
+
 
         <form method="POST" action="/login">
 
@@ -51,5 +72,32 @@
     <div class="card-footer">
         Pas encore de compte ?&nbsp;<a href="/register">S'inscrire</a>
     </div>
-
 </div>
+<?php if (!empty($deactivated)): ?>
+    <!--
+        When the user clicks "Réactiver mon compte", we need to forward
+        the password they typed in the login form into the reactivation
+        form (which is a separate <form> pointing at /reactivate).
+        The password field value is NOT pre-filled by the server for
+        security reasons — it is copied client-side at submit time.
+    -->
+    <script>
+        (function() {
+            var btnReactivate      = document.getElementById('btn-reactivate');
+            var reactivatePassword = document.getElementById('reactivate-password');
+            var passwordField      = document.getElementById('password');
+
+            if (!btnReactivate || !reactivatePassword || !passwordField) return;
+
+            btnReactivate.closest('form').addEventListener('submit', function(e) {
+                if (passwordField.value === '') {
+                    e.preventDefault();
+                    passwordField.focus();
+                    alert('Veuillez d\'abord saisir votre mot de passe dans le formulaire de connexion.');
+                    return;
+                }
+                reactivatePassword.value = passwordField.value;
+            });
+        })();
+    </script>
+<?php endif; ?>

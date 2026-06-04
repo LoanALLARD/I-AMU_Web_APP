@@ -30,7 +30,7 @@ class UserRepository
     public function findByEmail(string $email): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, email, password_hash, first_name, last_name, is_active
+            'SELECT id, email, password_hash, first_name, last_name, is_active, theme, email_verified_at
              FROM users WHERE email = :email'
         );
         $stmt->execute(['email' => $email]);
@@ -38,6 +38,19 @@ class UserRepository
         $result = $stmt->fetch();
 
         return $result === false ? null : $result;
+    }
+
+    /**
+     * Persists the user's UI theme preference. Pass null for "follow the OS".
+     *
+     * @param 'LIGHT'|'DARK'|null $theme
+     */
+    public function updateTheme(int $userId, ?string $theme): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE users SET theme = CAST(:theme AS theme_type) WHERE id = :id'
+        );
+        $stmt->execute(['theme' => $theme, 'id' => $userId]);
     }
 
     /**
@@ -124,4 +137,59 @@ class UserRepository
             throw $e;
         }
     }
+    public function deactivate(int $userId): int
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE users SET is_active = FALSE WHERE id = :id AND is_active = TRUE'
+        );
+        $stmt->execute(['id' => $userId]);
+        return $stmt->rowCount();
+    }
+
+    public function reactivate(int $userId): int
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE users SET is_active = TRUE WHERE id = :id AND is_active = FALSE'
+        );
+        $stmt->execute(['id' => $userId]);
+        return $stmt->rowCount();
+    }
+
+    public function findById(int $userId): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT id, email, password_hash, is_active FROM users WHERE id = :id'
+        );
+        $stmt->execute(['id' => $userId]);
+        $result = $stmt->fetch();
+        return $result === false ? null : $result;
+    }
+    public function setVerifyToken(int $userId, string $token): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE users SET email_verify_token = :token WHERE id = :id'
+        );
+        $stmt->execute(['token' => $token, 'id' => $userId]);
+    }
+
+    public function verifyEmail(string $token): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE users SET email_verified_at = NOW(), email_verify_token = NULL
+         WHERE email_verify_token = :token AND email_verified_at IS NULL'
+        );
+        $stmt->execute(['token' => $token]);
+        return $stmt->rowCount() > 0;
+    }
+
+    public function isEmailVerified(int $userId): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT email_verified_at FROM users WHERE id = :id'
+        );
+        $stmt->execute(['id' => $userId]);
+        $row = $stmt->fetch();
+        return $row !== false && $row['email_verified_at'] !== null;
+    }
+
 }
