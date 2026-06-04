@@ -138,6 +138,8 @@ body.auth-body {
 .auth-body input[type="text"],
 .auth-body input[type="email"],
 .auth-body input[type="password"],
+.auth-body select[id="place_id"],
+.auth-body select[id="department_id"],
 .auth-body select {
     width: 100%;
     border: 1.5px solid var(--gray-200);

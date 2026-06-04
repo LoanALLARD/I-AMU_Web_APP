@@ -518,9 +518,9 @@
     transition: border-color .18s, background .18s, box-shadow .18s;
 }
 
-.model-selector-btn:hover {
+[data-theme="dark"] .model-selector-btn:hover {
+    background: rgba(128, 145, 180, .10);
     border-color: var(--gray-400);
-    background: var(--gray-50, #fafafa);
 }
 
 .model-selector-chevron {
