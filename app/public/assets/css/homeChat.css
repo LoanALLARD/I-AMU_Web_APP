@@ -7,8 +7,8 @@
     min-height: 100vh;
     overflow: hidden;
     background-image:
-        radial-gradient(ellipse 600px 400px at 5% 95%, rgba(26, 115, 200, .04) 0%, transparent 70%),
-        radial-gradient(ellipse 400px 300px at 95% 5%, rgba(245, 166, 35, .03) 0%, transparent 70%);
+            radial-gradient(ellipse 600px 400px at 5% 95%, rgba(26, 115, 200, .04) 0%, transparent 70%),
+            radial-gradient(ellipse 400px 300px at 95% 5%, rgba(245, 166, 35, .03) 0%, transparent 70%);
 }
 
 .sidebar {
@@ -501,6 +501,158 @@
     background: var(--white);
 }
 
+.model-selector-wrapper {
+    position: relative;
+}
+
+.model-selector-btn {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .35rem .75rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--gray-200);
+    background: var(--white);
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color .18s, background .18s, box-shadow .18s;
+}
+
+.model-selector-btn:hover {
+    border-color: var(--gray-400);
+    background: var(--gray-50, #fafafa);
+}
+
+.model-selector-chevron {
+    transition: transform .2s ease;
+    color: var(--gray-400);
+    flex-shrink: 0;
+}
+
+.model-selector-chevron.rotated {
+    transform: rotate(180deg);
+}
+
+.model-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 280px;
+    max-height: 320px;
+    overflow-y: auto;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .10), 0 2px 8px rgba(0, 0, 0, .04);
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity .18s, transform .18s, visibility .18s;
+}
+
+.model-dropdown.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.model-dropdown-header {
+    padding: .55rem .85rem .35rem;
+    font-size: .68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--gray-400);
+}
+
+.model-dropdown-empty {
+    padding: 1rem .85rem;
+    font-size: .82rem;
+    color: var(--gray-400);
+    text-align: center;
+}
+
+.model-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    width: 100%;
+    padding: .55rem .85rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: background .12s;
+}
+
+.model-dropdown-item:hover {
+    background: var(--gray-100, #f3f4f6);
+}
+
+.model-dropdown-item.active {
+    background: var(--blue-light, #e8f4fd);
+}
+
+.model-dropdown-item:last-child {
+    border-radius: 0 0 10px 10px;
+}
+
+.model-dropdown-letter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem;
+    font-weight: 700;
+    background: var(--gray-800);
+    color: var(--white);
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.model-dropdown-item.active .model-dropdown-letter {
+    background: var(--blue);
+}
+
+.model-dropdown-info {
+    display: flex;
+    flex-direction: column;
+    gap: .1rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.model-dropdown-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .78rem;
+    font-weight: 500;
+    color: var(--gray-800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.model-dropdown-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .62rem;
+    color: var(--gray-400);
+}
+
+.model-dropdown-check {
+    color: var(--blue);
+    opacity: 0;
+    flex-shrink: 0;
+    transition: opacity .15s;
+}
+
+.model-dropdown-item.active .model-dropdown-check {
+    opacity: 1;
+}
+
 .model-tags {
     display: flex;
     gap: .4rem;
@@ -710,7 +862,7 @@
 
 .msg-actions {
     display: flex;
-    gap: .35rem;
+    gap: .85rem;
     margin-top: .4rem;
 }
 
@@ -722,6 +874,7 @@
     border: none;
     cursor: pointer;
     padding: .25rem .5rem;
+    margin-left: -.5rem;
     border-radius: 6px;
     transition: color .15s, background .15s;
     display: flex;
@@ -733,6 +886,24 @@
     color: var(--blue);
     background: var(--blue-light);
 }
+.msg-stat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .66rem;
+    color: var(--gray-400);
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+}
+
+
+.msg-action svg,
+.msg-stat svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    stroke-width: 2px;
+}
+
 
 .typing-indicator {
     display: inline-flex;

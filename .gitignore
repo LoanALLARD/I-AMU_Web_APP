@@ -2,6 +2,7 @@
 .vscode/
 .env
 .DS_Store
+docker-compose.yaml
 
 # Composer vendor (committed lock = reproducible CI).
 /app/vendor/

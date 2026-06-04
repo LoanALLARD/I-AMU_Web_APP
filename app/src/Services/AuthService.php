@@ -8,6 +8,7 @@ use Models\EmailDomainRepository;
 use Models\PlaceRepository;
 use Models\UserRepository;
 use PDO;
+use Services\MailService;
 
 /**
  * Authentication service against the real `users` table.
@@ -52,7 +53,18 @@ final class AuthService
         }
 
         if (!$row['is_active']) {
-            return ['success' => false, 'error' => 'Ce compte est désactivé.'];
+            return [
+                'success' => false,
+                'error' => 'Ce compte est désactivé.',
+                'deactivated' => true,
+                'email' => (string) $row['email']
+                ];
+        }
+        if ($row['email_verified_at'] === null) {
+            return [
+                'success' => false,
+                'error'   => 'Veuillez consultez votre boîte mail.',
+            ];
         }
 
         $userId = (int) $row['id'];
@@ -140,7 +152,7 @@ final class AuthService
 
         // ----- Insert (user + role row, atomically) -----------------
         try {
-            $this->users->createUserWithRole(
+            $userId = $this->users->createUserWithRole(
                 [
                     'email'           => $email,
                     'password_hash'   => password_hash($password, PASSWORD_DEFAULT),
@@ -151,7 +163,27 @@ final class AuthService
                 ],
                 $role
             );
+            //  Email verification token
+            $token = bin2hex(random_bytes(32));
+            $this->users->setVerifyToken($userId, $token);
+
+            // --- Send verification email ---
+            $config = require __DIR__ . '/../Config/config.php';
+            $link   = ($config['app']['url'] ?? 'http://localhost:8085') . '/verify-email?token=' . $token;
+
+            $mail = new MailService();
+            $mail->send(
+                $email,
+                'Vérifiez votre adresse email — I-AMU',
+                '<h2>Bienvenue sur I-AMU !</h2>'
+                . '<p>Cliquez sur le lien ci-dessous pour activer votre compte :</p>'
+                . '<p><a href="' . htmlspecialchars($link) . '">Vérifier mon email</a></p>'
+                . '<p>Si vous n\'avez pas créé de compte, ignorez cet email.</p>'
+            );
+
+            return ['success' => true, 'pending_verification' => true];
         } catch (\Throwable $e) {
+            error_log('REGISTER ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
             return [
                 'success' => false,
                 'error'   => "Erreur lors de l'enregistrement. Merci de réessayer.",
@@ -163,6 +195,56 @@ final class AuthService
         // password is still available here, before it goes out of scope.
         return $this->login($email, $password);
     }
+
+    public function deactivateAccount(int $userId): array
+    {
+        try {
+            $affected = $this->users->deactivate($userId);
+
+            if ($affected === 0) {
+                return [
+                    'success' => false,
+                    'error'   => 'Le compte est déjà désactivé ou introuvable.',
+                ];
+            }
+            return ['success' => true];
+
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error'   => 'Erreur lors de la désactivation du compte.',
+            ];
+        }
+    }
+
+    public function reactivateAccount(string $email, string $password): array
+    {
+        if ($email === '' || $password === '') {
+            return ['success' => false, 'error' => 'Email et mot de passe requis.'];
+        }
+
+        $row = $this->users->findByEmail($email);
+
+        if (!$row || !password_verify($password, (string) $row['password_hash'])) {
+            return ['success' => false, 'error' => 'Identifiants invalides.'];
+        }
+
+        if ($row['is_active']) {
+            return ['success' => false, 'error' => 'Ce compte est déjà actif.'];
+        }
+
+        try {
+            $this->users->reactivate((int) $row['id']);
+            return ['success' => true];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error'   => 'Erreur lors de la réactivation.',
+            ];
+        }
+    }
+
+
 
     /**
      * Validates the registration form input. Returns the (French) error
