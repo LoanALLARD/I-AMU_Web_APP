@@ -41,7 +41,7 @@ INSERT INTO users (department_id, email, password_hash, first_name, last_name, i
     ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'nathan.gris@etu.univ-amu.fr',   crypt('password', gen_salt('bf')), 'Nathan',   'Gris',      TRUE, 'LIGHT', NOW()),
     (NULL,                                                       'chercheur1@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Pierre',   'Curie',     TRUE, 'LIGHT', NOW()),
     (NULL,                                                       'chercheur2@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Henri',    'Poincare',  TRUE, 'DARK',  NOW()),
-    (NULL,                                                       'orphan@univ-amu.fr',            crypt('password', gen_salt('bf')), 'Sans',     'Role',      TRUE, NULL,    NOW()),
+    (NULL,                                                       'orphan@univ-amu.fr',            crypt('password', gen_salt('bf')), 'Sans',     'Role',      TRUE, 'LIGHT', NOW()),
     ((SELECT id FROM departments WHERE name = 'Informatique'),   'admin.info@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Admin',    'Info',      TRUE, 'LIGHT', NOW()),
     ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'admin.maths@univ-amu.fr',       crypt('password', gen_salt('bf')), 'Admin',    'Maths',     TRUE, 'LIGHT', NOW());
 
@@ -331,5 +331,7 @@ INSERT INTO sessions (resource_id, name) VALUES
 INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
     ((SELECT id FROM users WHERE email = 'evan@gmail.com'),
      (SELECT id FROM sessions WHERE name = 'session de dev'),
-     (SELECT id FROM models WHERE name = 'llama3.2:1b'),
-     'testconv');
+    --  (SELECT id FROM models
+    --     WHERE name = 'llama3.2:1b'
+    --       AND department_id = (SELECT id FROM departments WHERE name = 'departement informatique')),
+    --  'testconv');
