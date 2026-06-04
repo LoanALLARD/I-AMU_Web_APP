@@ -25,4 +25,22 @@ class AdminController extends Controller
             'user'      => $this->currentUser(),
         ]);
     }
+
+    /** The department this admin is scoped to; 403 if none (role implies one). */
+    protected function currentDepartmentId(): int
+    {
+        $departmentId = $this->currentUser()['department_id'] ?? null;
+        if ($departmentId === null) {
+            $this->renderForbidden();
+        }
+        return $departmentId;
+    }
+
+    /** Aborts with 403 unless the target belongs to the admin's department. */
+    protected function assertSameDepartment(int $targetDepartmentId): void
+    {
+        if ($targetDepartmentId !== $this->currentDepartmentId()) {
+            $this->renderForbidden();
+        }
+    }
 }

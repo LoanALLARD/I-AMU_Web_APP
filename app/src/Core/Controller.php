@@ -184,7 +184,7 @@ abstract class Controller
     /**
      * Returns the currently logged-in user as a flat array, or null.
      *
-     * @return array{id:int, email:string, first_name:string, last_name:string, roles:list<string>}|null
+     * @return array{id:int, email:string, first_name:string, last_name:string, roles:list<string>, department_id:int|null}|null
      */
     protected function currentUser(): ?array
     {
@@ -198,10 +198,13 @@ abstract class Controller
             'last_name' => (string) ($_SESSION['user_last_name'] ?? ''),
             'roles' => $_SESSION['roles'] ?? [],
             'theme' => $_SESSION['user_theme'] ?? null,
+            'department_id' => isset($_SESSION['user_department_id'])
+                ? (int) $_SESSION['user_department_id']
+                : null,
         ];
     }
 
-    private function renderForbidden(): never
+    protected function renderForbidden(): never
     {
         http_response_code(403);
         $this->render('pages/error', [
