@@ -1,7 +1,7 @@
 <?php
 /**
  * Chat page content. The sidebar + topbar shell is provided by
- * Layout/chat.php; this view only owns the model bar, message list,
+ * layout/chat.php; this view only owns the model bar, message list,
  * composer and the chat-specific scripts.
  *
  * @var array  $user           currentUser() snapshot (id, email, first_name, last_name, roles)

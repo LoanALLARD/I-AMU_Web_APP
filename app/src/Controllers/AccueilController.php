@@ -48,7 +48,7 @@ class AccueilController extends Controller
             $this->redirect('/chat');
         }
 
-        $this->render('pages/homeView', [
+        $this->render('pages/home', [
             'user'          => $user,
             'page'          => 'chat',
             'models'        => $models,

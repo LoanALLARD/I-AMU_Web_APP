@@ -30,7 +30,7 @@ class AuthController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('pages/Auth/login', ['titrePage' => 'Connexion'], 'auth');
+        $this->render('pages/auth/login', ['titrePage' => 'Connexion'], 'auth');
     }
 
     /**
@@ -54,7 +54,7 @@ class AuthController extends Controller
         $result = $this->authService->login($email, $password);
 
         if (!$result['success']) {
-            $this->render('pages/Auth/login', [
+            $this->render('pages/auth/login', [
                 'titrePage' => 'Connexion',
                 'error'     => $result['error'],
                 'email'     => $email,
@@ -77,7 +77,7 @@ class AuthController extends Controller
         $result = $this->authService->reactivateAccount($email, $password);
 
         if (!$result['success']) {
-            $this->render('pages/homeView', [
+            $this->render('pages/home', [
                 'titrePage' => 'Connexion',
                 'error'     => $result['error'],
                 'email'     => $email,
@@ -88,7 +88,7 @@ class AuthController extends Controller
         $loginResult = $this->authService->login($email, $password);
 
         if (!$loginResult['success']) {
-            $this->render('pages/Auth/login', [
+            $this->render('pages/auth/login', [
                 'titrePage' => 'Connexion',
                 'error'     => $loginResult['error'],
                 'email'     => $email,
@@ -108,7 +108,7 @@ class AuthController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('pages/Auth/register', [
+        $this->render('pages/auth/register', [
             'titrePage' => 'Inscription',
             'places'    => $this->places->all()],
          'auth');
@@ -116,7 +116,7 @@ class AuthController extends Controller
 
     public function showRGPD(): void
     {
-        $this->render('pages/Auth/RGPDConsent', ['titrePage' => 'Mentions RGPD']);
+        $this->render('pages/auth/rgpd_consent', ['titrePage' => 'Mentions RGPD']);
     }
 
     /**

@@ -29,7 +29,7 @@ class SessionController extends Controller
     }
 
     /**
-     * Session pages render inside Layout/chat.php (the authenticated shell).
+     * Session pages render inside layout/chat.php (the authenticated shell).
      *
      * @param array<string, mixed> $data
      */
