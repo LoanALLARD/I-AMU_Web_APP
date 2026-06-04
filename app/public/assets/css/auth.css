@@ -23,7 +23,24 @@ body.auth-body {
     from { opacity: 0; transform: translateY(24px); }
     to   { opacity: 1; transform: translateY(0); }
 }
-
+.deactivate-account-msg{
+    background:var(--blue, #eff6ff);
+    border:1px solid var(--blue, #bfdbfe);
+    border-radius:8px;
+    padding:14px 16px;
+    margin-top:12px;
+    margin-bottom:16px;
+}
+.deactivate-account-msg a{
+    font-size:13px;
+    color:var(--blue, #1e40af);
+    line-height:1.5;
+    margin:0 0 12px;
+}
+.deactivate-account-msg button{
+    width:100%;
+    background:var(--blue, #2563eb);
+}
 .card-header {
     background: var(--blue);
     padding: 2rem 2rem 1.5rem;
