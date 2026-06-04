@@ -138,9 +138,6 @@
 }
 
 .profile-info-box {
-    background: var(--gray-100);
-    border: 1px solid var(--gray-200);
-    border-radius: var(--r-1);
     padding: 16px;
     margin-bottom: 16px;
 }
