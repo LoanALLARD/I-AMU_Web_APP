@@ -101,7 +101,6 @@ $themePref = match ($user['theme'] ?? null) {
         <a href="/chat" class="topbar-brand" aria-label="Accueil I-AMU">
             <img src="/assets/img/logo.png" alt="">
             <div class="topbar-brand-text">
-                <strong>I-AMU</strong>
                 <span><?= htmlspecialchars($roleLabel) ?></span>
             </div>
         </a>
@@ -186,7 +185,6 @@ its own identity above the navigation. */ ?>
             <div class="sidebar-brand">
                 <img src="/assets/img/logo.png" alt="">
                 <div class="sidebar-brand-text">
-                    <strong>I-AMU</strong>
                     <span><?= htmlspecialchars($roleLabel) ?></span>
                 </div>
             </div>
