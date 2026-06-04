@@ -6,7 +6,13 @@ services :
       - "8082:11434"
     volumes : # pour sauvegarder les modeles téléchargés
       - ollama_data:/root/.ollama
-    
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -39,6 +45,12 @@ services :
       - "8083:8080"
     depends_on:
       - db
+  mailpit:
+    image: axllent/mailpit
+    restart: always
+    ports:
+      - "8025:8025"
+      - "1025:1025"
 
   php-app:
     build: ./app
@@ -55,6 +67,9 @@ services :
       DB_PASSWORD: ${DB_PASSWORD}
       OLLAMA_URL: http://ollama2:11434
       APP_DEBUG: "true"
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_FROM: noreply@iamu.univ-amu.fr
     depends_on:
       - db
     volumes:

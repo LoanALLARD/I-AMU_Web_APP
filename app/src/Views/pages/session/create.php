@@ -75,9 +75,6 @@ $typeCards = [
 
 <form method="POST" action="<?= htmlspecialchars($action) ?>" class="session-form-grid" id="session-form">
     <?= csrf_field() ?>
-    <?php if (!$isEdit): ?>
-        <input type="hidden" name="access_code" value="<?= htmlspecialchars($previewCode) ?>">
-    <?php endif; ?>
 
     <div class="session-form-main">
 
@@ -115,7 +112,7 @@ $typeCards = [
                     <p class="fsection-hint">Aucune ressource ne vous appartient. Demandez à un administrateur de département de vous en attribuer une avant de créer une session.</p>
                 <?php else: ?>
                     <select name="resource_id" required>
-                        <option value="">— sélectionnez une ressource —</option>
+                        <option value="">— Sélectionnez une ressource —</option>
                         <?php foreach ($resources as $r): ?>
                             <option value="<?= (int) $r['id'] ?>" <?= $selectedResourceId === (int) $r['id'] ? 'selected' : '' ?>>
                                 <?= htmlspecialchars((string) $r['code']) ?> — <?= htmlspecialchars((string) $r['name']) ?>
@@ -246,6 +243,7 @@ $typeCards = [
 
     <!-- Right column : access code + preview + preflight -->
     <aside class="session-aside">
+        <?php if ($previewCodeFormatted !== ''): ?>
         <div class="access-card">
             <div class="access-card-label">Code d'accès</div>
             <div class="access-code-display" id="access-code-display">
@@ -253,13 +251,14 @@ $typeCards = [
             </div>
             <div class="access-card-actions">
                 <button type="button" class="btn bordered" id="btn-copy-code">
-                    <?= icon('copy', '', 11) ?> copier
+                    <?= icon('copy', '', 11) ?> Copier
                 </button>
                 <button type="button" class="btn bordered" id="btn-fullscreen-code">
-                    <?= icon('eye', '', 11) ?> plein écran
+                    <?= icon('eye', '', 11) ?> Plein écran
                 </button>
             </div>
         </div>
+        <?php endif; ?>
 
         <div>
             <div class="fsection-head">
@@ -269,7 +268,9 @@ $typeCards = [
             <div class="preview-card">
                 <div class="preview-card-header">
                     <span class="preview-card-tag" id="preview-tag"><?= htmlspecialchars(strtolower($currentType->value)) ?> / <?= htmlspecialchars($currentType->label()) ?></span>
-                    <span class="preview-card-tag">· <?= htmlspecialchars($previewCodeFormatted) ?></span>
+                    <?php if ($previewCodeFormatted !== ''): ?>
+                        <span class="preview-card-tag">· <?= htmlspecialchars($previewCodeFormatted) ?></span>
+                    <?php endif; ?>
                 </div>
                 <div class="preview-card-name" id="preview-name">— libellé —</div>
                 <div class="preview-card-meta">

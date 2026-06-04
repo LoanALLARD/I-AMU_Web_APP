@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Models;
 
 use PDO;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -65,25 +64,30 @@ class SessionRepository
     }
 
     /**
+     * Inserts a session. `access_code` is left to the database trigger
+     * `trg_generate_session_access_code`, which fills it when the status is
+     * SCHEDULED or ACTIVE. The generated value (or null for a draft) is
+     * returned alongside the new id.
+     *
      * @param array<string, scalar|null> $data
+     * @return array{id: int, access_code: ?string}
      */
-    public function insert(array $data): int
+    public function insert(array $data): array
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO sessions
-                (resource_id, name, type, status, access_code, starts_at, ends_at, closed_at,
+                (resource_id, name, type, status, starts_at, ends_at, closed_at,
                  pre_prompt_override, post_prompt_override, instructions, max_input_size)
              VALUES
-                (:resource_id, :name, :type, :status, :access_code, :starts_at, :ends_at, :closed_at,
+                (:resource_id, :name, :type, :status, :starts_at, :ends_at, :closed_at,
                  :pre_prompt_override, :post_prompt_override, :instructions, :max_input_size)
-             RETURNING id'
+             RETURNING id, access_code'
         );
         $stmt->execute([
             'resource_id'          => $data['resource_id'],
             'name'                 => $data['name'],
             'type'                 => $data['type'],
             'status'               => $data['status'],
-            'access_code'          => $data['access_code'],
             'starts_at'            => $data['starts_at'],
             'ends_at'              => $data['ends_at'],
             'closed_at'            => $data['closed_at'],
@@ -93,7 +97,15 @@ class SessionRepository
             'max_input_size'       => $data['max_input_size'],
         ]);
 
-        return (int) $stmt->fetchColumn();
+        /** @var array{id: int|string, access_code: ?string} $row */
+        $row = $stmt->fetch();
+
+        return [
+            'id'          => (int) $row['id'],
+            'access_code' => $row['access_code'] !== null && $row['access_code'] !== ''
+                ? (string) $row['access_code']
+                : null,
+        ];
     }
 
     /**
@@ -160,29 +172,69 @@ class SessionRepository
         }
     }
 
-    public function accessCodeExists(string $code): bool
+    /**
+     * Per enrolled student of a session: their conversation, prompt count,
+     * last activity and last-used model. Students with no conversation yet
+     * still appear (LEFT JOINs), with a zero count.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function monitorStudents(int $sessionId): array
     {
-        $stmt = $this->pdo->prepare('SELECT 1 FROM sessions WHERE access_code = :code');
-        $stmt->execute(['code' => $code]);
+        $stmt = $this->pdo->prepare(
+            'SELECT
+                 u.id            AS student_id,
+                 u.first_name,
+                 u.last_name,
+                 c.id            AS conversation_id,
+                 c.name          AS conversation_name,
+                 c.created_at    AS conversation_created,
+                 COUNT(i.id)     AS prompt_count,
+                 MAX(i.sent_at)  AS last_activity,
+                 (SELECT m.name
+                    FROM interactions i2
+                    JOIN models m ON m.id = i2.model_id
+                   WHERE i2.conversation_id = c.id
+                   ORDER BY i2.sent_at DESC
+                   LIMIT 1) AS last_model
+               FROM enrollments e
+               JOIN users u ON u.id = e.student_id
+               LEFT JOIN conversations c ON c.user_id = e.student_id AND c.session_id = e.session_id
+               LEFT JOIN interactions i ON i.conversation_id = c.id
+              WHERE e.session_id = :sid
+              GROUP BY u.id, u.first_name, u.last_name, c.id, c.name, c.created_at
+              ORDER BY u.last_name, u.first_name, c.created_at'
+        );
+        $stmt->execute(['sid' => $sessionId]);
 
-        return $stmt->fetchColumn() !== false;
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
     }
 
-    public function generateUniqueAccessCode(): string
+    /**
+     * Prompt/response history of a single conversation, scoped to the session
+     * for safety (read-only supervision).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function interactionsOfConversation(int $conversationId, int $sessionId): array
     {
-        $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        $max      = strlen($alphabet) - 1;
+        $stmt = $this->pdo->prepare(
+            'SELECT i.prompt, i.response, i.sent_at, m.name AS model_name
+               FROM interactions i
+               JOIN conversations c ON c.id = i.conversation_id
+               JOIN models m ON m.id = i.model_id
+              WHERE i.conversation_id = :cid AND c.session_id = :sid
+              ORDER BY i.sent_at ASC'
+        );
+        $stmt->execute(['cid' => $conversationId, 'sid' => $sessionId]);
 
-        for ($attempt = 0; $attempt < 20; $attempt++) {
-            $code = '';
-            for ($i = 0; $i < 6; $i++) {
-                $code .= $alphabet[random_int(0, $max)];
-            }
-            if (!$this->accessCodeExists($code)) {
-                return $code;
-            }
-        }
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
 
-        throw new RuntimeException('Unable to generate a unique access code.');
+        return $rows;
     }
+
 }

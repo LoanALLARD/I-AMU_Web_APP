@@ -74,13 +74,13 @@ class SessionService
      */
     public function createFormData(int $teacherId): array
     {
-        $code = $this->sessions->generateUniqueAccessCode();
-
+        // No code to preview: the database trigger assigns one only when
+        // the session becomes scheduled/active.
         return [
             'models'               => $this->modelOptions(),
             'resources'            => $this->resources->findAllByOwner($teacherId),
-            'previewCode'          => $code,
-            'previewCodeFormatted' => Session::formatAccessCode($code),
+            'previewCode'          => '',
+            'previewCodeFormatted' => '',
         ];
     }
 
@@ -94,8 +94,8 @@ class SessionService
             'models'               => $this->modelOptions(),
             'resources'            => $this->resources->findAllByOwner($teacherId),
             'authorizedModelIds'   => $this->sessions->authorizedModelIdsOf((int) $session->id()),
-            'previewCode'          => $session->accessCode(),
-            'previewCodeFormatted' => $session->accessCodeFormatted(),
+            'previewCode'          => $session->accessCode() ?? '',
+            'previewCodeFormatted' => $session->accessCodeFormatted() ?? '',
         ];
     }
 
@@ -124,7 +124,7 @@ class SessionService
             'typeClass'          => $session->type()->badgeClass(),
             'statusLabel'        => $computed->label(),
             'statusClass'        => $computed->badgeClass(),
-            'accessCode'         => $session->accessCodeFormatted(),
+            'accessCode'         => $session->accessCodeFormatted() ?? '',
             'startsAtFormatted'  => $session->startsAt()?->format('d/m/Y H:i'),
             'endsAtFormatted'    => $session->endsAt()?->format('d/m/Y H:i'),
             'closedAtFormatted'  => $session->closedAt()?->format('d/m/Y H:i'),
@@ -137,6 +137,91 @@ class SessionService
             'canStart'           => $actions['can_start'],
             'canEnd'             => $actions['can_end'],
             'canCancel'          => $actions['can_cancel'],
+            'canMonitor'         => $computed === SessionStatus::Active || $computed === SessionStatus::Ended,
+        ];
+    }
+
+    /**
+     * Read-only supervision view of a session: the enrolled students, each
+     * with their (possibly several) conversations, plus the transcript of
+     * the selected conversation. Returns null when the session is neither
+     * active nor ended (nothing to monitor yet).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function monitor(Session $session, int $conversationId = 0): ?array
+    {
+        $computed = $session->computedStatus($this->now());
+        if ($computed !== SessionStatus::Active && $computed !== SessionStatus::Ended) {
+            return null;
+        }
+
+        $sessionId = (int) $session->id();
+
+        // Group the (student, conversation) rows by student. A student with
+        // no conversation still appears, with an empty conversation list.
+        $byStudent = [];
+        foreach ($this->sessions->monitorStudents($sessionId) as $r) {
+            $sid = (int) $r['student_id'];
+            if (!isset($byStudent[$sid])) {
+                $byStudent[$sid] = [
+                    'id'            => $sid,
+                    'name'          => trim(((string) $r['first_name']) . ' ' . ((string) $r['last_name'])),
+                    'conversations' => [],
+                    'totalPrompts'  => 0,
+                ];
+            }
+            if ($r['conversation_id'] !== null) {
+                $byStudent[$sid]['conversations'][] = [
+                    'id'           => (int) $r['conversation_id'],
+                    'name'         => (string) $r['conversation_name'],
+                    'promptCount'  => (int) $r['prompt_count'],
+                    'lastActivity' => $r['last_activity'] !== null
+                        ? (new DateTimeImmutable((string) $r['last_activity']))->format('d/m/Y H:i')
+                        : null,
+                    'lastModel'    => $r['last_model'] !== null && $r['last_model'] !== '' ? (string) $r['last_model'] : null,
+                ];
+                $byStudent[$sid]['totalPrompts'] += (int) $r['prompt_count'];
+            }
+        }
+        $students = array_values($byStudent);
+
+        // Resolve the selected conversation (must belong to one of the
+        // session's students) and load its transcript.
+        $selected = null;
+        if ($conversationId > 0) {
+            foreach ($students as $stu) {
+                foreach ($stu['conversations'] as $conv) {
+                    if ($conv['id'] === $conversationId) {
+                        $selected = [
+                            'conversationId'   => $conversationId,
+                            'conversationName' => $conv['name'],
+                            'studentName'      => $stu['name'],
+                            'transcript'       => array_map(
+                                static fn (array $r): array => [
+                                    'prompt'   => (string) $r['prompt'],
+                                    'response' => $r['response'] !== null ? (string) $r['response'] : '',
+                                    'model'    => (string) $r['model_name'],
+                                    'sentAt'   => (new DateTimeImmutable((string) $r['sent_at']))->format('d/m/Y H:i'),
+                                ],
+                                $this->sessions->interactionsOfConversation($conversationId, $sessionId)
+                            ),
+                        ];
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        return [
+            'id'           => $sessionId,
+            'name'         => $session->name(),
+            'accessCode'   => $session->accessCodeFormatted() ?? '',
+            'statusLabel'  => $computed->label(),
+            'statusClass'  => $computed->badgeClass(),
+            'studentCount' => count($students),
+            'students'     => $students,
+            'selected'     => $selected,
         ];
     }
 
@@ -168,7 +253,9 @@ class SessionService
             (string) $data['name'],
             $data['type'],
             $status,
-            $this->resolveAccessCode($data['accessCode'] ?? null),
+            // Access code is generated by the DB trigger once the session
+            // is SCHEDULED/ACTIVE; null while it stays a draft.
+            null,
             $startsAt,
             $endsAt,
             null,
@@ -178,9 +265,10 @@ class SessionService
             $data['maxInputSize'],
         );
 
-        $id = $this->sessions->insert($session->toRow());
-        $session->assignId($id);
-        $this->sessions->setAuthorizedModels($id, $data['modelIds']);
+        $result = $this->sessions->insert($session->toRow());
+        $session->assignId($result['id']);
+        $session->assignAccessCode($result['access_code']);
+        $this->sessions->setAuthorizedModels($result['id'], $data['modelIds']);
 
         return $session;
     }
@@ -268,12 +356,16 @@ class SessionService
             $this->enrollments->enroll($studentUserId, $sessionId);
         }
 
+        // Land on the student's existing conversation, or create the first
+        // one ("SESSION - CODE #1"). They can add more from the chat.
         $conversationId = $this->conversations->findIdByUserAndSession($studentUserId, $sessionId);
         if ($conversationId === null) {
-            $created        = $this->conversations->newConversation($studentUserId, $sessionId, 'SESSION - ' . $session->accessCodeFormatted());
-            $conversationId = $created !== null
-                ? (int) $created['id']
-                : (int) ($this->conversations->findIdByUserAndSession($studentUserId, $sessionId) ?? 0);
+            $code           = $session->accessCodeFormatted() ?? ('S' . $sessionId);
+            $conversationId = $this->conversations->newConversation(
+                $studentUserId,
+                $sessionId,
+                'SESSION - ' . $code . ' #1'
+            );
         }
 
         return [
@@ -299,18 +391,6 @@ class SessionService
         }
 
         return null;
-    }
-
-    private function resolveAccessCode(?string $proposed): string
-    {
-        if ($proposed !== null && $proposed !== '') {
-            $normalized = Session::normalizeAccessCode($proposed);
-            if (preg_match('/^[A-Z0-9]{6}$/', $normalized) === 1 && !$this->sessions->accessCodeExists($normalized)) {
-                return $normalized;
-            }
-        }
-
-        return $this->sessions->generateUniqueAccessCode();
     }
 
     /**
@@ -344,7 +424,7 @@ class SessionService
             'typeClass'         => $session->type()->badgeClass(),
             'statusLabel'       => $computed->label(),
             'statusClass'       => $computed->badgeClass(),
-            'accessCode'        => $session->accessCodeFormatted(),
+            'accessCode'        => $session->accessCodeFormatted() ?? '',
             'startsAtFormatted' => $session->startsAt()?->format('d/m/Y H:i'),
             'endsAtFormatted'   => $session->endsAt()?->format('d/m/Y H:i'),
             'canEdit'           => $actions['can_edit'],

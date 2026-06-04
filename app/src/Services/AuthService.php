@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Services;
 
-use Data\Database;
+use Models\EmailDomainRepository;
+use Models\PlaceRepository;
+use Models\UserRepository;
 use PDO;
-use PDOStatement;
+use Services\MailService;
 
 /**
- * Minimal authentication service against the real `users` table.
+ * Authentication service against the real `users` table.
  *
- * Temporary bridge between the legacy login flow (kept on
- * Controllers\LoginController) and the real database introduced by spec 00.
- * To be rewritten on top of UserRepositoryInterface / App\Application
- * once spec 01 (Auth & Account) is properly implemented.
+ * Owns the application logic (input validation, domain -> role mapping,
+ * password hashing/verification, session population). All SQL lives in
+ * the repositories, which this service drives.
  *
  * Schema alignment notes:
  *   - Tables and columns are plural / `id`-based per init-scripts/IAMU_db.sql:
@@ -25,24 +26,15 @@ use PDOStatement;
  */
 final class AuthService
 {
-    private PDO $pdo;
+    private UserRepository $users;
+    private PlaceRepository $places;
+    private EmailDomainRepository $emailDomains;
 
-    public function __construct()
+    public function __construct(PDO $pdo)
     {
-        $this->pdo = Database::getConnection();
-    }
-
-    /**
-     * Prepare + execute helper (replaces the former PdoConnection::query()).
-     *
-     * @param array<string, scalar|null> $params
-     */
-    private function run(string $sql, array $params = []): PDOStatement
-    {
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-
-        return $stmt;
+        $this->users        = new UserRepository($pdo);
+        $this->places       = new PlaceRepository($pdo);
+        $this->emailDomains = new EmailDomainRepository($pdo);
     }
 
     /**
@@ -54,32 +46,37 @@ final class AuthService
             return ['success' => false, 'error' => 'Email et mot de passe requis.'];
         }
 
-        $row = $this->run(
-            'SELECT id, email, password_hash, first_name, last_name, is_active
-             FROM users WHERE email = :email',
-            ['email' => $email]
-        )->fetch();
+        $row = $this->users->findByEmail($email);
 
-        if (!$row || !password_verify($password, (string) $row['password_hash'])) {
+        if ($row === null || !password_verify($password, (string) $row['password_hash'])) {
             return ['success' => false, 'error' => 'Identifiants invalides.'];
         }
 
         if (!$row['is_active']) {
-            return ['success' => false, 'error' => 'Ce compte est désactivé.'];
+            return [
+                'success' => false,
+                'error' => 'Ce compte est désactivé.',
+                'deactivated' => true,
+                'email' => (string) $row['email']
+                ];
+        }
+        if ($row['email_verified_at'] === null) {
+            return [
+                'success' => false,
+                'error'   => 'Veuillez consultez votre boîte mail.',
+            ];
         }
 
         $userId = (int) $row['id'];
 
-        $this->run(
-            'UPDATE users SET last_login_at = NOW() WHERE id = :id',
-            ['id' => $userId]
-        );
+        $this->users->touchLastLogin($userId);
 
         $_SESSION['user_id']         = $userId;
         $_SESSION['user_email']      = (string) $row['email'];
         $_SESSION['user_first_name'] = (string) $row['first_name'];
         $_SESSION['user_last_name']  = (string) $row['last_name'];
         $_SESSION['roles']           = $this->resolveRoles($userId);
+        $_SESSION['user_theme']      = $row['theme'] ?? null;
         session_regenerate_id(true);
 
         return ['success' => true];
@@ -91,18 +88,16 @@ final class AuthService
      * Behaviour:
      *   - Format-validates the form input (email, password >= 8 chars,
      *     password_confirm match, RGPD consent ticked).
-     *   - Looks up the email domain to derive the role:
-     *       @etu.univ-amu.fr  -> student auto
-     *       @univ-amu.fr      -> teacher auto
-     *       anything else     -> rejected (per CLAUDE.md §7).
-     *     Once spec 05 ships an admin UI for `email_domain_configs`, this
-     *     lookup will move to the DB; the contract here doesn't change.
+     *   - Looks up the email domain in `email_domain_configs` to derive the
+     *     role (active domains only). An unknown / disabled domain is
+     *     rejected — only domains an admin configured can register.
      *   - Hashes the password with bcrypt.
-     *   - Wraps `INSERT users` + `INSERT teachers|students` in a single
-     *     transaction so a half-created account can never linger.
+     *   - Delegates persistence to UserRepository::createUserWithRole(),
+     *     which creates the user + role row in a single transaction so a
+     *     half-created account can never linger.
      *
-     * Does NOT auto-login: the caller flashes a success message and
-     * redirects to /login (LoginController::register already does that).
+     * On success the new user is auto-logged-in (the session is populated
+     * via login()), so the caller can redirect straight to the app.
      *
      * @param array<string, mixed> $data
      * @return array{success: true} | array{success: false, error: string}
@@ -114,23 +109,31 @@ final class AuthService
         $passwordConfirm = (string) ($data['password_confirm']     ?? '');
         $firstName       = trim((string) ($data['first_name']      ?? ''));
         $lastName        = trim((string) ($data['last_name']       ?? ''));
+        $placeId         = (int) ($data['place_id']                ?? 0);
+        $departmentId    = (int) ($data['department_id']           ?? 0);
         $rgpdConsent     = (bool)  ($data['rgpd_consent']          ?? false);
 
         // ----- Format validation ------------------------------------
-        if ($email === '' || $password === '' || $firstName === '' || $lastName === '') {
-            return ['success' => false, 'error' => 'Tous les champs sont obligatoires.'];
+        $validationError = $this->validateRegistration(
+            $email,
+            $password,
+            $passwordConfirm,
+            $firstName,
+            $lastName,
+            $rgpdConsent
+        );
+        if ($validationError !== null) {
+            return ['success' => false, 'error' => $validationError];
         }
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return ['success' => false, 'error' => 'Email invalide.'];
+
+        // ----- Place / department --------------------------------------
+        // The dependent select is filled by client-side JS, so we re-check
+        // server-side that the department exists and belongs to the place.
+        if ($placeId === 0 || $departmentId === 0) {
+            return ['success' => false, 'error' => 'Veuillez choisir un lieu et un département.'];
         }
-        if (strlen($password) < 8) {
-            return ['success' => false, 'error' => 'Le mot de passe doit faire au moins 8 caractères.'];
-        }
-        if ($password !== $passwordConfirm) {
-            return ['success' => false, 'error' => 'Les mots de passe ne correspondent pas.'];
-        }
-        if (!$rgpdConsent) {
-            return ['success' => false, 'error' => 'Vous devez accepter les conditions RGPD pour créer un compte.'];
+        if (!$this->places->departmentBelongsToPlace($departmentId, $placeId)) {
+            return ['success' => false, 'error' => 'Le département sélectionné est invalide.'];
         }
 
         // ----- Role lookup ------------------------------------------
@@ -143,69 +146,156 @@ final class AuthService
         }
 
         // ----- Email uniqueness -------------------------------------
-        $existing = $this
-            ->run('SELECT 1 FROM users WHERE email = :email', ['email' => $email])
-            ->fetch();
-        if ($existing !== false) {
+        if ($this->users->emailExists($email)) {
             return ['success' => false, 'error' => 'Cet email est déjà utilisé.'];
         }
 
-        // ----- Insert -----------------------------------------------
-        $hash = password_hash($password, PASSWORD_DEFAULT);
-
-        $this->pdo->beginTransaction();
+        // ----- Insert (user + role row, atomically) -----------------
         try {
-            $stmt = $this->run(
-                'INSERT INTO users (email, password_hash, first_name, last_name, consent_at, consent_version)
-                 VALUES (:email, :hash, :fn, :ln, NOW(), :ver)
-                 RETURNING id',
+            $userId = $this->users->createUserWithRole(
                 [
-                    'email' => $email,
-                    'hash'  => $hash,
-                    'fn'    => $firstName,
-                    'ln'    => $lastName,
-                    'ver'   => '1.0',
-                ]
+                    'email'           => $email,
+                    'password_hash'   => password_hash($password, PASSWORD_DEFAULT),
+                    'first_name'      => $firstName,
+                    'last_name'       => $lastName,
+                    'department_id'   => $departmentId,
+                    'consent_version' => '1.0',
+                ],
+                $role
             );
-            $userId = (int) $stmt->fetchColumn();
+            //  Email verification token
+            $token = bin2hex(random_bytes(32));
+            $this->users->setVerifyToken($userId, $token);
 
-            // The role table only carries the FK to users.id; default
-            // values are good for is_specialised (false) / title (null) /
-            // student_number (null) — the user can fill them later.
-            if ($role === 'teacher') {
-                $this->run('INSERT INTO teachers (id) VALUES (:id)', ['id' => $userId]);
-            } else {
-                $this->run('INSERT INTO students (id) VALUES (:id)', ['id' => $userId]);
-            }
+            // --- Send verification email ---
+            $config = require __DIR__ . '/../Config/config.php';
+            $link   = ($config['app']['url'] ?? 'http://localhost:8085') . '/verify-email?token=' . $token;
 
-            $this->pdo->commit();
+            $mail = new MailService();
+            $mail->send(
+                $email,
+                'Vérifiez votre adresse email — I-AMU',
+                '<h2>Bienvenue sur I-AMU !</h2>'
+                . '<p>Cliquez sur le lien ci-dessous pour activer votre compte :</p>'
+                . '<p><a href="' . htmlspecialchars($link) . '">Vérifier mon email</a></p>'
+                . '<p>Si vous n\'avez pas créé de compte, ignorez cet email.</p>'
+            );
+
+            return ['success' => true, 'pending_verification' => true];
         } catch (\Throwable $e) {
-            $this->pdo->rollBack();
+            error_log('REGISTER ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
             return [
                 'success' => false,
                 'error'   => "Erreur lors de l'enregistrement. Merci de réessayer.",
             ];
         }
 
-        return ['success' => true];
+        // Auto-login: reuse login() so the session is populated through the
+        // single code path (roles, session_regenerate_id). The plaintext
+        // password is still available here, before it goes out of scope.
+        return $this->login($email, $password);
+    }
+
+    public function deactivateAccount(int $userId): array
+    {
+        try {
+            $affected = $this->users->deactivate($userId);
+
+            if ($affected === 0) {
+                return [
+                    'success' => false,
+                    'error'   => 'Le compte est déjà désactivé ou introuvable.',
+                ];
+            }
+            return ['success' => true];
+
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error'   => 'Erreur lors de la désactivation du compte.',
+            ];
+        }
+    }
+
+    public function reactivateAccount(string $email, string $password): array
+    {
+        if ($email === '' || $password === '') {
+            return ['success' => false, 'error' => 'Email et mot de passe requis.'];
+        }
+
+        $row = $this->users->findByEmail($email);
+
+        if (!$row || !password_verify($password, (string) $row['password_hash'])) {
+            return ['success' => false, 'error' => 'Identifiants invalides.'];
+        }
+
+        if ($row['is_active']) {
+            return ['success' => false, 'error' => 'Ce compte est déjà actif.'];
+        }
+
+        try {
+            $this->users->reactivate((int) $row['id']);
+            return ['success' => true];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error'   => 'Erreur lors de la réactivation.',
+            ];
+        }
+    }
+
+
+
+    /**
+     * Validates the registration form input. Returns the (French) error
+     * message to surface to the user, or null when every field is valid.
+     */
+    private function validateRegistration(
+        string $email,
+        string $password,
+        string $passwordConfirm,
+        string $firstName,
+        string $lastName,
+        bool $rgpdConsent
+    ): ?string {
+        if ($email === '' || $password === '' || $firstName === '' || $lastName === '') {
+            return 'Tous les champs sont obligatoires.';
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return 'Email invalide.';
+        }
+        if (strlen($password) < 8) {
+            return 'Le mot de passe doit faire au moins 8 caractères.';
+        }
+        if ($password !== $passwordConfirm) {
+            return 'Les mots de passe ne correspondent pas.';
+        }
+        if (!$rgpdConsent) {
+            return 'Vous devez accepter les conditions RGPD pour créer un compte.';
+        }
+
+        return null;
     }
 
     /**
-     * Hardcoded domain → role mapping (CLAUDE.md §7).
-     *
-     * To be replaced by a lookup in `email_domain_configs` once spec 05
-     * is implemented. Returning null means "no auto-role for this domain".
+     * Maps an email to its role by looking up the part after the `@` in the
+     * `email_domain_configs` table. Only active domains match. Returns the
+     * role in the lowercase form createUserWithRole() expects
+     * ('student' / 'teacher'), or null when the domain is unknown / disabled.
      */
     private function resolveRoleFromDomain(string $email): ?string
     {
-        $lower = strtolower($email);
-        if (str_ends_with($lower, '@etu.univ-amu.fr')) {
-            return 'student';
+        $atPos = strrpos($email, '@');
+        if ($atPos === false) {
+            return null;
         }
-        if (str_ends_with($lower, '@univ-amu.fr')) {
-            return 'teacher';
-        }
-        return null;
+        $domain = strtolower(substr($email, $atPos + 1));
+
+        // The table stores the SQL enum (UPPERCASE); the rest of the code
+        // (createUserWithRole) works with lowercase role names.
+        $role = $this->emailDomains->findRoleByDomain($domain);
+
+        return $role === null ? null : strtolower($role);
     }
 
     public function logout(): void
@@ -236,25 +326,15 @@ final class AuthService
     {
         $roles = [];
 
-        if ($this->existsIn('teachers', $userId)) {
+        if ($this->users->hasRole($userId, 'teachers')) {
             $roles[] = 'teacher';
         }
-        if ($this->existsIn('students', $userId)) {
+        if ($this->users->hasRole($userId, 'students')) {
             $roles[] = 'student';
         }
         // researchers / department_administrators exist on the live
         // schema but their HTTP surface belongs to spec 05.
 
         return $roles;
-    }
-
-    private function existsIn(string $table, int $userId): bool
-    {
-        // Table whitelist enforced by the call sites (teachers/students/...).
-        $row = $this->run(
-            "SELECT 1 FROM {$table} WHERE id = :id",
-            ['id' => $userId]
-        )->fetch();
-        return $row !== false;
     }
 }

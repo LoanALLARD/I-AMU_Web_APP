@@ -28,6 +28,12 @@ class Database{
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                     PDO::ATTR_EMULATE_PREPARES   => false,
                 ]);
+
+                // Return timestamptz values in the app timezone so the UI
+                // shows local time (the column is stored in UTC). Sanitised
+                // because SET TIME ZONE cannot take a bound parameter.
+                $tz = preg_replace('/[^A-Za-z0-9\/_+-]/', '', (string) ($config['timezone'] ?? 'Europe/Paris'));
+                self::$instance->exec("SET TIME ZONE '" . $tz . "'");
             } catch (PDOException $e) {
                 die("Error while the connection with the database : " . $e->getMessage());
             }

@@ -152,7 +152,8 @@
 .app-body:not(.page-chat) .page-header,
 .app-body:not(.page-chat) .page-body,
 .app-body:not(.page-chat) .dashboard-header,
-.app-body:not(.page-chat) .dashboard-grid {
+.app-body:not(.page-chat) .dashboard-grid,
+.app-body:not(.page-chat) .session-form-grid {
     max-width: none;
     margin: 0;
     padding-left:  clamp(1rem, 5vw, 4rem);
@@ -353,43 +354,99 @@ textarea {
     border-collapse: collapse;
     margin-top: 20px;
     background: var(--white);
+    border: 1px solid var(--gray-200);
     border-radius: var(--r-3);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 1px 3px rgba(20, 26, 46, .04);
     overflow: hidden;
 }
 .session-table th {
     text-align: left;
+    font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--gray-800);
-    padding: 14px 18px;
-    background: var(--gray-200);
-    border-bottom: 2px solid var(--gray-400);
+    color: var(--gray-600);
+    padding: 15px 18px;
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
 }
 .session-table td {
-    padding: 16px 18px;
+    padding: 14px 18px;
     border-bottom: 1px solid var(--gray-200);
     font-size: 14px;
     color: var(--gray-800);
+    vertical-align: middle;
 }
 .session-table tr:last-child td { border-bottom: none; }
-.session-table tr:hover td { background: var(--gray-100); }
+.session-table tbody tr { transition: background .12s; }
+.session-table tbody tr:hover td { background: rgba(128, 145, 180, .07); }
 .session-table .cell-actions { text-align: right; white-space: nowrap; }
 .session-table .cell-actions form { display: inline; margin: 0; }
 .session-table .cell-actions > * { margin-left: 4px; }
 .session-table .access-code-cell {
     font-family: var(--font-mono);
     font-size: 13px;
-    font-weight: 600;
-    letter-spacing: .04em;
+    font-weight: 700;
+    letter-spacing: .05em;
     color: var(--blue-dark);
     background: var(--blue-light);
-    padding: 3px 10px;
-    border-radius: 6px;
+    border: 1px solid #cfe2f7;
+    padding: 4px 10px;
+    border-radius: 8px;
     display: inline-block;
 }
+
+/* Modern row: tinted type-icon square + name + type subtitle. */
+.session-cell-main { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.session-cell-txt { min-width: 0; }
+.session-cell-txt b {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--gray-800);
+    display: block;
+    line-height: 1.3;
+    transition: color .15s;
+}
+.session-cell-main:hover .session-cell-txt b { color: var(--blue); }
+.session-cell-txt span { font-size: 12px; color: var(--gray-400); }
+.stype-ico {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+.stype-ico.badge-exam       { background: var(--gold-light); color: var(--exam-ink); }
+.stype-ico.badge-free-study { background: #f5f3ff; color: #7c3aed; }
+.stype-ico.badge-lab        { background: #f0f9ff; color: #0284c7; }
+.stype-ico.badge-tutorial   { background: var(--blue-light); color: var(--blue-dark); }
+
+/* Status badge with a leading dot (inherits the status colour); the live
+   "active" one gets a soft pulse. */
+.badge-dot::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+.badge.badge-active.badge-dot::before { animation: sessPulse 1.8s ease-in-out infinite; }
+@keyframes sessPulse {
+    0%, 100% { box-shadow: 0 0 0 2px rgba(21, 128, 61, .25); }
+    50%      { box-shadow: 0 0 0 5px rgba(21, 128, 61, .04); }
+}
+
+/* Time-slot cell: clock + start → end. */
+.session-slot { display: inline-flex; align-items: center; gap: 7px; color: var(--gray-600); font-size: 13.5px; white-space: nowrap; }
+.session-slot svg { color: var(--gray-400); flex-shrink: 0; }
+.session-slot .arr { color: var(--gray-400); }
 
 .session-cards { display: none; padding: 16px 0 32px; gap: 14px; flex-direction: column; }
 .session-card {
@@ -421,24 +478,38 @@ textarea {
 
 /* ── Create / Edit form (2-column with aside) ─────────────────────── */
 
+/* Card-based layout matching the dashboard: a transparent grid whose
+   columns are individual white cards, instead of one flat slab. */
 .session-form-grid {
     display: grid;
     grid-template-columns: 1.6fr 1fr;
-    background: var(--white);
-    border-radius: var(--r-3);
-    box-shadow: var(--shadow-md);
+    gap: 24px;
     margin: 0;
-    overflow: hidden;
+    padding: 24px 0;
+    align-items: start;
 }
-.session-form-main { padding: 28px 32px; border-right: 1px solid var(--gray-200); }
+.session-form-main {
+    padding: 28px 32px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-3);
+    box-shadow: var(--shadow-sm);
+}
 .session-aside {
-    padding: 28px;
-    background: linear-gradient(180deg, var(--gray-100) 0%, var(--blue-light) 100%);
-    display: flex; flex-direction: column; gap: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+/* Each aside section (access code, preview, preflight) is its own card. */
+.session-aside > div {
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-3);
+    padding: 22px 24px;
+    box-shadow: var(--shadow-sm);
 }
 @media (max-width: 960px) {
     .session-form-grid { grid-template-columns: 1fr; }
-    .session-form-main { border-right: 0; border-bottom: 1px solid var(--gray-200); }
 }
 
 .fsection { margin-bottom: 26px; }
@@ -540,12 +611,11 @@ textarea {
 .access-card-actions .btn { flex: 1; justify-content: center; }
 
 .preview-card {
-    background: var(--white);
+    background: var(--gray-100);
     border: 1.5px solid var(--gray-200);
     border-radius: var(--r-2);
     padding: 16px;
     margin-top: 10px;
-    box-shadow: var(--shadow-sm);
 }
 .preview-card-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
 .preview-card-tag { font-family: var(--font-mono); font-size: 10px; color: var(--gray-400); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
@@ -832,6 +902,7 @@ textarea {
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: .45rem;
     transition: background .18s, color .18s, box-shadow .18s;
 }
@@ -942,4 +1013,522 @@ textarea {
     background: var(--gray-100);
     color: var(--gray-400);
     cursor: not-allowed;
+}
+
+/* ── Session monitor (teacher supervision, read-only) ──────────────── */
+
+.monitor-grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 20px;
+    align-items: start;
+}
+@media (max-width: 820px) {
+    .monitor-grid { grid-template-columns: 1fr; }
+}
+
+/* Left column — student list */
+.monitor-list {
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-3);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+.monitor-student {
+    display: block;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gray-200);
+    text-decoration: none;
+    transition: background .15s;
+}
+.monitor-student:last-child { border-bottom: none; }
+.monitor-student:hover { background: var(--gray-100); }
+.monitor-student.is-active {
+    background: var(--blue-light);
+    box-shadow: inset 3px 0 0 var(--blue);
+}
+.monitor-student-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+.monitor-student-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--gray-800);
+}
+.monitor-student-count {
+    flex-shrink: 0;
+    min-width: 22px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--blue-dark);
+    background: var(--blue-light);
+    border-radius: 100px;
+    padding: 1px 7px;
+}
+.monitor-student-meta {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--gray-600);
+}
+.monitor-student-meta .mono { font-size: 11px; color: var(--gray-600); }
+.monitor-muted { color: var(--gray-400); }
+
+/* Right column — transcript */
+.monitor-transcript {
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-3);
+    box-shadow: var(--shadow-sm);
+    min-height: 360px;
+    padding: 18px 20px;
+}
+.monitor-transcript-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--gray-200);
+    font-size: 15px;
+    color: var(--gray-800);
+}
+.monitor-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 280px;
+    color: var(--gray-400);
+    text-align: center;
+}
+.monitor-empty svg { color: var(--gray-200); }
+
+.transcript-turn {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--gray-100);
+}
+.transcript-turn:last-child { border-bottom: none; }
+.transcript-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 11px;
+    color: var(--gray-400);
+    font-family: var(--font-mono);
+}
+.transcript-num {
+    color: var(--gray-300, #cbd5e1);
+    font-weight: 700;
+}
+.transcript-prompt {
+    background: var(--gray-100);
+    border-radius: var(--r-2, 10px);
+    padding: 10px 14px;
+    font-size: 13.5px;
+    color: var(--gray-800);
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.transcript-response {
+    border-left: 3px solid var(--blue);
+    padding: 8px 14px;
+    margin-top: 8px;
+    font-size: 13.5px;
+    color: var(--gray-600);
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ── Chat environment header (sidebar) ─────────────────────────────── */
+
+.sidebar-env {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: .75rem .75rem .35rem;
+}
+.sidebar-env-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--gray-500, #64748b);
+}
+.sidebar-env-label.is-session {
+    font-size: .74rem;
+    letter-spacing: .04em;
+    color: var(--exam-ink);
+    background: var(--gold-light);
+    border: 1px solid var(--gold);
+    padding: .32rem .65rem;
+    border-radius: 7px;
+}
+.sidebar-env-switch {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--blue);
+    text-decoration: none;
+}
+.sidebar-env-switch:hover { text-decoration: underline; }
+
+/* The new-chat button now lives in a form; carry its outer margins on
+   the form and let the button fill the width with centred content so it
+   matches the leave/join buttons below it. */
+.new-chat-form { margin: .75rem .75rem .5rem; }
+.new-chat-form .btn-new-chat {
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+}
+
+/* "Quitter la session" — same footprint as the new-chat button but a
+   low-emphasis style that turns red on hover (a leaving action). */
+.btn-leave-session {
+    margin: 0 .75rem .5rem;
+    padding: .55rem .9rem;
+    background: var(--white);
+    color: var(--gray-600);
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    font-family: 'Nunito', sans-serif;
+    font-size: .82rem;
+    font-weight: 700;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    transition: background .18s, color .18s, border-color .18s;
+}
+.btn-leave-session:hover {
+    color: #b91c1c;
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+
+/* ── Monitor: nested students → conversations ──────────────────────── */
+
+.monitor-student-group {
+    border-bottom: 1px solid var(--gray-200);
+}
+.monitor-student-group:last-child { border-bottom: none; }
+.monitor-student-group[open] { padding-bottom: 6px; }
+
+/* <summary> — clickable header that expands/collapses the conversations. */
+.monitor-student-head {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 16px;
+    transition: background .15s;
+}
+.monitor-student-head::-webkit-details-marker { display: none; }
+.monitor-student-head:hover { background: var(--gray-100); }
+.monitor-student-head .monitor-student-name { flex: 1; }
+
+.monitor-chevron {
+    color: var(--gray-400);
+    flex-shrink: 0;
+    transition: transform .15s;
+}
+.monitor-student-group[open] > .monitor-student-head .monitor-chevron { transform: rotate(90deg); }
+
+.monitor-student-conv-count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--gray-400);
+}
+
+.monitor-noconv {
+    margin: 0;
+    padding: 0 16px 6px 38px;
+    font-size: 12px;
+    font-style: italic;
+}
+.monitor-conv {
+    display: block;
+    padding: 8px 16px 8px 24px;
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: background .15s, border-color .15s;
+}
+.monitor-conv:hover { background: var(--gray-100); }
+.monitor-conv.is-active {
+    background: var(--blue-light);
+    border-left-color: var(--blue);
+}
+.monitor-conv-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-800);
+    font-family: var(--font-sans);
+}
+.monitor-conv-meta {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: 2px;
+    font-size: 11.5px;
+    color: var(--gray-600);
+}
+.monitor-conv-count { font-family: var(--font-mono); }
+
+/* ── Conversation row + per-item kebab menu (chat sidebar) ─────────────
+   The conversation list wraps each entry in a flex `.conv-row` so a kebab
+   button can sit to the right of the link. The row owns the hover/active
+   background (overriding homeChat.css, which is loaded earlier). */
+.conv-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    margin-bottom: 2px;
+}
+.conv-row:hover { background: var(--gray-100); }
+.conv-row.active { background: var(--blue-light); }
+
+.conv-row .conv-item {
+    flex: 1 1 auto;
+    min-width: 0;          /* let the title ellipsis kick in */
+    margin-bottom: 0;
+    background: transparent;
+}
+.conv-row .conv-item:hover { background: transparent; }
+.conv-row.active .conv-title {
+    color: var(--blue);
+    font-weight: 600;
+}
+
+.conv-actions {
+    position: relative;
+    flex: 0 0 auto;
+}
+.conv-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin-right: 4px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    color: var(--gray-400);
+    cursor: pointer;
+    opacity: .45;          /* visible-but-muted so it stays tappable on touch */
+    transition: opacity .15s, background .15s, color .15s;
+}
+.conv-row:hover .conv-menu-btn,
+.conv-menu-btn:focus-visible,
+.conv-menu-btn[aria-expanded="true"] { opacity: 1; }
+.conv-menu-btn:hover {
+    background: var(--gray-200);
+    color: var(--gray-800);
+}
+
+.conv-menu {
+    position: absolute;
+    top: calc(100% - 2px);
+    right: 4px;
+    z-index: 40;
+    min-width: 156px;
+    padding: 5px;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(20, 30, 60, .14);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.conv-menu[hidden] { display: none; }
+
+.conv-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 9px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: .82rem;
+    color: var(--gray-800);
+    text-align: left;
+    cursor: pointer;
+}
+.conv-menu-item:hover { background: var(--gray-100); }
+.conv-menu-item svg {
+    flex: 0 0 auto;
+    color: var(--gray-400);
+}
+
+/* ── Conversation scope switch (Conversations / Archivées) ─────────────
+   The list header is a dropdown trigger: a chevron signals it can switch
+   between the active and the archived conversation list. */
+.conv-scope {
+    position: relative;
+    padding: .5rem .5rem .3rem;
+}
+.conv-scope-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+.conv-scope-toggle .conv-group-label {
+    padding: 0;            /* the wrapper owns the spacing now */
+}
+.conv-scope-chevron {
+    color: var(--gray-400);
+    transition: transform .15s;
+}
+.conv-scope-toggle[aria-expanded="true"] .conv-scope-chevron {
+    transform: rotate(180deg);
+}
+.conv-scope-toggle:hover .conv-group-label,
+.conv-scope-toggle:hover .conv-scope-chevron {
+    color: var(--gray-600);
+}
+
+.conv-scope-menu {
+    position: absolute;
+    top: calc(100% - 2px);
+    left: .5rem;
+    z-index: 40;
+    min-width: 184px;
+    padding: 5px;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(20, 30, 60, .14);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.conv-scope-menu[hidden] { display: none; }
+.conv-scope-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 9px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: .82rem;
+    color: var(--gray-800);
+}
+.conv-scope-item:hover { background: var(--gray-100); }
+.conv-scope-item svg { flex: 0 0 auto; color: var(--gray-400); }
+.conv-scope-item.is-current {
+    background: var(--blue-light);
+    color: var(--blue);
+    font-weight: 600;
+}
+.conv-scope-item.is-current svg { color: var(--blue); }
+
+/* =====================================================================
+   Dark-theme component overrides
+   Only the hard-coded colours that the token overrides can't reach.
+   ===================================================================== */
+[data-theme="dark"] .stype-ico.badge-free-study { background: #251c3c; color: #bd9af7; }
+[data-theme="dark"] .stype-ico.badge-lab        { background: #0f2638; color: #5cc4f5; }
+[data-theme="dark"] .stype-ico.badge-exam       { background: #352a14; color: #f3cd86; }
+[data-theme="dark"] .stype-ico.badge-tutorial   { background: var(--blue-light); color: var(--blue); }
+[data-theme="dark"] .session-table .access-code-cell { border-color: rgba(90, 162, 240, .28); }
+[data-theme="dark"] .icon-btn { background: #222838; }
+
+/* Popover menus (hard-coded #fff). */
+[data-theme="dark"] .conv-scope-menu,
+[data-theme="dark"] .conv-menu { background: var(--white); box-shadow: 0 10px 30px rgba(0, 0, 0, .55); }
+[data-theme="dark"] .conv-scope-item:hover,
+[data-theme="dark"] .conv-menu a:hover { background: rgba(128, 145, 180, .10); }
+
+/* Type pill badges with hard-coded light tints. */
+[data-theme="dark"] .badge-lab        { background: #0f2638; color: #7dd3fc; border-color: #1f4a66; }
+[data-theme="dark"] .badge-free-study { background: #251c3c; color: #c4b5fd; border-color: #45356a; }
+[data-theme="dark"] .badge-student    { background: #122a1c; color: #6ee7a0; border-color: #1f5236; }
+
+/* Session-type "kind" cards: deeper fills so the light text stays legible. */
+[data-theme="dark"] .kind-card.is-active {
+    background: #1c3a5e;
+    border-color: var(--blue);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .45);
+}
+[data-theme="dark"] .kind-card.is-active .kind-head { color: #eaf2fb; }
+[data-theme="dark"] .kind-card.is-active .kind-desc { color: rgba(234, 242, 251, .82); }
+[data-theme="dark"] .kind-card.kraft.is-active {
+    background: #4b3a16;
+    border-color: #c89a3a;
+}
+[data-theme="dark"] .kind-card.kraft.is-active .kind-head,
+[data-theme="dark"] .kind-card.kraft.is-active .kind-desc { color: #f3cd86; }
+
+/* Danger hovers (hard-coded light red). */
+[data-theme="dark"] .sidebar-logout:hover,
+[data-theme="dark"] .btn-leave-session:hover {
+    color: #f87171;
+    background: #2c1618;
+    border-color: #f87171;
+}
+
+/* Chat code blocks: --gray-800 inverts to a light surface in dark mode. */
+[data-theme="dark"] .msg-content pre  { background: #0d0f17; color: #e2e8f0; }
+[data-theme="dark"] .msg-content code { background: rgba(128, 145, 180, .14); color: #cdd6f4; }
+
+/* Flash alerts (hard-coded light hex in style.css). */
+[data-theme="dark"] .alert-success { background: var(--accept-bg); color: var(--accept); border-color: var(--accept); }
+[data-theme="dark"] .alert-error,
+[data-theme="dark"] .alert-danger  { background: var(--refuse-bg); color: var(--refuse); border-color: var(--refuse); }
+[data-theme="dark"] .alert-info    { background: var(--blue-light); color: var(--blue);   border-color: var(--blue); }
+
+/* ── Appearance / theme selector (profile page) ───────────────────── */
+.theme-select { display: flex; gap: 8px; flex-wrap: wrap; }
+.theme-opt {
+    flex: 1;
+    min-width: 90px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-600);
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-1);
+    padding: 9px 12px;
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
+}
+.theme-opt:hover { border-color: var(--blue); color: var(--blue); }
+.theme-opt.is-active {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: var(--blue-light);
+    box-shadow: var(--shadow-sm);
 }

@@ -2,63 +2,53 @@
     // Hand-written autoloader (runtime). Composer's vendor/autoload.php
     // is reserved for dev tools (PHPStan, PHPUnit, PHPCS).
     
-    //require dirname(__DIR__) . '/autoload.php';
     require dirname(__DIR__) . '/src/bootstrap.php';
 
     session_start();
     use Core\Router;
     use Controllers\AccueilController;
     use Controllers\LLMController;
-    use Controllers\LoginController;
+    use Controllers\AuthController;
     use Controllers\SessionController;
     use Controllers\ProfileController;
+    use Controllers\PlaceController;
 
-    // routeur 
+// routeur
     $router = new Router();
 
     $router->add('GET',  '/',            function() { (new AccueilController())->index(); });
     $router->add('GET',  '/accueil',     function() { (new AccueilController())->index(); });
 
-    //L'api doit prendre la forme suivante pour envoyer un prompt 
-    // de l'application vers le serveur ollama
-    /*
-    *   curl http://localhost:8082/api/generate -d '{
-            "model": "llama3.2:1b",
-            "prompt": "raconte moi une histoire",
-            "stream": false,
-            "format":"json"
-            }'
-    *
-    format :                curl -X POST -d "data" URL
-    commande cible :        curl -X POST -d '{
-                                "model"   : "....",
-                                "message" : "....",
-                                "context" : "[..]"
-                            }'
-                            http://localhost:8085/chat
-    *
-    *
-    *
-    */
-
-    $router->add('POST', '/chat',        function() { (new LLMController())->handleChat(); });
+    $router->add('POST', '/chat',         function() { (new LLMController())->handleChat(); });
+    $router->add('POST', '/chat/new',     function() { (new AccueilController())->newChat(); });
+    $router->add('POST', '/chat/rename',    function() { (new AccueilController())->renameChat(); });
+    $router->add('POST', '/chat/archive',   function() { (new AccueilController())->archiveChat(); });
+    $router->add('POST', '/chat/unarchive', function() { (new AccueilController())->unarchiveChat(); });
 
     $uri = $_SERVER['REQUEST_URI'];
     $method = $_SERVER['REQUEST_METHOD'];
 
-    $router->add('GET',  '/login',       function() { (new LoginController())->showLogin(); });
-    $router->add('POST', '/login',       function() { (new LoginController())->login(); });
-    $router->add('GET',  '/register',    function() { (new LoginController())->showRegister(); });
-    $router->add('POST', '/register',    function() { (new LoginController())->register(); });
-    $router->add('GET',  '/logout',      function() { (new LoginController())->logout(); });
-    $router->add('GET',  '/RGPDConsent', function() { (new LoginController())->showRGPD(); });
+    $router->add('GET',  '/login',       function() { (new AuthController())->showLogin(); });
+    $router->add('POST', '/login',       function() { (new AuthController())->login(); });
+    $router->add('GET',  '/register',    function() { (new AuthController())->showRegister(); });
+    $router->add('POST', '/register',    function() { (new AuthController())->register(); });
+    $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
+    $router->add('POST', '/reactivate',  function() { (new AuthController())->reactivate();});
+    $router->add('GET',  '/RGPDConsent', function() { (new AuthController())->showRGPD(); });
+    $router->add('GET',  '/verify-email',function() { (new AuthController())->verifyEmail(); });
+
+    // AJAX: departments of a place, for the registration form's dependent select.
+    $router->add('GET',  '/places/{id}/departments', function($id) { (new PlaceController())->departments($id); });
 
     // --- Chat home + profile (authenticated) --------------------------
-    $router->add('GET', '/chat',      function()    { (new AccueilController())->index(); });
-    $router->add('GET', '/chat/{id}', function($id)  { (new AccueilController())->index(); });
-    $router->add('GET', '/profile',   function()    { (new ProfileController())->index(); });
+    $router->add('GET',  '/chat',                function()     { (new AccueilController())->index(); });
+    $router->add('GET',  '/chat/{id}',           function($id)  { (new AccueilController())->index($id); });
+    $router->add('GET',  '/profile',             function()     { (new ProfileController())->index(); });
+    $router->add('POST', '/profile/theme',       function()     { (new ProfileController())->updateTheme(); });
+    $router->add('POST', '/profile/deactivate',  function()     { (new ProfileController())->deactivate(); });
 
-    // --- Sessions (teacher) + join (student) --------------------------
+
+// --- Sessions (teacher) + join (student) --------------------------
     // Literal routes are registered before the `{id}` wildcard so they win.
     $router->add('GET',  '/sessions',         function() { (new SessionController())->index(); });
     $router->add('GET',  '/sessions/create',  function() { (new SessionController())->create(); });
@@ -71,7 +61,9 @@
     $router->add('POST', '/sessions/{id}/start',  function($id) { (new SessionController())->start($id); });
     $router->add('POST', '/sessions/{id}/end',    function($id) { (new SessionController())->end($id); });
     $router->add('POST', '/sessions/{id}/cancel', function($id) { (new SessionController())->cancel($id); });
+    $router->add('GET',  '/sessions/{id}/monitor', function($id) { (new SessionController())->monitor($id); });
     $router->add('GET',  '/sessions/{id}',        function($id) { (new SessionController())->dashboard($id); });
 
     $router->compare($uri, $method);
 ?>
+

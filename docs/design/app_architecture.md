@@ -35,7 +35,9 @@
 - ❌ Pas d'architecture hexagonale complète, pas de couche `Application/`
   ni `Infrastructure/`, pas de dossier `Ports/`.
 - ❌ Pas de conteneur d'injection ni de câblage manuel exhaustif :
-  l'instanciation directe (`new AuthService()`) est **assumée**.
+  l'instanciation directe (`new AuthService($pdo)`) est **assumée**. Le
+  Controller passe la connexion `Data\Database::getConnection()` au Service,
+  qui ne la récupère jamais lui-même (uniformité + testabilité).
 - ❌ Pas d'ORM (Doctrine, Eloquent) — PDO direct dans les Models.
 - ❌ Pas de DTO ni de ViewModel systématiques — les vues reçoivent des
   tableaux simples ou des entités du Domain.
@@ -111,13 +113,13 @@ namespace Controllers;
 use Core\Controller;
 use Services\AuthService;
 
-class LoginController extends Controller
+class AuthController extends Controller
 {
     private AuthService $authService;
 
     public function __construct()
     {
-        $this->authService = new AuthService();      // instanciation directe assumée
+        $this->authService = new AuthService(Database::getConnection());
     }
 
     public function login(): void
@@ -334,7 +336,7 @@ Ce qui se lit directement sur le graphe :
 │   │   └── config.php
 │   ├── Controllers/             ← le « C » : endpoints HTTP
 │   │   ├── AccueilController.php
-│   │   ├── LoginController.php
+│   │   ├── AuthController.php
 │   │   ├── LLMController.php
 │   │   └── dbController.php
 │   ├── Core/                    ← micro-framework (Router, Controller)
@@ -372,7 +374,7 @@ Ce qui se lit directement sur le graphe :
 
 - Le namespace **est le nom du dossier**, sans préfixe `App\` :
   - `Core\Router`, `Core\Controller`
-  - `Controllers\LoginController`
+  - `Controllers\AuthController`
   - `Services\AuthService`
   - `Models\AiRepository`
   - `Domain\Ai`, `Domain\LlmAdaptaterInterface`
@@ -426,7 +428,7 @@ Un Service regroupe la logique d'un domaine fonctionnel et renvoie un
 résultat exploitable par le Controller (souvent un tableau de statut).
 
 ```php
-$result = (new AuthService())->login($email, $password);
+$result = (new AuthService(Database::getConnection()))->login($email, $password);
 // ['success' => true] | ['success' => false, 'error' => '...']
 ```
 
@@ -460,7 +462,7 @@ sequenceDiagram
     autonumber
     actor B as Browser
     participant I as index.php + Router
-    participant C as LoginController
+    participant C as AuthController
     participant S as AuthService
     participant DB as Data/Database (PDO)
     participant V as Views
@@ -499,8 +501,8 @@ Pas de conteneur d'injection. Le démarrage reste léger :
 ```php
 // public/index.php (extrait)
 $router = new Core\Router();
-$router->add('GET',  '/login', fn() => (new Controllers\LoginController())->showLogin());
-$router->add('POST', '/login', fn() => (new Controllers\LoginController())->login());
+$router->add('GET',  '/login', fn() => (new Controllers\AuthController())->showLogin());
+$router->add('POST', '/login', fn() => (new Controllers\AuthController())->login());
 $router->compare($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
 ```
 

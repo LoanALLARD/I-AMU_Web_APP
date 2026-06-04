@@ -107,11 +107,10 @@ class SessionController extends Controller
             $this->redirect('/sessions/create');
         }
 
-        $this->flash('success', sprintf(
-            "Session « %s » créée. Code d'accès : %s",
-            $session->name(),
-            $session->accessCodeFormatted()
-        ));
+        $code = $session->accessCodeFormatted();
+        $this->flash('success', $code !== null
+            ? sprintf("Session « %s » créée. Code d'accès : %s", $session->name(), $code)
+            : sprintf("Session « %s » créée (brouillon). Le code d'accès sera généré au démarrage.", $session->name()));
         $this->redirect('/sessions/' . $session->id());
     }
 
@@ -228,6 +227,28 @@ class SessionController extends Controller
 
         $this->render('pages/session/dashboard', [
             'title'      => $view['name'],
+            'navSection' => 'sessions',
+            'view'       => $view,
+            'user'       => $this->currentUser(),
+        ]);
+    }
+
+    /** GET /sessions/{id}/monitor — read-only supervision of enrolled students. */
+    public function monitor(string $id): void
+    {
+        $this->requireRole('teacher');
+        $session = $this->loadOwned((int) $id);
+
+        $conversationId = (int) $this->query('conversation', 0);
+        $view           = $this->sessions->monitor($session, $conversationId);
+
+        if ($view === null) {
+            $this->flash('error', "Le suivi n'est disponible que pour une session en cours ou terminée.");
+            $this->redirect('/sessions/' . (int) $id);
+        }
+
+        $this->render('pages/session/monitor', [
+            'title'      => 'Suivi · ' . $session->name(),
             'navSection' => 'sessions',
             'view'       => $view,
             'user'       => $this->currentUser(),
