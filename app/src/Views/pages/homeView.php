@@ -11,7 +11,7 @@
  */
 
 $firstModel = $models[0] ?? null;
-$defaultModelName = $firstModel ? $firstModel['name'] : 'mistral:latest';
+$defaultModelName = $firstModel ? $firstModel['name'] : null;
 $sessionClosed = $sessionClosed ?? false;
 $closedReason = $closedReason ?? '';
 $conversation = $conversation ?? null;
@@ -173,7 +173,7 @@ $hasMessages = $messages !== [];
     const chevron       = document.getElementById('modelChevron');
     const modelLetter   = document.getElementById('modelLetter');
     const modelDisplay  = document.getElementById('modelNameDisplay');
-    let   selectedModel = modelDisplay?.textContent?.trim() || 'mistral:latest';
+    let   selectedModel = modelDisplay?.textContent?.trim() || null;
 
     selectorBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
