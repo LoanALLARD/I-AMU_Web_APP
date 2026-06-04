@@ -12,8 +12,9 @@
     use Controllers\SessionController;
     use Controllers\ProfileController;
     use Controllers\PlaceController;
+    use Controllers\AdminController;
 
-    // routeur 
+// routeur
     $router = new Router();
 
     $router->add('GET',  '/',            function() { (new AccueilController())->index(); });
@@ -33,7 +34,9 @@
     $router->add('GET',  '/register',    function() { (new AuthController())->showRegister(); });
     $router->add('POST', '/register',    function() { (new AuthController())->register(); });
     $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
-    $router->add('GET',  '/RGPDConsent', function() { (new AuthController())->showRGPD(); });
+    $router->add('POST', '/reactivate',  function() { (new AuthController())->reactivate();});
+    $router->add('GET',  '/rgpd-consent', function() { (new AuthController())->showRGPD(); });
+    $router->add('GET',  '/verify-email',function() { (new AuthController())->verifyEmail(); });
 
     // AJAX: departments of a place, for the registration form's dependent select.
     $router->add('GET',  '/places/{id}/departments', function($id) { (new PlaceController())->departments($id); });
@@ -41,10 +44,14 @@
     // --- Chat home + profile (authenticated) --------------------------
     $router->add('GET', '/chat',      function()    { (new AccueilController())->index(); });
     $router->add('GET', '/chat/{id}', function($id)  { (new AccueilController())->index($id); });
-    $router->add('GET',  '/profile',       function() { (new ProfileController())->index(); });
-    $router->add('POST', '/profile/theme', function() { (new ProfileController())->updateTheme(); });
+    $router->add('GET', '/profile',   function()    { (new ProfileController())->index(); });
+    $router->add('POST', '/profile/theme',       function()     { (new ProfileController())->updateTheme(); });
+    $router->add('POST', '/profile/deactivate',  function()     { (new ProfileController())->deactivate(); });
 
-    // --- Sessions (teacher) + join (student) --------------------------
+    // --- Department-admin console (department_admin role) --------------
+    $router->add('GET', '/admin',     function()    { (new AdminController())->index(); });
+
+// --- Sessions (teacher) + join (student) --------------------------
     // Literal routes are registered before the `{id}` wildcard so they win.
     $router->add('GET',  '/sessions',         function() { (new SessionController())->index(); });
     $router->add('GET',  '/sessions/create',  function() { (new SessionController())->create(); });
@@ -62,3 +69,4 @@
 
     $router->compare($uri, $method);
 ?>
+

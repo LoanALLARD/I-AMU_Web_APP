@@ -136,6 +136,7 @@ Tester l'endpoint de l'application en envoyant du JSON brut via une commande `cu
 ```bash
 curl -X POST http://localhost:8085/chat \
   -H "Content-Type: application/json" \
+  -b cookies.txt \
   -d '{
     "model" : "llama3.2:1b",
     "message" : "Présente toi",

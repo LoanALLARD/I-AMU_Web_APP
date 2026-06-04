@@ -140,12 +140,14 @@ class LLMController{
         // Persist the interaction only for a session-bound conversation.
         if ($conversationData !== null && $response !== false && isset($response->response)) {
             $interaction = new InteractionRepository($pdo);
-            $output_tokens = isset($response->context) && is_array($response->context) ? count($response->context) : 0;
+            $input_tokens  = isset($response->prompt_eval_count) ? (int) $response->prompt_eval_count : null;
+            $output_tokens = isset($response->eval_count) ? (int) $response->eval_count : null;
+
             $interactionData = $interaction->newInteration(
                 (int) $conversationData['id'],
                 $userMessage,
                 (string) $response->response,
-                200,
+                $input_tokens,
                 $output_tokens
             );
             $meta_data = $adapter->formatMetadata($response);
@@ -154,9 +156,11 @@ class LLMController{
 
         header('Content-Type: application/json');
         echo json_encode([
-            'response'          => $response,
-            'conversation_id'   => $conversationData['id'],
-            'conversation_name' => $conversationData['name'],
+            'response'          => $response->response,
+            'prompt_eval_count' => $response->prompt_eval_count ?? null,
+            'eval_count'        => $response->eval_count ?? null,
+            'conversation_id'   => $conversationData['id'] ?? null,
+            'conversation_name' => $conversationData['name'] ?? null,
         ]);
         
     }

@@ -30,7 +30,7 @@ class AuthController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('pages/Auth/login', ['titrePage' => 'Connexion'], 'auth');
+        $this->render('pages/auth/login', ['titrePage' => 'Connexion'], 'auth');
     }
 
     /**
@@ -54,14 +54,49 @@ class AuthController extends Controller
         $result = $this->authService->login($email, $password);
 
         if (!$result['success']) {
-            $this->render('pages/Auth/login', [
+            $this->render('pages/auth/login', [
                 'titrePage' => 'Connexion',
                 'error'     => $result['error'],
-                'email'     => $email,],
+                'email'     => $email,
+                'deactivated' => !empty($result['deactivated']),],
                 'auth');
             return;
         }
 
+        // Department admins land on their console; everyone else on the chat.
+        $this->redirect($this->hasRole('department_admin') ? '/admin' : '/chat');
+    }
+
+    public function reactivate(): void{
+
+        $this->verifyCsrf();
+
+        $email    = trim($this->input('email', ''));
+        $password = $this->input('password', '');
+
+        $result = $this->authService->reactivateAccount($email, $password);
+
+        if (!$result['success']) {
+            $this->render('pages/home', [
+                'titrePage' => 'Connexion',
+                'error'     => $result['error'],
+                'email'     => $email,
+            ], 'auth');
+            return;
+        }
+
+        $loginResult = $this->authService->login($email, $password);
+
+        if (!$loginResult['success']) {
+            $this->render('pages/auth/login', [
+                'titrePage' => 'Connexion',
+                'error'     => $loginResult['error'],
+                'email'     => $email,
+            ], 'auth');
+            return;
+        }
+
+        $this->flash('success', 'Votre compte a été réactivé.');
         $this->redirect('/chat');
     }
 
@@ -73,7 +108,7 @@ class AuthController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('pages/Auth/register', [
+        $this->render('pages/auth/register', [
             'titrePage' => 'Inscription',
             'places'    => $this->places->all()],
          'auth');
@@ -81,7 +116,7 @@ class AuthController extends Controller
 
     public function showRGPD(): void
     {
-        $this->render('pages/Auth/RGPDConsent', ['titrePage' => 'Mentions RGPD']);
+        $this->render('pages/auth/rgpd_consent', ['titrePage' => 'Mentions RGPD']);
     }
 
     /**
@@ -102,12 +137,9 @@ class AuthController extends Controller
 
         $result = $this->authService->register($data);
 
-        if (!$result['success']) {
-            $this->render('pages/Auth/register', [
-                'titrePage' => 'Inscription',
-                'error'=> $result['error'], 'data'=> $data,
-                'places'=> $this->places->all(),],
-                'auth');
+        if (!empty($result['pending_verification'])) {
+            $this->flash('success', 'Inscription réussie ! Un email de vérification a été envoyé. Vérifiez votre boîte de réception.');
+            $this->redirect('/login');
             return;
         }
 
@@ -122,6 +154,27 @@ class AuthController extends Controller
     public function logout(): void
     {
         $this->authService->logout();
+        $this->redirect('/login');
+    }
+
+    public function verifyEmail(): void
+    {
+        $token = $this->query('token', '');
+
+        if ($token === '') {
+            $this->flash('error', 'Lien de vérification invalide.');
+            $this->redirect('/login');
+        }
+
+        $pdo  = Database::getConnection();
+        $users = new \Models\UserRepository($pdo);
+
+        if ($users->verifyEmail($token)) {
+            $this->flash('success', 'Votre email a été vérifié ! Vous pouvez vous connecter.');
+        } else {
+            $this->flash('error', 'Ce lien est invalide ou a déjà été utilisé.');
+        }
+
         $this->redirect('/login');
     }
 }

@@ -35,7 +35,7 @@ CREATE TABLE users (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     consent_at TIMESTAMPTZ,
     consent_version VARCHAR(50),
-    theme theme_type,
+    theme theme_type NOT NULL DEFAULT 'LIGHT',
     archive_duration_days SMALLINT,
     email_verified_at TIMESTAMPTZ,
     email_verify_token VARCHAR(255),

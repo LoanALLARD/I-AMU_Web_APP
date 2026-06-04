@@ -30,11 +30,20 @@ class AccueilController extends Controller
     public function index(?string $id = null): void
     {
         $this->requireAuth();
+        $this->redirectAdminToConsole();
         $user = $this->currentUser();
 
         $conversationId = $id !== null && $id !== '' ? (int) $id : null;
         $archived       = $this->query('archived') === '1';
         $env            = $this->chat->environment((int) $user['id'], $conversationId, $archived);
+        $models = [];
+        try {
+            $pdo = Database::getConnection();
+            $aiRepository = new \Models\AiRepository($pdo);
+            $models = $aiRepository->findAllActive();
+        } catch (\Throwable $e) {
+            error_log('Impossible de charger les modèles : ' . $e->getMessage());
+        }
 
         if (!empty($env['notFound'])) {
             $this->flash('error', 'Conversation introuvable.');
@@ -65,9 +74,10 @@ class AccueilController extends Controller
             $conversationRepo->getConversationsByUserId($user['id'])
         );
 
-        $this->render('pages/homeView', [
+        $this->render('pages/home', [
             'user'          => $user,
             'page'          => 'chat',
+            'models'        => $models,
             'conversation'  => $env['conversation'],
             'conversations' => $env['conversations'],
             'messages'  => $env['messages'],
@@ -85,6 +95,7 @@ class AccueilController extends Controller
     public function newChat(): void
     {
         $this->requireAuth();
+        $this->redirectAdminToConsole();
         $this->verifyCsrf();
         $user = $this->currentUser();
 
@@ -109,6 +120,7 @@ class AccueilController extends Controller
     public function renameChat(): void
     {
         $this->requireAuth();
+        $this->redirectAdminToConsole();
         $this->verifyCsrf();
         $user = $this->currentUser();
 
@@ -134,6 +146,7 @@ class AccueilController extends Controller
     public function archiveChat(): void
     {
         $this->requireAuth();
+        $this->redirectAdminToConsole();
         $this->verifyCsrf();
         $user = $this->currentUser();
 
@@ -162,6 +175,7 @@ class AccueilController extends Controller
     public function unarchiveChat(): void
     {
         $this->requireAuth();
+        $this->redirectAdminToConsole();
         $this->verifyCsrf();
         $user = $this->currentUser();
 
@@ -176,5 +190,17 @@ class AccueilController extends Controller
         }
 
         $this->redirect('/chat/' . $id);
+    }
+
+    /**
+     * Department admins have no business in the chat: send them back to
+     * their console. Call after requireAuth() so the redirect target is a
+     * known, authenticated role. Other roles fall through untouched.
+     */
+    private function redirectAdminToConsole(): void
+    {
+        if ($this->hasRole('department_admin')) {
+            $this->redirect('/admin');
+        }
     }
 }

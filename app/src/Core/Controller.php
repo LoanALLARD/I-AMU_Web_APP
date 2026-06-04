@@ -39,7 +39,7 @@ abstract class Controller
     ): void {
 
         $viewFile = self::$viewsPath . '/' . $template . '.php';
-        $layoutFile = self::$viewsPath . '/Layout/' . $layout . '.php';
+        $layoutFile = self::$viewsPath . '/layout/' . $layout . '.php';
 
         if (!is_file($viewFile)) {
             throw new \RuntimeException("View not found: {$viewFile}");
@@ -132,6 +132,16 @@ abstract class Controller
     }
 
     /**
+     * Non-blocking role check: tells whether the current user carries the
+     * given role. Use this to branch (redirect, show a link); use
+     * requireRole() when the role is mandatory to proceed.
+     */
+    protected function hasRole(string $role): bool
+    {
+        return in_array($role, $_SESSION['roles'] ?? [], true);
+    }
+
+    /**
      * Ensures the authenticated user has the given role. Renders a 403
      * error page otherwise.
      */
@@ -174,7 +184,7 @@ abstract class Controller
     /**
      * Returns the currently logged-in user as a flat array, or null.
      *
-     * @return array{id:int, email:string, first_name:string, last_name:string, roles:list<string>}|null
+     * @return array{id:int, email:string, first_name:string, last_name:string, roles:list<string>, department_id:int|null}|null
      */
     protected function currentUser(): ?array
     {
@@ -188,10 +198,13 @@ abstract class Controller
             'last_name' => (string) ($_SESSION['user_last_name'] ?? ''),
             'roles' => $_SESSION['roles'] ?? [],
             'theme' => $_SESSION['user_theme'] ?? null,
+            'department_id' => isset($_SESSION['user_department_id'])
+                ? (int) $_SESSION['user_department_id']
+                : null,
         ];
     }
 
-    private function renderForbidden(): never
+    protected function renderForbidden(): never
     {
         http_response_code(403);
         $this->render('pages/error', [
