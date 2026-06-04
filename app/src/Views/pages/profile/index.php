@@ -32,13 +32,13 @@ $themeCur = match ($user['theme'] ?? null) {
 <div class="page-header">
     <div class="page-header-row">
         <h1>Mon profil</h1>
-        <span class="mono" style="font-size:11px;color:var(--gray-400);">compte personnel</span>
+        <span class="mono">compte personnel</span>
     </div>
     <p class="page-sub">Informations de votre compte et gestion de vos données personnelles.</p>
 </div>
 
 <div class="page-body">
-    <div class="dashboard-grid" style="max-width: 880px; margin: 0 auto; padding: 0;">
+    <div class="profile-grid">
 
         <div>
             <div class="dashboard-card">
@@ -55,9 +55,9 @@ $themeCur = match ($user['theme'] ?? null) {
                 </div>
             </div>
 
-            <div class="dashboard-card">
+            <div class="profile-card">
                 <h2>Apparence</h2>
-                <p style="color:var(--gray-400);font-size:12px;margin: 0 0 14px;">
+                <p class="page-sub">
                     Thème de l'interface. « Automatique » suit le réglage de votre appareil.
                 </p>
                 <form method="POST" action="/profile/theme" class="theme-select">
@@ -68,19 +68,18 @@ $themeCur = match ($user['theme'] ?? null) {
                 </form>
             </div>
 
-            <div class="dashboard-card">
+
+            <div class="profile-card">
                 <h2>Sécurité</h2>
                 <a href="/logout" class="btn danger">
                     <?= icon('lock', '', 12) ?> Se déconnecter
                 </a>
             </div>
 
-            <div class="dashboard-card">
-                <div style="background:var(--gray-50, #f9fafb);border:1px solid var(--gray-200, #e5e7eb);border-radius:8px;padding:16px;margin-bottom:16px;">
-                    <h3 style="font-size:14px;font-weight:600;margin:0 0 8px;color:var(--gray-700, #374151);">
-                        Désactiver mon compte
-                    </h3>
-                    <p style="font-size:12px;color:var(--gray-500);line-height:1.5;margin:0 0 12px;">
+            <div class="profile-card">
+                <div class="profile-info-box">
+                    <h3>Désactiver mon compte</h3>
+                    <p>
                         La désactivation rend votre compte inaccessible. Vous ne pourrez plus
                         vous connecter tant qu'un administrateur n'aura pas réactivé votre compte.
                     </p>
@@ -89,21 +88,18 @@ $themeCur = match ($user['theme'] ?? null) {
                     </button>
                 </div>
 
-                <div style="background:var(--gray-50, #f9fafb);border:1px solid var(--gray-200, #e5e7eb);border-radius:8px;padding:16px;">
-                    <h3 style="font-size:14px;font-weight:600;margin:0 0 8px;color:var(--gray-700, #374151);">
-                        Suppression de vos données
-                    </h3>
-                    <p style="font-size:12px;color:var(--gray-500);line-height:1.5;margin:0 0 8px;">
+
+                <div class="profile-info-box">
+                    <h3>Suppression de vos données</h3>
+                    <p>
                         Pour exercer votre droit à l'effacement et demander la suppression
                         définitive de vos données personnelles, veuillez envoyer votre demande
                         par email à l'adresse suivante :
                     </p>
-                    <p style="margin:0;">
-                        <a href="mailto:dpo@univ-amu.fr" class="mono" style="font-size:13px;font-weight:600;color:var(--primary, #2563eb);">
-                            dpo@univ-amu.fr
-                        </a>
+                    <p>
+                        <a href="mailto:dpo@univ-amu.fr" class="dpo-link">dpo@univ-amu.fr</a>
                     </p>
-                    <p style="font-size:11px;color:var(--gray-400);line-height:1.4;margin:8px 0 0;">
+                    <p class="dpo-hint">
                         Précisez votre nom, prénom et adresse email universitaire dans votre demande.
                         Le responsable de traitement traitera votre requête dans un délai de 30 jours
                         conformément à l'article 17 du RGPD.
@@ -113,43 +109,38 @@ $themeCur = match ($user['theme'] ?? null) {
         </div>
 
         <aside>
-            <div class="dashboard-card" style="text-align:center;">
-                <div class="user-pill-avatar" style="width:72px;height:72px;font-size:24px;margin: 12px auto 16px;">
+            <div class="profile-aside-card">
+                <div class="profile-avatar">
                     <?= htmlspecialchars($initials) ?>
                 </div>
-                <div style="font-weight:600;font-size:16px;"><?= htmlspecialchars($displayName) ?></div>
+                <div class="profile-display-name"><?= htmlspecialchars($displayName) ?></div>
                 <?php if ($roles !== []): ?>
-                    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px;">
+                    <div class="profile-roles">
                         <?php foreach ($roles as $role): ?>
                             <span class="badge badge-<?= htmlspecialchars($role) ?>"><?= htmlspecialchars($roleFr($role)) ?></span>
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <div class="mono" style="font-size:11px;color:var(--gray-400);margin-top:8px;">aucun rôle</div>
+                    <div class="profile-no-role">aucun rôle</div>
                 <?php endif; ?>
             </div>
         </aside>
-
     </div>
 </div>
-<div id="modal-deactivate" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
-    <div style="background:var(--white, #fff);border-radius:12px;padding:28px 32px;max-width:460px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.25);">
-        <h2 style="margin:0 0 12px;font-size:18px;color:var(--gray-800, #1f2937);">
-            Confirmer la désactivation
-        </h2>
-        <p style="font-size:13px;color:var(--gray-600, #4b5563);line-height:1.6;margin:0 0 8px;">
-            Êtes-vous sûr de vouloir désactiver votre compte ?
-        </p>
-        <ul style="font-size:12px;color:var(--gray-500);line-height:1.6;margin:0 0 20px;padding-left:18px;">
+<div class="modal-overlay" id="modal-deactivate">
+    <div class="modal-box">
+        <h2>Confirmer la désactivation</h2>
+        <p>Êtes-vous sûr de vouloir désactiver votre compte ?</p>
+        <ul>
             <li>Vous serez immédiatement déconnecté</li>
             <li>Vous ne pourrez plus vous connecter</li>
             <li>Vos données seront conservées à des fins de recherche</li>
             <li>Pour supprimer vos données, contactez <strong>dpo@univ-amu.fr</strong></li>
         </ul>
 
-        <form method="POST" action="/profile/deactivate" style="display:flex;gap:10px;justify-content:flex-end;">
+        <form method="POST" action="/profile/deactivate" class="modal-actions">
             <?= csrf_field() ?>
-            <button type="button" class="btn" id="btn-cancel-deactivate" style="background:var(--gray-100, #f3f4f6);color:var(--gray-700, #374151);">
+            <button type="button" class="btn btn-cancel" id="btn-cancel-deactivate">
                 Annuler
             </button>
             <button type="submit" class="btn danger">
@@ -158,6 +149,7 @@ $themeCur = match ($user['theme'] ?? null) {
         </form>
     </div>
 </div>
+
 
 <script>
     (function() {

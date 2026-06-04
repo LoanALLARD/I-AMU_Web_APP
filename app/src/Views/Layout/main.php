@@ -7,9 +7,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&family=Nunito+Sans:wght@300;400;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/style.css">
-    <link rel="stylesheet" href="/assets/css/layoutMain.css">
-    <link rel="stylesheet" href="/assets/css/sessions.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="layoutMain.css">
+    <link rel="stylesheet" href="components.css">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
 <?php
