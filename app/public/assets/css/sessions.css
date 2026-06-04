@@ -328,6 +328,8 @@ textarea {
     border: 1px solid var(--gray-200);
 }
 .badge-exam        { background: var(--gold-light); color: var(--exam-ink); border-color: var(--gold); }
+.badge-course      { background: var(--blue-light); color: var(--blue-dark); border-color: var(--blue); }
+/* Legacy type badges (TD/TP/Étude libre) — merged into COURSE, kept for old data. */
 .badge-tutorial    { background: var(--blue-light); color: var(--blue-dark); border-color: var(--blue); }
 .badge-lab         { background: #f0f9ff; color: #075985; border-color: #7dd3fc; }
 .badge-free-study  { background: #f5f3ff; color: #5b21b6; border-color: #c4b5fd; }
@@ -397,6 +399,34 @@ textarea {
     display: inline-block;
 }
 
+/* Click-to-copy on the code chips (wired by the script in session/index). */
+.access-code-cell.is-copyable {
+    cursor: pointer;
+    position: relative;
+    transition: box-shadow .12s;
+}
+.access-code-cell.is-copyable:hover { box-shadow: 0 0 0 3px rgba(26, 115, 200, .12); }
+.access-code-cell.is-copyable:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+.access-code-cell.copied::after {
+    content: "Copié !";
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gray-800);
+    color: var(--white);
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0;
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    box-shadow: var(--shadow-sm);
+    pointer-events: none;
+    z-index: 5;
+}
+
 /* Modern row: tinted type-icon square + name + type subtitle. */
 .session-cell-main { display: flex; align-items: center; gap: 12px; text-decoration: none; }
 .session-cell-txt { min-width: 0; }
@@ -423,6 +453,7 @@ textarea {
     color: var(--gray-600);
 }
 .stype-ico.badge-exam       { background: var(--gold-light); color: var(--exam-ink); }
+.stype-ico.badge-course     { background: var(--blue-light); color: var(--blue-dark); }
 .stype-ico.badge-free-study { background: #f5f3ff; color: #7c3aed; }
 .stype-ico.badge-lab        { background: #f0f9ff; color: #0284c7; }
 .stype-ico.badge-tutorial   { background: var(--blue-light); color: var(--blue-dark); }
@@ -1464,6 +1495,7 @@ textarea {
 [data-theme="dark"] .stype-ico.badge-free-study { background: #251c3c; color: #bd9af7; }
 [data-theme="dark"] .stype-ico.badge-lab        { background: #0f2638; color: #5cc4f5; }
 [data-theme="dark"] .stype-ico.badge-exam       { background: #352a14; color: #f3cd86; }
+[data-theme="dark"] .stype-ico.badge-course     { background: var(--blue-light); color: var(--blue); }
 [data-theme="dark"] .stype-ico.badge-tutorial   { background: var(--blue-light); color: var(--blue); }
 [data-theme="dark"] .session-table .access-code-cell { border-color: rgba(90, 162, 240, .28); }
 [data-theme="dark"] .icon-btn { background: #222838; }

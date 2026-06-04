@@ -4,10 +4,8 @@
  */
 // Type badge class → Lucide icon shown in the tinted square of each row.
 $typeIcon = static fn(string $typeClass): string => [
-    'badge-exam'       => 'lock',
-    'badge-free-study' => 'eye',
-    'badge-lab'        => 'book',
-    'badge-tutorial'   => 'book',
+    'badge-exam'   => 'lock',
+    'badge-course' => 'book',
 ][$typeClass] ?? 'book';
 ?>
 <div class="page-header">
@@ -146,3 +144,5 @@ $typeIcon = static fn(string $typeClass): string => [
     </div>
 <?php endif; ?>
 </div><!-- /.page-body -->
+<?php /* Click-to-copy on the .access-code-cell chips is wired globally by
+   /assets/js/clipboard.js (loaded in the layout). */ ?>
