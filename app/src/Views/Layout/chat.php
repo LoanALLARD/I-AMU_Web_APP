@@ -80,6 +80,8 @@ $themePref = match ($user['theme'] ?? null) {
     <link rel="stylesheet" href="/assets/css/components.css<?= $v('components.css') ?>">
     <link rel="stylesheet" href="/assets/css/shell.css<?= $v('shell.css') ?>">
     <link rel="stylesheet" href="/assets/css/sessions.css<?= $v('sessions.css') ?>">
+    <link rel="stylesheet" href="/assets/css/profile.css<?= $v('profile.css') ?>">
+
 
     <?php if ($page === 'chat'): ?>
         <?php /* Markdown rendering for AI replies (live + history). Loaded
