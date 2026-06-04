@@ -331,7 +331,7 @@ INSERT INTO sessions (resource_id, name) VALUES
 INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
     ((SELECT id FROM users WHERE email = 'evan@gmail.com'),
      (SELECT id FROM sessions WHERE name = 'session de dev'),
-    --  (SELECT id FROM models
-    --     WHERE name = 'llama3.2:1b'
-    --       AND department_id = (SELECT id FROM departments WHERE name = 'departement informatique')),
-    --  'testconv');
+     (SELECT id FROM models
+        WHERE name = 'llama3.2:1b'
+          AND department_id = (SELECT id FROM departments WHERE name = 'departement informatique')),
+     'testconv');
