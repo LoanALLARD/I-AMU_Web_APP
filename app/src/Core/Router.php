@@ -79,8 +79,8 @@ final class Router
             return;
         }
 
-        http_response_code(404);
-        echo 'Erreur 404 : Page introuvable';
+        // No route matched — let the global handler render the 404 page.
+        throw new HttpException(404, 'Cette page n\'existe pas.');
     }
 
     /**

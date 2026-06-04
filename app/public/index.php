@@ -13,6 +13,8 @@
     use Controllers\ProfileController;
     use Controllers\PlaceController;
     use Controllers\AdminController;
+    use Controllers\ErrorController;
+    use Core\HttpException;
 
 // routeur
     $router = new Router();
@@ -72,6 +74,14 @@
     $router->add('GET',  '/sessions/{id}/export',  function($id) { (new SessionController())->export($id); });
     $router->add('GET',  '/sessions/{id}',        function($id) { (new SessionController())->dashboard($id); });
 
-    $router->compare($uri, $method);
+    try {
+        $router->compare($uri, $method);
+    } catch (HttpException $e) {
+        (new ErrorController())->show($e->statusCode(), $e);
+    } catch (\Throwable $e) {
+        error_log('[I-AMU] Uncaught ' . $e::class . ': ' . $e->getMessage()
+            . ' @ ' . $e->getFile() . ':' . $e->getLine());
+        (new ErrorController())->show(500, $e);
+    }
 ?>
 
