@@ -179,10 +179,12 @@
     cursor: pointer;
 }
 
-.sidebar-search input {
-    background: transparent;
-    border: none;
-    box-shadow: none;
+#searchConv {
+    background: transparent ;
+    border: none ;
+    outline: none ;
+    -webkit-appearance: none ;
+    appearance: none ;
 }
 
 .conv-item:hover {
