@@ -250,6 +250,73 @@ final class AuthService
 
 
     /**
+     * Updates the current user's display name and keeps the session in sync
+     * so the layout (avatar, breadcrumb) reflects it right away.
+     *
+     * @return array{success: true} | array{success: false, error: string}
+     */
+    public function updateProfile(int $userId, string $firstName, string $lastName): array
+    {
+        $firstName = trim($firstName);
+        $lastName  = trim($lastName);
+
+        if ($firstName === '' || $lastName === '') {
+            return ['success' => false, 'error' => 'Le prénom et le nom sont obligatoires.'];
+        }
+        if (mb_strlen($firstName) > 50 || mb_strlen($lastName) > 100) {
+            return ['success' => false, 'error' => 'Prénom (max 50) ou nom (max 100) trop long.'];
+        }
+
+        try {
+            $this->users->updateName($userId, $firstName, $lastName);
+        } catch (\Throwable $e) {
+            return ['success' => false, 'error' => 'Erreur lors de la mise à jour du profil.'];
+        }
+
+        $_SESSION['user_first_name'] = $firstName;
+        $_SESSION['user_last_name']  = $lastName;
+
+        return ['success' => true];
+    }
+
+    /**
+     * Changes the current user's password after verifying the current one.
+     *
+     * @return array{success: true} | array{success: false, error: string}
+     */
+    public function changePassword(int $userId, string $current, string $new, string $confirm): array
+    {
+        if ($current === '' || $new === '' || $confirm === '') {
+            return ['success' => false, 'error' => 'Tous les champs sont obligatoires.'];
+        }
+        if (strlen($new) < 8) {
+            return ['success' => false, 'error' => 'Le nouveau mot de passe doit faire au moins 8 caractères.'];
+        }
+        if ($new !== $confirm) {
+            return ['success' => false, 'error' => 'Les nouveaux mots de passe ne correspondent pas.'];
+        }
+
+        $row = $this->users->findById($userId);
+        if ($row === null) {
+            return ['success' => false, 'error' => 'Compte introuvable.'];
+        }
+        if (!password_verify($current, (string) $row['password_hash'])) {
+            return ['success' => false, 'error' => 'Le mot de passe actuel est incorrect.'];
+        }
+        if (password_verify($new, (string) $row['password_hash'])) {
+            return ['success' => false, 'error' => "Le nouveau mot de passe doit être différent de l'ancien."];
+        }
+
+        try {
+            $this->users->updatePassword($userId, password_hash($new, PASSWORD_DEFAULT));
+        } catch (\Throwable $e) {
+            return ['success' => false, 'error' => 'Erreur lors du changement de mot de passe.'];
+        }
+
+        return ['success' => true];
+    }
+
+    /**
      * Validates the registration form input. Returns the (French) error
      * message to surface to the user, or null when every field is valid.
      */

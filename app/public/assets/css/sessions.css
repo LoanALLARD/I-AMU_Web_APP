@@ -1549,3 +1549,40 @@ textarea {
     background: var(--blue-light);
     box-shadow: var(--shadow-sm);
 }
+
+/* ── Account forms (profile: edit name, change password) ──────────────── */
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.profile-form .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.profile-form label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-600);
+}
+.profile-form input {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 14px;
+    color: var(--gray-800);
+    /* Theme-aware surface: var(--white) remaps to a dark input bg under
+       [data-theme="dark"], so the text stays readable in both themes. */
+    background: var(--white);
+    transition: border-color .15s;
+}
+.profile-form input:focus {
+    outline: none;
+    border-color: var(--blue);
+}
+.profile-form .form-actions {
+    margin-top: 4px;
+}

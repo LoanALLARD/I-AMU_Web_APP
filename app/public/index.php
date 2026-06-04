@@ -45,6 +45,8 @@
     $router->add('GET', '/chat',      function()    { (new AccueilController())->index(); });
     $router->add('GET', '/chat/{id}', function($id)  { (new AccueilController())->index($id); });
     $router->add('GET', '/profile',   function()    { (new ProfileController())->index(); });
+    $router->add('POST', '/profile/update',      function()     { (new ProfileController())->updateProfile(); });
+    $router->add('POST', '/profile/password',    function()     { (new ProfileController())->changePassword(); });
     $router->add('POST', '/profile/theme',       function()     { (new ProfileController())->updateTheme(); });
     $router->add('POST', '/profile/deactivate',  function()     { (new ProfileController())->deactivate(); });
 

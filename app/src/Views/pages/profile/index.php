@@ -44,36 +44,56 @@ $themeCur = match ($user['theme'] ?? null) {
         <div>
             <div class="dashboard-card">
                 <h2>Identité</h2>
-                <div class="kv-grid">
-                    <span class="kv-key">prénom</span>
-                    <span class="kv-val"><?= htmlspecialchars($user['first_name'] ?? '—') ?></span>
-                    <span class="kv-key">nom</span>
-                    <span class="kv-val"><?= htmlspecialchars($user['last_name'] ?? '—') ?></span>
-                    <span class="kv-key">email</span>
-                    <span class="kv-val mono"><?= htmlspecialchars($user['email'] ?? '—') ?></span>
-                    <span class="kv-key">id interne</span>
-                    <span class="kv-val mono">#<?= (int) ($user['id'] ?? 0) ?></span>
-                </div>
-            </div>
-
-            <div class="dashboard-card">
-                <h2>Apparence</h2>
-                <p style="color:var(--gray-400);font-size:12px;margin: 0 0 14px;">
-                    Thème de l'interface. « Automatique » suit le réglage de votre appareil.
-                </p>
-                <form method="POST" action="/profile/theme" class="theme-select">
+                <form method="POST" action="/profile/update" class="profile-form">
                     <?= csrf_field() ?>
-                    <button type="submit" name="theme" value="auto" class="theme-opt<?= $themeCur === 'auto' ? ' is-active' : '' ?>">Automatique</button>
-                    <button type="submit" name="theme" value="light" class="theme-opt<?= $themeCur === 'light' ? ' is-active' : '' ?>">Clair</button>
-                    <button type="submit" name="theme" value="dark" class="theme-opt<?= $themeCur === 'dark' ? ' is-active' : '' ?>">Sombre</button>
+                    <div class="form-row">
+                        <label for="first_name">Prénom</label>
+                        <input type="text" id="first_name" name="first_name" maxlength="50"
+                            value="<?= htmlspecialchars($user['first_name'] ?? '') ?>" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="last_name">Nom</label>
+                        <input type="text" id="last_name" name="last_name" maxlength="100"
+                            value="<?= htmlspecialchars($user['last_name'] ?? '') ?>" required>
+                    </div>
+                    <div class="kv-grid" style="margin-top:4px;">
+                        <span class="kv-key">email</span>
+                        <span class="kv-val mono"><?= htmlspecialchars($user['email'] ?? '—') ?></span>
+                        <span class="kv-key">id interne</span>
+                        <span class="kv-val mono">#<?= (int) ($user['id'] ?? 0) ?></span>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn">Enregistrer</button>
+                    </div>
                 </form>
             </div>
 
             <div class="dashboard-card">
                 <h2>Sécurité</h2>
-                <a href="/logout" class="btn danger">
-                    <?= icon('lock', '', 12) ?> Se déconnecter
-                </a>
+                <p style="color:var(--gray-400);font-size:12px;margin:0 0 14px;">
+                    Changez votre mot de passe. Minimum 8 caractères.
+                </p>
+                <form method="POST" action="/profile/password" class="profile-form" autocomplete="off">
+                    <?= csrf_field() ?>
+                    <div class="form-row">
+                        <label for="current_password">Mot de passe actuel</label>
+                        <input type="password" id="current_password" name="current_password"
+                            required autocomplete="current-password">
+                    </div>
+                    <div class="form-row">
+                        <label for="new_password">Nouveau mot de passe</label>
+                        <input type="password" id="new_password" name="new_password"
+                            minlength="8" required autocomplete="new-password">
+                    </div>
+                    <div class="form-row">
+                        <label for="new_password_confirm">Confirmer le nouveau mot de passe</label>
+                        <input type="password" id="new_password_confirm" name="new_password_confirm"
+                            minlength="8" required autocomplete="new-password">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn">Changer le mot de passe</button>
+                    </div>
+                </form>
             </div>
 
             <div class="dashboard-card">
@@ -128,6 +148,22 @@ $themeCur = match ($user['theme'] ?? null) {
                 <?php else: ?>
                     <div class="mono" style="font-size:11px;color:var(--gray-400);margin-top:8px;">aucun rôle</div>
                 <?php endif; ?>
+                <a href="/logout" class="btn danger" style="margin-top:16px;">
+                    <?= icon('lock', '', 12) ?> Se déconnecter
+                </a>
+            </div>
+
+            <div class="dashboard-card">
+                <h2>Apparence</h2>
+                <p style="color:var(--gray-400);font-size:12px;margin: 0 0 14px;">
+                    Thème de l'interface. « Automatique » suit le réglage de votre appareil.
+                </p>
+                <form method="POST" action="/profile/theme" class="theme-select">
+                    <?= csrf_field() ?>
+                    <button type="submit" name="theme" value="auto" class="theme-opt<?= $themeCur === 'auto' ? ' is-active' : '' ?>">Automatique</button>
+                    <button type="submit" name="theme" value="light" class="theme-opt<?= $themeCur === 'light' ? ' is-active' : '' ?>">Clair</button>
+                    <button type="submit" name="theme" value="dark" class="theme-opt<?= $themeCur === 'dark' ? ' is-active' : '' ?>">Sombre</button>
+                </form>
             </div>
         </aside>
 

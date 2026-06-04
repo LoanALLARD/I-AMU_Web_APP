@@ -35,6 +35,51 @@ class ProfileController extends Controller
             'title'     => 'Mon profil',
         ], 'chat');
     }
+    /**
+     * POST /profile/update — edit the display name (first + last).
+     */
+    public function updateProfile(): void
+    {
+        $this->requireAuth();
+        $this->verifyCsrf();
+        $user = $this->currentUser();
+
+        $result = $this->auth->updateProfile(
+            (int) $user['id'],
+            (string) $this->input('first_name', ''),
+            (string) $this->input('last_name', '')
+        );
+
+        $this->flash(
+            $result['success'] ? 'success' : 'error',
+            $result['success'] ? 'Profil mis à jour.' : $result['error']
+        );
+        $this->redirect('/profile');
+    }
+
+    /**
+     * POST /profile/password — change the password after verifying the old one.
+     */
+    public function changePassword(): void
+    {
+        $this->requireAuth();
+        $this->verifyCsrf();
+        $user = $this->currentUser();
+
+        $result = $this->auth->changePassword(
+            (int) $user['id'],
+            (string) $this->input('current_password', ''),
+            (string) $this->input('new_password', ''),
+            (string) $this->input('new_password_confirm', '')
+        );
+
+        $this->flash(
+            $result['success'] ? 'success' : 'error',
+            $result['success'] ? 'Mot de passe modifié.' : $result['error']
+        );
+        $this->redirect('/profile');
+    }
+
     public function deactivate(): void
     {
         $this->requireAuth();
