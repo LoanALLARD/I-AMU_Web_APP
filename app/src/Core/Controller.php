@@ -132,6 +132,16 @@ abstract class Controller
     }
 
     /**
+     * Non-blocking role check: tells whether the current user carries the
+     * given role. Use this to branch (redirect, show a link); use
+     * requireRole() when the role is mandatory to proceed.
+     */
+    protected function hasRole(string $role): bool
+    {
+        return in_array($role, $_SESSION['roles'] ?? [], true);
+    }
+
+    /**
      * Ensures the authenticated user has the given role. Renders a 403
      * error page otherwise.
      */

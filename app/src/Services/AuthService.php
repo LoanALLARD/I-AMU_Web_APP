@@ -249,8 +249,11 @@ final class AuthService
         if ($this->users->hasRole($userId, 'students')) {
             $roles[] = 'student';
         }
-        // researchers / department_administrators exist on the live
-        // schema but their HTTP surface belongs to spec 05.
+        if ($this->users->hasRole($userId, 'department_administrators')) {
+            $roles[] = 'department_admin';
+        }
+        // researchers exist on the live schema but their HTTP surface
+        // belongs to spec 05.
 
         return $roles;
     }

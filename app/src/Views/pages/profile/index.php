@@ -16,9 +16,10 @@ $roles = $user['roles'] ?? [];
 // French UI labels for roles — the badge text is uppercased by CSS, so
 // 'étudiant' renders as 'ÉTUDIANT'. Unknown roles fall back to their key.
 $roleLabels = [
-    'student' => 'étudiant',
-    'teacher' => 'enseignant',
-    'admin'   => 'administrateur',
+    'student'          => 'étudiant',
+    'teacher'          => 'enseignant',
+    'department_admin' => 'admin de département',
+    'admin'            => 'administrateur',
 ];
 $roleFr = static fn(string $r): string => $roleLabels[$r] ?? $r;
 ?>

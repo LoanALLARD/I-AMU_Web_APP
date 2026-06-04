@@ -52,7 +52,8 @@ class AuthController extends Controller
             return;
         }
 
-        $this->redirect('/chat');
+        // Department admins land on their console; everyone else on the chat.
+        $this->redirect($this->hasRole('department_admin') ? '/admin' : '/chat');
     }
 
     /**

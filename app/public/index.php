@@ -13,6 +13,7 @@
     use Controllers\SessionController;
     use Controllers\ProfileController;
     use Controllers\PlaceController;
+    use Controllers\AdminController;
 
     // routeur 
     $router = new Router();
@@ -43,6 +44,9 @@
     $router->add('GET', '/chat',      function()    { (new AccueilController())->index(); });
     $router->add('GET', '/chat/{id}', function($id)  { (new AccueilController())->index($id); });
     $router->add('GET', '/profile',   function()    { (new ProfileController())->index(); });
+
+    // --- Department-admin console (department_admin role) --------------
+    $router->add('GET', '/admin',     function()    { (new AdminController())->index(); });
 
     // --- Sessions (teacher) + join (student) --------------------------
     // Literal routes are registered before the `{id}` wildcard so they win.

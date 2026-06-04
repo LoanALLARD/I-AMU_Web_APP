@@ -30,6 +30,7 @@ $chatHref = (($env['mode'] ?? '') === 'session' && !empty($conversation['id']))
 $roles = $user['roles'] ?? [];
 $isTeacher = in_array('teacher', $roles, true);
 $isStudent = in_array('student', $roles, true);
+$isDeptAdmin = in_array('department_admin', $roles, true);
 $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
 $initials = strtoupper(
     mb_substr($user['first_name'] ?? '·', 0, 1)
@@ -64,7 +65,7 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
 <body class="app-body page-<?= htmlspecialchars($page) ?>">
 
     <header class="app-topbar">
-        <a href="/chat" class="topbar-brand" aria-label="Accueil I-AMU">
+        <a href="<?= $isDeptAdmin ? '/admin' : '/chat' ?>" class="topbar-brand" aria-label="Accueil I-AMU">
             <img src="/assets/img/logo.png" alt="">
             <div class="topbar-brand-text">
                 <strong>I-AMU</strong>
@@ -103,6 +104,7 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
         <?php endif; ?>
 
         <div class="topbar-tabs">
+            <?php if (!$isDeptAdmin): ?>
             <a href="<?= htmlspecialchars($chatHref) ?>" class="topbar-tab<?= $page === 'chat' ? ' active' : '' ?>">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -110,6 +112,7 @@ $roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
                 </svg>
                 Chat
             </a>
+            <?php endif; ?>
             <?php if ($isTeacher): ?>
                 <a href="/sessions" class="topbar-tab<?= $page === 'sessions' ? ' active' : '' ?>">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -161,6 +164,7 @@ its own identity above the navigation. */ ?>
 On desktop these live as pills in the topbar (.topbar-tabs), so
 .sidebar-nav stays display:none there to avoid duplication. */ ?>
             <nav class="sidebar-nav" aria-label="Navigation principale">
+                <?php if (!$isDeptAdmin): ?>
                 <a href="<?= htmlspecialchars($chatHref) ?>"
                     class="sidebar-nav-link<?= $page === 'chat' ? ' is-active' : '' ?>">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -169,6 +173,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                     </svg>
                     Chat
                 </a>
+                <?php endif; ?>
                 <?php if ($isTeacher): ?>
                     <a href="/sessions" class="sidebar-nav-link<?= $page === 'sessions' ? ' is-active' : '' ?>">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
