@@ -137,6 +137,7 @@ $themeCur = match ($user['theme'] ?? null) {
             <li>Vos données seront conservées à des fins de recherche</li>
             <li>Pour supprimer vos données, contactez <strong>dpo@univ-amu.fr</strong></li>
         </ul>
+        <a href="/rgpd" class="rgpd-link">Consulter les mentions d'information RGPD</a>
 
         <form method="POST" action="/profile/deactivate" class="modal-actions">
             <?= csrf_field() ?>
