@@ -1,10 +1,12 @@
+/* Page header */
+
 .page-header {
     margin-bottom: 28px;
 }
 
 .page-header-row {
     display: flex;
-    align-items: baseline;+
+    align-items: baseline;
     gap: 12px;
     margin-bottom: 4px;
 }
@@ -30,6 +32,8 @@
     line-height: 1.5;
 }
 
+/* Profile layout */
+
 .profile-grid {
     display: grid;
     grid-template-columns: 1fr 280px;
@@ -37,6 +41,8 @@
     max-width: 880px;
     margin: 0 auto;
 }
+
+/* Cards */
 
 .profile-card {
     background: var(--white);
@@ -54,6 +60,29 @@
     color: var(--gray-800);
     margin: 0 0 16px;
 }
+
+.profile-card h3 {
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin: 0 0 8px;
+}
+
+.profile-card hr {
+    border: none;
+    border-top: 1px solid var(--gray-200);
+    margin: 20px 0;
+}
+
+.profile-card .section-desc {
+    font-size: 0.82rem;
+    color: var(--gray-600);
+    line-height: 1.6;
+    margin: 0 0 12px;
+}
+
+/* Identity key-value grid */
 
 .kv-grid {
     display: grid;
@@ -80,6 +109,8 @@
     font-family: var(--font-mono);
     font-size: 0.82rem;
 }
+
+/* Theme selector */
 
 .theme-select {
     display: flex;
@@ -110,6 +141,8 @@
     color: #ffffff;
 }
 
+/* Buttons */
+
 .profile-card .btn {
     display: inline-flex;
     align-items: center;
@@ -122,6 +155,7 @@
     border-radius: var(--r-1);
     cursor: pointer;
     transition: background 0.18s, transform 0.12s;
+    text-decoration: none;
 }
 
 .profile-card .btn:hover {
@@ -137,46 +171,20 @@
     background: #991b1b;
 }
 
-.profile-info-box .rgpd-link {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--blue);
-    text-decoration: none;
+/* DPO contact block */
+
+.dpo-block {
+    background: var(--gray-50, var(--gray-100));
+    border: 1px solid var(--gray-200);
+    border-radius: var(--r-1);
+    padding: 14px 16px;
+    margin-bottom: 14px;
 }
 
-.profile-info-box .rgpd-link:hover {
-    text-decoration: underline;
-}
-
-.profile-info-box {
-    padding: 16px;
-    margin-bottom: 16px;
-}
-
-.profile-info-box:last-child {
-    margin-bottom: 0;
-}
-
-.profile-info-box h3 {
-    font-family: var(--font-display);
-    font-size: 0.88rem;
-    font-weight: 600;
-    margin: 0 0 8px;
-    color: var(--gray-800);
-}
-
-.profile-info-box p {
-    font-size: 0.78rem;
-    color: var(--gray-600);
-    line-height: 1.5;
-    margin: 0 0 12px;
-}
-
-.profile-info-box p:last-child {
-    margin-bottom: 0;
-}
-
-.profile-info-box .dpo-link {
+.dpo-block .dpo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-family: var(--font-mono);
     font-size: 0.82rem;
     font-weight: 600;
@@ -184,16 +192,33 @@
     text-decoration: none;
 }
 
-.profile-info-box .dpo-link:hover {
+.dpo-block .dpo-link:hover {
     text-decoration: underline;
 }
 
-.profile-info-box .dpo-hint {
-    font-size: 0.7rem;
+.dpo-block .dpo-hint {
+    font-size: 0.75rem;
     color: var(--gray-400);
-    line-height: 1.4;
+    line-height: 1.5;
     margin: 8px 0 0;
 }
+
+/* RGPD link */
+
+.profile-card .rgpd-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--blue);
+    text-decoration: none;
+}
+
+.profile-card .rgpd-link:hover {
+    text-decoration: underline;
+}
+
+/* Aside card */
 
 .profile-aside-card {
     background: var(--white);
@@ -241,6 +266,8 @@
     margin-top: 8px;
 }
 
+/* Role badges */
+
 .badge {
     font-family: var(--font-mono);
     font-size: 0.68rem;
@@ -265,6 +292,8 @@
     background: var(--accept-bg);
     color: var(--accept);
 }
+
+/* Modal */
 
 .modal-overlay {
     display: none;
@@ -343,6 +372,9 @@
 .modal-actions .btn.danger:hover {
     background: #991b1b;
 }
+
+/* Responsive */
+
 @media (max-width: 768px) {
     .profile-grid {
         grid-template-columns: 1fr;

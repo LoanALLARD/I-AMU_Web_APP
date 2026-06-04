@@ -1,8 +1,6 @@
 <?php
 /**
- * Profile page — minimal MVP, lives under the same authenticated layout
- * as the sessions/chat pages. To be enriched by spec 01 (password change,
- * account settings, RGPD opt-outs, …).
+ * Profile page
  *
  * @var array{id:int, email:string, first_name:string, last_name:string, roles:list<string>}|null $user
  */
@@ -13,8 +11,7 @@ $initials = strtoupper(
 );
 $roles = $user['roles'] ?? [];
 
-// French UI labels for roles — the badge text is uppercased by CSS, so
-// 'étudiant' renders as 'ÉTUDIANT'. Unknown roles fall back to their key.
+// French UI labels for roles
 $roleLabels = [
     'student' => 'étudiant',
     'teacher' => 'enseignant',
@@ -22,7 +19,7 @@ $roleLabels = [
 ];
 $roleFr = static fn(string $r): string => $roleLabels[$r] ?? $r;
 
-// Current theme choice for the selector ('auto' = follow the OS).
+// Current theme choice for the selector
 $themeCur = match ($user['theme'] ?? null) {
     'LIGHT' => 'light',
     'DARK'  => 'dark',
@@ -60,6 +57,7 @@ $themeCur = match ($user['theme'] ?? null) {
                 <p class="page-sub">
                     Thème de l'interface. « Automatique » suit le réglage de votre appareil.
                 </p>
+                <hr>
                 <form method="POST" action="/profile/theme" class="theme-select">
                     <?= csrf_field() ?>
                     <button type="submit" name="theme" value="auto" class="theme-opt<?= $themeCur === 'auto' ? ' is-active' : '' ?>">Automatique</button>
@@ -68,14 +66,22 @@ $themeCur = match ($user['theme'] ?? null) {
                 </form>
             </div>
 
-
             <div class="profile-card">
-                <h2>Compte et donnée</h2>
+                <h2>Compte et données</h2>
+
+                <!-- Session -->
+                <p class="section-desc">
+                    Vous pouvez vous déconnecter de votre session active.
+                </p>
                 <a href="/logout" class="btn danger">
                     <?= icon('lock', '', 12) ?> Se déconnecter
                 </a>
+
+                <hr>
+
+                <!-- Deactivation -->
                 <h3>Désactiver mon compte</h3>
-                <p>
+                <p class="section-desc">
                     La désactivation rend votre compte inaccessible. Vous ne pourrez plus
                     vous connecter tant qu'un administrateur n'aura pas réactivé votre compte.
                 </p>
@@ -83,20 +89,23 @@ $themeCur = match ($user['theme'] ?? null) {
                     <?= icon('user-x', '', 12) ?> Désactiver mon compte
                 </button>
 
+                <hr>
+
+                <!-- Data deletion -->
                 <h3>Suppression de vos données</h3>
-                <p>
-                    Pour exercer votre droit à l'effacement et demander la suppression
-                    définitive de vos données personnelles, veuillez envoyer votre demande
-                    par email à l'adresse suivante :
+                <p class="section-desc">
+                    Pour exercer votre droit à l'effacement (article 17 du RGPD),
+                    envoyez votre demande par email au délégué à la protection des données.
                 </p>
-                <p>
-                    <a href="mailto:dpo@univ-amu.fr" class="dpo-link">dpo@univ-amu.fr</a>
-                </p>
-                <p class="dpo-hint">
-                    Précisez votre nom, prénom et adresse email universitaire dans votre demande.
-                    Le responsable de traitement traitera votre requête dans un délai de 30 jours
-                    conformément à l'article 17 du RGPD.
-                </p>
+                <div class="dpo-block">
+                    <a href="mailto:dpo@univ-amu.fr" class="dpo-link">
+                        <?= icon('mail', '', 12) ?> dpo@univ-amu.fr
+                    </a>
+                    <p class="dpo-hint">
+                        Précisez votre nom, prénom et adresse email universitaire.
+                        Délai de traitement : 30 jours.
+                    </p>
+                </div>
                 <a href="/RGPDConsent" class="rgpd-link">Consulter les mentions d'information RGPD</a>
             </div>
         </div>
@@ -120,6 +129,8 @@ $themeCur = match ($user['theme'] ?? null) {
         </aside>
     </div>
 </div>
+
+<!-- Deactivation confirmation modal -->
 <div class="modal-overlay" id="modal-deactivate">
     <div class="modal-box">
         <h2>Confirmer la désactivation</h2>
@@ -142,7 +153,6 @@ $themeCur = match ($user['theme'] ?? null) {
         </form>
     </div>
 </div>
-
 
 <script>
     (function() {
@@ -175,4 +185,3 @@ $themeCur = match ($user['theme'] ?? null) {
         });
     })();
 </script>
-
