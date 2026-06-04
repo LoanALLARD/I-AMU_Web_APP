@@ -9,8 +9,14 @@ INSERT INTO places (name, address, city, zip_code) VALUES
 INSERT INTO departments (place_id, name, description) VALUES
     ((SELECT id FROM places WHERE name = 'Campus de Luminy'),
      'Informatique', 'Departement informatique de la FST Luminy'),
+    ((SELECT id FROM places WHERE name = 'Campus de Luminy'),
+     'Physique', 'Departement de physique de la FST Luminy'),
+    ((SELECT id FROM places WHERE name = 'Campus de Luminy'),
+     'Biologie', 'Departement de biologie de la FST Luminy'),
     ((SELECT id FROM places WHERE name = 'Campus Saint-Charles'),
-     'Mathematiques', 'Departement de mathematiques');
+     'Mathematiques', 'Departement de mathematiques'),
+    ((SELECT id FROM places WHERE name = 'Campus Saint-Charles'),
+     'Chimie', 'Departement de chimie');
 
 INSERT INTO laboratories (code, name, address, email) VALUES
     ('LIS', 'Laboratoire d''Informatique et Systemes',
@@ -303,7 +309,9 @@ INSERT INTO places (name, address, city, zip_code) VALUES
     ('IUT Aix', 'site gaston berger', 'Aix-en-Pce', '101010');
 INSERT INTO departments (place_id, name, description) VALUES
     ((SELECT id FROM places WHERE name = 'IUT Aix'),
-     'departement informatique', 'departement de dev logiciel');
+     'departement informatique', 'departement de dev logiciel'),
+    ((SELECT id FROM places WHERE name = 'IUT Aix'),
+     'departement reseaux', 'departement reseaux et telecommunications');
 INSERT INTO users (department_id, email, password_hash, first_name, last_name, consent_version) VALUES
     ((SELECT id FROM departments WHERE name = 'departement informatique'),
      'evan@gmail.com', '218937801', 'atherly', 'evan', 'v1');
