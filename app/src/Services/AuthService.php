@@ -144,7 +144,7 @@ final class AuthService
         if ($role === null) {
             return [
                 'success' => false,
-                'error'   => "Seuls les emails AMU sont acceptés (@etu.univ-amu.fr ou @univ-amu.fr).",
+                'error'   => "Ce domaine email n'est pas autorisé.",
             ];
         }
 
@@ -192,11 +192,6 @@ final class AuthService
                 'error'   => "Erreur lors de l'enregistrement. Merci de réessayer.",
             ];
         }
-
-        // Auto-login: reuse login() so the session is populated through the
-        // single code path (roles, session_regenerate_id). The plaintext
-        // password is still available here, before it goes out of scope.
-        return $this->login($email, $password);
     }
 
     public function deactivateAccount(int $userId): array
@@ -246,8 +241,6 @@ final class AuthService
             ];
         }
     }
-
-
 
     /**
      * Updates the current user's display name and keeps the session in sync
@@ -315,6 +308,7 @@ final class AuthService
 
         return ['success' => true];
     }
+
 
     /**
      * Validates the registration form input. Returns the (French) error

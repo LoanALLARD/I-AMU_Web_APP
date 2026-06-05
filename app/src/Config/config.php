@@ -41,7 +41,6 @@ return [
     'app' => [
         'url' => $_ENV['APP_URL'] ?? 'http://localhost:8085',
     ],
-
     // Debug mode (APP_DEBUG=true in dev). When on, the error page shows the
     // exception type, location and trace. Keep it OFF in production.
     'debug' => filter_var($_ENV['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN),

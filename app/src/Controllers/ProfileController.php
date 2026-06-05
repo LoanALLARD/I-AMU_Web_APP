@@ -35,6 +35,30 @@ class ProfileController extends Controller
             'title'     => 'Mon profil',
         ], 'chat');
     }
+    public function deactivate(): void
+    {
+        $this->requireAuth();
+        $this->verifyCsrf();
+
+        $user = $this->currentUser() ?? $this->redirect('/login');
+
+        $result = $this->auth->deactivateAccount($user['id']);
+
+        if (!$result['success']) {
+            $this->flash('error', $result['error']);
+            $this->redirect('/profile');
+        }
+
+        // Destroy session — the user is now logged out.
+        $this->auth->logout();
+
+        // Start a fresh session just for the flash message.
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+        $this->flash('success', 'Votre compte a été désactivé. Pour demander la suppression définitive de vos données, veuillez envoyer un email à dpo@univ-amu.fr.');
+        $this->redirect('/login');
+    }
     /**
      * POST /profile/update — edit the display name (first + last).
      */
@@ -78,31 +102,6 @@ class ProfileController extends Controller
             $result['success'] ? 'Mot de passe modifié.' : $result['error']
         );
         $this->redirect('/profile');
-    }
-
-    public function deactivate(): void
-    {
-        $this->requireAuth();
-        $this->verifyCsrf();
-
-        $user = $this->currentUser() ?? $this->redirect('/login');
-
-        $result = $this->auth->deactivateAccount($user['id']);
-
-        if (!$result['success']) {
-            $this->flash('error', $result['error']);
-            $this->redirect('/profile');
-        }
-
-        // Destroy session — the user is now logged out.
-        $this->auth->logout();
-
-        // Start a fresh session just for the flash message.
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-        $this->flash('success', 'Votre compte a été désactivé. Pour demander la suppression définitive de vos données, veuillez envoyer un email à dpo@univ-amu.fr.');
-        $this->redirect('/login');
     }
 
     /**

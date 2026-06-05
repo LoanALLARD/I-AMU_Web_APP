@@ -1,181 +1,16 @@
 /* =====================================================================
-   I-AMU — Sessions, profile and dashboard styles
-
-   Composed on top of style.css (palette tokens) and homeChat.css
-   (the universal authenticated shell: sidebar + topbar). Owns the
-   page-level rules unique to /sessions/* and /profile when they
-   render inside Layout/chat.php's <main class="app-content">.
+   I-AMU — Sessions, dashboard, monitor, join, conversation menus
+   Loaded by Layout/chat.php after components.css and shell.css.
+   Contains ONLY /sessions/*, /chat sidebar widgets, and conversation
+   menu styles. Generic buttons, badges, page chrome, and shell layout
+   now live in components.css and shell.css respectively.
    ===================================================================== */
 
-/* ── Universal authenticated shell ─────────────────────────────────
- *
- * Layout structure (overrides the older horizontal-only flex from
- * homeChat.css to keep the brand permanently aligned with the topbar):
- *
- *   <body class="app-body page-X">           column flex, 100vh
- *     <header class="app-topbar">            full-width row, 54px
- *       <a class="topbar-brand">             logo + I-AMU + role
- *       ... burger / breadcrumb / tabs / avatar ...
- *     <div class="app-body-row">             row flex, fills remaining
- *       <aside class="sidebar">              260px, only on /chat
- *       <div class="app-main">               flex:1
- *         <div class="app-content">          page body
- */
+/*Inline-style replacements (create.php)*/
+.page-header-hint { font-size: 11px; color: var(--gray-400); }
+.field-suffix--narrow { max-width: 240px; }
 
-.app-body {
-    flex-direction: column;
-    overflow: hidden;
-    min-height: 0;
-    height: 100vh;
-}
-
-.app-body-row {
-    display: flex;
-    flex: 1;
-    min-height: 0;
-    align-items: stretch;
-}
-
-/* Sidebar lives inside the row, so it no longer needs its own 100vh
-   nor sticky positioning. */
-.app-body-row > .sidebar {
-    height: auto;
-    position: relative;
-    top: auto;
-}
-
-/* Same for the main column — it's the row's flex child. The
-   min-height: 0 is critical: without it, .app-main expands to its
-   content's intrinsic size (flexbox default) and the inner
-   .app-content can never scroll on long pages like /sessions/create. */
-.app-body-row > .app-main {
-    height: auto;
-    min-height: 0;
-}
-
-/* Brand block in the topbar — replaces the former .sidebar-header. */
-.topbar-brand {
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-    width: 260px;
-    flex-shrink: 0;
-    height: 100%;
-    padding-left: 1.25rem;
-    padding-right: 1rem;
-    margin-left: -1.25rem;           /* extend to the viewport edge */
-    border-right: 1px solid var(--gray-200);
-    text-decoration: none;
-}
-.topbar-brand img {
-    height: 30px;
-    width: auto;
-}
-.topbar-brand-text {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.15;
-}
-.topbar-brand-text strong {
-    font-family: 'Nunito', sans-serif;
-    font-size: .95rem;
-    font-weight: 700;
-    color: var(--gray-800);
-    letter-spacing: -.01em;
-}
-.topbar-brand-text span {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: .62rem;
-    font-weight: 500;
-    color: var(--blue);
-    text-transform: uppercase;
-    letter-spacing: .08em;
-}
-
-/* When the sidebar is hidden (non-chat pages), the brand absorbs the
-   leftover column gutter and drops its separator. */
-.app-body:not(.page-chat) .topbar-brand {
-    border-right: none;
-}
-
-/* Sidebar close button (mobile slide-out) — was inside .sidebar-header,
-   now floats at the top-right of the sidebar. Stays display:none on
-   desktop; the mobile media query in homeChat.css re-enables it. */
-.sidebar > .sidebar-close {
-    position: absolute;
-    top: .75rem;
-    right: .75rem;
-    z-index: 1;
-}
-
-/* ── Authenticated content area (sibling of .app-topbar) ──────────── */
-
-/* Base: flex column so children with flex:1 expand. min-height:0 lets
-   inner scrollers behave inside the parent flex container. */
-.app-content {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-/* /chat — the chat-container manages its own scroll, so we just clip
-   any overflow at this level. Background stays the chat shell default. */
-.app-body.page-chat .app-content {
-    overflow: hidden;
-}
-
-/* Non-chat pages (/sessions, /profile, …) — content is a regular
-   scrollable document on a soft gray background, and the sidebar is
-   hidden because the topbar tabs are enough to navigate. The main
-   column then spans the full viewport width.
-
-   IMPORTANT: switch .app-content from `display: flex` back to a plain
-   block here. As a flex column container, its child <form> kept its
-   intrinsic min-height (flex's default `min-height: auto` on items)
-   and overflow-y: auto refused to scroll because the flex algorithm
-   couldn't decide who to shrink. A regular block scroll model is the
-   reliable fix for long pages like /sessions/create. */
-.app-body:not(.page-chat) .sidebar      { display: none; }
-.app-body:not(.page-chat) .topbar-burger { display: none; }
-.app-body:not(.page-chat) .app-content   {
-    display: block;
-    overflow-y: auto;
-    background: var(--gray-100);
-}
-
-/* Override the per-page max-width so /sessions and /profile span the
-   entire content area when the sidebar is hidden, but keep generous
-   horizontal padding so titles, tables and cards breathe away from
-   the edges. Padding scales with viewport width via clamp(). */
-.app-body:not(.page-chat) .page-container,
-.app-body:not(.page-chat) .page-header,
-.app-body:not(.page-chat) .page-body,
-.app-body:not(.page-chat) .dashboard-header,
-.app-body:not(.page-chat) .dashboard-grid,
-.app-body:not(.page-chat) .session-form-grid {
-    max-width: none;
-    margin: 0;
-    padding-left:  clamp(1rem, 5vw, 4rem);
-    padding-right: clamp(1rem, 5vw, 4rem);
-}
-
-/* When the page-header / page-body are rendered through the shell,
-   they get cosier vertical padding to match the auth-pages density. */
-.app-content .page-header { padding-top: 24px; padding-bottom: 18px; }
-.app-content .page-body { padding-top: 20px; padding-bottom: 32px; }
-
-/* ── Page chrome ──────────────────────────────────────────────────── */
-
-.page-container,
-.page-body,
-.page-header {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px;
-    width: 100%;
-}
-
+/*Sessions list*/
 .page-header {
     padding: 28px 24px 22px;
     border-bottom: 1px solid var(--gray-200);
@@ -458,8 +293,6 @@ textarea {
 .stype-ico.badge-lab        { background: #f0f9ff; color: #0284c7; }
 .stype-ico.badge-tutorial   { background: var(--blue-light); color: var(--blue-dark); }
 
-/* Status badge with a leading dot (inherits the status colour); the live
-   "active" one gets a soft pulse. */
 .badge-dot::before {
     content: "";
     width: 7px;
@@ -474,7 +307,6 @@ textarea {
     50%      { box-shadow: 0 0 0 5px rgba(21, 128, 61, .04); }
 }
 
-/* Time-slot cell: clock + start → end. */
 .session-slot { display: inline-flex; align-items: center; gap: 7px; color: var(--gray-600); font-size: 13.5px; white-space: nowrap; }
 .session-slot svg { color: var(--gray-400); flex-shrink: 0; }
 .session-slot .arr { color: var(--gray-400); }
@@ -507,10 +339,8 @@ textarea {
 }
 .session-empty p { margin: 0 0 16px; font-size: 15px; }
 
-/* ── Create / Edit form (2-column with aside) ─────────────────────── */
+/*Create / Edit form*/
 
-/* Card-based layout matching the dashboard: a transparent grid whose
-   columns are individual white cards, instead of one flat slab. */
 .session-form-grid {
     display: grid;
     grid-template-columns: 1.6fr 1fr;
@@ -531,7 +361,6 @@ textarea {
     flex-direction: column;
     gap: 24px;
 }
-/* Each aside section (access code, preview, preflight) is its own card. */
 .session-aside > div {
     background: var(--white);
     border: 1.5px solid var(--gray-200);
@@ -554,7 +383,7 @@ textarea {
 .row-2 { display: grid; grid-template-columns: 1fr 1fr;     gap: 12px; }
 .flabel { font-size: 11px; color: var(--gray-600); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; display: block; }
 
-/* Kind cards (session types) */
+/* Kind cards */
 .kind-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .kind-card {
     text-align: left;
@@ -617,7 +446,7 @@ textarea {
     display: flex; justify-content: space-between;
 }
 
-/* Aside: access code card + student preview + preflight */
+/* Aside: access code + preview + preflight */
 .access-card {
     background: var(--white);
     border: 1.5px solid var(--gray-200);
@@ -684,73 +513,7 @@ textarea {
 .form-actions { display: flex; gap: 12px; padding-top: 16px; border-top: 1px solid var(--gray-200); margin-top: 8px; }
 .form-actions .grow { flex: 1; }
 
-/* ── Dashboard view ───────────────────────────────────────────────── */
-
-.dashboard-header {
-    display: flex; justify-content: space-between; gap: 16px;
-    align-items: flex-start;
-    padding: 24px 0;
-    border-bottom: 1px solid var(--gray-200);
-    flex-wrap: wrap;
-}
-.dashboard-header h1 { font-family: var(--font-display); color: var(--gray-800); }
-.dashboard-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
-.dashboard-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: 1fr 380px;
-    gap: 24px;
-    padding: 24px 0;
-}
-@media (max-width: 960px) {
-    .dashboard-grid { grid-template-columns: 1fr; }
-    /* Profile: once the grid stacks, surface the identity card (avatar +
-       name) above the detail cards. Scoped so the desktop two-column order
-       is untouched. */
-    .page-profile .dashboard-grid > aside { order: -1; }
-    /* Match the 18px card rhythm: the stacked gap otherwise doubled up
-       (24px grid gap + the avatar card's 18px margin-bottom). */
-    .page-profile .dashboard-grid { gap: 18px; }
-    .page-profile .dashboard-grid > aside .dashboard-card { margin-bottom: 0; }
-}
-
-.dashboard-card {
-    background: var(--white);
-    border: 1.5px solid var(--gray-200);
-    border-radius: var(--r-3);
-    padding: 22px;
-    margin-bottom: 18px;
-    box-shadow: var(--shadow-sm);
-}
-.dashboard-card h2 {
-    margin: 0 0 14px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: var(--gray-400);
-    font-family: var(--font-sans);
-}
-.kv-grid { display: grid; grid-template-columns: auto 1fr; gap: 10px 20px; }
-.kv-key { font-size: 11px; color: var(--gray-400); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
-.kv-val { font-size: 14px; color: var(--gray-800); font-weight: 600; }
-.kv-val.mono { font-family: var(--font-mono); }
-
-.prompt-block {
-    background: var(--gray-100);
-    border-left: 3px solid var(--blue);
-    border-radius: 6px;
-    padding: 12px 14px;
-    font-family: var(--font-mono);
-    font-size: 12.5px;
-    line-height: 1.55;
-    color: var(--gray-800);
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-
-/* Code overlay (fullscreen access code) */
+/*Code overlay (fullscreen access code)*/
 .code-overlay {
     position: fixed; inset: 0;
     background: rgba(15, 90, 160, .92);
@@ -780,77 +543,7 @@ textarea {
 }
 .code-overlay-close:hover { background: var(--white); color: var(--blue-dark); }
 
-/* ── Profile page ─────────────────────────────────────────────────── */
-
-.user-pill-avatar {
-    width: 30px; height: 30px;
-    border-radius: 50%;
-    background: var(--blue);
-    color: var(--white);
-    display: inline-flex; align-items: center; justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    font-family: var(--font-display);
-}
-
-/* ── Mono / icon utilities ────────────────────────────────────────── */
-
-.mono { font-family: var(--font-mono); letter-spacing: 0; }
-.lucide { vertical-align: middle; }
-
-/* =====================================================================
-   Mobile drawer navigation (<= 768px)
-
-   On phones the burger drawer is the single navigation surface for
-   EVERY authenticated page. The desktop shell above hides the sidebar
-   and burger on non-chat pages (they navigate via the topbar pills),
-   but on mobile those pills are hidden, so the drawer must come back.
-
-   This block sits at the end of the last-loaded stylesheet on purpose:
-   it authoritatively overrides both homeChat.css's base shell and the
-   `.app-body:not(.page-chat)` desktop overrides earlier in this file.
-   ===================================================================== */
-@media (max-width: 768px) {
-
-    /* Drawer = fixed slide-over on every page, chat or not. The
-       `.app-body-row >` prefix matches the desktop rule it replaces so
-       it wins on source order. */
-    .app-body-row > .sidebar,
-    .app-body:not(.page-chat) .sidebar {
-        display: flex;
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100vh;
-        width: min(84vw, 300px);
-        min-width: 0;
-        transform: translateX(-100%);
-        z-index: 1000;
-    }
-    .app-body-row > .sidebar.open {
-        transform: translateX(0);
-        box-shadow: 4px 0 24px rgba(0, 0, 0, .18);
-    }
-
-    /* Burger is always present to open that drawer. */
-    .app-body .topbar-burger,
-    .app-body:not(.page-chat) .topbar-burger {
-        display: flex;
-        order: -1;
-    }
-
-    /* Collapse the 260px brand column to its content so the topbar
-       breathes; the avatar then sits flush right. */
-    .app-body .topbar-brand {
-        width: auto;
-        margin-left: 0;
-        padding-left: 0;
-        padding-right: 0;
-        border-right: none;
-    }
-}
-
-/* ── Join-a-session page (student) ─────────────────────────────────── */
+/*Join-a-session page*/
 
 .join-wrap {
     display: flex;
@@ -919,137 +612,7 @@ textarea {
     font-size: 15px;
 }
 
-/* Secondary sidebar button (students only) sitting under "Nouvelle
-   conversation"; mirrors .btn-new-chat's box but in a bordered, lower-
-   emphasis style so it doesn't compete with the primary action. */
-.btn-join-session {
-    margin: 0 .75rem .5rem;
-    padding: .55rem .9rem;
-    background: var(--white);
-    color: var(--blue);
-    border: 1.5px solid var(--blue);
-    border-radius: 8px;
-    font-family: 'Nunito', sans-serif;
-    font-size: .82rem;
-    font-weight: 700;
-    text-decoration: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: .45rem;
-    transition: background .18s, color .18s, box-shadow .18s;
-}
-.btn-join-session:hover {
-    background: var(--blue-light);
-    color: var(--blue-dark);
-    box-shadow: var(--shadow-sm);
-}
-
-/* Entry point shown in the chat empty-state for students. */
-.empty-join-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 22px;
-    padding: 10px 18px;
-    border: 1.5px solid var(--blue);
-    border-radius: var(--r-1);
-    color: var(--blue);
-    background: var(--white);
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 700;
-    text-decoration: none;
-    transition: background .15s, color .15s, box-shadow .15s;
-}
-.empty-join-link:hover {
-    background: var(--blue-light);
-    color: var(--blue-dark);
-    box-shadow: var(--shadow-sm);
-}
-
-/* ── Flash messages inside the authenticated shell ─────────────────── */
-
-/* Floating toast just below the 54px topbar. Taken out of flow (fixed) so
-   it never disrupts the constrained flex layout of /chat — where it used
-   to render as a full-width slab squeezed above the chat area. Auto-
-   dismissed (and click-to-close) by the script in Layout/chat.php. */
-.flash-stack {
-    position: fixed;
-    top: 68px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1100;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: fit-content;
-    max-width: min(92vw, 480px);
-    pointer-events: none;            /* clicks fall through the gaps */
-}
-
-/* On /chat the 260px sidebar shifts the content area to the right; nudge
-   the toast by half the sidebar so it stays centred over the chat itself,
-   not the whole viewport. The sidebar is hidden on mobile / non-chat. */
-@media (min-width: 769px) {
-    .page-chat .flash-stack {
-        left: calc(50% + 130px);
-    }
-}
-.flash-stack .alert {
-    margin: 0;
-    cursor: pointer;
-    pointer-events: auto;
-    box-shadow: 0 10px 30px rgba(20, 26, 46, .18);
-    animation: flashIn .25s cubic-bezier(.22, .9, .32, 1) both;
-}
-@keyframes flashIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Empty-state hint in the sidebar conversation list. */
-.conv-empty {
-    margin: 0;
-    padding: .5rem .75rem;
-    font-size: .8rem;
-    color: var(--gray-400);
-    font-family: var(--font-sans);
-}
-
-/* Topbar mode badge: a session-bound chat is marked in gold to stand
-   apart from the blue "libre" (free) chat. */
-.topbar-mode.topbar-mode-session {
-    color: var(--exam-ink);
-    background: var(--gold-light);
-}
-
-/* Read-only notice shown above the composer when the linked session is
-   over; the textarea is also rendered with [disabled]. */
-.session-closed-banner {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-    padding: 10px 14px;
-    border: 1px solid var(--gray-200);
-    border-radius: var(--r-1, 8px);
-    background: var(--gray-100);
-    color: var(--gray-600);
-    font-family: var(--font-sans);
-    font-size: 13px;
-    font-weight: 600;
-}
-.session-closed-banner svg { color: var(--gray-400); flex-shrink: 0; }
-
-#promptInput:disabled {
-    background: var(--gray-100);
-    color: var(--gray-400);
-    cursor: not-allowed;
-}
-
-/* ── Session monitor (teacher supervision, read-only) ──────────────── */
+/*Session monitor*/
 
 .monitor-grid {
     display: grid;
@@ -1061,7 +624,6 @@ textarea {
     .monitor-grid { grid-template-columns: 1fr; }
 }
 
-/* Left column — student list */
 .monitor-list {
     background: var(--white);
     border: 1.5px solid var(--gray-200);
@@ -1069,25 +631,34 @@ textarea {
     box-shadow: var(--shadow-sm);
     overflow: hidden;
 }
-.monitor-student {
-    display: block;
-    padding: 12px 16px;
+
+.monitor-student-group {
     border-bottom: 1px solid var(--gray-200);
-    text-decoration: none;
+}
+.monitor-student-group:last-child { border-bottom: none; }
+.monitor-student-group[open] { padding-bottom: 6px; }
+
+.monitor-student-head {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 16px;
     transition: background .15s;
 }
-.monitor-student:last-child { border-bottom: none; }
-.monitor-student:hover { background: var(--gray-100); }
-.monitor-student.is-active {
-    background: var(--blue-light);
-    box-shadow: inset 3px 0 0 var(--blue);
+.monitor-student-head::-webkit-details-marker { display: none; }
+.monitor-student-head:hover { background: var(--gray-100); }
+.monitor-student-head .monitor-student-name { flex: 1; }
+
+.monitor-chevron {
+    color: var(--gray-400);
+    flex-shrink: 0;
+    transition: transform .15s;
 }
-.monitor-student-top {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
-}
+.monitor-student-group[open] > .monitor-student-head .monitor-chevron { transform: rotate(90deg); }
+
 .monitor-student-name {
     font-family: var(--font-display);
     font-weight: 700;
@@ -1106,18 +677,49 @@ textarea {
     border-radius: 100px;
     padding: 1px 7px;
 }
-.monitor-student-meta {
+.monitor-student-conv-count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--gray-400);
+}
+.monitor-muted { color: var(--gray-400); }
+
+.monitor-noconv {
+    margin: 0;
+    padding: 0 16px 6px 38px;
+    font-size: 12px;
+    font-style: italic;
+}
+.monitor-conv {
+    display: block;
+    padding: 8px 16px 8px 24px;
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: background .15s, border-color .15s;
+}
+.monitor-conv:hover { background: var(--gray-100); }
+.monitor-conv.is-active {
+    background: var(--blue-light);
+    border-left-color: var(--blue);
+}
+.monitor-conv-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-800);
+    font-family: var(--font-sans);
+}
+.monitor-conv-meta {
     display: flex;
     gap: 6px;
     align-items: center;
-    margin-top: 4px;
-    font-size: 12px;
+    margin-top: 2px;
+    font-size: 11.5px;
     color: var(--gray-600);
 }
-.monitor-student-meta .mono { font-size: 11px; color: var(--gray-600); }
-.monitor-muted { color: var(--gray-400); }
+.monitor-conv-count { font-family: var(--font-mono); }
 
-/* Right column — transcript */
+/* Transcript */
 .monitor-transcript {
     background: var(--white);
     border: 1.5px solid var(--gray-200);
@@ -1187,7 +789,7 @@ textarea {
     word-break: break-word;
 }
 
-/* ── Chat environment header (sidebar) ─────────────────────────────── */
+/*Chat sidebar widgets*/
 
 .sidebar-env {
     display: flex;
@@ -1222,9 +824,6 @@ textarea {
 }
 .sidebar-env-switch:hover { text-decoration: underline; }
 
-/* The new-chat button now lives in a form; carry its outer margins on
-   the form and let the button fill the width with centred content so it
-   matches the leave/join buttons below it. */
 .new-chat-form { margin: .75rem .75rem .5rem; }
 .new-chat-form .btn-new-chat {
     margin: 0;
@@ -1233,8 +832,30 @@ textarea {
     justify-content: center;
 }
 
-/* "Quitter la session" — same footprint as the new-chat button but a
-   low-emphasis style that turns red on hover (a leaving action). */
+.btn-join-session {
+    margin: 0 .75rem .5rem;
+    padding: .55rem .9rem;
+    background: var(--white);
+    color: var(--blue);
+    border: 1.5px solid var(--blue);
+    border-radius: 8px;
+    font-family: 'Nunito', sans-serif;
+    font-size: .82rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    transition: background .18s, color .18s, box-shadow .18s;
+}
+.btn-join-session:hover {
+    background: var(--blue-light);
+    color: var(--blue-dark);
+    box-shadow: var(--shadow-sm);
+}
+
 .btn-leave-session {
     margin: 0 .75rem .5rem;
     padding: .55rem .9rem;
@@ -1258,81 +879,59 @@ textarea {
     background: #fef2f2;
 }
 
-/* ── Monitor: nested students → conversations ──────────────────────── */
-
-.monitor-student-group {
-    border-bottom: 1px solid var(--gray-200);
+.empty-join-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 22px;
+    padding: 10px 18px;
+    border: 1.5px solid var(--blue);
+    border-radius: var(--r-1);
+    color: var(--blue);
+    background: var(--white);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .15s, color .15s, box-shadow .15s;
 }
-.monitor-student-group:last-child { border-bottom: none; }
-.monitor-student-group[open] { padding-bottom: 6px; }
+.empty-join-link:hover {
+    background: var(--blue-light);
+    color: var(--blue-dark);
+    box-shadow: var(--shadow-sm);
+}
 
-/* <summary> — clickable header that expands/collapses the conversations. */
-.monitor-student-head {
-    list-style: none;
-    cursor: pointer;
-    user-select: none;
+/* Topbar mode badge */
+.topbar-mode.topbar-mode-session {
+    color: var(--exam-ink);
+    background: var(--gold-light);
+}
+
+/* Session closed banner */
+.session-closed-banner {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 11px 16px;
-    transition: background .15s;
-}
-.monitor-student-head::-webkit-details-marker { display: none; }
-.monitor-student-head:hover { background: var(--gray-100); }
-.monitor-student-head .monitor-student-name { flex: 1; }
-
-.monitor-chevron {
-    color: var(--gray-400);
-    flex-shrink: 0;
-    transition: transform .15s;
-}
-.monitor-student-group[open] > .monitor-student-head .monitor-chevron { transform: rotate(90deg); }
-
-.monitor-student-conv-count {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--gray-400);
-}
-
-.monitor-noconv {
-    margin: 0;
-    padding: 0 16px 6px 38px;
-    font-size: 12px;
-    font-style: italic;
-}
-.monitor-conv {
-    display: block;
-    padding: 8px 16px 8px 24px;
-    text-decoration: none;
-    border-left: 3px solid transparent;
-    transition: background .15s, border-color .15s;
-}
-.monitor-conv:hover { background: var(--gray-100); }
-.monitor-conv.is-active {
-    background: var(--blue-light);
-    border-left-color: var(--blue);
-}
-.monitor-conv-name {
-    display: block;
+    margin-bottom: 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--r-1, 8px);
+    background: var(--gray-100);
+    color: var(--gray-600);
+    font-family: var(--font-sans);
     font-size: 13px;
     font-weight: 600;
-    color: var(--gray-800);
-    font-family: var(--font-sans);
 }
-.monitor-conv-meta {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    margin-top: 2px;
-    font-size: 11.5px;
-    color: var(--gray-600);
-}
-.monitor-conv-count { font-family: var(--font-mono); }
+.session-closed-banner svg { color: var(--gray-400); flex-shrink: 0; }
 
-/* ── Conversation row + per-item kebab menu (chat sidebar) ─────────────
-   The conversation list wraps each entry in a flex `.conv-row` so a kebab
-   button can sit to the right of the link. The row owns the hover/active
-   background (overriding homeChat.css, which is loaded earlier). */
+#promptInput:disabled {
+    background: var(--gray-100);
+    color: var(--gray-400);
+    cursor: not-allowed;
+}
+
+/*Conversation row + kebab menu*/
+
 .conv-row {
     position: relative;
     display: flex;
@@ -1345,7 +944,7 @@ textarea {
 
 .conv-row .conv-item {
     flex: 1 1 auto;
-    min-width: 0;          /* let the title ellipsis kick in */
+    min-width: 0;
     margin-bottom: 0;
     background: transparent;
 }
@@ -1355,10 +954,7 @@ textarea {
     font-weight: 600;
 }
 
-.conv-actions {
-    position: relative;
-    flex: 0 0 auto;
-}
+.conv-actions { position: relative; flex: 0 0 auto; }
 .conv-menu-btn {
     display: flex;
     align-items: center;
@@ -1372,7 +968,7 @@ textarea {
     border-radius: 6px;
     color: var(--gray-400);
     cursor: pointer;
-    opacity: .45;          /* visible-but-muted so it stays tappable on touch */
+    opacity: .45;
     transition: opacity .15s, background .15s, color .15s;
 }
 .conv-row:hover .conv-menu-btn,
@@ -1416,14 +1012,10 @@ textarea {
     cursor: pointer;
 }
 .conv-menu-item:hover { background: var(--gray-100); }
-.conv-menu-item svg {
-    flex: 0 0 auto;
-    color: var(--gray-400);
-}
+.conv-menu-item svg { flex: 0 0 auto; color: var(--gray-400); }
 
-/* ── Conversation scope switch (Conversations / Archivées) ─────────────
-   The list header is a dropdown trigger: a chevron signals it can switch
-   between the active and the archived conversation list. */
+/*Conversation scope switch*/
+
 .conv-scope {
     position: relative;
     padding: .5rem .5rem .3rem;
@@ -1437,20 +1029,14 @@ textarea {
     background: transparent;
     cursor: pointer;
 }
-.conv-scope-toggle .conv-group-label {
-    padding: 0;            /* the wrapper owns the spacing now */
-}
+.conv-scope-toggle .conv-group-label { padding: 0; }
 .conv-scope-chevron {
     color: var(--gray-400);
     transition: transform .15s;
 }
-.conv-scope-toggle[aria-expanded="true"] .conv-scope-chevron {
-    transform: rotate(180deg);
-}
+.conv-scope-toggle[aria-expanded="true"] .conv-scope-chevron { transform: rotate(180deg); }
 .conv-scope-toggle:hover .conv-group-label,
-.conv-scope-toggle:hover .conv-scope-chevron {
-    color: var(--gray-600);
-}
+.conv-scope-toggle:hover .conv-scope-chevron { color: var(--gray-600); }
 
 .conv-scope-menu {
     position: absolute;
@@ -1488,30 +1074,20 @@ textarea {
 }
 .conv-scope-item.is-current svg { color: var(--blue); }
 
-/* =====================================================================
-   Dark-theme component overrides
-   Only the hard-coded colours that the token overrides can't reach.
-   ===================================================================== */
+/*Dark-theme session overrides*/
+
 [data-theme="dark"] .stype-ico.badge-free-study { background: #251c3c; color: #bd9af7; }
 [data-theme="dark"] .stype-ico.badge-lab        { background: #0f2638; color: #5cc4f5; }
 [data-theme="dark"] .stype-ico.badge-exam       { background: #352a14; color: #f3cd86; }
 [data-theme="dark"] .stype-ico.badge-course     { background: var(--blue-light); color: var(--blue); }
 [data-theme="dark"] .stype-ico.badge-tutorial   { background: var(--blue-light); color: var(--blue); }
 [data-theme="dark"] .session-table .access-code-cell { border-color: rgba(90, 162, 240, .28); }
-[data-theme="dark"] .icon-btn { background: #222838; }
 
-/* Popover menus (hard-coded #fff). */
 [data-theme="dark"] .conv-scope-menu,
 [data-theme="dark"] .conv-menu { background: var(--white); box-shadow: 0 10px 30px rgba(0, 0, 0, .55); }
 [data-theme="dark"] .conv-scope-item:hover,
 [data-theme="dark"] .conv-menu a:hover { background: rgba(128, 145, 180, .10); }
 
-/* Type pill badges with hard-coded light tints. */
-[data-theme="dark"] .badge-lab        { background: #0f2638; color: #7dd3fc; border-color: #1f4a66; }
-[data-theme="dark"] .badge-free-study { background: #251c3c; color: #c4b5fd; border-color: #45356a; }
-[data-theme="dark"] .badge-student    { background: #122a1c; color: #6ee7a0; border-color: #1f5236; }
-
-/* Session-type "kind" cards: deeper fills so the light text stays legible. */
 [data-theme="dark"] .kind-card.is-active {
     background: #1c3a5e;
     border-color: var(--blue);
@@ -1526,7 +1102,6 @@ textarea {
 [data-theme="dark"] .kind-card.kraft.is-active .kind-head,
 [data-theme="dark"] .kind-card.kraft.is-active .kind-desc { color: #f3cd86; }
 
-/* Danger hovers (hard-coded light red). */
 [data-theme="dark"] .sidebar-logout:hover,
 [data-theme="dark"] .btn-leave-session:hover {
     color: #f87171;
@@ -1534,7 +1109,6 @@ textarea {
     border-color: #f87171;
 }
 
-/* Chat code blocks: --gray-800 inverts to a light surface in dark mode. */
 [data-theme="dark"] .msg-content pre  { background: #0d0f17; color: #e2e8f0; }
 [data-theme="dark"] .msg-content code { background: rgba(128, 145, 180, .14); color: #cdd6f4; }
 
@@ -1620,79 +1194,4 @@ textarea {
 }
 .profile-form .form-actions {
     margin-top: 4px;
-}
-
-/* ── Error page (404 / 403 / 500 …) ───────────────────────────────────── */
-.error-page {
-    max-width: 600px;
-    margin: clamp(2.5rem, 11vh, 7rem) auto;
-    padding: 0 1.5rem;
-    text-align: center;
-}
-.error-page .error-code {
-    font-size: clamp(64px, 16vw, 124px);
-    font-weight: 700;
-    line-height: 1;
-    color: var(--blue);
-    letter-spacing: -.03em;
-}
-.error-page .error-title {
-    margin: 10px 0 10px;
-    font-family: var(--font-display);
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--gray-800);
-}
-.error-page .error-message {
-    margin: 0 auto 26px;
-    max-width: 460px;
-    font-size: 15px;
-    line-height: 1.6;
-    color: var(--gray-600);
-}
-.error-page .error-actions {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-}
-.error-debug {
-    margin-top: 36px;
-    text-align: left;
-    border: 1px solid var(--gray-200);
-    border-radius: var(--r-2, 10px);
-    background: var(--white);
-    overflow: hidden;
-}
-.error-debug > summary {
-    cursor: pointer;
-    padding: 12px 16px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--gray-600);
-    background: var(--gray-100);
-}
-.error-debug-body {
-    padding: 14px 16px;
-}
-.error-debug-body p {
-    margin: 0 0 6px;
-    font-size: 13px;
-    color: var(--gray-800);
-    word-break: break-word;
-}
-.error-debug-where {
-    color: var(--gray-600);
-    font-size: 12px;
-}
-.error-debug-body pre {
-    margin: 10px 0 0;
-    padding: 12px 14px;
-    overflow-x: auto;
-    background: var(--gray-800);
-    color: #e2e8f0;
-    border-radius: 8px;
-    font-family: var(--font-mono);
-    font-size: 11.5px;
-    line-height: 1.55;
 }

@@ -46,13 +46,13 @@ final class ResearcherAuthorizationService
     /**
      * @return array{success: true} | array{success: false, error: string}
      */
-    public function reject(int $researcherId, int $departmentId): array
+    public function reject(int $researcherId, int $departmentId, int $adminId): array
     {
         if ($this->repo->findPendingDepartmentId($researcherId, $departmentId) === null) {
             return ['success' => false, 'error' => 'Cette demande est introuvable ou deja traitee.'];
         }
 
-        $this->repo->reject($researcherId, $departmentId);
+        $this->repo->reject($researcherId, $departmentId, $adminId);
 
         return ['success' => true];
     }

@@ -54,7 +54,7 @@ class AdminController extends Controller
 
         $researcherId = (int) $this->input('researcher_id');
         $result = (new ResearcherAuthorizationService(Database::getConnection()))
-            ->reject($researcherId, $this->currentDepartmentId());
+            ->reject($researcherId, $this->currentDepartmentId(), (int) $this->currentUser()['id']);
 
         $this->flash($result['success'] ? 'success' : 'error',
             $result['success'] ? 'Demande chercheur refusee.' : $result['error']);

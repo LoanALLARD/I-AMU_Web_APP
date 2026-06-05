@@ -9,7 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&family=Nunito+Sans:wght@300;400;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="stylesheet" href="/assets/css/layoutMain.css">
-    <link rel="stylesheet" href="/assets/css/sessions.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+    <link rel="stylesheet" href="/assets/css/error.css">
+    <link rel="stylesheet" href="/assets/css/rgpd.css">
     <link rel="stylesheet" href="/assets/css/admin.css">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
