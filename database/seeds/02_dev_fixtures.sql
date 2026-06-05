@@ -128,12 +128,12 @@ INSERT INTO sessions (resource_id, name, status, starts_at, ends_at, type,
                       max_input_size, instructions) VALUES
     ((SELECT id FROM resources WHERE code = 'INF101'),
      'TP Algo - brouillon',         'DRAFT',
-     NULL, NULL, 'LAB',
+     NULL, NULL, 'COURSE',
      2000, 'Brouillon de TP, pas encore publie.'),
 
     ((SELECT id FROM resources WHERE code = 'INF101'),
      'TP Algo - seance 1',          'SCHEDULED',
-     NOW() + INTERVAL '2 days', NOW() + INTERVAL '2 days 2 hours', 'LAB',
+     NOW() + INTERVAL '2 days', NOW() + INTERVAL '2 days 2 hours', 'COURSE',
      2000, 'Premier TP: tri et complexite.'),
 
     ((SELECT id FROM resources WHERE code = 'INF202'),
@@ -143,17 +143,17 @@ INSERT INTO sessions (resource_id, name, status, starts_at, ends_at, type,
 
     ((SELECT id FROM resources WHERE code = 'INF202'),
      'TD BDD - en cours',           'ACTIVE',
-     NOW() - INTERVAL '1 hour', NOW() + INTERVAL '1 hour', 'TUTORIAL',
+     NOW() - INTERVAL '1 hour', NOW() + INTERVAL '1 hour', 'COURSE',
      1500, 'TD interactif sur les jointures.'),
 
     ((SELECT id FROM resources WHERE code = 'INF101'),
      'TP Algo - archive',           'ENDED',
-     NOW() - INTERVAL '14 days', NOW() - INTERVAL '14 days' + INTERVAL '2 hours', 'LAB',
+     NOW() - INTERVAL '14 days', NOW() - INTERVAL '14 days' + INTERVAL '2 hours', 'COURSE',
      2000, 'TP termine. Code d''acces conserve pour traces.'),
 
     ((SELECT id FROM resources WHERE code = 'MAT101'),
      'CM Analyse - annule',         'CANCELLED',
-     NULL, NULL, 'FREE_STUDY',
+     NULL, NULL, 'COURSE',
      NULL, 'Session annulee suite au changement de planning.');
 
 UPDATE sessions
