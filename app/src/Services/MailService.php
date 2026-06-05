@@ -55,11 +55,17 @@ final class MailService
         return true;
     }
 
+    /**
+     * @param resource $socket
+     */
     private function write($socket, string $data): void
     {
         fwrite($socket, $data);
     }
 
+    /**
+     * @param resource $socket
+     */
     private function read($socket): string
     {
         $response = '';

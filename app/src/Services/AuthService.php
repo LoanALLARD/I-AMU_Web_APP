@@ -194,6 +194,9 @@ final class AuthService
         }
     }
 
+    /**
+     * @return array{success: bool, error?: string}
+     */
     public function deactivateAccount(int $userId): array
     {
         try {
@@ -215,6 +218,9 @@ final class AuthService
         }
     }
 
+    /**
+     * @return array{success: bool, error?: string}
+     */
     public function reactivateAccount(string $email, string $password): array
     {
         if ($email === '' || $password === '') {
