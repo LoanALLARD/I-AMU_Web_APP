@@ -29,8 +29,8 @@ class LLMController{
             return;
         }
 
-        $modelName = $data['model'];     // "llama3.2:1b"
-        $userMessage = $data['message']; 
+        $modelName = $data['model'];
+        $userMessage = $data['message'];
         // $context = $data['context'] ?? [];
         //$user_email = $data['user_email'] ?? null;
         $context = [];
@@ -77,7 +77,7 @@ class LLMController{
             $context = [];
         } else {
             // else recover the conversation and check if it's own by the same user
-            $conversationData = $conversationRepository->getConversationByUserIdAndConversationId(   
+            $conversationData = $conversationRepository->getConversationByUserIdAndConversationId(
                 $userId,
                 $conversation_id,
             );       

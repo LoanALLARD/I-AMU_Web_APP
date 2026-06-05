@@ -3,8 +3,9 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 INSERT INTO places (name, address, city, zip_code) VALUES
-    ('Campus de Luminy',       '163 Avenue de Luminy',   'Marseille', '13288'),
-    ('Campus Saint-Charles',   '3 Place Victor Hugo',    'Marseille', '13003');
+    ('Campus de Luminy',       '163 Avenue de Luminy',   'Marseille',    '13288'),
+    ('Campus Saint-Charles',   '3 Place Victor Hugo',    'Marseille',    '13003'),
+    ('IUT Aix',                'Site Gaston Berger',     'Aix-en-Pce',   '13100');
 
 INSERT INTO departments (place_id, name, description) VALUES
     ((SELECT id FROM places WHERE name = 'Campus de Luminy'),
@@ -16,7 +17,17 @@ INSERT INTO departments (place_id, name, description) VALUES
     ((SELECT id FROM places WHERE name = 'Campus Saint-Charles'),
      'Mathematiques', 'Departement de mathematiques'),
     ((SELECT id FROM places WHERE name = 'Campus Saint-Charles'),
-     'Chimie', 'Departement de chimie');
+     'Chimie', 'Departement de chimie'),
+    ((SELECT id FROM places WHERE name = 'IUT Aix'),
+     'Info', 'Informatique'),
+    ((SELECT id FROM places WHERE name = 'IUT Aix'),
+     'GMP', 'Genie Mecanique et Productique'),
+    ((SELECT id FROM places WHERE name = 'IUT Aix'),
+     'TC', 'Techniques de Commercialisation'),
+    ((SELECT id FROM places WHERE name = 'IUT Aix'),
+     'GEA', 'Gestion des Entreprises et des Administrations'),
+    ((SELECT id FROM places WHERE name = 'IUT Aix'),
+     'MLT', 'Management de la Logistique et des Transports');
 
 INSERT INTO laboratories (code, name, address, email) VALUES
     ('LIS', 'Laboratoire d''Informatique et Systemes',
@@ -128,12 +139,12 @@ INSERT INTO sessions (resource_id, name, status, starts_at, ends_at, type,
                       max_input_size, instructions) VALUES
     ((SELECT id FROM resources WHERE code = 'INF101'),
      'TP Algo - brouillon',         'DRAFT',
-     NULL, NULL, 'LAB',
+     NULL, NULL, 'COURSE',
      2000, 'Brouillon de TP, pas encore publie.'),
 
     ((SELECT id FROM resources WHERE code = 'INF101'),
      'TP Algo - seance 1',          'SCHEDULED',
-     NOW() + INTERVAL '2 days', NOW() + INTERVAL '2 days 2 hours', 'LAB',
+     NOW() + INTERVAL '2 days', NOW() + INTERVAL '2 days 2 hours', 'COURSE',
      2000, 'Premier TP: tri et complexite.'),
 
     ((SELECT id FROM resources WHERE code = 'INF202'),
@@ -143,17 +154,17 @@ INSERT INTO sessions (resource_id, name, status, starts_at, ends_at, type,
 
     ((SELECT id FROM resources WHERE code = 'INF202'),
      'TD BDD - en cours',           'ACTIVE',
-     NOW() - INTERVAL '1 hour', NOW() + INTERVAL '1 hour', 'TUTORIAL',
+     NOW() - INTERVAL '1 hour', NOW() + INTERVAL '1 hour', 'COURSE',
      1500, 'TD interactif sur les jointures.'),
 
     ((SELECT id FROM resources WHERE code = 'INF101'),
      'TP Algo - archive',           'ENDED',
-     NOW() - INTERVAL '14 days', NOW() - INTERVAL '14 days' + INTERVAL '2 hours', 'LAB',
+     NOW() - INTERVAL '14 days', NOW() - INTERVAL '14 days' + INTERVAL '2 hours', 'COURSE',
      2000, 'TP termine. Code d''acces conserve pour traces.'),
 
     ((SELECT id FROM resources WHERE code = 'MAT101'),
      'CM Analyse - annule',         'CANCELLED',
-     NULL, NULL, 'FREE_STUDY',
+     NULL, NULL, 'COURSE',
      NULL, 'Session annulee suite au changement de planning.');
 
 UPDATE sessions
@@ -313,32 +324,29 @@ INSERT INTO interactions (conversation_id, prompt, response,
      'Avec plaisir.',
      150, 3, 15, NULL);
 
-INSERT INTO places (name, address, city, zip_code) VALUES
-    ('IUT Aix', 'site gaston berger', 'Aix-en-Pce', '101010');
-INSERT INTO departments (place_id, name, description) VALUES
-    ((SELECT id FROM places WHERE name = 'IUT Aix'),
-     'departement informatique', 'departement de dev logiciel'),
-    ((SELECT id FROM places WHERE name = 'IUT Aix'),
-     'departement reseaux', 'departement reseaux et telecommunications');
 INSERT INTO users (department_id, email, password_hash, first_name, last_name, consent_version) VALUES
-    ((SELECT id FROM departments WHERE name = 'departement informatique'),
-     'evan@gmail.com', '218937801', 'atherly', 'evan', 'v1');
+    ((SELECT id FROM departments WHERE name = 'Info'
+        AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix')),
+     'evan@univ-amu.fr', crypt('password', gen_salt('bf')), 'Atherly', 'Evan', '1.0');
 INSERT INTO teachers (id, title) VALUES
-    ((SELECT id FROM users WHERE email = 'evan@gmail.com'), 'dev_Evan');
+    ((SELECT id FROM users WHERE email = 'evan@univ-amu.fr'), 'Professeur');
 INSERT INTO resources (owner_id, department_id, code, name, description, semester) VALUES
-    ((SELECT id FROM users WHERE email = 'evan@gmail.com'),
-     (SELECT id FROM departments WHERE name = 'departement informatique'),
+    ((SELECT id FROM users WHERE email = 'evan@univ-amu.fr'),
+     (SELECT id FROM departments WHERE name = 'Info'
+        AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix')),
      'code', 'dev', 'ressources pour le dev de l outils', 's3');
 -- INSERT INTO models (department_id, resource_id, name, version, provider, max_tokens, context_window, api_url, adapter) VALUES
---     ((SELECT id FROM departments WHERE name = 'departement informatique'),
+--     ((SELECT id FROM departments WHERE name = 'Info'
+--         AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix')),
 --      NULL, 'llama3.2:1b', 'V1', 'meta', 100000, 128000,
 --      'http://i-amu_web_app-ollama2-1:11434/api/generate', 'ollama');
 -- INSERT INTO sessions (resource_id, name) VALUES
 --     ((SELECT id FROM resources WHERE code = 'code'), 'session de dev');
 -- INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
---     ((SELECT id FROM users WHERE email = 'evan@gmail.com'),
+--     ((SELECT id FROM users WHERE email = 'evan@univ-amu.fr'),
 --      (SELECT id FROM sessions WHERE name = 'session de dev'),
 --      (SELECT id FROM models
 --         WHERE name = 'llama3.2:1b'
---           AND department_id = (SELECT id FROM departments WHERE name = 'departement informatique')),
+--           AND department_id = (SELECT id FROM departments WHERE name = 'Info'
+--             AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix'))),
 --      'testconv');

@@ -13,6 +13,8 @@
     use Controllers\ProfileController;
     use Controllers\PlaceController;
     use Controllers\AdminController;
+    use Controllers\ErrorController;
+    use Core\HttpException;
 
 // routeur
     $router = new Router();
@@ -35,18 +37,20 @@
     $router->add('POST', '/register',    function() { (new AuthController())->register(); });
     $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
     $router->add('POST', '/reactivate',  function() { (new AuthController())->reactivate();});
-    $router->add('GET',  '/rgpd-consent', function() { (new AuthController())->showRGPD(); });
+    $router->add('GET',  '/rgpd_consent', function() { (new AuthController())->showRGPD(); });
     $router->add('GET',  '/verify-email',function() { (new AuthController())->verifyEmail(); });
 
     // AJAX: departments of a place, for the registration form's dependent select.
     $router->add('GET',  '/places/{id}/departments', function($id) { (new PlaceController())->departments($id); });
 
     // --- Chat home + profile (authenticated) --------------------------
-    $router->add('GET', '/chat',      function()    { (new AccueilController())->index(); });
-    $router->add('GET', '/chat/{id}', function($id)  { (new AccueilController())->index($id); });
-    $router->add('GET', '/profile',   function()    { (new ProfileController())->index(); });
+    $router->add('GET',  '/chat',                function()     { (new AccueilController())->index(); });
+    $router->add('GET',  '/chat/{id}',           function($id)  { (new AccueilController())->index($id); });
+    $router->add('GET',  '/profile',             function()     { (new ProfileController())->index(); });
     $router->add('POST', '/profile/theme',       function()     { (new ProfileController())->updateTheme(); });
     $router->add('POST', '/profile/deactivate',  function()     { (new ProfileController())->deactivate(); });
+    $router->add('POST', '/profile/update',      function()     { (new ProfileController())->updateProfile(); });
+    $router->add('POST', '/profile/password',    function()     { (new ProfileController())->changePassword(); });
 
     // --- Department-admin console (department_admin role) --------------
     $router->add('GET',  '/admin',                         function() { (new AdminController())->index(); });
@@ -67,8 +71,17 @@
     $router->add('POST', '/sessions/{id}/end',    function($id) { (new SessionController())->end($id); });
     $router->add('POST', '/sessions/{id}/cancel', function($id) { (new SessionController())->cancel($id); });
     $router->add('GET',  '/sessions/{id}/monitor', function($id) { (new SessionController())->monitor($id); });
+    $router->add('GET',  '/sessions/{id}/export',  function($id) { (new SessionController())->export($id); });
     $router->add('GET',  '/sessions/{id}',        function($id) { (new SessionController())->dashboard($id); });
 
-    $router->compare($uri, $method);
+    try {
+        $router->compare($uri, $method);
+    } catch (HttpException $e) {
+        (new ErrorController())->show($e->statusCode(), $e);
+    } catch (\Throwable $e) {
+        error_log('[I-AMU] Uncaught ' . $e::class . ': ' . $e->getMessage()
+            . ' @ ' . $e->getFile() . ':' . $e->getLine());
+        (new ErrorController())->show(500, $e);
+    }
 ?>
 

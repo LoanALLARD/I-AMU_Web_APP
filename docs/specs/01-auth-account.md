@@ -5,6 +5,37 @@
 - **Dépend de** : 00-foundations
 - **État POC** : implémenté
 
+## 0bis. État d'implémentation (dev — MVC)
+
+> Mise à jour **2026-06-04**. Le code de `dev` est en **MVC**
+> (`Controllers\` / `Services\` / `Models\` / `Domain\`), pas dans la Clean
+> Architecture (`App\…`) décrite aux §3→6 — celles-ci valent comme
+> **intention de design** ; ce bloc décrit l'**état réel**.
+
+### ✅ Fait
+- **Connexion / déconnexion** — `AuthController` + `AuthService::login/logout` (session PHP, `session_regenerate_id`).
+- **Inscription** — `AuthService::register` : validation, **rôle auto par domaine paramétrable** (table `email_domain_configs`, pas de hardcode), unicité email, création atomique user + rôle (`UserRepository::createUserWithRole`).
+- **Vérification d'email** (token + lien par mail) — *ajout hors spec d'origine* : `GET /verify-email`, `MailService`, colonnes `users.email_verified_at` / `email_verify_token`. Le login est bloqué tant que l'email n'est pas vérifié.
+- **Désactivation / réactivation** de compte — `POST /profile/deactivate`, `POST /reactivate`.
+- **Édition du profil** (prénom / nom) — `POST /profile/update` → `AuthService::updateProfile` (synchronise la session).
+- **Changement de mot de passe** — `POST /profile/password` → `AuthService::changePassword` (vérifie l'actuel, ≥ 8 car., ≠ ancien, re-hash bcrypt).
+- **Préférence thème** (auto / clair / sombre) persistée (`users.theme`) — `POST /profile/theme`.
+- **Rôles multiples** résolus depuis `students` / `teachers` / `department_administrators`.
+
+### 🟡 Partiel / divergent
+- **Page compte** : sous `/profile` (et non `/account`), MVP — pas d'agrégat stats (`GetAccountOverviewService` non implémenté).
+- **Rattachement département** : via selects **lieu + département** dépendants (et non « code département » du §2bis). Le `department_id` est bien écrit et validé serveur.
+- **Mention RGPD** : checkbox bloquante à l'inscription + page `/rgpd_consent` ; pas de page publique `/privacy` (cf. [spec 06](./06-rgpd.md)).
+
+### ❌ Pas fait
+- **Réinitialisation du mot de passe oublié** (`/password/forgot`, `/password/reset`, table `password_reset`, mail de reset) — *must-have non couvert*.
+- **Réglage de la durée d'archivage** : la colonne `users.archive_duration_days` existe, mais aucune UI ni service.
+- **Suppression de compte automatisée** (soft-delete + anonymisation) — remplacée par désactivation + demande à `dpo@univ-amu.fr`.
+- **Préférences densité / langue**.
+
+### Routes réelles (vs §6 planifié)
+Présentes : `GET /profile`, `POST /profile/update`, `POST /profile/password`, `POST /profile/theme`, `POST /profile/deactivate`, `POST /reactivate`, `GET /rgpd_consent`, `GET /verify-email`. Les routes `/account/*` et `/password/*` du §6 ne sont **pas** en place.
+
 ## 1. Objectifs
 
 Gérer l'identité de l'utilisateur :
@@ -228,6 +259,12 @@ Tables existantes (source de vérité :
 > recréer une colonne `conversation_archive_days`.
 
 ### Nouvelles colonnes / tables
+
+> **État dev (2026-06-04)** — la **vérification d'email** (ajout) a introduit
+> dans `users` : `email_verified_at TIMESTAMPTZ` + `email_verify_token
+> VARCHAR(255)` (contrainte unique `uq_users_email_verify_token`). En revanche
+> la table `password_reset` ci-dessous **n'est pas** créée (reset de mot de
+> passe non implémenté).
 
 ```sql
 -- database/migrations/AAAA-MM-DD-password-reset.sql

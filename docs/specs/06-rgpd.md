@@ -8,6 +8,19 @@
 - **Référence externe** : [Guide RGPD du développeur — CNIL](https://www.cnil.fr/fr/guide-rgpd-du-developpeur),
   rapport d'analyse préliminaire §5.
 
+## 0bis. État d'implémentation (dev)
+
+> Mise à jour **2026-06-04**. RGPD **largement non couvert** — reste bloquant
+> pour une mise en production.
+
+- 🟡 **Consentement** : checkbox bloquante à l'inscription + mention via `GET /rgpd_consent`. Pas de retrait post-inscription ni d'interception bloquante au login.
+- 🟡 **Effacement** : manuel — désactivation du compte (`is_active = false`) + demande à `dpo@univ-amu.fr` ; pas de `DeleteAccountService` ni d'anonymisation automatique.
+- ❌ **Information** : pas de page publique `/privacy` (`legal/privacy.php`).
+- ❌ **Accès** : pas d'export de données (`/account/data-export`).
+- ❌ **Opposition recherche** : colonne `research_opposed` absente, pas d'endpoint `/account/oppose-research`.
+- ❌ **Journalisation** (`data_access_log`, `LogDataAccessService`) : table absente, aucun log.
+- ❌ **Journal admin** (`/admin/data-access-log`) et **filtre d'opposition** dans les exports chercheur (spec 05).
+
 ## 1. Objectifs
 
 Mettre la plateforme **en conformité RGPD** sur ses 4 axes :

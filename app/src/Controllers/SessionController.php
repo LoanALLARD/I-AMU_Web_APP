@@ -229,6 +229,7 @@ class SessionController extends Controller
             'title'      => $view['name'],
             'navSection' => 'sessions',
             'view'       => $view,
+            'students'   => $this->sessions->enrolledStudents((int) $id),
             'user'       => $this->currentUser(),
         ]);
     }
@@ -253,6 +254,53 @@ class SessionController extends Controller
             'view'       => $view,
             'user'       => $this->currentUser(),
         ]);
+    }
+
+    /**
+     * GET /sessions/{id}/export — JSON research export of the whole session
+     * (students -> conversations -> interactions). No platform-side
+     * anonymisation (cf. spec 06): the export carries identity.
+     *
+     * Accessible to the owning teacher, or to a researcher / department admin.
+     */
+    public function export(string $id): void
+    {
+        $this->requireAuth();
+        $user  = $this->currentUser();
+        $roles = $user['roles'] ?? [];
+
+        $session = $this->sessions->find((int) $id);
+        if ($session === null) {
+            $this->flash('error', 'Session introuvable.');
+            $this->redirect('/sessions');
+        }
+
+        $isOwner     = $session->teacherId() !== null && (int) ($user['id'] ?? 0) === $session->teacherId();
+        $canResearch = in_array('researcher', $roles, true) || in_array('department_admin', $roles, true);
+        if (!$isOwner && !$canResearch) {
+            $this->forbidden();
+        }
+
+        // Filters from the export modal. When `configured` is absent (e.g. a
+        // direct link), default to the full export.
+        $configured = $this->query('configured') !== null;
+        $excludeRaw = $this->query('exclude_ids', []);
+        $excludeIds = is_array($excludeRaw) ? array_map('intval', $excludeRaw) : [];
+
+        $options = [
+            'excludeIds'       => $excludeIds,
+            'includePrompts'   => !$configured || $this->query('include_prompts')   !== null,
+            'includeResponses' => !$configured || $this->query('include_responses') !== null,
+        ];
+
+        $data     = $this->sessions->exportSessionData($session, $options);
+        $codeSlug = preg_replace('/[^A-Za-z0-9]/', '', (string) ($session->accessCode() ?? ('s' . $session->id())));
+        $filename = 'session-' . $codeSlug . '.json';
+
+        header('Content-Type: application/json; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        exit;
     }
 
     /** GET /sessions/join — student form. */

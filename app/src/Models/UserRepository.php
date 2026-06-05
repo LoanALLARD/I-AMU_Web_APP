@@ -54,6 +54,29 @@ class UserRepository
     }
 
     /**
+     * Updates the user's display name (first + last).
+     */
+    public function updateName(int $userId, string $firstName, string $lastName): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE users SET first_name = :fn, last_name = :ln WHERE id = :id'
+        );
+        $stmt->execute(['fn' => $firstName, 'ln' => $lastName, 'id' => $userId]);
+    }
+
+    /**
+     * Replaces the user's password hash. The caller hashes the new password
+     * (the repository only stores what it is given).
+     */
+    public function updatePassword(int $userId, string $passwordHash): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE users SET password_hash = :hash WHERE id = :id'
+        );
+        $stmt->execute(['hash' => $passwordHash, 'id' => $userId]);
+    }
+
+    /**
      * Tells whether an account already exists for the given email.
      */
     public function emailExists(string $email): bool

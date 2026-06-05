@@ -192,22 +192,8 @@
         r.addEventListener('change', refreshModels);
     });
 
-    // ──────────────────────────────────────────────────────────
-    // Copy access code
-    // ──────────────────────────────────────────────────────────
-    const copyBtn = document.getElementById('btn-copy-code');
-    if (copyBtn && code) {
-        copyBtn.addEventListener('click', async () => {
-            try {
-                await navigator.clipboard.writeText(code);
-                const original = copyBtn.innerHTML;
-                copyBtn.textContent = 'Copié ✓';
-                setTimeout(() => { copyBtn.innerHTML = original; }, 1500);
-            } catch (err) {
-                console.error('Clipboard copy failed', err);
-            }
-        });
-    }
+    // Copy access code → handled globally by /assets/js/clipboard.js
+    // (the "Copier" button carries data-copy / data-copy-feedback).
 
     // ──────────────────────────────────────────────────────────
     // Fullscreen overlay

@@ -44,8 +44,7 @@
                 <label for="email">Adresse e-mail</label>
                 <input type="email" id="email" name="email"
                        value="<?= htmlspecialchars($data['email'] ?? '') ?>"
-                       placeholder="prenom.nom@etu.univ-amu.fr" required>
-                <span class="field-hint">Domaines acceptés&nbsp;: @etu.univ-amu.fr, @univ-amu.fr</span>
+                       placeholder="prenom.nom@exemple.fr" required>
             </div>
 
             <div class="form-group">
@@ -87,7 +86,7 @@
                 <label for="rgpd_consent" class="rgpd-label">
                     J'accepte le traitement de mes données personnelles dans le cadre
                     de la recherche scientifique sur l'usage de l'IA.
-                    <a href="/rgpd-consent" target="_blank">En savoir plus</a>
+                    <a href="/rgpd_consent" target="_blank">En savoir plus</a>
                 </label>
             </div>
 
@@ -97,7 +96,6 @@
             </button>
 
         </form>
-
     </div>
 
     <div class="card-footer">

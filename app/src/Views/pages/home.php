@@ -221,13 +221,21 @@ $hasMessages = $messages !== [];
             pre.parentNode.insertBefore(wrap, pre);
             wrap.appendChild(pre);
 
+            // Mirror the code language onto the <pre> so the CSS badge
+            // (pre[data-lang]::before) shows it (e.g. "PHP").
+            if (!pre.hasAttribute('data-lang')) {
+                const code = pre.querySelector('code');
+                const lang = code && code.className.match(/language-([\w-]+)/);
+                if (lang) pre.setAttribute('data-lang', lang[1]);
+            }
+
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'code-copy';
             btn.textContent = 'Copier';
             btn.addEventListener('click', () => {
                 const code = pre.querySelector('code') || pre;
-                navigator.clipboard.writeText(code.textContent).then(() => {
+                window.copyToClipboard(code.textContent).then(() => {
                     btn.textContent = 'Copié';
                     btn.classList.add('is-copied');
                     setTimeout(() => {
@@ -244,7 +252,7 @@ $hasMessages = $messages !== [];
     // the latest message so a reopened thread starts at the bottom.
     (function () {
         document.querySelectorAll('.msg-ai .msg-content[data-markdown]').forEach((el) => {
-            renderMarkdown(el.textContent, el);
+            renderMarkdown(el.getAttribute('data-markdown') ?? '', el);
         });
         const m = document.getElementById('messages');
         if (m) m.scrollTop = m.scrollHeight;
@@ -349,7 +357,7 @@ $hasMessages = $messages !== [];
 
 
             const responseText = data.response ?? 'Pas de réponse.';
-            aiMsg.querySelector('.msg-content').innerHTML = parseMarkdown(responseText);
+            renderMarkdown(responseText, aiMsg.querySelector('.msg-content'));
 
             
             const newConvId   = data.conversation_id   ?? null;
@@ -384,8 +392,9 @@ $hasMessages = $messages !== [];
             if (newConvId) {
                 addConvToSidebar(newConvId, newConvName);
             }
-            aiMsg.innerHTML += `
-                <div class="msg-actions">
+            const actions = document.createElement('div');
+            actions.className = 'msg-actions';
+            actions.innerHTML = `
                     <button class="msg-action" onclick="copyMsg(this)">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                         Copier
@@ -394,7 +403,7 @@ $hasMessages = $messages !== [];
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
                         Garder
                     </button>
-                
+
                     <span class="msg-stat" title="Temps de réponse">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         ${durationStr}
@@ -402,8 +411,8 @@ $hasMessages = $messages !== [];
                     <span class="msg-stat" title="${inputTokens} entrée + ${outputTokens} sortie">
                         ${totalTokens} tokens
                     </span>
-                </div>
             `;
+            aiMsg.appendChild(actions);
         } catch (err) {
             aiMsg.querySelector('.msg-content').innerHTML = err.name === 'AbortError'
                 ? '<p class="msg-error">Génération interrompue.</p>'
@@ -423,104 +432,10 @@ $hasMessages = $messages !== [];
 
     function copyMsg(btn) {
         const text = btn.closest('.msg').querySelector('.msg-content').textContent;
-        navigator.clipboard.writeText(text);
+        window.copyToClipboard(text);
         const original = btn.innerHTML;
         btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> copié`;
         setTimeout(() => btn.innerHTML = original, 1500);
     }
 
-function parseMarkdown(text) {
-    if (!text) return '';
-
-    // --- Étape 0 : normaliser les fins de ligne ---
-    let raw = text.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-
-    // --- Étape 1 : extraire les blocs de code (protégés des autres regex) ---
-    // On les remplace par des tokens neutres pour éviter toute transformation dessus
-    const codeBlocks = [];
-    raw = raw.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
-        const idx = codeBlocks.length;
-        const langAttr = lang ? ` data-lang="${escapeHtml(lang)}"` : '';
-        codeBlocks.push(
-            `<pre${langAttr}><code>${escapeHtml(code.trim())}</code></pre>`
-        );
-        return `\x00CODE_BLOCK_${idx}\x00`;
-    });
-
-    // --- Étape 2 : inline code (protégé aussi) ---
-    const inlineCodes = [];
-    raw = raw.replace(/`([^`\n]+)`/g, (_, code) => {
-        const idx = inlineCodes.length;
-        inlineCodes.push(`<code>${escapeHtml(code)}</code>`);
-        return `\x00INLINE_${idx}\x00`;
-    });
-
-    // --- Étape 3 : découper en blocs (paragraphes séparés par \n\n) ---
-    const blocks = raw.split(/\n{2,}/);
-
-    const processedBlocks = blocks.map(block => {
-        const trimmed = block.trim();
-        if (!trimmed) return '';
-
-        // Token code block → restituer directement, pas de wrap <p>
-        if (/^\x00CODE_BLOCK_\d+\x00$/.test(trimmed)) {
-            return trimmed;
-        }
-
-        // --- Headings (en début de bloc) ---
-        if (/^###\s/.test(trimmed)) return `<h3>${inlineFormat(trimmed.slice(4))}</h3>`;
-        if (/^##\s/.test(trimmed))  return `<h2>${inlineFormat(trimmed.slice(3))}</h2>`;
-        if (/^#\s/.test(trimmed))   return `<h1>${inlineFormat(trimmed.slice(2))}</h1>`;
-
-        // --- Listes (lignes commençant par - ou *) ---
-        const lines = trimmed.split('\n');
-        const isListBlock = lines.every(l => /^[-*]\s/.test(l.trim()) || l.trim() === '');
-        if (isListBlock) {
-            const items = lines
-                .filter(l => /^[-*]\s/.test(l.trim()))
-                .map(l => `<li>${inlineFormat(l.trim().slice(2))}</li>`)
-                .join('');
-            return `<ul>${items}</ul>`;
-        }
-
-        // --- Listes numérotées ---
-        const isOrderedList = lines.every(l => /^\d+\.\s/.test(l.trim()) || l.trim() === '');
-        if (isOrderedList) {
-            const items = lines
-                .filter(l => /^\d+\.\s/.test(l.trim()))
-                .map(l => `<li>${inlineFormat(l.trim().replace(/^\d+\.\s/, ''))}</li>`)
-                .join('');
-            return `<ol>${items}</ol>`;
-        }
-
-        // --- Paragraphe normal : \n simples → <br> à l'intérieur ---
-        const content = lines.map(l => inlineFormat(l)).join('<br>');
-        return `<p>${content}</p>`;
-    });
-
-    let html = processedBlocks.filter(Boolean).join('\n');
-
-    // --- Étape 4 : réinjecter les tokens protégés ---
-    html = html.replace(/\x00CODE_BLOCK_(\d+)\x00/g, (_, i) => codeBlocks[i]);
-    html = html.replace(/\x00INLINE_(\d+)\x00/g,     (_, i) => inlineCodes[i]);
-
-    return html;
-}
-
-// Formatage inline (bold, italic, liens) — jamais appelé sur du code
-function inlineFormat(text) {
-    return text
-        .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
-        .replace(/\*\*(.+?)\*\*/g,     '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g,         '<em>$1</em>')
-        .replace(/~~(.+?)~~/g,         '<del>$1</del>')
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[data-markdown]').forEach(el => {
-        const raw = el.getAttribute('data-markdown');
-        el.innerHTML = parseMarkdown(raw);
-    });
-});
 </script>

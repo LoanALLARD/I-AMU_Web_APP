@@ -191,18 +191,14 @@ class SessionRepository
                  c.created_at    AS conversation_created,
                  COUNT(i.id)     AS prompt_count,
                  MAX(i.sent_at)  AS last_activity,
-                 (SELECT m.name
-                    FROM interactions i2
-                    JOIN models m ON m.id = i2.model_id
-                   WHERE i2.conversation_id = c.id
-                   ORDER BY i2.sent_at DESC
-                   LIMIT 1) AS last_model
+                 mdl.name        AS last_model
                FROM enrollments e
                JOIN users u ON u.id = e.student_id
                LEFT JOIN conversations c ON c.user_id = e.student_id AND c.session_id = e.session_id
+               LEFT JOIN models mdl ON mdl.id = c.model_id
                LEFT JOIN interactions i ON i.conversation_id = c.id
               WHERE e.session_id = :sid
-              GROUP BY u.id, u.first_name, u.last_name, c.id, c.name, c.created_at
+              GROUP BY u.id, u.first_name, u.last_name, c.id, c.name, c.created_at, mdl.name
               ORDER BY u.last_name, u.first_name, c.created_at'
         );
         $stmt->execute(['sid' => $sessionId]);
@@ -211,6 +207,21 @@ class SessionRepository
         $rows = $stmt->fetchAll();
 
         return $rows;
+    }
+
+    /**
+     * Id of the first model authorised for a session (from session_models),
+     * or null when the session has none.
+     */
+    public function firstModelForSession(int $sessionId): ?int
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT model_id FROM session_models WHERE session_id = :sid ORDER BY model_id LIMIT 1'
+        );
+        $stmt->execute(['sid' => $sessionId]);
+        $id = $stmt->fetchColumn();
+
+        return $id === false ? null : (int) $id;
     }
 
     /**
@@ -225,7 +236,7 @@ class SessionRepository
             'SELECT i.prompt, i.response, i.sent_at, m.name AS model_name
                FROM interactions i
                JOIN conversations c ON c.id = i.conversation_id
-               JOIN models m ON m.id = i.model_id
+               JOIN models m ON m.id = c.model_id
               WHERE i.conversation_id = :cid AND c.session_id = :sid
               ORDER BY i.sent_at ASC'
         );
@@ -237,4 +248,75 @@ class SessionRepository
         return $rows;
     }
 
+    /**
+     * Flat research export of a session: one row per (student × conversation ×
+     * interaction). Enrolled students with no conversation, and conversations
+     * with no interaction, still appear (LEFT JOINs). The caller nests the rows
+     * into students -> conversations -> interactions.
+     *
+     * No anonymisation (per the project's RGPD stance) — identity is included.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function exportRows(int $sessionId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT
+                 u.id            AS student_id,
+                 u.first_name,
+                 u.last_name,
+                 u.email,
+                 st.student_number,
+                 c.id            AS conversation_id,
+                 c.name          AS conversation_name,
+                 c.created_at    AS conversation_created,
+                 c.is_archived,
+                 i.id            AS interaction_id,
+                 i.prompt,
+                 i.response,
+                 i.input_tokens,
+                 i.output_tokens,
+                 i.latency,
+                 i.user_feedback,
+                 i.sent_at,
+                 m.name          AS model_name
+               FROM enrollments e
+               JOIN users u ON u.id = e.student_id
+               LEFT JOIN students st ON st.id = u.id
+               LEFT JOIN conversations c ON c.user_id = e.student_id AND c.session_id = e.session_id
+               LEFT JOIN interactions i ON i.conversation_id = c.id
+               LEFT JOIN models m ON m.id = c.model_id
+              WHERE e.session_id = :sid
+              ORDER BY u.last_name, u.first_name, c.id, i.sent_at, i.id'
+        );
+        $stmt->execute(['sid' => $sessionId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
+
+    /**
+     * Enrolled students of a session (one row each), for the export filter UI.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function enrolledStudents(int $sessionId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT u.id, u.first_name, u.last_name, st.student_number
+               FROM enrollments e
+               JOIN users u ON u.id = e.student_id
+               LEFT JOIN students st ON st.id = u.id
+              WHERE e.session_id = :sid
+              ORDER BY u.last_name, u.first_name'
+        );
+        $stmt->execute(['sid' => $sessionId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
 }

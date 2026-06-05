@@ -7,8 +7,7 @@ namespace Models;
 use PDO;
 
 /**
- * Data access for `researcher_authorizations`. A row with `authorized_at IS
- * NULL` is a pending request; once set it is an approved authorization.
+ * Data access for `researcher_authorizations`.
  */
 class ResearcherAuthorizationRepository
 {
@@ -35,7 +34,9 @@ class ResearcherAuthorizationRepository
              JOIN researchers r ON r.id = ra.researcher_id
              JOIN users u ON u.id = r.id
              JOIN laboratories l ON l.id = r.laboratory_id
-             WHERE ra.department_id = :dept AND ra.authorized_at IS NULL
+             WHERE ra.department_id = :dept
+               AND ra.authorized_at IS NULL
+               AND ra.rejected_at IS NULL
              ORDER BY u.last_name, u.first_name'
         );
         $stmt->execute(['dept' => $departmentId]);
@@ -51,7 +52,8 @@ class ResearcherAuthorizationRepository
     {
         $stmt = $this->pdo->prepare(
             'SELECT department_id FROM researcher_authorizations
-             WHERE researcher_id = :rid AND department_id = :dept AND authorized_at IS NULL'
+             WHERE researcher_id = :rid AND department_id = :dept
+               AND authorized_at IS NULL AND rejected_at IS NULL'
         );
         $stmt->execute(['rid' => $researcherId, 'dept' => $departmentId]);
         $value = $stmt->fetchColumn();
@@ -65,21 +67,24 @@ class ResearcherAuthorizationRepository
         $stmt = $this->pdo->prepare(
             'UPDATE researcher_authorizations
              SET authorized_at = NOW(), authorized_by_id = :admin
-             WHERE researcher_id = :rid AND department_id = :dept AND authorized_at IS NULL'
+             WHERE researcher_id = :rid AND department_id = :dept
+               AND authorized_at IS NULL AND rejected_at IS NULL'
         );
         $stmt->execute(['admin' => $adminId, 'rid' => $researcherId, 'dept' => $departmentId]);
 
         return $stmt->rowCount();
     }
 
-    /** Rejects a pending request by deleting the row. */
-    public function reject(int $researcherId, int $departmentId): int
+    /** Rejects a pending request: stamps rejected_at and the deciding admin. */
+    public function reject(int $researcherId, int $departmentId, int $adminId): int
     {
         $stmt = $this->pdo->prepare(
-            'DELETE FROM researcher_authorizations
-             WHERE researcher_id = :rid AND department_id = :dept AND authorized_at IS NULL'
+            'UPDATE researcher_authorizations
+             SET rejected_at = NOW(), authorized_by_id = :admin
+             WHERE researcher_id = :rid AND department_id = :dept
+               AND authorized_at IS NULL AND rejected_at IS NULL'
         );
-        $stmt->execute(['rid' => $researcherId, 'dept' => $departmentId]);
+        $stmt->execute(['admin' => $adminId, 'rid' => $researcherId, 'dept' => $departmentId]);
 
         return $stmt->rowCount();
     }
