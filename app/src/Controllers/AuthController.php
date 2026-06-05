@@ -115,7 +115,7 @@ class AuthController extends Controller
 
     public function showRGPD(): void
     {
-        $this->render('pages/Auth/RGPDConsent', ['titrePage' => 'Mentions RGPD']);
+        $this->render('pages/auth/rgpd_consent', ['titrePage' => 'Mentions RGPD']);
     }
 
     /**

@@ -37,7 +37,7 @@
     $router->add('POST', '/register',    function() { (new AuthController())->register(); });
     $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
     $router->add('POST', '/reactivate',  function() { (new AuthController())->reactivate();});
-    $router->add('GET',  '/RGPDConsent', function() { (new AuthController())->showRGPD(); });
+    $router->add('GET',  '/rgpd_consent', function() { (new AuthController())->showRGPD(); });
     $router->add('GET',  '/verify-email',function() { (new AuthController())->verifyEmail(); });
 
     // AJAX: departments of a place, for the registration form's dependent select.
