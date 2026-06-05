@@ -49,8 +49,7 @@
                 <label for="email">Adresse e-mail</label>
                 <input type="email" id="email" name="email"
                        value="<?= htmlspecialchars($email ?? '') ?>"
-                       placeholder="prenom.nom@etu.univ-amu.fr" required autofocus>
-                <span class="field-hint">Domaines acceptés : @etu.univ-amu.fr, @univ-amu.fr</span>
+                       placeholder="prenom.nom@exemple.fr" required autofocus>
             </div>
 
             <div class="form-group">

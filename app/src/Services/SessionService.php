@@ -471,12 +471,21 @@ class SessionService
         // one ("SESSION - CODE #1"). They can add more from the chat.
         $conversationId = $this->conversations->findIdByUserAndSession($studentUserId, $sessionId);
         if ($conversationId === null) {
-            $code           = $session->accessCodeFormatted() ?? ('S' . $sessionId);
-            $conversationId = $this->conversations->newConversation(
+            // conversations.model_id is NOT NULL: use a model authorised for
+            // the session, falling back to any active model.
+            $modelId = $this->sessions->firstModelForSession($sessionId) ?? $this->models->firstActiveId();
+            if ($modelId === null) {
+                throw new \RuntimeException('Aucun modèle disponible pour cette session.');
+            }
+
+            $code    = $session->accessCodeFormatted() ?? ('S' . $sessionId);
+            $created = $this->conversations->newConversation(
                 $studentUserId,
+                $modelId,
                 $sessionId,
                 'SESSION - ' . $code . ' #1'
             );
+            $conversationId = $created !== null ? (int) $created['id'] : null;
         }
 
         return [

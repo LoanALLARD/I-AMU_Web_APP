@@ -63,7 +63,8 @@ class AuthController extends Controller
             return;
         }
 
-        $this->redirect('/chat');
+        // Department admins land on their console; everyone else on the chat.
+        $this->redirect($this->hasRole('department_admin') ? '/admin' : '/chat');
     }
 
     public function reactivate(): void{
@@ -76,7 +77,7 @@ class AuthController extends Controller
         $result = $this->authService->reactivateAccount($email, $password);
 
         if (!$result['success']) {
-            $this->render('pages/homeView', [
+            $this->render('pages/home', [
                 'titrePage' => 'Connexion',
                 'error'     => $result['error'],
                 'email'     => $email,
@@ -87,7 +88,7 @@ class AuthController extends Controller
         $loginResult = $this->authService->login($email, $password);
 
         if (!$loginResult['success']) {
-            $this->render('pages/Auth/login', [
+            $this->render('pages/auth/login', [
                 'titrePage' => 'Connexion',
                 'error'     => $loginResult['error'],
                 'email'     => $email,
@@ -107,7 +108,7 @@ class AuthController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('pages/Auth/register', [
+        $this->render('pages/auth/register', [
             'titrePage' => 'Inscription',
             'places'    => $this->places->all()],
          'auth');
@@ -136,13 +137,14 @@ class AuthController extends Controller
 
         $result = $this->authService->register($data);
 
-        if (!empty($result['pending_verification'])) {
-            $this->flash('success', 'Inscription réussie ! Un email de vérification a été envoyé. Vérifiez votre boîte de réception.');
-            $this->redirect('/login');
+        if (empty($result['success'])) {
+            $this->flash('error', $result['error'] ?? "Erreur lors de l'inscription.");
+            $this->redirect('/register');
+            return;
         }
-        // register() auto-logs-in the new user, so go straight to the app.
-        $this->flash('success', 'Inscription reussie! Bienvenue.');
-        $this->redirect('/chat');
+
+        $this->flash('success', 'Inscription réussie ! Un email de vérification a été envoyé. Vérifiez votre boîte de réception.');
+        $this->redirect('/login');
     }
 
     /**
