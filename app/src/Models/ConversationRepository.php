@@ -16,8 +16,10 @@ class ConversationRepository {
      * Creates a conversation and returns its new id. `session_id` is null
      * for a free-mode conversation. (The `conversations` table has no
      * model_id column — the model is chosen per interaction.)
+     *
+     * @return array<string, mixed>|null
      */
-    public function newConversation(int $user_id,int $model_id, ?int $session_id, string $name)
+    public function newConversation(int $user_id, int $model_id, ?int $session_id, string $name): ?array
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO conversations (user_id, session_id, model_id, name)

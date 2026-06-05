@@ -319,4 +319,25 @@ class SessionRepository
 
         return $rows;
     }
+
+
+    /**
+     * Retrun the value of preprompt in the table Session in the DB.
+     * 
+     * @return array<string, mixed>
+     */
+    public function getPrepromptBySessionId(int $sessionId): array {
+        $query = $this->pdo->prepare(
+            'SELECT pre_prompt_override 
+            FROM sessions 
+            where id = :id
+            '
+        );
+        $query->execute(['id'=>$sessionId]);
+
+        $row = $query->fetch();
+
+        return $row;
+
+    }
 }

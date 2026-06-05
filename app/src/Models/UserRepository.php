@@ -178,6 +178,9 @@ class UserRepository
         return $stmt->rowCount();
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function findById(int $userId): ?array
     {
         $stmt = $this->pdo->prepare(

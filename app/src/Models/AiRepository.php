@@ -55,6 +55,19 @@ class AiRepository{
     }
 
     /**
+     * Id of the first active model — the default used when a session has no
+     * explicitly authorised model. Null when no model is active.
+     */
+    public function firstActiveId(): ?int
+    {
+        $query = $this->pdo->prepare('SELECT id FROM models WHERE is_active = TRUE ORDER BY id LIMIT 1');
+        $query->execute();
+        $id = $query->fetchColumn();
+
+        return $id === false ? null : (int) $id;
+    }
+
+    /**
      * Models matching the given ids, for the session dashboard.
      *
      * @param list<int> $ids
