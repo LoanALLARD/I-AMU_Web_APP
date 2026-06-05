@@ -40,8 +40,8 @@ class Ai {
         $this->adaptater = $adaptater;
     }
 
-    public function ask(string $message, array $context): string {
-        return $this->adaptater->generate($message, $context);
+    public function ask(string $message, array $context,?string $preprompt): string {
+        return $this->adaptater->generate($message, $context, $preprompt);
     }
 
 

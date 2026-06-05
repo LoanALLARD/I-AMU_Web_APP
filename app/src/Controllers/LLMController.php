@@ -12,6 +12,7 @@ use Models\AiRepository;
 use Models\InteractionRepository;
 use Models\UserRepository;
 use Models\ConversationRepository;
+use Models\SessionRepository;
 
 class LLMController{
 
@@ -91,6 +92,14 @@ class LLMController{
             return;
         }    
 
+        // Get the preprompt of the session
+        $preprompt = null;
+        if ($conversationData["session_id"] !=null){
+            $sessionRepo = new SessionRepository($pdo);
+            $prepromptRaw = $sessionRepo->getPrepromptBySessionId($conversationData["session_id"]);
+            $preprompt = $prepromptRaw["pre_prompt_override"];
+        }
+
         $metadata = $conversationRepository->getContextByConversationIdAndUserId($conversationData['id'], $userId);
 
         switch ($aiData["adapter"]) {
@@ -112,6 +121,8 @@ class LLMController{
         if ($metadata){
             $context = $adapter->readContextFromMetadata($metadata);
         }
+
+        // Recover Param from Session
         
         $ai = new Ai (
             $id = $aiData["id"],
@@ -127,7 +138,7 @@ class LLMController{
             $aiData["api_url"],
             $adapter,
         );
-        $responseRaw = $ai->ask($userMessage, $context);
+        $responseRaw = $ai->ask($userMessage, $context,$preprompt);
         $response = json_decode($responseRaw);
 
         if ($response === null || (is_object($response) && isset($response->error))) {

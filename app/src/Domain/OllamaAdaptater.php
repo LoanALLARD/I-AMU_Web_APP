@@ -16,14 +16,14 @@ class OllamaAdaptater implements LlmAdaptaterInterface {
     /**
      * @param array<int, int> $context conversation context (Ollama token ids)
      */
-    public function generate(string $message, array $context): string {
+    public function generate(string $message, array $context, ?string $preprompt): string {
         $payload = json_encode([
             "model" => $this->modelName,
             "prompt" => $message,
             "context" => $context,
+            "system"   => $preprompt,
             "stream" => false
         ]);
-
         // Code cURL...
         try {
             $ch = curl_init();

@@ -155,7 +155,6 @@ $hasMessages = $messages !== [];
 <script>
     const conversationId = <?= json_encode($conversation['id'] ?? null) ?>;
     const conversationContext = <?= json_encode($messages ?? []) ?>;
-    console.log("CONVERSATION CONTEXT:", conversationContext);
 
     const input = document.getElementById('promptInput');
     const sendBtn = document.getElementById('btnSend');
