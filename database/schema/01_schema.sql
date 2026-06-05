@@ -250,7 +250,9 @@ CREATE TABLE researcher_authorizations (
     authorized_by_id BIGINT,
     request TEXT,
     authorized_at TIMESTAMPTZ,
+    rejected_at TIMESTAMPTZ,
     CONSTRAINT pk_researcher_authorizations PRIMARY KEY (researcher_id, department_id),
+    CONSTRAINT ck_researcher_authorizations_decision CHECK (authorized_at IS NULL OR rejected_at IS NULL),
     CONSTRAINT fk_researcher_authorizations_researcher FOREIGN KEY (researcher_id) REFERENCES researchers (id) ON DELETE CASCADE,
     CONSTRAINT fk_researcher_authorizations_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE RESTRICT,
     CONSTRAINT fk_researcher_authorizations_authorized_by FOREIGN KEY (authorized_by_id) REFERENCES department_administrators (id) ON DELETE SET NULL
