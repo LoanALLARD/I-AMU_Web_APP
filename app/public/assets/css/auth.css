@@ -15,7 +15,7 @@ body.auth-body {
     border-radius: var(--radius);
     box-shadow: var(--shadow-md);
     width: 100%;
-    max-width: 440px;
+    max-width: 480px;
     overflow: hidden;
     animation: slideUp .45s cubic-bezier(.22,.9,.32,1) both;
 }
