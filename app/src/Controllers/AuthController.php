@@ -137,15 +137,14 @@ class AuthController extends Controller
 
         $result = $this->authService->register($data);
 
-        if (!empty($result['pending_verification'])) {
-            $this->flash('success', 'Inscription réussie ! Un email de vérification a été envoyé. Vérifiez votre boîte de réception.');
-            $this->redirect('/login');
+        if (empty($result['success'])) {
+            $this->flash('error', $result['error'] ?? "Erreur lors de l'inscription.");
+            $this->redirect('/register');
             return;
         }
 
-        // register() auto-logs-in the new user, so go straight to the app.
-        $this->flash('success', 'Inscription reussie! Bienvenue.');
-        $this->redirect('/chat');
+        $this->flash('success', 'Inscription réussie ! Un email de vérification a été envoyé. Vérifiez votre boîte de réception.');
+        $this->redirect('/login');
     }
 
     /**

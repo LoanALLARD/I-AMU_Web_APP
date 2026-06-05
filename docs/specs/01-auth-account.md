@@ -33,9 +33,6 @@
 - **Suppression de compte automatisée** (soft-delete + anonymisation) — remplacée par désactivation + demande à `dpo@univ-amu.fr`.
 - **Préférences densité / langue**.
 
-### 🐛 Dette
-- Code d'auto-login **mort** (inatteignable) en fin de `AuthService::register()` — à supprimer.
-
 ### Routes réelles (vs §6 planifié)
 Présentes : `GET /profile`, `POST /profile/update`, `POST /profile/password`, `POST /profile/theme`, `POST /profile/deactivate`, `POST /reactivate`, `GET /rgpd-consent`, `GET /verify-email`. Les routes `/account/*` et `/password/*` du §6 ne sont **pas** en place.
 
