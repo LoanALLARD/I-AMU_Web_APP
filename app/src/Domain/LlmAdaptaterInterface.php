@@ -11,7 +11,11 @@ interface LlmAdaptaterInterface {
      */
     public function generate(string $message, array $context, ?string $preprompt,?string $posprompt): string;
 
-    public function formatMetadata(object $response);
+    public function formatMetadata(object $response): string;
 
-    public function readContextFromMetadata(array $metaDataRaw) : array;
+    /**
+     * @param array<string, mixed> $metaDataRaw
+     * @return list<int>
+     */
+    public function readContextFromMetadata(array $metaDataRaw): array;
 }

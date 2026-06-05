@@ -111,7 +111,7 @@ class AccueilController extends Controller
         try {
             $defaultModelId = (int) ($models[0]['id'] ?? 1);
             $conversationId = $sessionId > 0
-                ? $this->chat->newSessionConversation((int) $user['id'], $sessionId)
+                ? $this->chat->newSessionConversation((int) $user['id'], $sessionId, $defaultModelId)
                 : $this->chat->newFreeConversation((int) $user['id'], $defaultModelId);
         } catch (\Throwable $e) {
             $this->flash('error', $e->getMessage());
