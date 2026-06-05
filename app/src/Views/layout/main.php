@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/assets/css/layoutMain.css">
     <link rel="stylesheet" href="/assets/css/sessions.css">
     <link rel="stylesheet" href="/assets/css/admin.css">
+    <link rel="stylesheet" href="/assets/css/error.css">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
 <?php
