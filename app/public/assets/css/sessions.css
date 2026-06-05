@@ -408,7 +408,7 @@ textarea {
 .access-code-cell.is-copyable:hover { box-shadow: 0 0 0 3px rgba(26, 115, 200, .12); }
 .access-code-cell.is-copyable:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
 .access-code-cell.copied::after {
-    content: "Copié !";
+    content: "Copi\00E9\00A0!";   /* \00E9 = é, \00A0 = nbsp — encoding-proof */
     position: absolute;
     bottom: calc(100% + 6px);
     left: 50%;
