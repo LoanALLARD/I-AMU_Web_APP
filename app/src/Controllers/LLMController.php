@@ -102,10 +102,12 @@ class LLMController{
 
         // Get the preprompt of the session
         $preprompt = null;
+        $postprompt = null;
         if ($conversationData["session_id"] !=null){
             $sessionRepo = new SessionRepository($pdo);
-            $prepromptRaw = $sessionRepo->getPrepromptBySessionId($conversationData["session_id"]);
-            $preprompt = $prepromptRaw["pre_prompt_override"];
+            $promptRaw = $sessionRepo->getPreAndPostPromptBySessionId($conversationData["session_id"]);
+            $preprompt = $promptRaw["pre_prompt_override"];
+            $postprompt = $promptRaw["post_prompt_override"];
         }
 
         $metadata = $conversationRepository->getContextByConversationIdAndUserId($conversationData['id'], $userId);
@@ -149,7 +151,7 @@ class LLMController{
             $aiData["api_url"],
             $adapter,
         );
-        $responseRaw = $ai->ask($userMessage, $context,$preprompt);
+        $responseRaw = $ai->ask($userMessage, $context,$preprompt,$postprompt);
         $response = json_decode($responseRaw);
 
         if ($response === null || (is_object($response) && isset($response->error))) {
