@@ -18,6 +18,7 @@
 $isAuthenticated = !empty($_SESSION['user_id']);
 $roles           = $_SESSION['roles'] ?? [];
 $isTeacher       = in_array('teacher', $roles, true);
+$isDeptAdmin     = in_array('department_admin', $roles, true);
 $displayName     = trim(($_SESSION['user_first_name'] ?? '') . ' ' . ($_SESSION['user_last_name'] ?? ''));
 
 // Stale-session safeguard: a logged-in browser that doesn't carry the
@@ -33,13 +34,18 @@ if ($isAuthenticated && $roles === []) {
 <body>
     <header>
         <nav>
-            <a href="<?= $isAuthenticated ? '/chat' : '/login' ?>" class="navbar-brand">
+            <a href="<?= !$isAuthenticated ? '/login' : ($isDeptAdmin ? '/admin' : '/chat') ?>" class="navbar-brand">
                 <img src="/assets/img/logo.png" alt="I-AMU" class="navbar-logo">
             </a>
             <?php if ($isAuthenticated): ?>
-                <a href="/chat" class="nav-link">Chat</a>
+                <?php if (!$isDeptAdmin): ?>
+                    <a href="/chat" class="nav-link">Chat</a>
+                <?php endif; ?>
                 <?php if ($isTeacher): ?>
                     <a href="/sessions" class="nav-link">Mes sessions</a>
+                <?php endif; ?>
+                <?php if ($isDeptAdmin): ?>
+                    <a href="/admin" class="nav-link">Administration</a>
                 <?php endif; ?>
                 <span class="nav-spacer"></span>
                 <a href="/profile" class="nav-link nav-user">

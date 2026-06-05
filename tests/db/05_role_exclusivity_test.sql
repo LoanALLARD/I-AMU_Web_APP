@@ -1,6 +1,5 @@
--- Role exclusivity rules enforced by enforce_role_exclusivity().
--- student and researcher are fully exclusive; teacher + department_administrator
--- may coexist. Covers every forbidden pair in both insertion orders.
+-- Role exclusivity enforced by enforce_role_exclusivity(): a user may hold
+-- at most one role. Every role pair is forbidden, in both insertion orders.
 
 BEGIN;
 
@@ -26,20 +25,22 @@ INSERT INTO users (id, email, password_hash) VALUES
     (8, 'u8@amu.fr', 'h');
 
 -- ============================================================
--- Allowed combinations
+-- Forbidden: teacher combined with department_administrator
 -- ============================================================
 
 INSERT INTO teachers (id) VALUES (1);
-SELECT lives_ok(
+SELECT throws_ok(
     $$INSERT INTO department_administrators (id, invited_by_id) VALUES (1, 1)$$,
-    'teacher + department_administrator is allowed'
+    '23514', NULL,
+    'teacher + department_administrator is rejected'
 );
 
--- Reverse insertion order must also be allowed
+-- Reverse insertion order must also be rejected
 INSERT INTO department_administrators (id, invited_by_id) VALUES (2, 1);
-SELECT lives_ok(
+SELECT throws_ok(
     $$INSERT INTO teachers (id) VALUES (2)$$,
-    'department_administrator + teacher (reverse order) is allowed'
+    '23514', NULL,
+    'department_administrator + teacher (reverse order) is rejected'
 );
 
 -- ============================================================
@@ -98,12 +99,11 @@ SELECT throws_ok(
     'teacher + researcher is rejected'
 );
 
--- User 2 is already teacher + department_administrator (allowed pair),
--- adding researcher on top must fail.
+-- User 2 is already a department_administrator; adding researcher must fail.
 SELECT throws_ok(
     $$INSERT INTO researchers (id, laboratory_id) VALUES (2, 1)$$,
     '23514', NULL,
-    'teacher+department_administrator + researcher is rejected'
+    'department_administrator + researcher is rejected'
 );
 
 SELECT finish();

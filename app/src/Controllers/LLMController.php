@@ -29,8 +29,12 @@ class LLMController{
             return;
         }
 
-        $modelName = $data['model'];     
+        $modelName = $data['model'];
         $userMessage = $data['message'];
+        // $context = $data['context'] ?? [];
+        //$user_email = $data['user_email'] ?? null;
+        $context = [];
+
         $conversation_id = $data['conversation_id'] ?? null;
         // Identify the user from the authenticated session (set at login),
         // never from the client payload. No email lookup needed.
@@ -62,17 +66,18 @@ class LLMController{
         // Free chat (no id) runs without persistence.
         $conversationData = null;
         $conversationRepository = new ConversationRepository($pdo);
-        if ($conversation_id == null) {
+        $nameConversation = mb_substr($userMessage, 0, 40);
+        if ($conversation_id == null) {                                     // If the conversation isn't given create new one
             $conversationData = $conversationRepository->newConversation(
                 $userId,
                 (int) $aiData['id'],
                 null,
-                "nouvelle conversation"
+                $nameConversation
             );
             $context = [];
         } else {
             // else recover the conversation and check if it's own by the same user
-            $conversationData = $conversationRepository->getConversationByUserId(   
+            $conversationData = $conversationRepository->getConversationByUserIdAndConversationId(
                 $userId,
                 $conversation_id,
             );               
@@ -154,6 +159,8 @@ class LLMController{
             'response'          => $response->response,
             'prompt_eval_count' => $response->prompt_eval_count ?? null,
             'eval_count'        => $response->eval_count ?? null,
+            'conversation_id'   => $conversationData['id'] ?? null,
+            'conversation_name' => $conversationData['name'] ?? null,
         ]);
         
     }

@@ -1,7 +1,7 @@
 CREATE TYPE theme_type AS ENUM ('LIGHT', 'DARK');
 CREATE TYPE resource_state_type AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED');
 CREATE TYPE domain_role_type AS ENUM ('STUDENT', 'TEACHER');
-CREATE TYPE session_type AS ENUM ('EXAM', 'TUTORIAL', 'LAB', 'FREE_STUDY');
+CREATE TYPE session_type AS ENUM ('COURSE', 'EXAM');
 CREATE TYPE session_status_type AS ENUM ('DRAFT', 'SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED');
 
 CREATE TABLE places (
@@ -35,7 +35,7 @@ CREATE TABLE users (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     consent_at TIMESTAMPTZ,
     consent_version VARCHAR(50),
-    theme theme_type,
+    theme theme_type NOT NULL DEFAULT 'LIGHT',
     archive_duration_days SMALLINT,
     email_verified_at TIMESTAMPTZ,
     email_verify_token VARCHAR(255),
@@ -247,7 +247,8 @@ CREATE TABLE researcher_authorizations (
     researcher_id BIGINT,
     department_id BIGINT NOT NULL,
     authorized_by_id BIGINT,
-    authorized_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    request TEXT,
+    authorized_at TIMESTAMPTZ,
     CONSTRAINT pk_researcher_authorizations PRIMARY KEY (researcher_id, department_id),
     CONSTRAINT fk_researcher_authorizations_researcher FOREIGN KEY (researcher_id) REFERENCES researchers (id) ON DELETE CASCADE,
     CONSTRAINT fk_researcher_authorizations_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE RESTRICT,

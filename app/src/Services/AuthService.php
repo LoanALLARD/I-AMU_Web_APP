@@ -77,6 +77,9 @@ final class AuthService
         $_SESSION['user_last_name']  = (string) $row['last_name'];
         $_SESSION['roles']           = $this->resolveRoles($userId);
         $_SESSION['user_theme']      = $row['theme'] ?? null;
+        $_SESSION['user_department_id'] = $row['department_id'] !== null
+            ? (int) $row['department_id']
+            : null;
         session_regenerate_id(true);
 
         return ['success' => true];
@@ -244,6 +247,72 @@ final class AuthService
         }
     }
 
+    /**
+     * Updates the current user's display name and keeps the session in sync
+     * so the layout (avatar, breadcrumb) reflects it right away.
+     *
+     * @return array{success: true} | array{success: false, error: string}
+     */
+    public function updateProfile(int $userId, string $firstName, string $lastName): array
+    {
+        $firstName = trim($firstName);
+        $lastName  = trim($lastName);
+
+        if ($firstName === '' || $lastName === '') {
+            return ['success' => false, 'error' => 'Le prénom et le nom sont obligatoires.'];
+        }
+        if (mb_strlen($firstName) > 50 || mb_strlen($lastName) > 100) {
+            return ['success' => false, 'error' => 'Prénom (max 50) ou nom (max 100) trop long.'];
+        }
+
+        try {
+            $this->users->updateName($userId, $firstName, $lastName);
+        } catch (\Throwable $e) {
+            return ['success' => false, 'error' => 'Erreur lors de la mise à jour du profil.'];
+        }
+
+        $_SESSION['user_first_name'] = $firstName;
+        $_SESSION['user_last_name']  = $lastName;
+
+        return ['success' => true];
+    }
+
+    /**
+     * Changes the current user's password after verifying the current one.
+     *
+     * @return array{success: true} | array{success: false, error: string}
+     */
+    public function changePassword(int $userId, string $current, string $new, string $confirm): array
+    {
+        if ($current === '' || $new === '' || $confirm === '') {
+            return ['success' => false, 'error' => 'Tous les champs sont obligatoires.'];
+        }
+        if (strlen($new) < 8) {
+            return ['success' => false, 'error' => 'Le nouveau mot de passe doit faire au moins 8 caractères.'];
+        }
+        if ($new !== $confirm) {
+            return ['success' => false, 'error' => 'Les nouveaux mots de passe ne correspondent pas.'];
+        }
+
+        $row = $this->users->findById($userId);
+        if ($row === null) {
+            return ['success' => false, 'error' => 'Compte introuvable.'];
+        }
+        if (!password_verify($current, (string) $row['password_hash'])) {
+            return ['success' => false, 'error' => 'Le mot de passe actuel est incorrect.'];
+        }
+        if (password_verify($new, (string) $row['password_hash'])) {
+            return ['success' => false, 'error' => "Le nouveau mot de passe doit être différent de l'ancien."];
+        }
+
+        try {
+            $this->users->updatePassword($userId, password_hash($new, PASSWORD_DEFAULT));
+        } catch (\Throwable $e) {
+            return ['success' => false, 'error' => 'Erreur lors du changement de mot de passe.'];
+        }
+
+        return ['success' => true];
+    }
 
 
     /**
@@ -332,8 +401,12 @@ final class AuthService
         if ($this->users->hasRole($userId, 'students')) {
             $roles[] = 'student';
         }
-        // researchers / department_administrators exist on the live
-        // schema but their HTTP surface belongs to spec 05.
+        if ($this->users->hasRole($userId, 'department_administrators')) {
+            $roles[] = 'department_admin';
+        }
+        if ($this->users->hasRole($userId, 'researchers')) {
+            $roles[] = 'researcher';
+        }
 
         return $roles;
     }

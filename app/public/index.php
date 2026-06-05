@@ -12,6 +12,9 @@
     use Controllers\SessionController;
     use Controllers\ProfileController;
     use Controllers\PlaceController;
+    use Controllers\AdminController;
+    use Controllers\ErrorController;
+    use Core\HttpException;
 
 // routeur
     $router = new Router();
@@ -46,7 +49,13 @@
     $router->add('GET',  '/profile',             function()     { (new ProfileController())->index(); });
     $router->add('POST', '/profile/theme',       function()     { (new ProfileController())->updateTheme(); });
     $router->add('POST', '/profile/deactivate',  function()     { (new ProfileController())->deactivate(); });
+    $router->add('POST', '/profile/update',      function()     { (new ProfileController())->updateProfile(); });
+    $router->add('POST', '/profile/password',    function()     { (new ProfileController())->changePassword(); });
 
+    // --- Department-admin console (department_admin role) --------------
+    $router->add('GET',  '/admin',                         function() { (new AdminController())->index(); });
+    $router->add('POST', '/admin/researchers/approve',     function() { (new AdminController())->approveResearcher(); });
+    $router->add('POST', '/admin/researchers/reject',      function() { (new AdminController())->rejectResearcher(); });
 
 // --- Sessions (teacher) + join (student) --------------------------
     // Literal routes are registered before the `{id}` wildcard so they win.
@@ -62,8 +71,17 @@
     $router->add('POST', '/sessions/{id}/end',    function($id) { (new SessionController())->end($id); });
     $router->add('POST', '/sessions/{id}/cancel', function($id) { (new SessionController())->cancel($id); });
     $router->add('GET',  '/sessions/{id}/monitor', function($id) { (new SessionController())->monitor($id); });
+    $router->add('GET',  '/sessions/{id}/export',  function($id) { (new SessionController())->export($id); });
     $router->add('GET',  '/sessions/{id}',        function($id) { (new SessionController())->dashboard($id); });
 
-    $router->compare($uri, $method);
+    try {
+        $router->compare($uri, $method);
+    } catch (HttpException $e) {
+        (new ErrorController())->show($e->statusCode(), $e);
+    } catch (\Throwable $e) {
+        error_log('[I-AMU] Uncaught ' . $e::class . ': ' . $e->getMessage()
+            . ' @ ' . $e->getFile() . ':' . $e->getLine());
+        (new ErrorController())->show(500, $e);
+    }
 ?>
 

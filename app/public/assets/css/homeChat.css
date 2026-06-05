@@ -210,6 +210,50 @@
     font-weight: 600;
 }
 
+.conv-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.conv-scope {
+    display: block;
+    width: 100%;
+}
+
+.conv-row {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    border-radius: 8px;
+    transition: background .15s;
+}
+
+.conv-row:hover {
+    background: var(--gray-100);
+}
+
+.conv-row.active {
+    background: var(--blue-light);
+}
+
+.conv-row .conv-item {
+    flex: 1;
+    min-width: 0;
+    padding: .5rem .65rem;
+    border-radius: 8px;
+    text-decoration: none;
+    display: block;
+}
+
+.conv-row .conv-item:hover {
+    background: none;
+}
+
+.conv-row.active .conv-title {
+    color: var(--blue);
+    font-weight: 600;
+}
+
 /* Drawer header brand — hidden on desktop (the brand sits in the topbar
    there); the mobile media query reveals it at the top of the slide-out. */
 .sidebar-brand {
@@ -863,6 +907,45 @@
     margin-bottom: 0;
 }
 
+.msg-ai .msg-content h1,
+.msg-ai .msg-content h2,
+.msg-ai .msg-content h3 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin: .75rem 0 .35rem;
+    line-height: 1.3;
+}
+.msg-ai .msg-content h1 { font-size: 1.15rem; }
+.msg-ai .msg-content h2 { font-size: 1.05rem; }
+.msg-ai .msg-content h3 { font-size: .97rem; }
+
+.msg-ai .msg-content ul,
+.msg-ai .msg-content ol {
+    margin: .4rem 0 .4rem 1.25rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+.msg-ai .msg-content li {
+    font-size: .92rem;
+    line-height: 1.6;
+}
+
+
+.msg-ai .msg-content a {
+    color: var(--blue);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.msg-ai .msg-content p {
+    margin: 0 0 .5rem;
+}
+
+
+
 .msg-error {
     color: #b91c1c;
     font-style: italic;
@@ -1084,6 +1167,17 @@
     border-color: rgba(134, 239, 172, .4);
     opacity: 1;
 }
+.msg-content pre[data-lang]::before {
+    content: attr(data-lang);
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .62rem;
+    color: var(--blue);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: .5rem;
+    opacity: .7;
+}
 
 .input-bar {
     padding: .75rem 1.25rem 1rem;
@@ -1268,6 +1362,10 @@
 
     .msg {
         max-width: 100%;
+    }
+
+    .msg-content {
+        white-space: pre-line;
     }
 
     /* The long usage hint is dropped on mobile; the char counter moves to

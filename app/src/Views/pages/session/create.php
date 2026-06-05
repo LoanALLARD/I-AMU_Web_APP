@@ -4,7 +4,7 @@
  *
  * Ported from `Downloads/I-AMU (1)/src/screens/03-session-modern.jsx`,
  * adapted to the live `sessions` schema:
- *   - 4 session types (EXAM, TUTORIAL, LAB, FREE_STUDY)
+ *   - 2 session types (COURSE, EXAM)
  *   - mandatory resource_id picker (sessions hangs off a resource)
  *   - single max_input_size cap (the 3-token-cap design was dropped)
  *   - pre_prompt_override (was system_prompt_override)
@@ -46,7 +46,7 @@ $val = static function (string $key, mixed $default = '') use ($session, $oldInp
     };
 };
 
-$currentType = $session?->type() ?? SessionType::Tutorial;
+$currentType = $session?->type() ?? SessionType::Course;
 if (isset($oldInput['type'])) {
     $t = SessionType::tryFrom((string) $oldInput['type']);
     if ($t !== null) {
@@ -57,10 +57,8 @@ $selectedResourceId = (int) $val('resource_id', 0);
 
 // Cards declared once so the radio + label markup stays DRY.
 $typeCards = [
-    SessionType::Tutorial->value  => ['icon' => 'book',  'label' => 'TD',          'desc' => 'Travaux dirigés guidés, historique scopé, prompts visibles.', 'kraft' => false],
-    SessionType::Lab->value       => ['icon' => 'book',  'label' => 'TP',          'desc' => 'Travail pratique en salle, plusieurs modèles autorisés.',     'kraft' => false],
-    SessionType::FreeStudy->value => ['icon' => 'eye',   'label' => 'Étude libre', 'desc' => 'Exploration ouverte sans cadre d\'examen.',                   'kraft' => false],
-    SessionType::Exam->value      => ['icon' => 'lock',  'label' => 'Examen',      'desc' => 'Pas d\'historique, surveillance visuelle, papier kraft.',     'kraft' => true],
+    SessionType::Course->value => ['icon' => 'book', 'label' => 'Cours',  'desc' => 'Cours, TD, TP ou étude libre — historique scopé, prompts visibles.', 'kraft' => false],
+    SessionType::Exam->value   => ['icon' => 'lock', 'label' => 'Examen', 'desc' => 'Pas d\'historique, surveillance visuelle, papier kraft.',           'kraft' => true],
 ];
 ?>
 <div class="page-header">
@@ -250,7 +248,8 @@ $typeCards = [
                 <?= htmlspecialchars($previewCodeFormatted) ?>
             </div>
             <div class="access-card-actions">
-                <button type="button" class="btn bordered" id="btn-copy-code">
+                <button type="button" class="btn bordered"
+                        data-copy="<?= htmlspecialchars($previewCodeFormatted) ?>" data-copy-feedback="text">
                     <?= icon('copy', '', 11) ?> Copier
                 </button>
                 <button type="button" class="btn bordered" id="btn-fullscreen-code">

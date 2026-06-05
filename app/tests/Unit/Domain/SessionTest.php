@@ -39,7 +39,7 @@ final class SessionTest extends TestCase
             'resource_id'          => 7,
             'teacher_id'           => 3,
             'name'                 => 'Algo TD',
-            'type'                 => 'TUTORIAL',
+            'type'                 => 'COURSE',
             'status'               => 'SCHEDULED',
             'access_code'          => 'ABC123',
             'starts_at'            => '2026-06-03T10:00:00+02:00',
@@ -93,9 +93,9 @@ final class SessionTest extends TestCase
 
     public function testToRowRoundTripsEnumValues(): void
     {
-        $row = $this->session(['type' => 'LAB', 'status' => 'ACTIVE'])->toRow();
+        $row = $this->session(['type' => 'COURSE', 'status' => 'ACTIVE'])->toRow();
 
-        self::assertSame('LAB', $row['type']);
+        self::assertSame('COURSE', $row['type']);
         self::assertSame('ACTIVE', $row['status']);
         self::assertSame('ABC123', $row['access_code']);
         self::assertSame(7, $row['resource_id']);

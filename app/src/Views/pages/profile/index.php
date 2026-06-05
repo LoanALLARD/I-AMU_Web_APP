@@ -13,9 +13,10 @@ $roles = $user['roles'] ?? [];
 
 // French UI labels for roles
 $roleLabels = [
-    'student' => 'étudiant',
-    'teacher' => 'enseignant',
-    'admin'   => 'administrateur',
+    'student'          => 'étudiant',
+    'teacher'          => 'enseignant',
+    'department_admin' => 'admin de département',
+    'admin'            => 'administrateur',
 ];
 $roleFr = static fn(string $r): string => $roleLabels[$r] ?? $r;
 
@@ -47,8 +48,6 @@ $themeCur = match ($user['theme'] ?? null) {
                     <span class="kv-val"><?= htmlspecialchars($user['last_name'] ?? '—') ?></span>
                     <span class="kv-key">email</span>
                     <span class="kv-val mono"><?= htmlspecialchars($user['email'] ?? '—') ?></span>
-                    <span class="kv-key">id interne</span>
-                    <span class="kv-val mono">#<?= (int) ($user['id'] ?? 0) ?></span>
                 </div>
             </div>
 

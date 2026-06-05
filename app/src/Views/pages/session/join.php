@@ -2,7 +2,7 @@
 /**
  * Student-facing "join a session" form.
  *
- * Renders inside Layout/chat.php — on this non-chat page the sidebar is
+ * Renders inside layout/chat.php — on this non-chat page the sidebar is
  * hidden, so the card sits centered on the soft gray background. The
  * access-code field id (`join-code-input`) is what session-join.js hooks
  * onto to auto-uppercase and insert the dash.

@@ -30,7 +30,7 @@ class AuthController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('pages/Auth/login', ['titrePage' => 'Connexion'], 'auth');
+        $this->render('pages/auth/login', ['titrePage' => 'Connexion'], 'auth');
     }
 
     /**
@@ -54,7 +54,7 @@ class AuthController extends Controller
         $result = $this->authService->login($email, $password);
 
         if (!$result['success']) {
-            $this->render('pages/Auth/login', [
+            $this->render('pages/auth/login', [
                 'titrePage' => 'Connexion',
                 'error'     => $result['error'],
                 'email'     => $email,
@@ -140,6 +140,9 @@ class AuthController extends Controller
             $this->flash('success', 'Inscription réussie ! Un email de vérification a été envoyé. Vérifiez votre boîte de réception.');
             $this->redirect('/login');
         }
+        // register() auto-logs-in the new user, so go straight to the app.
+        $this->flash('success', 'Inscription reussie! Bienvenue.');
+        $this->redirect('/chat');
     }
 
     /**

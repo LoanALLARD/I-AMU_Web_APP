@@ -87,7 +87,7 @@
                 <label for="rgpd_consent" class="rgpd-label">
                     J'accepte le traitement de mes données personnelles dans le cadre
                     de la recherche scientifique sur l'usage de l'IA.
-                    <a href="/RGPDConsent" target="_blank">En savoir plus</a>
+                    <a href="/rgpd-consent" target="_blank">En savoir plus</a>
                 </label>
             </div>
 

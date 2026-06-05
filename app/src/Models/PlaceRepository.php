@@ -54,6 +54,25 @@ class PlaceRepository
     }
 
     /**
+     * The department's name with its place, or null if it does not exist.
+     *
+     * @return array{name:string, place_name:string}|null
+     */
+    public function departmentWithPlace(int $departmentId): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT d.name, p.name AS place_name
+             FROM departments d
+             JOIN places p ON p.id = d.place_id
+             WHERE d.id = :id'
+        );
+        $stmt->execute(['id' => $departmentId]);
+        $row = $stmt->fetch();
+
+        return $row === false ? null : $row;
+    }
+
+    /**
      * Tells whether the department exists, is active, and belongs to the
      * given place. Used to validate the submitted pair server-side, since
      * the dependent select is filled by client-side JS we cannot trust.

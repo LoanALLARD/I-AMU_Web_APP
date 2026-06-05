@@ -51,7 +51,7 @@ class ChatService
         $sessionId    = null;
 
         if ($conversationId !== null) {
-            $row = $this->conversations->getConversationByUserId($userId, $conversationId);
+            $row = $this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId);
             if ($row === null) {
                 return ['notFound' => true];
             }
@@ -100,7 +100,7 @@ class ChatService
                     'response' => (string) $m['response'],
                     'model'    => (string) ($m['model_name'] ?? ''),
                 ],
-                $this->interactions->listByConversation((int) $conversation['id'])
+             $this->interactions->listByConversation((int) $conversation['id'])
             );
         }
 
@@ -130,7 +130,7 @@ class ChatService
      * Creates a new conversation in a session ("SESSION - CODE #N"). The
      * session must be active.
      */
-    public function newSessionConversation(int $userId, int $sessionId): int
+    public function newSessionConversation(int $userId, int $sessionId, int $modelId): int
     {
         $row = $this->sessions->findById($sessionId);
         if ($row === null) {
@@ -145,17 +145,17 @@ class ChatService
         $code = $session->accessCodeFormatted() ?? ('S' . $sessionId);
         $n    = $this->conversations->countByUserAndSession($userId, $sessionId) + 1;
 
-        return $this->conversations->newConversation($userId, $sessionId, 'SESSION - ' . $code . ' #' . $n);
+        return $this->conversations->newConversation($userId, $modelId, $sessionId, 'SESSION - ' . $code . ' #' . $n);
     }
 
     /**
      * Creates a new free-mode conversation ("Conversation #N").
      */
-    public function newFreeConversation(int $userId): int
+    public function newFreeConversation(int $userId, int $modelId): int
     {
         $n = count($this->conversations->listFreeByUser($userId)) + 1;
 
-        return $this->conversations->newConversation($userId, null, 'Conversation #' . $n);
+        return $this->conversations->newConversation($userId, $modelId, null, 'Conversation #' . $n);
     }
 
     /**
@@ -164,7 +164,7 @@ class ChatService
      */
     public function rename(int $userId, int $conversationId, string $name): void
     {
-        $row = $this->conversations->getConversationByUserId($userId, $conversationId);
+        $row = $this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId);
         if ($row === null) {
             throw new RuntimeException('Conversation introuvable.');
         }
@@ -193,7 +193,7 @@ class ChatService
      */
     public function archive(int $userId, int $conversationId): array
     {
-        $row = $this->conversations->getConversationByUserId($userId, $conversationId);
+        $row = $this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId);
         if ($row === null) {
             throw new RuntimeException('Conversation introuvable.');
         }
@@ -214,7 +214,7 @@ class ChatService
      */
     public function unarchive(int $userId, int $conversationId): void
     {
-        $row = $this->conversations->getConversationByUserId($userId, $conversationId);
+        $row = $this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId);
         if ($row === null) {
             throw new RuntimeException('Conversation introuvable.');
         }

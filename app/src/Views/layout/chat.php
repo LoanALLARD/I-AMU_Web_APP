@@ -30,6 +30,7 @@ $chatHref = (($env['mode'] ?? '') === 'session' && !empty($conversation['id']))
 $roles = $user['roles'] ?? [];
 $isTeacher = in_array('teacher', $roles, true);
 $isStudent = in_array('student', $roles, true);
+$isDeptAdmin = in_array('department_admin', $roles, true);
 $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
 $initials = strtoupper(
     mb_substr($user['first_name'] ?? '·', 0, 1)
@@ -83,6 +84,8 @@ $themePref = match ($user['theme'] ?? null) {
     <link rel="stylesheet" href="/assets/css/profile.css<?= $v('profile.css') ?>">
 
 
+    <?php $jsDir = dirname(__DIR__, 3) . '/public/assets/js'; ?>
+    <script src="/assets/js/clipboard.js<?= '?v=' . (@filemtime("$jsDir/clipboard.js") ?: 0) ?>" defer></script>
     <?php if ($page === 'chat'): ?>
         <?php /* Markdown rendering for AI replies (live + history). Loaded
          synchronously in <head> so the chat view's inline script can use
@@ -100,7 +103,7 @@ $themePref = match ($user['theme'] ?? null) {
 <body class="app-body page-<?= htmlspecialchars($page) ?>">
 
     <header class="app-topbar">
-        <a href="/chat" class="topbar-brand" aria-label="Accueil I-AMU">
+        <a href="<?= $isDeptAdmin ? '/admin' : '/chat' ?>" class="topbar-brand" aria-label="Accueil I-AMU">
             <img src="/assets/img/logo.png" alt="">
             <div class="topbar-brand-text">
                 <span><?= htmlspecialchars($roleLabel) ?></span>
@@ -138,6 +141,7 @@ $themePref = match ($user['theme'] ?? null) {
         <?php endif; ?>
 
         <div class="topbar-tabs">
+            <?php if (!$isDeptAdmin): ?>
             <a href="<?= htmlspecialchars($chatHref) ?>" class="topbar-tab<?= $page === 'chat' ? ' active' : '' ?>">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -145,6 +149,7 @@ $themePref = match ($user['theme'] ?? null) {
                 </svg>
                 Chat
             </a>
+            <?php endif; ?>
             <?php if ($isTeacher): ?>
                 <a href="/sessions" class="topbar-tab<?= $page === 'sessions' ? ' active' : '' ?>">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -195,6 +200,7 @@ its own identity above the navigation. */ ?>
 On desktop these live as pills in the topbar (.topbar-tabs), so
 .sidebar-nav stays display:none there to avoid duplication. */ ?>
             <nav class="sidebar-nav" aria-label="Navigation principale">
+                <?php if (!$isDeptAdmin): ?>
                 <a href="<?= htmlspecialchars($chatHref) ?>"
                     class="sidebar-nav-link<?= $page === 'chat' ? ' is-active' : '' ?>">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -203,6 +209,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                     </svg>
                     Chat
                 </a>
+                <?php endif; ?>
                 <?php if ($isTeacher): ?>
                     <a href="/sessions" class="sidebar-nav-link<?= $page === 'sessions' ? ' is-active' : '' ?>">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -575,6 +582,49 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                 if (e.key === 'Escape') closeAll(null);
             });
         })();
+
+        function addConvToSidebar(id, name) {
+            const convList = document.getElementById('convList');
+            if (!convList) return;
+
+            // Ne pas dupliquer si elle existe déjà
+            if (convList.querySelector(`a[href="/chat/${id}"]`)) return;
+
+            const group = convList.querySelector('.conv-group');
+            if (!group) return;
+
+                // Désactiver la conv active actuelle
+            group.querySelectorAll('.conv-row.active')
+            .forEach(el => el.classList.remove('active'));
+
+           // Créer le row
+            const row = document.createElement('div');
+            row.className = 'conv-row active';
+
+            // Échapper le nom sans dépendre de escapeHtml (défini dans homeView)
+            const a = document.createElement('a');
+            a.href = `/chat/${id}`;
+            a.className = 'conv-item';
+
+            const span = document.createElement('span');
+            span.className = 'conv-title';
+            span.textContent = name;  // textContent échappe automatiquement
+
+            a.appendChild(span);
+            row.appendChild(a);
+
+            // Insérer après le label/scope, avant les autres conv-row
+            const firstRow = group.querySelector('.conv-row');
+            const anchor   = group.querySelector('.conv-scope, .conv-group-label');
+
+            if (firstRow) {
+                group.insertBefore(row, firstRow);
+            } else if (anchor) {
+                anchor.after(row);
+            } else {
+                group.prepend(row);
+            }
+}
     </script>
 
 </body>
