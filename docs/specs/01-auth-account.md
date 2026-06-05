@@ -25,7 +25,7 @@
 ### 🟡 Partiel / divergent
 - **Page compte** : sous `/profile` (et non `/account`), MVP — pas d'agrégat stats (`GetAccountOverviewService` non implémenté).
 - **Rattachement département** : via selects **lieu + département** dépendants (et non « code département » du §2bis). Le `department_id` est bien écrit et validé serveur.
-- **Mention RGPD** : checkbox bloquante à l'inscription + page `/rgpd-consent` ; pas de page publique `/privacy` (cf. [spec 06](./06-rgpd.md)).
+- **Mention RGPD** : checkbox bloquante à l'inscription + page `/rgpd_consent` ; pas de page publique `/privacy` (cf. [spec 06](./06-rgpd.md)).
 
 ### ❌ Pas fait
 - **Réinitialisation du mot de passe oublié** (`/password/forgot`, `/password/reset`, table `password_reset`, mail de reset) — *must-have non couvert*.
@@ -37,7 +37,7 @@
 - Code d'auto-login **mort** (inatteignable) en fin de `AuthService::register()` — à supprimer.
 
 ### Routes réelles (vs §6 planifié)
-Présentes : `GET /profile`, `POST /profile/update`, `POST /profile/password`, `POST /profile/theme`, `POST /profile/deactivate`, `POST /reactivate`, `GET /rgpd-consent`, `GET /verify-email`. Les routes `/account/*` et `/password/*` du §6 ne sont **pas** en place.
+Présentes : `GET /profile`, `POST /profile/update`, `POST /profile/password`, `POST /profile/theme`, `POST /profile/deactivate`, `POST /reactivate`, `GET /rgpd_consent`, `GET /verify-email`. Les routes `/account/*` et `/password/*` du §6 ne sont **pas** en place.
 
 ## 1. Objectifs
 

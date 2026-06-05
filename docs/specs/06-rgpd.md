@@ -13,7 +13,7 @@
 > Mise à jour **2026-06-04**. RGPD **largement non couvert** — reste bloquant
 > pour une mise en production.
 
-- 🟡 **Consentement** : checkbox bloquante à l'inscription + mention via `GET /rgpd-consent`. Pas de retrait post-inscription ni d'interception bloquante au login.
+- 🟡 **Consentement** : checkbox bloquante à l'inscription + mention via `GET /rgpd_consent`. Pas de retrait post-inscription ni d'interception bloquante au login.
 - 🟡 **Effacement** : manuel — désactivation du compte (`is_active = false`) + demande à `dpo@univ-amu.fr` ; pas de `DeleteAccountService` ni d'anonymisation automatique.
 - ❌ **Information** : pas de page publique `/privacy` (`legal/privacy.php`).
 - ❌ **Accès** : pas d'export de données (`/account/data-export`).
