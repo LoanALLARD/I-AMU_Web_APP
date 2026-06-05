@@ -20,7 +20,8 @@ CREATE TABLE departments (
     description TEXT,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT pk_departments PRIMARY KEY (id),
-    CONSTRAINT fk_departments_place FOREIGN KEY (place_id) REFERENCES places (id)
+    CONSTRAINT fk_departments_place FOREIGN KEY (place_id) REFERENCES places (id),
+    CONSTRAINT uq_departments_place_name UNIQUE (place_id, name)
 );
 
 CREATE TABLE users (
