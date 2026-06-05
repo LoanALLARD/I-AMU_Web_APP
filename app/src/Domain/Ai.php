@@ -19,7 +19,7 @@ class Ai {
     private string $version;
     private string $provider;           // compagny who delivery the model
     private int $max_tokens;
-    private int $context_window;      // size of the context window of the model  
+    private string $context_window;   // size of the context window of the model
     private bool $is_active;
     private bool $is_shareable;
     // private string $infoSizeOfModel;        // size of the model
@@ -35,67 +35,103 @@ class Ai {
         $this->provider = $provider;
         $this->max_tokens = $max_tokens;
         $this->context_window = $context_window;
+        $this->is_active = $is_active;
+        $this->is_shareable = $is_shareable;
         // $this->infoSizeOfModel = $infoSizeOfModel;
         $this->url = $url;
         $this->adaptater = $adaptater;
     }
 
-    public function ask(string $message, array $context,?string $preprompt): string {
+    /**
+     * @param array<int, int> $context
+     */
+    public function ask(string $message, array $context, ?string $preprompt): string {
         return $this->adaptater->generate($message, $context, $preprompt);
     }
 
 
     // Getters & Setters
-    public function getId(){
+    public function getId(): int
+    {
         return $this->id;
     }
 
-    public function getName(){
+    public function getDepartmentId(): ?int
+    {
+        return $this->department_id;
+    }
+
+    public function getResourceId(): ?int
+    {
+        return $this->resource_id;
+    }
+
+    public function getName(): string
+    {
         return $this->name;
     }
 
-    public function getInfoContextWindow(){
-
+    public function getVersion(): string
+    {
+        return $this->version;
     }
 
-    public function getInfoSizeOfModel(){
-
+    public function getInfoContextWindow(): string
+    {
+        return $this->context_window;
     }
 
-    public function getInfoCompagny(){
-
+    public function getInfoSizeOfModel(): int
+    {
+        return $this->max_tokens;
     }
 
-    public function getUrl(){
-
+    public function getInfoCompagny(): string
+    {
+        return $this->provider;
     }
 
-    public function getFormatRequest(){
-
+    public function isActive(): bool
+    {
+        return $this->is_active;
     }
 
-
-    public function setName(string $name){
-
+    public function isShareable(): bool
+    {
+        return $this->is_shareable;
     }
 
-    public function setInfoContextWindow(string $infoContextWindow){
-
+    public function getUrl(): string
+    {
+        return $this->url;
     }
 
-    public function setInfoSizeOfModel(string $infoSizeOfModel ){
-
+    public function getFormatRequest(): string
+    {
+        return '';
     }
 
-    public function setInfoCompagny(string $infoCompagny){
-
+    public function setName(string $name): void
+    {
     }
 
-    public function setUrl(string $url){
-
+    public function setInfoContextWindow(string $infoContextWindow): void
+    {
     }
 
-    public function setFormatRequest(string $formatRequest){
+    public function setInfoSizeOfModel(string $infoSizeOfModel): void
+    {
+    }
 
+    public function setInfoCompagny(string $infoCompagny): void
+    {
+    }
+
+    public function setUrl(string $url): void
+    {
+    }
+
+    public function setFormatRequest(string $formatRequest): void
+    {
     }
 }

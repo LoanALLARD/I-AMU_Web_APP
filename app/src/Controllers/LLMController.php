@@ -16,7 +16,7 @@ use Models\SessionRepository;
 
 class LLMController{
 
-    public function handleChat(){
+    public function handleChat(): void {
 
         // raw data of the request
         $jsonRaw = file_get_contents('php://input');
@@ -110,17 +110,20 @@ class LLMController{
 
         $metadata = $conversationRepository->getContextByConversationIdAndUserId($conversationData['id'], $userId);
 
+        $adapter = null;
         switch ($aiData["adapter"]) {
-        case "ollama":
-            $adapter = new OllamaAdaptater($aiData["api_url"],$aiData["name"]);
-            break;
-        case "openAi":
-            //code block;
-            break;
-        default:
-            $adapter = null;
+            case "ollama":
+                $adapter = new OllamaAdaptater($aiData["api_url"], $aiData["name"]);
+                break;
+            case "openAi":
+                // not implemented yet
+                break;
+        }
+        if ($adapter === null) {
+            header('Content-Type: application/json');
+            http_response_code(400);
+            echo json_encode(['error' => "Adaptateur non supporté."]);
             return;
-            break;
         }
 
         // read from the database all the context of the conversation
