@@ -359,6 +359,7 @@ $hasMessages = $messages !== [];
             const outputTokens =  data.eval_count || 0;
             const totalTokens  = inputTokens + outputTokens;
 
+            
             if (newConvId && !conversationId) {
                 window._activeConvId = newConvId;
                 history.replaceState(null, '', `/chat/${newConvId}`);
@@ -367,6 +368,19 @@ $hasMessages = $messages !== [];
                 if (convNameEl) convNameEl.textContent = newConvName;
             }
 
+            if (newConvName){
+                const convNameEl = document.getElementById('convName');
+                if (convNameEl) convNameEl.textContent = newConvName;
+
+                const activeConvId = newConvId ?? conversationId;
+                const sidebarLink = document.querySelector(
+                    `#convList .conv-item[href="/chat/${activeConvId}"]`
+                );
+                if (sidebarLink) {
+                    const titleEl = sidebarLink.querySelector('.conv-title');
+                    if (titleEl) titleEl.textContent = newConvName;
+                }
+            }
             if (newConvId) {
                 addConvToSidebar(newConvId, newConvName);
             }

@@ -80,7 +80,15 @@ class LLMController{
             $conversationData = $conversationRepository->getConversationByUserIdAndConversationId(   
                 $userId,
                 $conversation_id,
-            );               
+            );       
+            if ($conversationData !== null && preg_match('/^Conversation #\d+$/', $conversationData['name'])) {
+                $conversationRepository->rename(
+                    $userId,
+                    (int) $conversationData['id'],
+                    $nameConversation
+                );
+                $conversationData['name'] = $nameConversation;
+            }        
         }                                                           
                 
         if ($conversationData == null){

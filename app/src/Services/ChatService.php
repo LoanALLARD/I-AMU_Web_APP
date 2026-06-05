@@ -145,7 +145,8 @@ class ChatService
         $code = $session->accessCodeFormatted() ?? ('S' . $sessionId);
         $n    = $this->conversations->countByUserAndSession($userId, $sessionId) + 1;
 
-        return $this->conversations->newConversation($userId, $modelId, $sessionId, 'SESSION - ' . $code . ' #' . $n);
+        $conversation = $this->conversations->newConversation($userId, $modelId, $sessionId, 'SESSION - ' . $code . ' #' . $n);
+        return (int) $conversation['id'];
     }
 
     /**
@@ -155,7 +156,8 @@ class ChatService
     {
         $n = count($this->conversations->listFreeByUser($userId)) + 1;
 
-        return $this->conversations->newConversation($userId, $modelId, null, 'Conversation #' . $n);
+        $conversation = $this->conversations->newConversation($userId, $modelId, null, 'Conversation #' . $n);
+        return (int) $conversation['id'];
     }
 
     /**
