@@ -242,8 +242,6 @@ final class AuthService
         }
     }
 
-
-
     /**
      * Updates the current user's display name and keeps the session in sync
      * so the layout (avatar, breadcrumb) reflects it right away.
@@ -310,6 +308,7 @@ final class AuthService
 
         return ['success' => true];
     }
+
 
     /**
      * Validates the registration form input. Returns the (French) error

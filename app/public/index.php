@@ -37,20 +37,20 @@
     $router->add('POST', '/register',    function() { (new AuthController())->register(); });
     $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
     $router->add('POST', '/reactivate',  function() { (new AuthController())->reactivate();});
-    $router->add('GET',  '/rgpd-consent', function() { (new AuthController())->showRGPD(); });
+    $router->add('GET',  '/rgpd_consent', function() { (new AuthController())->showRGPD(); });
     $router->add('GET',  '/verify-email',function() { (new AuthController())->verifyEmail(); });
 
     // AJAX: departments of a place, for the registration form's dependent select.
     $router->add('GET',  '/places/{id}/departments', function($id) { (new PlaceController())->departments($id); });
 
     // --- Chat home + profile (authenticated) --------------------------
-    $router->add('GET', '/chat',      function()    { (new AccueilController())->index(); });
-    $router->add('GET', '/chat/{id}', function($id)  { (new AccueilController())->index($id); });
-    $router->add('GET', '/profile',   function()    { (new ProfileController())->index(); });
-    $router->add('POST', '/profile/update',      function()     { (new ProfileController())->updateProfile(); });
-    $router->add('POST', '/profile/password',    function()     { (new ProfileController())->changePassword(); });
+    $router->add('GET',  '/chat',                function()     { (new AccueilController())->index(); });
+    $router->add('GET',  '/chat/{id}',           function($id)  { (new AccueilController())->index($id); });
+    $router->add('GET',  '/profile',             function()     { (new ProfileController())->index(); });
     $router->add('POST', '/profile/theme',       function()     { (new ProfileController())->updateTheme(); });
     $router->add('POST', '/profile/deactivate',  function()     { (new ProfileController())->deactivate(); });
+    $router->add('POST', '/profile/update',      function()     { (new ProfileController())->updateProfile(); });
+    $router->add('POST', '/profile/password',    function()     { (new ProfileController())->changePassword(); });
 
     // --- Department-admin console (department_admin role) --------------
     $router->add('GET',  '/admin',                         function() { (new AdminController())->index(); });
