@@ -46,7 +46,7 @@ class Ai {
      * @param array<int, int> $context
      */
     public function ask(string $message, array $context, ?string $postprompt, ?string $preprompt): string {
-        return $this->adaptater->generate($message, $context, $postprompt, $preprompt);
+        return $this->adaptater->generate($message, $context, $postprompt, $preprompt,null);
     }
 
 

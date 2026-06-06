@@ -32,8 +32,6 @@ class LLMController{
 
         $modelName = $data['model'];
         $userMessage = $data['message'];
-        // $context = $data['context'] ?? [];
-        //$user_email = $data['user_email'] ?? null;
         $context = [];
 
         $conversation_id = $data['conversation_id'] ?? null;
