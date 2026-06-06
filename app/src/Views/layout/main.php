@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="/assets/css/components.css">
     <link rel="stylesheet" href="/assets/css/error.css">
     <link rel="stylesheet" href="/assets/css/rgpd.css">
-    <link rel="stylesheet" href="/assets/css/admin.css">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
 <?php
