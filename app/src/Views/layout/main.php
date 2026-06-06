@@ -9,14 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&family=Nunito+Sans:wght@300;400;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="stylesheet" href="/assets/css/layoutMain.css">
-<<<<<<< HEAD
     <link rel="stylesheet" href="/assets/css/sessions.css">
     <link rel="stylesheet" href="/assets/css/department_admin.css">
-=======
-    <link rel="stylesheet" href="/assets/css/components.css">
->>>>>>> 5ffd2f9a34c3219185cf12f14fbbdc6e0e89ae77
-    <link rel="stylesheet" href="/assets/css/sessions.css">
-    <link rel="stylesheet" href="/assets/css/department_admin.css">    
     <link rel="stylesheet" href="/assets/css/components.css">
     <link rel="stylesheet" href="/assets/css/error.css">
     <link rel="stylesheet" href="/assets/css/rgpd.css">
