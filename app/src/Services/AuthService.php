@@ -194,6 +194,9 @@ final class AuthService
         }
     }
 
+    /**
+     * @return array{success: bool, error?: string}
+     */
     public function deactivateAccount(int $userId): array
     {
         try {
@@ -215,6 +218,9 @@ final class AuthService
         }
     }
 
+    /**
+     * @return array{success: bool, error?: string}
+     */
     public function reactivateAccount(string $email, string $password): array
     {
         if ($email === '' || $password === '') {
@@ -241,8 +247,6 @@ final class AuthService
             ];
         }
     }
-
-
 
     /**
      * Updates the current user's display name and keeps the session in sync
@@ -310,6 +314,7 @@ final class AuthService
 
         return ['success' => true];
     }
+
 
     /**
      * Validates the registration form input. Returns the (French) error

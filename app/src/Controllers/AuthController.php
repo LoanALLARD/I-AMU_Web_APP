@@ -140,7 +140,6 @@ class AuthController extends Controller
         if (empty($result['success'])) {
             $this->flash('error', $result['error'] ?? "Erreur lors de l'inscription.");
             $this->redirect('/register');
-            return;
         }
 
         $this->flash('success', 'Inscription réussie ! Un email de vérification a été envoyé. Vérifiez votre boîte de réception.');

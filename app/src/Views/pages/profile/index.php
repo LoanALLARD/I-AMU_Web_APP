@@ -1,8 +1,6 @@
 <?php
 /**
- * Profile page — minimal MVP, lives under the same authenticated layout
- * as the sessions/chat pages. To be enriched by spec 01 (password change,
- * account settings, RGPD opt-outs, …).
+ * Profile page
  *
  * @var array{id:int, email:string, first_name:string, last_name:string, roles:list<string>}|null $user
  */
@@ -13,8 +11,7 @@ $initials = strtoupper(
 );
 $roles = $user['roles'] ?? [];
 
-// French UI labels for roles — the badge text is uppercased by CSS, so
-// 'étudiant' renders as 'ÉTUDIANT'. Unknown roles fall back to their key.
+// French UI labels for roles
 $roleLabels = [
     'student'          => 'étudiant',
     'teacher'          => 'enseignant',
@@ -23,7 +20,7 @@ $roleLabels = [
 ];
 $roleFr = static fn(string $r): string => $roleLabels[$r] ?? $r;
 
-// Current theme choice for the selector ('auto' = follow the OS).
+// Current theme choice for the selector
 $themeCur = match ($user['theme'] ?? null) {
     'LIGHT' => 'light',
     'DARK'  => 'dark',
@@ -33,131 +30,33 @@ $themeCur = match ($user['theme'] ?? null) {
 <div class="page-header">
     <div class="page-header-row">
         <h1>Mon profil</h1>
-        <span class="mono" style="font-size:11px;color:var(--gray-400);">compte personnel</span>
+        <span class="mono">compte personnel</span>
     </div>
     <p class="page-sub">Informations de votre compte et gestion de vos données personnelles.</p>
 </div>
 
 <div class="page-body">
-    <div class="dashboard-grid" style="max-width: 880px; margin: 0 auto; padding: 0;">
+    <div class="profile-grid">
 
         <div>
             <div class="dashboard-card">
                 <h2>Identité</h2>
-                <form method="POST" action="/profile/update" class="profile-form">
-                    <?= csrf_field() ?>
-                    <div class="form-row">
-                        <label for="first_name">Prénom</label>
-                        <input type="text" id="first_name" name="first_name" maxlength="50"
-                            value="<?= htmlspecialchars($user['first_name'] ?? '') ?>" required>
-                    </div>
-                    <div class="form-row">
-                        <label for="last_name">Nom</label>
-                        <input type="text" id="last_name" name="last_name" maxlength="100"
-                            value="<?= htmlspecialchars($user['last_name'] ?? '') ?>" required>
-                    </div>
-                    <div class="kv-grid" style="margin-top:4px;">
-                        <span class="kv-key">email</span>
-                        <span class="kv-val mono"><?= htmlspecialchars($user['email'] ?? '—') ?></span>
-                        <span class="kv-key">id interne</span>
-                        <span class="kv-val mono">#<?= (int) ($user['id'] ?? 0) ?></span>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn">Enregistrer</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="dashboard-card">
-                <h2>Sécurité</h2>
-                <p style="color:var(--gray-400);font-size:12px;margin:0 0 14px;">
-                    Changez votre mot de passe. Minimum 8 caractères.
-                </p>
-                <form method="POST" action="/profile/password" class="profile-form" autocomplete="off">
-                    <?= csrf_field() ?>
-                    <div class="form-row">
-                        <label for="current_password">Mot de passe actuel</label>
-                        <input type="password" id="current_password" name="current_password"
-                            required autocomplete="current-password">
-                    </div>
-                    <div class="form-row">
-                        <label for="new_password">Nouveau mot de passe</label>
-                        <input type="password" id="new_password" name="new_password"
-                            minlength="8" required autocomplete="new-password">
-                    </div>
-                    <div class="form-row">
-                        <label for="new_password_confirm">Confirmer le nouveau mot de passe</label>
-                        <input type="password" id="new_password_confirm" name="new_password_confirm"
-                            minlength="8" required autocomplete="new-password">
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn">Changer le mot de passe</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="dashboard-card">
-                <div style="background:var(--gray-50, #f9fafb);border:1px solid var(--gray-200, #e5e7eb);border-radius:8px;padding:16px;margin-bottom:16px;">
-                    <h3 style="font-size:14px;font-weight:600;margin:0 0 8px;color:var(--gray-700, #374151);">
-                        Désactiver mon compte
-                    </h3>
-                    <p style="font-size:12px;color:var(--gray-500);line-height:1.5;margin:0 0 12px;">
-                        La désactivation rend votre compte inaccessible. Vous ne pourrez plus
-                        vous connecter tant qu'un administrateur n'aura pas réactivé votre compte.
-                    </p>
-                    <button type="button" class="btn danger" id="btn-deactivate-account">
-                        <?= icon('user-x', '', 12) ?> Désactiver mon compte
-                    </button>
-                </div>
-
-                <div style="background:var(--gray-50, #f9fafb);border:1px solid var(--gray-200, #e5e7eb);border-radius:8px;padding:16px;">
-                    <h3 style="font-size:14px;font-weight:600;margin:0 0 8px;color:var(--gray-700, #374151);">
-                        Suppression de vos données
-                    </h3>
-                    <p style="font-size:12px;color:var(--gray-500);line-height:1.5;margin:0 0 8px;">
-                        Pour exercer votre droit à l'effacement et demander la suppression
-                        définitive de vos données personnelles, veuillez envoyer votre demande
-                        par email à l'adresse suivante :
-                    </p>
-                    <p style="margin:0;">
-                        <a href="mailto:dpo@univ-amu.fr" class="mono" style="font-size:13px;font-weight:600;color:var(--primary, #2563eb);">
-                            dpo@univ-amu.fr
-                        </a>
-                    </p>
-                    <p style="font-size:11px;color:var(--gray-400);line-height:1.4;margin:8px 0 0;">
-                        Précisez votre nom, prénom et adresse email universitaire dans votre demande.
-                        Le responsable de traitement traitera votre requête dans un délai de 30 jours
-                        conformément à l'article 17 du RGPD.
-                    </p>
+                <div class="kv-grid">
+                    <span class="kv-key">prénom</span>
+                    <span class="kv-val"><?= htmlspecialchars($user['first_name'] ?? '—') ?></span>
+                    <span class="kv-key">nom</span>
+                    <span class="kv-val"><?= htmlspecialchars($user['last_name'] ?? '—') ?></span>
+                    <span class="kv-key">email</span>
+                    <span class="kv-val mono"><?= htmlspecialchars($user['email'] ?? '—') ?></span>
                 </div>
             </div>
-        </div>
 
-        <aside>
-            <div class="dashboard-card" style="text-align:center;">
-                <div class="user-pill-avatar" style="width:72px;height:72px;font-size:24px;margin: 12px auto 16px;">
-                    <?= htmlspecialchars($initials) ?>
-                </div>
-                <div style="font-weight:600;font-size:16px;"><?= htmlspecialchars($displayName) ?></div>
-                <?php if ($roles !== []): ?>
-                    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px;">
-                        <?php foreach ($roles as $role): ?>
-                            <span class="badge badge-<?= htmlspecialchars($role) ?>"><?= htmlspecialchars($roleFr($role)) ?></span>
-                        <?php endforeach; ?>
-                    </div>
-                <?php else: ?>
-                    <div class="mono" style="font-size:11px;color:var(--gray-400);margin-top:8px;">aucun rôle</div>
-                <?php endif; ?>
-                <a href="/logout" class="btn danger" style="margin-top:16px;">
-                    <?= icon('lock', '', 12) ?> Se déconnecter
-                </a>
-            </div>
-
-            <div class="dashboard-card">
+            <div class="profile-card">
                 <h2>Apparence</h2>
-                <p style="color:var(--gray-400);font-size:12px;margin: 0 0 14px;">
+                <p class="page-sub">
                     Thème de l'interface. « Automatique » suit le réglage de votre appareil.
                 </p>
+                <hr>
                 <form method="POST" action="/profile/theme" class="theme-select">
                     <?= csrf_field() ?>
                     <button type="submit" name="theme" value="auto" class="theme-opt<?= $themeCur === 'auto' ? ' is-active' : '' ?>">Automatique</button>
@@ -165,28 +64,86 @@ $themeCur = match ($user['theme'] ?? null) {
                     <button type="submit" name="theme" value="dark" class="theme-opt<?= $themeCur === 'dark' ? ' is-active' : '' ?>">Sombre</button>
                 </form>
             </div>
-        </aside>
 
+            <div class="profile-card">
+                <h2>Compte et données</h2>
+
+                <!-- Session -->
+                <p class="section-desc">
+                    Vous pouvez vous déconnecter de votre session active.
+                </p>
+                <a href="/logout" class="btn danger">
+                    <?= icon('lock', '', 12) ?> Se déconnecter
+                </a>
+
+                <hr>
+
+                <!-- Deactivation -->
+                <h3>Désactiver mon compte</h3>
+                <p class="section-desc">
+                    La désactivation rend votre compte inaccessible. Vous ne pourrez plus
+                    vous connecter tant qu'un administrateur n'aura pas réactivé votre compte.
+                </p>
+                <button type="button" class="btn danger" id="btn-deactivate-account">
+                    <?= icon('user-x', '', 12) ?> Désactiver mon compte
+                </button>
+
+                <hr>
+
+                <!-- Data deletion -->
+                <h3>Suppression de vos données</h3>
+                <p class="section-desc">
+                    Pour exercer votre droit à l'effacement (article 17 du RGPD),
+                    envoyez votre demande par email au délégué à la protection des données.
+                </p>
+                <div class="dpo-block">
+                    <a href="mailto:dpo@univ-amu.fr" class="dpo-link">
+                        dpo@univ-amu.fr
+                    </a>
+                    <p class="dpo-hint">
+                        Précisez votre nom, prénom et adresse email universitaire.
+                        Délai de traitement : 30 jours.
+                    </p>
+                </div>
+                <a href="/rgpd_çonsent" class="rgpd-link">Consulter les mentions d'information RGPD</a>
+            </div>
+        </div>
+
+        <aside>
+            <div class="profile-aside-card">
+                <div class="profile-avatar">
+                    <?= htmlspecialchars($initials) ?>
+                </div>
+                <div class="profile-display-name"><?= htmlspecialchars($displayName) ?></div>
+                <?php if ($roles !== []): ?>
+                    <div class="profile-roles">
+                        <?php foreach ($roles as $role): ?>
+                            <span class="badge badge-<?= htmlspecialchars($role) ?>"><?= htmlspecialchars($roleFr($role)) ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="profile-no-role">aucun rôle</div>
+                <?php endif; ?>
+            </div>
+        </aside>
     </div>
 </div>
-<div id="modal-deactivate" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
-    <div style="background:var(--white, #fff);border-radius:12px;padding:28px 32px;max-width:460px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.25);">
-        <h2 style="margin:0 0 12px;font-size:18px;color:var(--gray-800, #1f2937);">
-            Confirmer la désactivation
-        </h2>
-        <p style="font-size:13px;color:var(--gray-600, #4b5563);line-height:1.6;margin:0 0 8px;">
-            Êtes-vous sûr de vouloir désactiver votre compte ?
-        </p>
-        <ul style="font-size:12px;color:var(--gray-500);line-height:1.6;margin:0 0 20px;padding-left:18px;">
+
+<!-- Deactivation confirmation modal -->
+<div class="modal-overlay" id="modal-deactivate">
+    <div class="modal-box">
+        <h2>Confirmer la désactivation</h2>
+        <p>Êtes-vous sûr de vouloir désactiver votre compte ?</p>
+        <ul>
             <li>Vous serez immédiatement déconnecté</li>
             <li>Vous ne pourrez plus vous connecter</li>
             <li>Vos données seront conservées à des fins de recherche</li>
             <li>Pour supprimer vos données, contactez <strong>dpo@univ-amu.fr</strong></li>
         </ul>
 
-        <form method="POST" action="/profile/deactivate" style="display:flex;gap:10px;justify-content:flex-end;">
+        <form method="POST" action="/profile/deactivate" class="modal-actions">
             <?= csrf_field() ?>
-            <button type="button" class="btn" id="btn-cancel-deactivate" style="background:var(--gray-100, #f3f4f6);color:var(--gray-700, #374151);">
+            <button type="button" class="btn btn-cancel" id="btn-cancel-deactivate">
                 Annuler
             </button>
             <button type="submit" class="btn danger">
@@ -227,4 +184,3 @@ $themeCur = match ($user['theme'] ?? null) {
         });
     })();
 </script>
-

@@ -64,7 +64,7 @@ $typeCards = [
 <div class="page-header">
     <div class="page-header-row">
         <h1><?= $isEdit ? 'Modifier la session' : 'Nouvelle session' ?></h1>
-        <span class="mono" style="font-size:11px;color:var(--gray-400);">
+        <span class="mono page-header-hint">
             <?= $isEdit ? 'édition' : 'brouillon · saisie' ?>
         </span>
     </div>
@@ -82,13 +82,13 @@ $typeCards = [
                 <span class="fsection-label">Type de session</span>
                 <span class="fsection-rule"></span>
             </div>
-            <div class="kind-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="kind-grid">
                 <?php foreach ($typeCards as $value => $c):
                     $active = $currentType->value === $value;
-                ?>
+                    ?>
                     <label class="kind-card <?= $c['kraft'] ? 'kraft' : '' ?> <?= $active ? 'is-active' : '' ?>" data-kind="<?= htmlspecialchars($value) ?>">
                         <input type="radio" name="type" value="<?= htmlspecialchars($value) ?>"
-                               <?= $active ? 'checked' : '' ?> <?= $isEdit ? 'disabled' : '' ?>>
+                            <?= $active ? 'checked' : '' ?> <?= $isEdit ? 'disabled' : '' ?>>
                         <span class="kind-head"><?= icon($c['icon'], '', 15) ?> <?= htmlspecialchars($c['label']) ?></span>
                         <span class="kind-desc"><?= htmlspecialchars($c['desc']) ?></span>
                     </label>
@@ -222,7 +222,7 @@ $typeCards = [
                 <span class="fsection-rule"></span>
             </div>
             <p class="fsection-hint">Taille maximale d'un prompt étudiant. Laisser vide pour aucune limite.</p>
-            <div class="field-suffix" style="max-width: 240px;">
+            <div class="field-suffix field-suffix--narrow">
                 <input type="number" id="f-max" name="max_input_size" min="1" max="200000"
                        value="<?= htmlspecialchars((string) $val('max_input_size')) ?>"
                        placeholder="ex. 8192">

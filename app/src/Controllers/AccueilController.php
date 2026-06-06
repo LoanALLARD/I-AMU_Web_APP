@@ -98,13 +98,21 @@ class AccueilController extends Controller
         $this->redirectAdminToConsole();
         $this->verifyCsrf();
         $user = $this->currentUser();
-
+        $models = [];
+        try {
+            $pdo = Database::getConnection();
+            $aiRepository = new \Models\AiRepository($pdo);
+            $models = $aiRepository->findAllActive();
+        } catch (\Throwable $e) {
+            error_log('Impossible de charger les modèles : ' . $e->getMessage());
+        }
         $sessionId = (int) $this->input('session_id', 0);
 
         try {
+            $defaultModelId = (int) ($models[0]['id'] ?? 1);
             $conversationId = $sessionId > 0
-                ? $this->chat->newSessionConversation((int) $user['id'], $sessionId)
-                : $this->chat->newFreeConversation((int) $user['id']);
+                ? $this->chat->newSessionConversation((int) $user['id'], $sessionId, $defaultModelId)
+                : $this->chat->newFreeConversation((int) $user['id'], $defaultModelId);
         } catch (\Throwable $e) {
             $this->flash('error', $e->getMessage());
             $this->redirect('/chat');

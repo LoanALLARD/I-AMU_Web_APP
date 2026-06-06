@@ -20,7 +20,6 @@ $page = $page ?? 'other';
 $pageTitle = $pageTitle ?? '';
 $conversation = $conversation ?? null;
 $conversations = $conversations ?? [];
-
 $env = $env ?? null;
 $archivedView = $archivedView ?? false;
 // "Chat" nav target: stay inside the open session conversation instead of
@@ -79,7 +78,12 @@ $themePref = match ($user['theme'] ?? null) {
     ?>
     <link rel="stylesheet" href="/assets/css/style.css<?= $v('style.css') ?>">
     <link rel="stylesheet" href="/assets/css/homeChat.css<?= $v('homeChat.css') ?>">
+    <link rel="stylesheet" href="/assets/css/components.css<?= $v('components.css') ?>">
+    <link rel="stylesheet" href="/assets/css/shell.css<?= $v('shell.css') ?>">
     <link rel="stylesheet" href="/assets/css/sessions.css<?= $v('sessions.css') ?>">
+    <link rel="stylesheet" href="/assets/css/profile.css<?= $v('profile.css') ?>">
+
+
     <?php $jsDir = dirname(__DIR__, 3) . '/public/assets/js'; ?>
     <script src="/assets/js/clipboard.js<?= '?v=' . (@filemtime("$jsDir/clipboard.js") ?: 0) ?>" defer></script>
     <?php if ($page === 'chat'): ?>
@@ -102,7 +106,6 @@ $themePref = match ($user['theme'] ?? null) {
         <a href="<?= $isDeptAdmin ? '/department-admin' : '/chat' ?>" class="topbar-brand" aria-label="Accueil I-AMU">
             <img src="/assets/img/logo.png" alt="">
             <div class="topbar-brand-text">
-                <strong>I-AMU</strong>
                 <span><?= htmlspecialchars($roleLabel) ?></span>
             </div>
         </a>
@@ -189,7 +192,6 @@ its own identity above the navigation. */ ?>
             <div class="sidebar-brand">
                 <img src="/assets/img/logo.png" alt="">
                 <div class="sidebar-brand-text">
-                    <strong>I-AMU</strong>
                     <span><?= htmlspecialchars($roleLabel) ?></span>
                 </div>
             </div>
@@ -592,7 +594,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
             if (!group) return;
 
                 // Désactiver la conv active actuelle
-            group.querySelectorAll('.conv-row.active')  
+            group.querySelectorAll('.conv-row.active')
             .forEach(el => el.classList.remove('active'));
 
            // Créer le row

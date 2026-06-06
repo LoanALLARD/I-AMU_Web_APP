@@ -12,10 +12,11 @@ use Models\AiRepository;
 use Models\InteractionRepository;
 use Models\UserRepository;
 use Models\ConversationRepository;
+use Models\SessionRepository;
 
 class LLMController{
 
-    public function handleChat(){
+    public function handleChat(): void {
 
         // raw data of the request
         $jsonRaw = file_get_contents('php://input');
@@ -29,8 +30,8 @@ class LLMController{
             return;
         }
 
-        $modelName = $data['model'];     // "llama3.2:1b"
-        $userMessage = $data['message']; 
+        $modelName = $data['model'];
+        $userMessage = $data['message'];
         // $context = $data['context'] ?? [];
         //$user_email = $data['user_email'] ?? null;
         $context = [];
@@ -77,10 +78,18 @@ class LLMController{
             $context = [];
         } else {
             // else recover the conversation and check if it's own by the same user
-            $conversationData = $conversationRepository->getConversationByUserIdAndConversationId(   
+            $conversationData = $conversationRepository->getConversationByUserIdAndConversationId(
                 $userId,
                 $conversation_id,
-            );               
+            );       
+            if ($conversationData !== null && preg_match('/^Conversation #\d+$/', $conversationData['name'])) {
+                $conversationRepository->rename(
+                    $userId,
+                    (int) $conversationData['id'],
+                    $nameConversation
+                );
+                $conversationData['name'] = $nameConversation;
+            }        
         }                                                           
                 
         if ($conversationData == null){
@@ -91,19 +100,32 @@ class LLMController{
             return;
         }    
 
+        // Get the preprompt of the session
+        $preprompt = null;
+        $postprompt = null;
+        if ($conversationData["session_id"] !=null){
+            $sessionRepo = new SessionRepository($pdo);
+            $promptRaw = $sessionRepo->getPreAndPostPromptBySessionId($conversationData["session_id"]);
+            $preprompt = $promptRaw["pre_prompt_override"];
+            $postprompt = $promptRaw["post_prompt_override"];
+        }
+
         $metadata = $conversationRepository->getContextByConversationIdAndUserId($conversationData['id'], $userId);
 
+        $adapter = null;
         switch ($aiData["adapter"]) {
-        case "ollama":
-            $adapter = new OllamaAdaptater($aiData["api_url"],$aiData["name"]);
-            break;
-        case "openAi":
-            //code block;
-            break;
-        default:
-            $adapter = null;
+            case "ollama":
+                $adapter = new OllamaAdaptater($aiData["api_url"], $aiData["name"]);
+                break;
+            case "openAi":
+                // not implemented yet
+                break;
+        }
+        if ($adapter === null) {
+            header('Content-Type: application/json');
+            http_response_code(400);
+            echo json_encode(['error' => "Adaptateur non supporté."]);
             return;
-            break;
         }
 
         // read from the database all the context of the conversation
@@ -112,6 +134,8 @@ class LLMController{
         if ($metadata){
             $context = $adapter->readContextFromMetadata($metadata);
         }
+
+        // Recover Param from Session
         
         $ai = new Ai (
             $id = $aiData["id"],
@@ -127,7 +151,7 @@ class LLMController{
             $aiData["api_url"],
             $adapter,
         );
-        $responseRaw = $ai->ask($userMessage, $context);
+        $responseRaw = $ai->ask($userMessage, $context,$preprompt,$postprompt);
         $response = json_decode($responseRaw);
 
         if ($response === null || (is_object($response) && isset($response->error))) {
