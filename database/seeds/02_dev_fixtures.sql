@@ -208,6 +208,14 @@ INSERT INTO researcher_authorizations (researcher_id, department_id, request) VA
      (SELECT id FROM departments WHERE name = 'Informatique'),
      'Je souhaite analyser les interactions du departement Informatique dans le cadre d''une etude sur les usages pedagogiques des LLM. Donnees agregees uniquement.');
 
+-- A revoked authorization:
+INSERT INTO researcher_authorizations (researcher_id, department_id, authorized_by_id, authorized_at, rejected_at) VALUES
+    ((SELECT id FROM users WHERE email = 'chercheur1@univ-amu.fr'),
+     (SELECT id FROM departments WHERE name = 'Mathematiques'),
+     (SELECT id FROM users WHERE email = 'admin.maths@univ-amu.fr'),
+     NOW() - INTERVAL '1 day',
+     NOW());
+
 INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
     ((SELECT id FROM users WHERE email = 'emma.blanc@etu.univ-amu.fr'),
      (SELECT id FROM sessions WHERE name = 'TD BDD - en cours'),
