@@ -200,7 +200,7 @@ class AccueilController extends Controller
     private function redirectAdminToConsole(): void
     {
         if ($this->hasRole('department_admin')) {
-            $this->redirect('/admin');
+            $this->redirect('/department-admin');
         }
     }
 }

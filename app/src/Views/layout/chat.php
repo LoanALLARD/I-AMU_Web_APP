@@ -99,7 +99,7 @@ $themePref = match ($user['theme'] ?? null) {
 <body class="app-body page-<?= htmlspecialchars($page) ?>">
 
     <header class="app-topbar">
-        <a href="<?= $isDeptAdmin ? '/admin' : '/chat' ?>" class="topbar-brand" aria-label="Accueil I-AMU">
+        <a href="<?= $isDeptAdmin ? '/department-admin' : '/chat' ?>" class="topbar-brand" aria-label="Accueil I-AMU">
             <img src="/assets/img/logo.png" alt="">
             <div class="topbar-brand-text">
                 <strong>I-AMU</strong>

@@ -12,7 +12,7 @@
     use Controllers\SessionController;
     use Controllers\ProfileController;
     use Controllers\PlaceController;
-    use Controllers\AdminController;
+    use Controllers\DepartmentAdminController;
     use Controllers\ErrorController;
     use Core\HttpException;
 
@@ -53,9 +53,12 @@
     $router->add('POST', '/profile/deactivate',  function()     { (new ProfileController())->deactivate(); });
 
     // --- Department-admin console (department_admin role) --------------
-    $router->add('GET',  '/admin',                         function() { (new AdminController())->index(); });
-    $router->add('POST', '/admin/researchers/approve',     function() { (new AdminController())->approveResearcher(); });
-    $router->add('POST', '/admin/researchers/reject',      function() { (new AdminController())->rejectResearcher(); });
+    $router->add('GET',  '/department-admin',                         function() { (new DepartmentAdminController())->index(); });
+    $router->add('POST', '/department-admin/researchers/approve',     function() { (new DepartmentAdminController())->approveResearcher(); });
+    $router->add('POST', '/department-admin/researchers/reject',      function() { (new DepartmentAdminController())->rejectResearcher(); });
+    $router->add('POST', '/department-admin/researchers/revoke',      function() { (new DepartmentAdminController())->revokeResearcher(); });
+    $router->add('POST', '/department-admin/researchers/reauthorize', function() { (new DepartmentAdminController())->reauthorizeResearcher(); });
+    $router->add('POST', '/department-admin/users/set-active',        function() { (new DepartmentAdminController())->setUserActive(); });
 
 // --- Sessions (teacher) + join (student) --------------------------
     // Literal routes are registered before the `{id}` wildcard so they win.

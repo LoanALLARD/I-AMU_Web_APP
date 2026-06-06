@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="stylesheet" href="/assets/css/layoutMain.css">
     <link rel="stylesheet" href="/assets/css/sessions.css">
-    <link rel="stylesheet" href="/assets/css/admin.css">
+    <link rel="stylesheet" href="/assets/css/department_admin.css">
     <link rel="stylesheet" href="/assets/css/error.css">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
@@ -35,7 +35,7 @@ if ($isAuthenticated && $roles === []) {
 <body>
     <header>
         <nav>
-            <a href="<?= !$isAuthenticated ? '/login' : ($isDeptAdmin ? '/admin' : '/chat') ?>" class="navbar-brand">
+            <a href="<?= !$isAuthenticated ? '/login' : ($isDeptAdmin ? '/department-admin' : '/chat') ?>" class="navbar-brand">
                 <img src="/assets/img/logo.png" alt="I-AMU" class="navbar-logo">
             </a>
             <?php if ($isAuthenticated): ?>
@@ -46,7 +46,7 @@ if ($isAuthenticated && $roles === []) {
                     <a href="/sessions" class="nav-link">Mes sessions</a>
                 <?php endif; ?>
                 <?php if ($isDeptAdmin): ?>
-                    <a href="/admin" class="nav-link">Administration</a>
+                    <a href="/department-admin" class="nav-link">Administration</a>
                 <?php endif; ?>
                 <span class="nav-spacer"></span>
                 <a href="/profile" class="nav-link nav-user">
