@@ -170,10 +170,10 @@ SELECT lives_ok(
 -- users: research_opposed defaults to FALSE and is NOT NULL (RGPD)
 -- ============================================================
 
-INSERT INTO users (id, email, password_hash) VALUES (2, 'optout@univ-amu.fr', 'h');
+INSERT INTO users (email, password_hash) VALUES ('optout@univ-amu.fr', 'h');
 
 SELECT is(
-    (SELECT research_opposed FROM users WHERE id = 2),
+    (SELECT research_opposed FROM users WHERE email = 'optout@univ-amu.fr'),
     FALSE,
     'users.research_opposed defaults to FALSE'
 );

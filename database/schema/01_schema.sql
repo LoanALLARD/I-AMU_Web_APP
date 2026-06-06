@@ -1,7 +1,7 @@
 CREATE TYPE theme_type AS ENUM ('LIGHT', 'DARK');
 CREATE TYPE resource_state_type AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED');
 CREATE TYPE domain_role_type AS ENUM ('STUDENT', 'TEACHER');
-CREATE TYPE session_type AS ENUM ('COURSE', 'EXAM');
+CREATE TYPE session_type AS ENUM ('EXAM', 'TUTORIAL', 'LAB', 'FREE_STUDY');
 CREATE TYPE session_status_type AS ENUM ('DRAFT', 'SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED');
 
 CREATE TABLE places (
