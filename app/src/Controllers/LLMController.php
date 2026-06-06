@@ -51,6 +51,23 @@ class LLMController{
 
         $pdo = Database::getConnection();                                   // Instance of the database
 
+        // Exam lockdown: a student inside a running exam may only post to
+        // their exam conversation. Free chat (no id) or any other
+        // conversation is rejected, so the locked UI cannot be bypassed by
+        // calling this endpoint directly.
+        if (in_array('student', $_SESSION['roles'] ?? [], true)) {
+            $lock = (new \Services\ExamLockService($pdo))->activeLockFor($userId);
+            if ($lock !== null) {
+                $targetId = $conversation_id !== null ? (int) $conversation_id : null;
+                if ($lock['conversationId'] === null || $targetId !== $lock['conversationId']) {
+                    header('Content-Type: application/json');
+                    http_response_code(403);
+                    echo json_encode(['error' => "Examen en cours : seule la conversation de l'examen est autorisée."]);
+                    return;
+                }
+            }
+        }
+
         $aiRepository = new AiRepository($pdo);
         $aiData = $aiRepository->getModelByName($modelName);                // Read Data from the DataBase
 
@@ -105,6 +122,16 @@ class LLMController{
         $postprompt = null;
         if ($conversationData["session_id"] !=null){
             $sessionRepo = new SessionRepository($pdo);
+            // The requested model must be authorized for the session. While the UI filters this,
+            // the backend enforces it for all direct requests (including exams and courses) to
+            // prevent unauthorized model access.
+            $allowedModelIds = $sessionRepo->authorizedModelIdsOf((int) $conversationData["session_id"]);
+            if (!in_array((int) $aiData['id'], $allowedModelIds, true)) {
+                header('Content-Type: application/json');
+                http_response_code(403);
+                echo json_encode(['error' => "Ce modèle n'est pas autorisé pour cette session."]);
+                return;
+            }
             $promptRaw = $sessionRepo->getPreAndPostPromptBySessionId($conversationData["session_id"]);
             $preprompt = $promptRaw["pre_prompt_override"];
             $postprompt = $promptRaw["post_prompt_override"];

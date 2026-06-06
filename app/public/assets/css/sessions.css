@@ -1195,3 +1195,50 @@ textarea {
 .profile-form .form-actions {
     margin-top: 4px;
 }
+
+/* Exam lockdown shell. A student confined to a running exam: distinct red
+   surveillance chrome, no navigation, no history. */
+.topbar-mode.topbar-mode-exam {
+    color: var(--white);
+    background: var(--refuse);
+    letter-spacing: .1em;
+}
+
+body.exam-locked .app-topbar {
+    border-bottom: 2px solid var(--refuse);
+}
+
+.exam-lock-panel {
+    margin: .9rem .75rem;
+    padding: 1rem .9rem;
+    border: 1px solid var(--refuse);
+    border-radius: var(--r-2);
+    background: var(--refuse-bg);
+}
+
+.exam-lock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--refuse);
+}
+
+.exam-lock-name {
+    margin: .55rem 0 .35rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--gray-800);
+}
+
+.exam-lock-note {
+    margin: 0;
+    font-size: .78rem;
+    line-height: 1.45;
+    color: var(--gray-600);
+}

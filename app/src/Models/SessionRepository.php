@@ -320,6 +320,30 @@ class SessionRepository
         return $rows;
     }
 
+    /**
+     * Exam sessions a student is enrolled in that may currently be running.
+     *
+     * Only EXAM-type sessions with a non-terminal status are returned; the
+     * caller hydrates Domain\Session and uses isActive() to confirm the
+     * lock (time-based expiry is resolved there, not in SQL).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function examCandidatesForStudent(int $studentId): array
+    {
+        $stmt = $this->pdo->prepare(
+            self::SELECT
+            . ' JOIN enrollments e ON e.session_id = s.id'
+            . " WHERE e.student_id = :sid AND s.type = 'EXAM'"
+            . " AND s.status IN ('SCHEDULED', 'ACTIVE')"
+        );
+        $stmt->execute(['sid' => $studentId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
 
     /**
      * Retrun the value of preprompt in the table Session in the DB.
