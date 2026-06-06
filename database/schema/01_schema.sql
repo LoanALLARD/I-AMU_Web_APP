@@ -40,6 +40,7 @@ CREATE TABLE users (
     archive_duration_days SMALLINT,
     email_verified_at TIMESTAMPTZ,
     email_verify_token VARCHAR(255),
+    research_opposed BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT pk_users PRIMARY KEY (id),
     CONSTRAINT fk_users_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE SET NULL,
     CONSTRAINT uq_users_email UNIQUE (email),
@@ -208,6 +209,16 @@ CREATE TABLE interactions (
     CONSTRAINT ck_interactions_input_tokens CHECK (input_tokens IS NULL OR input_tokens > 0),
     CONSTRAINT ck_interactions_output_tokens CHECK (output_tokens IS NULL OR output_tokens >= 0),
     CONSTRAINT ck_interactions_latency CHECK (latency IS NULL OR latency >= 0)
+);
+
+CREATE TABLE conversation_exports (
+    conversation_id BIGINT,
+    researcher_id BIGINT,
+    ip_address INET NOT NULL,
+    exported_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT pk_conversation_exports PRIMARY KEY (conversation_id, researcher_id),
+    CONSTRAINT fk_conversation_exports_conversation FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_conversation_exports_researcher FOREIGN KEY (researcher_id) REFERENCES researchers (id) ON DELETE RESTRICT
 );
 
 CREATE TABLE teacher_resources (

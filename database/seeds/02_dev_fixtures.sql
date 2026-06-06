@@ -332,6 +332,22 @@ INSERT INTO interactions (conversation_id, prompt, response,
      'Avec plaisir.',
      150, 3, 15, NULL);
 
+-- RGPD: some users object to having their data used for research.
+UPDATE users SET research_opposed = TRUE
+ WHERE email IN ('lea.vert@etu.univ-amu.fr', 'orphan@univ-amu.fr');
+
+-- Export audit trail: who exported which conversation, from which IP and when.
+INSERT INTO conversation_exports (conversation_id, researcher_id, ip_address, exported_at) VALUES
+    ((SELECT id FROM conversations WHERE name = 'TD jointures - Emma'),
+     (SELECT id FROM users WHERE email = 'chercheur1@univ-amu.fr'),
+     '147.94.0.10', NOW() - INTERVAL '2 days'),
+    ((SELECT id FROM conversations WHERE name = 'TP archive - Alice'),
+     (SELECT id FROM users WHERE email = 'chercheur1@univ-amu.fr'),
+     '147.94.0.10', NOW() - INTERVAL '1 day'),
+    ((SELECT id FROM conversations WHERE name = 'TD jointures - Hugo'),
+     (SELECT id FROM users WHERE email = 'chercheur2@univ-amu.fr'),
+     '2001:660:6201::42', NOW() - INTERVAL '3 hours');
+
 INSERT INTO users (department_id, email, password_hash, first_name, last_name, consent_version) VALUES
     ((SELECT id FROM departments WHERE name = 'Info'
         AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix')),

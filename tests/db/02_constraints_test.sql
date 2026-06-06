@@ -5,7 +5,7 @@
 
 BEGIN;
 
-SELECT plan(15);
+SELECT plan(17);
 
 -- ============================================================
 -- Fixtures
@@ -164,6 +164,26 @@ SELECT lives_ok(
     $$INSERT INTO interactions (conversation_id, prompt, user_feedback)
       VALUES (1, 'Hello', -1)$$,
     'interactions.user_feedback = -1 is accepted'
+);
+
+-- ============================================================
+-- users: research_opposed defaults to FALSE and is NOT NULL (RGPD)
+-- ============================================================
+
+INSERT INTO users (id, email, password_hash) VALUES (2, 'optout@univ-amu.fr', 'h');
+
+SELECT is(
+    (SELECT research_opposed FROM users WHERE id = 2),
+    FALSE,
+    'users.research_opposed defaults to FALSE'
+);
+
+SELECT throws_ok(
+    $$INSERT INTO users (email, password_hash, research_opposed)
+      VALUES ('d@test.fr', 'h', NULL)$$,
+    '23502',
+    NULL,
+    'users.research_opposed = NULL is rejected (NOT NULL)'
 );
 
 SELECT finish();
