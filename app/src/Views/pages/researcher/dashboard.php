@@ -11,6 +11,11 @@ $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '
 $places   = $places ?? [];
 $requests = $requests ?? [];
 
+// Split by status into three sections so a refusal never reads as pending.
+$granted = array_filter($requests, static fn (array $r): bool => $r['status'] === 'authorized');
+$pending = array_filter($requests, static fn (array $r): bool => $r['status'] === 'pending');
+$history = array_filter($requests, static fn (array $r): bool => in_array($r['status'], ['rejected', 'revoked'], true));
+
 // Status -> (French label, badge CSS class). Mirrors the service's deriveStatus.
 $statusMeta = [
     'pending'    => ['En attente', 'badge-scheduled'],
@@ -35,6 +40,31 @@ $statusMeta = [
         <?php endforeach; ?>
         <?php unset($_SESSION['_flash']); ?>
     <?php endif; ?>
+
+    <div class="admin-section">
+        <h2><?= icon('building', '', 16) ?> Mes acces</h2>
+
+        <?php if ($granted === []): ?>
+            <p class="no-message">Vous n'avez acces aux donnees d'aucun departement pour le moment.</p>
+        <?php else: ?>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Departement</th>
+                        <th>Lieu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($granted as $g): ?>
+                        <tr>
+                            <td><?= htmlspecialchars((string) $g['department_name']) ?></td>
+                            <td><?= htmlspecialchars((string) $g['place_name']) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </div>
 
     <div class="admin-section">
         <h2><?= icon('book', '', 16) ?> Demander l'acces a un departement</h2>
@@ -72,28 +102,25 @@ $statusMeta = [
     </div>
 
     <div class="admin-section">
-        <h2><?= icon('eye', '', 16) ?> Mes demandes</h2>
+        <h2><?= icon('eye', '', 16) ?> Demandes en attente</h2>
 
-        <?php if ($requests === []): ?>
-            <p class="no-message">Vous n'avez encore depose aucune demande d'acces.</p>
+        <?php if ($pending === []): ?>
+            <p class="no-message">Aucune demande en attente.</p>
         <?php else: ?>
             <table class="admin-table">
                 <thead>
                     <tr>
                         <th>Departement</th>
                         <th>Lieu</th>
-                        <th>Statut</th>
                         <th>Message</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($requests as $req): ?>
-                        <?php [$label, $badgeClass] = $statusMeta[$req['status']] ?? ['Inconnu', 'badge-draft']; ?>
+                    <?php foreach ($pending as $req): ?>
                         <tr>
                             <td><?= htmlspecialchars((string) $req['department_name']) ?></td>
                             <td><?= htmlspecialchars((string) $req['place_name']) ?></td>
-                            <td><span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($label) ?></span></td>
                             <td>
                                 <?php if (trim((string) ($req['request'] ?? '')) !== ''): ?>
                                     <?= htmlspecialchars((string) $req['request']) ?>
@@ -102,16 +129,12 @@ $statusMeta = [
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <?php if ($req['status'] === 'pending'): ?>
-                                    <form method="POST" action="/researcher/requests/cancel"
-                                          data-confirm="Annuler cette demande d'acces ?">
-                                        <?= csrf_field() ?>
-                                        <input type="hidden" name="department_id" value="<?= (int) $req['department_id'] ?>">
-                                        <button class="btn danger sm" type="submit"><?= icon('x', '', 13) ?> Annuler</button>
-                                    </form>
-                                <?php else: ?>
-                                    <span class="no-message">&mdash;</span>
-                                <?php endif; ?>
+                                <form method="POST" action="/researcher/requests/cancel"
+                                      data-confirm="Annuler cette demande d'acces ?">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="department_id" value="<?= (int) $req['department_id'] ?>">
+                                    <button class="btn danger sm" type="submit"><?= icon('x', '', 13) ?> Annuler</button>
+                                </form>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -119,6 +142,32 @@ $statusMeta = [
             </table>
         <?php endif; ?>
     </div>
+
+    <?php if ($history !== []): ?>
+        <div class="admin-section">
+            <h2><?= icon('book', '', 16) ?> Historique</h2>
+
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Departement</th>
+                        <th>Lieu</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($history as $req): ?>
+                        <?php [$label, $badgeClass] = $statusMeta[$req['status']] ?? ['Inconnu', 'badge-draft']; ?>
+                        <tr>
+                            <td><?= htmlspecialchars((string) $req['department_name']) ?></td>
+                            <td><?= htmlspecialchars((string) $req['place_name']) ?></td>
+                            <td><span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($label) ?></span></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php endif; ?>
 
 </div>
 
