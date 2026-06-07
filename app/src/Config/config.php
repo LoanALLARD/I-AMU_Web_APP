@@ -36,6 +36,9 @@ return [
         'host' => $_ENV['SMTP_HOST'] ?? 'mailpit',
         'port' => (int) ($_ENV['SMTP_PORT'] ?? 1025),
         'from' => $_ENV['SMTP_FROM'] ?? 'noreply@iamu.univ-amu.fr',
+        'user'       => $_ENV['SMTP_USER'] ?? '',
+        'pass'       => $_ENV['SMTP_PASS'] ?? '',
+        'encryption' => strtolower((string) ($_ENV['SMTP_ENCRYPTION'] ?? '')),
     ],
 
     'app' => [
