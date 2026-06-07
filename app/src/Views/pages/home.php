@@ -306,7 +306,7 @@ $hasMessages = $messages !== [];
         if (sessionMaxInputSize !== null && message.length > sessionMaxInputSize) {
             const errorMsg = document.createElement('div');
             errorMsg.className = 'msg msg-error';
-            errorMsg.innerHTML = <div class="msg-content"><p class="msg-error">Votre message d�passe la limite de  + sessionMaxInputSize +  caract�res.</p></div>;
+            errorMsg.innerHTML = `<div class="msg-content"><p class="msg-error">Votre message dépasse la limite de ${sessionMaxInputSize} caractères.</p></div>`;
             const messagesEl = document.getElementById('messages');
             messagesEl.appendChild(errorMsg);
             messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -364,9 +364,17 @@ $hasMessages = $messages !== [];
                 return;
             }
 
+            // Server-side limits / auth: the endpoint returns an error JSON
+            // with a non-2xx status (429 token cap, 422 char cap, 403, etc.).
+            if (!res.ok || data.error) {
+                const msg = data.error ?? 'Une erreur est survenue.';
+                aiMsg.querySelector('.msg-content').innerHTML =
+                    `<p class="msg-error">${escapeHtml(msg)}</p>`;
+                return;
+            }
+
             const endTime = performance.now();
             const durationStr = ((endTime - startTime) / 1000).toFixed(2) + 's';
-
 
             const responseText = data.response ?? 'Pas de réponse.';
             renderMarkdown(responseText, aiMsg.querySelector('.msg-content'));

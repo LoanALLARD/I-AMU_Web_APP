@@ -95,7 +95,7 @@ class SessionRepository
             'post_prompt_override' => $data['post_prompt_override'],
             'instructions'         => $data['instructions'],
             'max_input_size'       => $data['max_input_size'],
-            'max_tokens '          => $data['max_tokens'],
+            'max_tokens'          => $data['max_tokens'],
         ]);
 
         /** @var array{id: int|string, access_code: ?string} $row */

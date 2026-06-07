@@ -130,8 +130,18 @@ class LLMController{
                 echo json_encode(['error' => "Ce modèle n'est pas autorisé pour cette session."]);
                 return;
             }
-            // Enforce the teacher-set request limit per session, blocking further prompts once reached (NULL denotes unlimited).
             $sessionRow  = $sessionRepo->findById((int) $conversationData["session_id"]);
+            // Per-prompt character limit (max_input_size). Counts characters of the raw user message
+            $maxInputSize = isset($sessionRow['max_input_size']) && $sessionRow['max_input_size'] !== null
+                ? (int) $sessionRow['max_input_size']
+                : null;
+            if ($maxInputSize !== null && mb_strlen($userMessage) > $maxInputSize) {
+                header('Content-Type: application/json');
+                http_response_code(422);
+                echo json_encode(['error' => "Message trop long : " . mb_strlen($userMessage) . "/$maxInputSize caractères."]);
+                return;
+            }
+            // Enforce the teacher-set request limit per session, blocking further prompts once reached (NULL denotes unlimited).
             $max_tokens  = isset($sessionRow['max_tokens']) && $sessionRow['max_tokens'] !== null
                 ? (int) $sessionRow['max_tokens']
                 : null;
@@ -140,7 +150,7 @@ class LLMController{
                 if ($used  >= $max_tokens ) {
                     header('Content-Type: application/json');
                     http_response_code(429);
-                    echo json_encode(['error' => "Limite de tokens atteinte pour cette session ($used/$maxTokens)."]);
+                    echo json_encode(['error' => "Limite de tokens atteinte pour cette session ($used/$max_tokens)."]);
                     return;
                 }
             }

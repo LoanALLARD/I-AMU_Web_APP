@@ -60,8 +60,6 @@ class ChatService
                 'id'        => (int) $row['id'],
                 'name'      => (string) $row['name'],
                 'sessionId' => $sessionId,
-                'maxInputSize'   => $sessionId !== null && $row !== null ? ($row['max_input_size'] ?? null) : null,
-                'maxTokens'      => $sessionId !== null && $row !== null ? ($row['max_tokens'] ?? null) : null,
             ];
         }
 

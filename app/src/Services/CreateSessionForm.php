@@ -100,8 +100,8 @@ class CreateSessionForm
         }
         $rawReq      = trim((string) ($post['max_tokens'] ?? ''));
         if ($rawReq !== '') {
-            $max_Tokens  = (int) $rawReq;
-            if ($max_Tokens  < 1 || $max_Tokens  > 500000) {
+            $maxTokens  = (int) $rawReq;
+            if ($maxTokens  < 1 || $maxTokens  > 500000) {
                 $errors[] = 'Limite de token invalide (1 à 500 000).';
             }
         }
@@ -123,7 +123,7 @@ class CreateSessionForm
                 'postPrompt'      => $optional($post['post_prompt'] ?? ''),
                 'instructions'    => $optional($post['instructions'] ?? ''),
                 'maxInputSize'    => $maxInputSize,
-                'maxTokens'       => $max_Tokens,
+                'maxTokens'       => $maxTokens,
                 'accessCode'      => $isCreate ? $optional($post['access_code'] ?? '') : null,
             ],
             'errors' => $errors,

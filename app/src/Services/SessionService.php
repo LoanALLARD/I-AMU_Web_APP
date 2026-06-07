@@ -243,6 +243,7 @@ class SessionService
             'postPromptOverride' => $session->postPromptOverride(),
             'instructions'       => $session->instructions(),
             'maxInputSize'       => $session->maxInputSize(),
+            'maxTokens'          => $session->maxTokens(),
             'authorizedModels'   => $models,
             'canEdit'            => $actions['can_edit'],
             'canStart'           => $actions['can_start'],

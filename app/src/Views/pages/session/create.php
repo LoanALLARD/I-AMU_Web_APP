@@ -37,7 +37,7 @@ $val = static function (string $key, mixed $default = '') use ($session, $oldInp
         'post_prompt'    => $session->postPromptOverride() ?? '',
         'instructions'   => $session->instructions() ?? '',
         'max_input_size' => $session->maxInputSize() ?? '',
-        'max_tokens'     => $session->max_tokens() ?? '',
+        'max_tokens'     => $session->maxTokens() ?? '',
         'resource_id'    => $session->resourceId(),
         'starts_at'      => $session->startsAt()?->format('Y-m-d\TH:i') ?? '',
         'duration_min'   => $session->startsAt() && $session->endsAt()
@@ -227,7 +227,7 @@ $typeCards = [
                 <input type="number" id="f-max" name="max_input_size" min="1" max="200000"
                        value="<?= htmlspecialchars((string) $val('max_input_size')) ?>"
                        placeholder="ex. 8192">
-                <span class="suffix">tok</span>
+                <span class="suffix">car</span>
             </div>
         </section>
 
@@ -242,7 +242,7 @@ $typeCards = [
                 <input type="number" id="f-maxreq" name="max_tokens" min="1" max="10000"
                        value="<?= htmlspecialchars((string) $val('max_tokens')) ?>"
                        placeholder="ex. 20">
-                <span class="suffix">req</span>
+                <span class="suffix">tok</span>
             </div>
         </section>
 
