@@ -122,15 +122,27 @@ class LLMController{
         $postprompt = null;
         if ($conversationData["session_id"] !=null){
             $sessionRepo = new SessionRepository($pdo);
-            // The requested model must be authorized for the session. While the UI filters this,
-            // the backend enforces it for all direct requests (including exams and courses) to
-            // prevent unauthorized model access.
+            // The requested model must be authorized for the session.
             $allowedModelIds = $sessionRepo->authorizedModelIdsOf((int) $conversationData["session_id"]);
             if (!in_array((int) $aiData['id'], $allowedModelIds, true)) {
                 header('Content-Type: application/json');
                 http_response_code(403);
                 echo json_encode(['error' => "Ce modèle n'est pas autorisé pour cette session."]);
                 return;
+            }
+            // Enforce the teacher-set request limit per session, blocking further prompts once reached (NULL denotes unlimited).
+            $sessionRow  = $sessionRepo->findById((int) $conversationData["session_id"]);
+            $max_tokens  = isset($sessionRow['max_tokens']) && $sessionRow['max_tokens'] !== null
+                ? (int) $sessionRow['max_tokens']
+                : null;
+            if ($max_tokens  !== null) {
+                $used = $sessionRepo->tokenUsageForStudent($userId, (int) $conversationData["session_id"]);
+                if ($used  >= $max_tokens ) {
+                    header('Content-Type: application/json');
+                    http_response_code(429);
+                    echo json_encode(['error' => "Limite de tokens atteinte pour cette session ($used/$maxTokens)."]);
+                    return;
+                }
             }
             $promptRaw = $sessionRepo->getPreAndPostPromptBySessionId($conversationData["session_id"]);
             $preprompt = $promptRaw["pre_prompt_override"];
@@ -216,3 +228,4 @@ class LLMController{
         
     }
 }
+

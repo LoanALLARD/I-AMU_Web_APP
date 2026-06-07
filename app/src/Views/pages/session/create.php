@@ -37,6 +37,7 @@ $val = static function (string $key, mixed $default = '') use ($session, $oldInp
         'post_prompt'    => $session->postPromptOverride() ?? '',
         'instructions'   => $session->instructions() ?? '',
         'max_input_size' => $session->maxInputSize() ?? '',
+        'max_tokens'     => $session->max_tokens() ?? '',
         'resource_id'    => $session->resourceId(),
         'starts_at'      => $session->startsAt()?->format('Y-m-d\TH:i') ?? '',
         'duration_min'   => $session->startsAt() && $session->endsAt()
@@ -230,6 +231,21 @@ $typeCards = [
             </div>
         </section>
 
+        <!-- Per-session request quota -->
+        <section class="fsection">
+            <div class="fsection-head">
+                <span class="fsection-label">Limite de tokens</span>
+                <span class="fsection-rule"></span>
+            </div>
+            <p class="fsection-hint">Nombre maximal de tokens qu'un étudiant peut utiliser sur la session. Laisser vide pour aucune limite.</p>
+            <div class="field-suffix field-suffix--narrow">
+                <input type="number" id="f-maxreq" name="max_tokens" min="1" max="10000"
+                       value="<?= htmlspecialchars((string) $val('max_tokens')) ?>"
+                       placeholder="ex. 20">
+                <span class="suffix">req</span>
+            </div>
+        </section>
+
         <div class="form-actions">
             <button type="submit" class="btn primary">
                 <?= $isEdit ? 'Enregistrer' : 'Créer la session' ?>
@@ -330,3 +346,4 @@ $jsPath = __DIR__ . '/../../../../public/assets/js/session-create.js';
 $jsVer  = is_file($jsPath) ? filemtime($jsPath) : 0;
 ?>
 <script src="/assets/js/session-create.js?v=<?= $jsVer ?>" defer></script>
+

@@ -155,6 +155,8 @@ $hasMessages = $messages !== [];
 <script>
     const conversationId = <?= json_encode($conversation['id'] ?? null) ?>;
     const conversationContext = <?= json_encode($messages ?? []) ?>;
+    const sessionMaxInputSize = <?= json_encode($env['maxInputSize'] ?? null) ?>;
+    const sessionMaxTokens = <?= json_encode($env['maxTokens'] ?? null) ?>;
 
     const input = document.getElementById('promptInput');
     const sendBtn = document.getElementById('btnSend');
@@ -300,6 +302,17 @@ $hasMessages = $messages !== [];
         const message = input.value.trim();
         if (!message) return;
 
+        // Validate max_input_size limit if set
+        if (sessionMaxInputSize !== null && message.length > sessionMaxInputSize) {
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'msg msg-error';
+            errorMsg.innerHTML = <div class="msg-content"><p class="msg-error">Votre message d�passe la limite de  + sessionMaxInputSize +  caract�res.</p></div>;
+            const messagesEl = document.getElementById('messages');
+            messagesEl.appendChild(errorMsg);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return;
+        }
+
         const messagesEl = document.getElementById('messages');
         const emptyState = document.getElementById('emptyState');
         if (emptyState) emptyState.style.display = 'none';
@@ -434,3 +447,5 @@ $hasMessages = $messages !== [];
     }
 
 </script>
+
+

@@ -373,7 +373,8 @@ class SessionService
             $data['prePrompt'],
             $data['postPrompt'],
             $data['instructions'],
-            $data['maxInputSize'],
+            $data['maxInputSize'] ?? null,
+            $data['maxTokens'] ?? null,
         );
 
         $result = $this->sessions->insert($session->toRow());
@@ -402,7 +403,7 @@ class SessionService
 
         $session->rename((string) $data['name'], $now);
         $session->reschedule($startsAt, $endsAt, $now);
-        $session->reconfigure($data['prePrompt'], $data['postPrompt'], $data['instructions'], $data['maxInputSize'], $now);
+        $session->reconfigure($data['prePrompt'], $data['postPrompt'], $data['instructions'], $data['maxTokens'] ?? null, $data['maxInputSize'] ?? null, $now);
 
         $this->sessions->update($id, $session->toRow());
         $this->sessions->setAuthorizedModels($id, $data['modelIds']);
