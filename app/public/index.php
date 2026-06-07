@@ -62,8 +62,9 @@
     $router->add('POST', '/department-admin/users/set-active',        function() { (new DepartmentAdminController())->setUserActive(); });
 
     // --- Researcher space (researcher role) ---------------------------
-    $router->add('GET',  '/researcher',          function() { (new ResearcherController())->index(); });
-    $router->add('POST', '/researcher/requests', function() { (new ResearcherController())->requestAccess(); });
+    $router->add('GET',  '/researcher',                 function() { (new ResearcherController())->index(); });
+    $router->add('POST', '/researcher/requests',        function() { (new ResearcherController())->requestAccess(); });
+    $router->add('POST', '/researcher/requests/cancel', function() { (new ResearcherController())->cancelRequest(); });
 
 // --- Sessions (teacher) + join (student) --------------------------
     // Literal routes are registered before the `{id}` wildcard so they win.

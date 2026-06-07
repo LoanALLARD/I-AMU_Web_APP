@@ -227,13 +227,7 @@ class ResearcherAuthorizationRepository
         return $stmt->rowCount();
     }
 
-    /**
-     * Submits (or re-submits) a researcher's access request for a department.
-     * The PK (researcher_id, department_id) means one row per pair, so a repeat
-     * request reuses the same row: ON CONFLICT resets it to pending (clears both
-     * timestamps and the deciding admin) and overwrites the message. This covers
-     * the first request as well as re-requesting a rejected or revoked one.
-     */
+    /** Files an access request; a repeat reuses the row (PK) and resets it to pending. */
     public function submitRequest(int $researcherId, int $departmentId, ?string $request): void
     {
         $stmt = $this->pdo->prepare(
@@ -253,9 +247,23 @@ class ResearcherAuthorizationRepository
     }
 
     /**
-     * All of a researcher's requests with their target department, place, and
-     * the raw timestamps the caller maps to a status (pending / authorized /
-     * rejected / revoked).
+     * Deletes a still-pending request, scoped to the researcher (anti-IDOR).
+     * A decided request is kept as history. Returns rows deleted (0 = none).
+     */
+    public function cancelPending(int $researcherId, int $departmentId): int
+    {
+        $stmt = $this->pdo->prepare(
+            'DELETE FROM researcher_authorizations
+             WHERE researcher_id = :rid AND department_id = :dept
+               AND authorized_at IS NULL AND rejected_at IS NULL'
+        );
+        $stmt->execute(['rid' => $researcherId, 'dept' => $departmentId]);
+
+        return $stmt->rowCount();
+    }
+
+    /**
+     * A researcher's requests with department, place and raw timestamps.
      *
      * @return list<array<string, mixed>>
      */

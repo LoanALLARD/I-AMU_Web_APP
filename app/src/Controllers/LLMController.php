@@ -47,6 +47,15 @@ class LLMController{
             return;
         }
 
+        // Roles with no chat access: refuse even a forged request.
+        $roles = $_SESSION['roles'] ?? [];
+        if (in_array('researcher', $roles, true) || in_array('department_admin', $roles, true)) {
+            header('Content-Type: application/json');
+            http_response_code(403);
+            echo json_encode(['error' => 'Acces non autorise.']);
+            return;
+        }
+
         $pdo = Database::getConnection();                                   // Instance of the database
 
         $aiRepository = new AiRepository($pdo);

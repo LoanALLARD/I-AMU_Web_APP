@@ -84,6 +84,7 @@ $statusMeta = [
                         <th>Lieu</th>
                         <th>Statut</th>
                         <th>Message</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -96,6 +97,18 @@ $statusMeta = [
                             <td>
                                 <?php if (trim((string) ($req['request'] ?? '')) !== ''): ?>
                                     <?= htmlspecialchars((string) $req['request']) ?>
+                                <?php else: ?>
+                                    <span class="no-message">&mdash;</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php if ($req['status'] === 'pending'): ?>
+                                    <form method="POST" action="/researcher/requests/cancel"
+                                          data-confirm="Annuler cette demande d'acces ?">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="department_id" value="<?= (int) $req['department_id'] ?>">
+                                        <button class="btn danger sm" type="submit"><?= icon('x', '', 13) ?> Annuler</button>
+                                    </form>
                                 <?php else: ?>
                                     <span class="no-message">&mdash;</span>
                                 <?php endif; ?>

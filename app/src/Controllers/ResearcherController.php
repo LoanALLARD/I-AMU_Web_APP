@@ -10,12 +10,8 @@ use Models\PlaceRepository;
 use Services\ResearcherAuthorizationService;
 
 /**
- * Researcher space.
- *
- * Gated by requireRole('researcher'), which renders the 403 page for any
- * other visitor. Lets a researcher file an access request for a department
- * (one per department) and review the status of their existing requests;
- * department admins then process them from their own console.
+ * Researcher space: file and track department access requests.
+ * Every action is gated by requireRole('researcher').
  */
 class ResearcherController extends Controller
 {
@@ -34,11 +30,7 @@ class ResearcherController extends Controller
         ]);
     }
 
-    /**
-     * POST /researcher/requests — files (or re-files) an access request for the
-     * chosen department. One request per department: a repeat on a rejected or
-     * revoked department resets it to pending.
-     */
+    /** POST /researcher/requests — files (or re-files) an access request. */
     public function requestAccess(): void
     {
         $this->requireRole('researcher');
@@ -56,6 +48,23 @@ class ResearcherController extends Controller
         $this->flash(
             $result['success'] ? 'success' : 'error',
             $result['success'] ? 'Demande envoyee au departement.' : $result['error']
+        );
+        $this->redirect('/researcher');
+    }
+
+    /** POST /researcher/requests/cancel — cancels a still-pending request. */
+    public function cancelRequest(): void
+    {
+        $this->requireRole('researcher');
+        $this->verifyCsrf();
+
+        $researcherId = (int) $this->currentUser()['id'];
+        $result = (new ResearcherAuthorizationService(Database::getConnection()))
+            ->cancelRequest($researcherId, (int) $this->input('department_id', 0));
+
+        $this->flash(
+            $result['success'] ? 'success' : 'error',
+            $result['success'] ? 'Demande annulee.' : $result['error']
         );
         $this->redirect('/researcher');
     }

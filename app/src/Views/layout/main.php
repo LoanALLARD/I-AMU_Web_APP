@@ -22,6 +22,7 @@ $isAuthenticated = !empty($_SESSION['user_id']);
 $roles           = $_SESSION['roles'] ?? [];
 $isTeacher       = in_array('teacher', $roles, true);
 $isDeptAdmin     = in_array('department_admin', $roles, true);
+$isResearcher    = in_array('researcher', $roles, true);
 $displayName     = trim(($_SESSION['user_first_name'] ?? '') . ' ' . ($_SESSION['user_last_name'] ?? ''));
 
 // Stale-session safeguard: a logged-in browser that doesn't carry the
@@ -37,11 +38,11 @@ if ($isAuthenticated && $roles === []) {
 <body>
     <header>
         <nav>
-            <a href="<?= !$isAuthenticated ? '/login' : ($isDeptAdmin ? '/department-admin' : '/chat') ?>" class="navbar-brand">
+            <a href="<?= !$isAuthenticated ? '/login' : ($isDeptAdmin ? '/department-admin' : ($isResearcher ? '/researcher' : '/chat')) ?>" class="navbar-brand">
                 <img src="/assets/img/logo.png" alt="I-AMU" class="navbar-logo">
             </a>
             <?php if ($isAuthenticated): ?>
-                <?php if (!$isDeptAdmin): ?>
+                <?php if (!$isDeptAdmin && !$isResearcher): ?>
                     <a href="/chat" class="nav-link">Chat</a>
                 <?php endif; ?>
                 <?php if ($isTeacher): ?>
@@ -49,6 +50,9 @@ if ($isAuthenticated && $roles === []) {
                 <?php endif; ?>
                 <?php if ($isDeptAdmin): ?>
                     <a href="/department-admin" class="nav-link">Administration</a>
+                <?php endif; ?>
+                <?php if ($isResearcher): ?>
+                    <a href="/researcher" class="nav-link">Espace chercheur</a>
                 <?php endif; ?>
                 <span class="nav-spacer"></span>
                 <a href="/profile" class="nav-link nav-user">

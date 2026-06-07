@@ -119,10 +119,8 @@ final class ResearcherAuthorizationService
     // ----------------------------------------------------------------
 
     /**
-     * Files a researcher's access request for a department. The department must
-     * exist, be active, and belong to the given place (re-checked server-side
-     * since the dependent select is JS-filled). A repeat on a rejected/revoked
-     * pair resets it to pending — the PK guarantees one request per department.
+     * Files an access request after validating the place/department pair and
+     * rejecting a duplicate of an active or pending one.
      *
      * @return array{success: true} | array{success: false, error: string}
      */
@@ -148,8 +146,24 @@ final class ResearcherAuthorizationService
     }
 
     /**
-     * The researcher's own requests, each tagged with a status derived from the
-     * timestamps: 'pending', 'authorized', 'rejected' or 'revoked'.
+     * Cancels the researcher's own request, allowed only while still pending.
+     *
+     * @return array{success: true} | array{success: false, error: string}
+     */
+    public function cancelRequest(int $researcherId, int $departmentId): array
+    {
+        if ($departmentId === 0) {
+            return ['success' => false, 'error' => 'Demande introuvable.'];
+        }
+        if ($this->repo->cancelPending($researcherId, $departmentId) === 0) {
+            return ['success' => false, 'error' => 'Cette demande ne peut plus etre annulee.'];
+        }
+
+        return ['success' => true];
+    }
+
+    /**
+     * The researcher's own requests, each tagged with a derived status.
      *
      * @return list<array<string, mixed>>
      */
@@ -167,10 +181,7 @@ final class ResearcherAuthorizationService
         );
     }
 
-    /**
-     * Maps the (authorized_at, rejected_at) pair to a status label, mirroring
-     * the repository's SQL predicates: the most recent decision wins.
-     */
+    /** Maps the timestamp pair to a status; the most recent decision wins. */
     private static function deriveStatus(?string $authorizedAt, ?string $rejectedAt): string
     {
         if ($authorizedAt === null && $rejectedAt === null) {
