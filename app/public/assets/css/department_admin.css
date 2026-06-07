@@ -1,4 +1,4 @@
-/* Department-admin console (pages/admin/*). Reuses tokens from style.css. */
+/* Department-admin console (pages/department_admin/*). Reuses tokens from style.css. */
 
 .admin-section { max-width: 1040px; margin: 0 auto 24px; }
 
@@ -56,3 +56,67 @@
 
 .admin-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
 .admin-actions form { margin: 0; }
+
+.admin-section > h2 {
+    font-size: 15px; margin: 0 0 12px;
+    display: flex; align-items: center; gap: 8px;
+}
+
+.admin-table {
+    width: 100%; border-collapse: collapse;
+    background: var(--white, #fff);
+    border: 1px solid var(--gray-200, #e5e7eb); border-radius: 12px;
+    overflow: hidden; font-size: 14px;
+}
+.admin-table th, .admin-table td {
+    padding: 10px 14px; text-align: left;
+    border-bottom: 1px solid var(--gray-100, #f3f4f6);
+}
+.admin-table th {
+    font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .03em; color: var(--gray-400, #9ca3af);
+    background: var(--gray-50, #fafafa);
+}
+.admin-table tbody tr:last-child td { border-bottom: none; }
+.admin-table td form { margin: 0; }
+
+.admin-subhead {
+    font-size: 13px; font-weight: 600; color: var(--gray-400, #9ca3af);
+    margin: 18px 0 8px; display: flex; align-items: center; gap: 6px;
+}
+
+.admin-empty {
+    color: var(--gray-400, #9ca3af); font-size: 13px; margin: 8px 0 0;
+}
+.admin-empty[hidden] { display: none; }
+
+.admin-table th.is-sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+.admin-table th.is-sortable:hover { color: var(--blue, #2563eb); }
+.admin-table th.is-sortable::after {
+    content: "\2195"; margin-left: 6px; font-size: 13px;
+    color: var(--gray-400, #9ca3af); opacity: 1;
+}
+.admin-table th.is-sortable:hover::after { color: var(--blue, #2563eb); }
+.admin-table th[aria-sort="ascending"],
+.admin-table th[aria-sort="descending"] { color: var(--blue, #2563eb); }
+.admin-table th[aria-sort="ascending"]::after  { content: "\2191"; color: var(--blue, #2563eb); }
+.admin-table th[aria-sort="descending"]::after { content: "\2193"; color: var(--blue, #2563eb); }
+/* Priority rank shown only when several columns are stacked. */
+.admin-table th[data-sort-order]::before {
+    content: attr(data-sort-order);
+    display: inline-block; margin-right: 4px;
+    min-width: 14px; height: 14px; line-height: 14px;
+    font-size: 10px; text-align: center; border-radius: 50%;
+    background: var(--blue, #2563eb); color: #fff;
+}
+
+/* Transient feedback for AJAX actions (replaces the flash + reload). Colors
+   and borders come from the shared .alert / .alert-* classes; this only adds
+   the floating position, a drop shadow and the show/hide transition. */
+.admin-toast {
+    position: fixed; top: 20px; left: 50%; transform: translate(-50%, -16px);
+    z-index: 1000; margin-bottom: 0;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .18);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+}
+.admin-toast.is-visible { opacity: 1; transform: translate(-50%, 0); }

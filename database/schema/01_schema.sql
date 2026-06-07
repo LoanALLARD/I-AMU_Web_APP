@@ -1,7 +1,7 @@
 CREATE TYPE theme_type AS ENUM ('LIGHT', 'DARK');
 CREATE TYPE resource_state_type AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED');
 CREATE TYPE domain_role_type AS ENUM ('STUDENT', 'TEACHER');
-CREATE TYPE session_type AS ENUM ('COURSE', 'EXAM');
+CREATE TYPE session_type AS ENUM ('EXAM', 'TUTORIAL', 'LAB', 'FREE_STUDY');
 CREATE TYPE session_status_type AS ENUM ('DRAFT', 'SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED');
 
 CREATE TABLE places (
@@ -40,6 +40,7 @@ CREATE TABLE users (
     archive_duration_days SMALLINT,
     email_verified_at TIMESTAMPTZ,
     email_verify_token VARCHAR(255),
+    research_opposed BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT pk_users PRIMARY KEY (id),
     CONSTRAINT fk_users_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE SET NULL,
     CONSTRAINT uq_users_email UNIQUE (email),
@@ -210,6 +211,16 @@ CREATE TABLE interactions (
     CONSTRAINT ck_interactions_latency CHECK (latency IS NULL OR latency >= 0)
 );
 
+CREATE TABLE conversation_exports (
+    conversation_id BIGINT,
+    researcher_id BIGINT,
+    ip_address INET NOT NULL,
+    exported_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT pk_conversation_exports PRIMARY KEY (conversation_id, researcher_id),
+    CONSTRAINT fk_conversation_exports_conversation FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_conversation_exports_researcher FOREIGN KEY (researcher_id) REFERENCES researchers (id) ON DELETE RESTRICT
+);
+
 CREATE TABLE teacher_resources (
     teacher_id BIGINT,
     resource_id BIGINT,
@@ -252,7 +263,7 @@ CREATE TABLE researcher_authorizations (
     authorized_at TIMESTAMPTZ,
     rejected_at TIMESTAMPTZ,
     CONSTRAINT pk_researcher_authorizations PRIMARY KEY (researcher_id, department_id),
-    CONSTRAINT ck_researcher_authorizations_decision CHECK (authorized_at IS NULL OR rejected_at IS NULL),
+    CONSTRAINT ck_researcher_authorizations_decision CHECK (authorized_at IS NULL OR rejected_at IS NULL OR authorized_at <> rejected_at),
     CONSTRAINT fk_researcher_authorizations_researcher FOREIGN KEY (researcher_id) REFERENCES researchers (id) ON DELETE CASCADE,
     CONSTRAINT fk_researcher_authorizations_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE RESTRICT,
     CONSTRAINT fk_researcher_authorizations_authorized_by FOREIGN KEY (authorized_by_id) REFERENCES department_administrators (id) ON DELETE SET NULL
