@@ -9,14 +9,18 @@ namespace Domain;
  */
 enum SessionType: string
 {
-    case Course = 'COURSE';
-    case Exam   = 'EXAM';
+    case Exam      = 'EXAM';
+    case Tutorial  = 'TUTORIAL';
+    case Lab       = 'LAB';
+    case FreeStudy = 'FREE_STUDY';
 
     public function label(): string
     {
         return match ($this) {
-            self::Course => 'Cours',
-            self::Exam   => 'Examen',
+            self::Exam      => 'Examen',
+            self::Tutorial  => 'TD',
+            self::Lab       => 'TP',
+            self::FreeStudy => 'Étude libre',
         };
     }
 
