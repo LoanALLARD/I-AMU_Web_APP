@@ -7,9 +7,9 @@
  * @var list<array{id:int, name:string}> $places
  * @var list<array<string, mixed>> $requests
  */
-$displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
 $places   = $places ?? [];
 $requests = $requests ?? [];
+$activeTab = 'access';
 
 // Split by status into three sections so a refusal never reads as pending.
 $granted = array_filter($requests, static fn (array $r): bool => $r['status'] === 'authorized');
@@ -23,15 +23,8 @@ $statusMeta = [
     'rejected'   => ['Refusee', 'badge-cancelled'],
     'revoked'    => ['Acces revoque', 'badge-cancelled'],
 ];
+require __DIR__ . '/_header.php';
 ?>
-<div class="page-header">
-    <div class="page-header-row">
-        <h1>Espace chercheur</h1>
-        <span class="badge badge-draft"><?= icon('flask-conical', '', 13) ?> chercheur</span>
-    </div>
-    <p class="page-sub">Connecte en tant que <strong><?= htmlspecialchars($displayName !== '' ? $displayName : 'chercheur') ?></strong> &middot; <?= htmlspecialchars($user['email'] ?? '') ?></p>
-</div>
-
 <div class="page-body">
 
     <?php if (!empty($_SESSION['_flash'])): ?>

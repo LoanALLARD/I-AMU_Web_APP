@@ -30,6 +30,17 @@ class ResearcherController extends Controller
         ]);
     }
 
+    /** GET /researcher/data — browse and export accessible department data. */
+    public function data(): void
+    {
+        $this->requireRole('researcher');
+
+        $this->render('pages/researcher/data', [
+            'titrePage' => 'Espace chercheur',
+            'user'      => $this->currentUser(),
+        ]);
+    }
+
     /** POST /researcher/requests — files (or re-files) an access request. */
     public function requestAccess(): void
     {

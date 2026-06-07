@@ -357,7 +357,37 @@ label {
     font-family: var(--font-sans);
 }
 
+/* Sub-navigation tabs (local to a role space, under the page header) */
+.tabs {
+    display: flex;
+    gap: 4px;
+    margin: 0 0 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+.tabs .tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: .6rem 1rem;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--gray-400);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+.tabs .tab .lucide { color: inherit; }
+/* Inactive tab darkens on hover; active tab stays blue + underlined so the
+   two states never look alike. */
+.tabs .tab:not(.is-active):hover { color: var(--gray-600, #4b5563); }
+.tabs .tab.is-active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+}
+
 /* Dark-theme component overrides */
+[data-theme="dark"] .tabs { border-bottom-color: #2a3142; }
+[data-theme="dark"] .tabs .tab:not(.is-active):hover { color: var(--gray-200, #e5e7eb); }
 [data-theme="dark"] .icon-btn { background: #222838; }
 [data-theme="dark"] .badge-lab        { background: #0f2638; color: #7dd3fc; border-color: #1f4a66; }
 [data-theme="dark"] .badge-free-study { background: #251c3c; color: #c4b5fd; border-color: #45356a; }
