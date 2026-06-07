@@ -1,29 +1,116 @@
 <?php
 /**
- * Researcher landing page.
+ * Researcher space: file an access request for a department and review the
+ * status of existing requests.
  *
  * @var array{id:int, email:string, first_name:string, last_name:string, roles:list<string>, department_id:int|null}|null $user
+ * @var list<array{id:int, name:string}> $places
+ * @var list<array<string, mixed>> $requests
  */
 $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
+$places   = $places ?? [];
+$requests = $requests ?? [];
+
+// Status -> (French label, badge CSS class). Mirrors the service's deriveStatus.
+$statusMeta = [
+    'pending'    => ['En attente', 'badge-scheduled'],
+    'authorized' => ['Acces accorde', 'badge-active'],
+    'rejected'   => ['Refusee', 'badge-cancelled'],
+    'revoked'    => ['Acces revoque', 'badge-cancelled'],
+];
 ?>
 <div class="page-header">
     <div class="page-header-row">
         <h1>Espace chercheur</h1>
         <span class="badge badge-draft"><?= icon('flask-conical', '', 13) ?> chercheur</span>
     </div>
-    <p class="page-sub">Connexion validee. Votre espace dedie sera enrichi prochainement.</p>
+    <p class="page-sub">Connecte en tant que <strong><?= htmlspecialchars($displayName !== '' ? $displayName : 'chercheur') ?></strong> &middot; <?= htmlspecialchars($user['email'] ?? '') ?></p>
 </div>
 
 <div class="page-body">
+
+    <?php if (!empty($_SESSION['_flash'])): ?>
+        <?php foreach ($_SESSION['_flash'] as $flash): ?>
+            <div class="alert alert-<?= htmlspecialchars($flash['type']) ?>"><?= htmlspecialchars($flash['message']) ?></div>
+        <?php endforeach; ?>
+        <?php unset($_SESSION['_flash']); ?>
+    <?php endif; ?>
+
     <div class="admin-section">
-        <div class="admin-identity">
-            <span class="admin-identity-icon"><?= icon('user', '', 18) ?></span>
-            <div>
-                <div class="admin-identity-name">
-                    Connecte en tant que <strong><?= htmlspecialchars($displayName !== '' ? $displayName : 'chercheur') ?></strong>
+        <h2><?= icon('book', '', 16) ?> Demander l'acces a un departement</h2>
+        <p class="page-sub">Choisissez le departement dont vous souhaitez consulter les donnees. Votre demande sera traitee par l'administrateur de ce departement. Une seule demande par departement.</p>
+
+        <form method="POST" action="/researcher/requests" class="researcher-request-form">
+            <?= csrf_field() ?>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="place_id">Lieu</label>
+                    <select id="place_id" name="place_id" required>
+                        <option value="">Choisir un lieu...</option>
+                        <?php foreach ($places as $place): ?>
+                            <option value="<?= (int) $place['id'] ?>"><?= htmlspecialchars($place['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
-                <div class="admin-identity-meta"><?= htmlspecialchars($user['email'] ?? '') ?></div>
+                <div class="form-group">
+                    <label for="department_id">Departement</label>
+                    <select id="department_id" name="department_id" required disabled data-selected="">
+                        <option value="">Choisir d'abord un lieu...</option>
+                    </select>
+                </div>
             </div>
-        </div>
+
+            <div class="form-group">
+                <label for="request">Message (optionnel)</label>
+                <textarea id="request" name="request" rows="3"
+                          placeholder="Precisez l'objet de votre demande (etude, donnees concernees...)."></textarea>
+            </div>
+
+            <button type="submit" class="btn success"><?= icon('check', '', 14) ?> Envoyer la demande</button>
+        </form>
     </div>
+
+    <div class="admin-section">
+        <h2><?= icon('eye', '', 16) ?> Mes demandes</h2>
+
+        <?php if ($requests === []): ?>
+            <p class="no-message">Vous n'avez encore depose aucune demande d'acces.</p>
+        <?php else: ?>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Departement</th>
+                        <th>Lieu</th>
+                        <th>Statut</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($requests as $req): ?>
+                        <?php [$label, $badgeClass] = $statusMeta[$req['status']] ?? ['Inconnu', 'badge-draft']; ?>
+                        <tr>
+                            <td><?= htmlspecialchars((string) $req['department_name']) ?></td>
+                            <td><?= htmlspecialchars((string) $req['place_name']) ?></td>
+                            <td><span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($label) ?></span></td>
+                            <td>
+                                <?php if (trim((string) ($req['request'] ?? '')) !== ''): ?>
+                                    <?= htmlspecialchars((string) $req['request']) ?>
+                                <?php else: ?>
+                                    <span class="no-message">&mdash;</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </div>
+
 </div>
+
+<?php
+$jsPath = __DIR__ . '/../../../../public/assets/js/register.js';
+$jsVer  = is_file($jsPath) ? filemtime($jsPath) : 0;
+?>
+<script src="/assets/js/register.js?v=<?= $jsVer ?>" defer></script>

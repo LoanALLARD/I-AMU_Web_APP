@@ -226,4 +226,59 @@ class ResearcherAuthorizationRepository
 
         return $stmt->rowCount();
     }
+
+    /**
+     * Submits (or re-submits) a researcher's access request for a department.
+     * The PK (researcher_id, department_id) means one row per pair, so a repeat
+     * request reuses the same row: ON CONFLICT resets it to pending (clears both
+     * timestamps and the deciding admin) and overwrites the message. This covers
+     * the first request as well as re-requesting a rejected or revoked one.
+     */
+    public function submitRequest(int $researcherId, int $departmentId, ?string $request): void
+    {
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO researcher_authorizations (researcher_id, department_id, request)
+             VALUES (:rid, :dept, :request)
+             ON CONFLICT (researcher_id, department_id) DO UPDATE
+             SET request = EXCLUDED.request,
+                 authorized_at = NULL,
+                 rejected_at = NULL,
+                 authorized_by_id = NULL'
+        );
+        $stmt->execute([
+            'rid'     => $researcherId,
+            'dept'    => $departmentId,
+            'request' => $request,
+        ]);
+    }
+
+    /**
+     * All of a researcher's requests with their target department, place, and
+     * the raw timestamps the caller maps to a status (pending / authorized /
+     * rejected / revoked).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findByResearcher(int $researcherId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT ra.department_id,
+                    ra.request,
+                    ra.authorized_at,
+                    ra.rejected_at,
+                    d.name AS department_name,
+                    p.name AS place_name
+             FROM researcher_authorizations ra
+             JOIN departments d ON d.id = ra.department_id
+             JOIN places p ON p.id = d.place_id
+             WHERE ra.researcher_id = :rid
+             ORDER BY p.name, d.name'
+        );
+        $stmt->execute(['rid' => $researcherId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
 }
