@@ -63,8 +63,14 @@ class AuthController extends Controller
             return;
         }
 
-        // Department admins land on their console; everyone else on the chat.
-        $this->redirect($this->hasRole('department_admin') ? '/department-admin' : '/chat');
+        // Each role lands on its own space; everyone else on the chat.
+        if ($this->hasRole('department_admin')) {
+            $this->redirect('/department-admin');
+        }
+        if ($this->hasRole('researcher')) {
+            $this->redirect('/researcher');
+        }
+        $this->redirect('/chat');
     }
 
     public function reactivate(): void{

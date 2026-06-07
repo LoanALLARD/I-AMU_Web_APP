@@ -13,6 +13,7 @@
     use Controllers\ProfileController;
     use Controllers\PlaceController;
     use Controllers\DepartmentAdminController;
+    use Controllers\ResearcherController;
     use Controllers\ErrorController;
     use Core\HttpException;
 
@@ -59,6 +60,9 @@
     $router->add('POST', '/department-admin/researchers/revoke',      function() { (new DepartmentAdminController())->revokeResearcher(); });
     $router->add('POST', '/department-admin/researchers/reauthorize', function() { (new DepartmentAdminController())->reauthorizeResearcher(); });
     $router->add('POST', '/department-admin/users/set-active',        function() { (new DepartmentAdminController())->setUserActive(); });
+
+    // --- Researcher space (researcher role) ---------------------------
+    $router->add('GET',  '/researcher', function() { (new ResearcherController())->index(); });
 
 // --- Sessions (teacher) + join (student) --------------------------
     // Literal routes are registered before the `{id}` wildcard so they win.
