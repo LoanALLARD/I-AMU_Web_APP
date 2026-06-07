@@ -56,6 +56,8 @@
     $router->add('GET',  '/admin',                         function() { (new AdminController())->index(); });
     $router->add('POST', '/admin/researchers/approve',     function() { (new AdminController())->approveResearcher(); });
     $router->add('POST', '/admin/researchers/reject',      function() { (new AdminController())->rejectResearcher(); });
+    $router->add('GET',  '/admin/addModel',                function() { (new AdminController())->fromModel(); });
+    $router->add('POST',  '/admin/addModel',               function() { (new AdminController())->addModel(); });
 
 // --- Sessions (teacher) + join (student) --------------------------
     // Literal routes are registered before the `{id}` wildcard so they win.

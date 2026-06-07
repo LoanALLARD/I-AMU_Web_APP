@@ -218,4 +218,26 @@ class UserRepository
         return $row !== false && $row['email_verified_at'] !== null;
     }
 
+    public function isTeacherSpecialized(int $id): bool
+    {
+        $query = $this->pdo->prepare(
+            'SELECT 1 FROM teachers WHERE id = :id AND is_specialised = true'
+        );
+        $query->execute(['id' => $id]);
+        
+        $row = $query->fetch();
+        
+        return (bool) $row;
+    }
+
+    public function getDepartmentIdByUserId(int $userId){
+        $query = $this->pdo->prepare(
+            'SELECT department_id FROM users WHERE id = :id'
+        );
+        $query->execute(['id' => $userId]);
+        
+        $row = $query->fetch();
+        
+        return $row;
+    }
 }

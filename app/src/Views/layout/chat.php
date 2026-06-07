@@ -14,7 +14,6 @@
  *   $pageTitle  — breadcrumb text shown in the topbar on non-chat pages
  *   $content    — view output, injected by Core\Controller::render()
  */
-
 $user = $user ?? null;
 $page = $page ?? 'other';
 $pageTitle = $pageTitle ?? '';

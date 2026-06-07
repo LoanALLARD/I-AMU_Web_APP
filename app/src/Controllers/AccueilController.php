@@ -40,7 +40,11 @@ class AccueilController extends Controller
         try {
             $pdo = Database::getConnection();
             $aiRepository = new \Models\AiRepository($pdo);
-            $models = $aiRepository->findAllActive();
+            if ($env["env"]["sessionId"] == null){
+                $models = $aiRepository->findAllActiveBySession(null);
+            }else{
+                $models = $aiRepository->findAllActiveBySession($env["env"]["sessionId"]);
+            }
         } catch (\Throwable $e) {
             error_log('Impossible de charger les modèles : ' . $e->getMessage());
         }
@@ -73,9 +77,10 @@ class AccueilController extends Controller
             static fn ($v) => ['id' => $v['id'], 'name' => $v['name']],
             $conversationRepo->getConversationsByUserId($user['id'])
         );
-
+        $canAddModel = $_SESSION['isSpecialized'];
         $this->render('pages/home', [
             'user'          => $user,
+            'canAddModel'   => $canAddModel,
             'page'          => 'chat',
             'models'        => $models,
             'conversation'  => $env['conversation'],

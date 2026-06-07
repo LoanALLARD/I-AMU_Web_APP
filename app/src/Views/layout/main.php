@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/assets/css/rgpd.css">
     <link rel="stylesheet" href="/assets/css/admin.css">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <link class="styles" rel="stylesheet" href="/assets/css/formAddModel.css">
 </head>
 <?php
 // Sessions's AuthService populates these on successful login.
