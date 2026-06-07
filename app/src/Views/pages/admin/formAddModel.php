@@ -27,7 +27,7 @@ $themePref = match ($user['theme'] ?? null) {
             <h3 class="admin-card-title">Ajouter un nouveau Modèle d'IA</h3>
         </div>
         <div class="admin-card-body">
-            <form action="/admin/addModel" method="POST" id="addModelForm" novalidate>
+            <form action="/department-admin/addModel" method="POST" id="addModelForm" novalidate>
                 
                 <div class="form-grid-2">
                     <div class="form-group">

@@ -525,7 +525,7 @@ class SessionService
                 'version'       => $m['version'] ?? null,
                 'contextWindow' => isset($m['context_window']) && $m['context_window'] !== null ? (int) $m['context_window'] : null,
             ],
-            $this->models->findAllActive()
+            $this->models->findAllActiveBySession(null)
         );
     }
 

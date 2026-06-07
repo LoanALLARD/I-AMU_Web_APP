@@ -54,14 +54,9 @@
     $router->add('POST', '/profile/password',    function()     { (new ProfileController())->changePassword(); });
 
     // --- Department-admin console (department_admin role) --------------
-<<<<<<< HEAD
-    $router->add('GET',  '/admin',                         function() { (new AdminController())->index(); });
-    $router->add('POST', '/admin/researchers/approve',     function() { (new AdminController())->approveResearcher(); });
-    $router->add('POST', '/admin/researchers/reject',      function() { (new AdminController())->rejectResearcher(); });
-    $router->add('GET',  '/admin/addModel',                function() { (new AdminController())->fromModel(); });
-    $router->add('POST',  '/admin/addModel',               function() { (new AdminController())->addModel(); });
-=======
     $router->add('GET',  '/department-admin',                         function() { (new DepartmentAdminController())->index(); });
+    $router->add('GET',  '/department-admin/addModel',                function() { (new DepartmentAdminController())->fromModel(); });
+    $router->add('POST', '/department-admin/addModel',                function() { (new DepartmentAdminController())->addModel(); });
     $router->add('POST', '/department-admin/researchers/approve',     function() { (new DepartmentAdminController())->approveResearcher(); });
     $router->add('POST', '/department-admin/researchers/reject',      function() { (new DepartmentAdminController())->rejectResearcher(); });
     $router->add('POST', '/department-admin/researchers/revoke',      function() { (new DepartmentAdminController())->revokeResearcher(); });
@@ -73,7 +68,6 @@
     $router->add('GET',  '/researcher/data',            function() { (new ResearcherController())->data(); });
     $router->add('POST', '/researcher/requests',        function() { (new ResearcherController())->requestAccess(); });
     $router->add('POST', '/researcher/requests/cancel', function() { (new ResearcherController())->cancelRequest(); });
->>>>>>> 2884cf655c4242ad3091978aac28cb4fe85c3c1c
 
 // --- Sessions (teacher) + join (student) --------------------------
     // Literal routes are registered before the `{id}` wildcard so they win.

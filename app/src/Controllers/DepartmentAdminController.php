@@ -8,6 +8,9 @@ use Core\Controller;
 use Data\Database;
 use Models\PlaceRepository;
 use Models\UserRepository;
+use Models\AiRepository;
+use Models\DepartmentRepository;
+use Models\ResourceRepository;
 use Services\ResearcherAuthorizationService;
 
 /**
@@ -210,5 +213,79 @@ class DepartmentAdminController extends Controller
             $this->renderForbidden();
         }
         return $departmentId;
+    }
+    public function fromModel(){
+        $this->requireAuth();
+
+        $userId = $_SESSION["user_id"];
+        $pdo = Database::getConnection();   
+        $user = $this->currentUser();
+
+        // recover all types of api who is available
+        $Ai = new AiRepository($pdo);
+        $adapters = $Ai->getAllTypeOfAdapters();
+
+        // recover departements this admin can manage
+        $department = new DepartmentRepository($pdo);
+        $departments = $department->getDepartementFromUserId($userId);
+
+        // recover resources this teacher has
+        $resource = new ResourceRepository($pdo);
+        $resources = $resource->getResourcesFromUserId($userId);
+
+        $this->render('pages/admin/formAddModel', [
+            'user'         => $user,
+            'adapters'     => $adapters,
+            'departments'  => $departments,
+            'resources'    => $resources
+        ]);
+    }
+
+    public function addModel(){
+        // Extraction et nettoyage des données reçues du formulaire
+        $name          = $this->input('name', null);
+        $version       = $this->input('version', null);
+        $provider      = $this->input('provider', null);
+        $adapter       = $this->input('adapter', null); 
+        $apiUrl        = $this->input('api_url', null);
+        $maxTokens     = $this->input('max_tokens', null);
+        $contextWindow = $this->input('context_window', null);
+        
+        // Récupère "1" (Oui) ou "0" (Non) depuis le groupe radio 'is_shareable'
+        $isShareable   = $this->input('is_shareable', '0');
+        $user = $this->currentUser();
+        if ($isShareable === '1'){
+            $department_id = $user["department_id"];
+            $resource_id = null;
+        }else {
+            $department_id = null;
+            $resource_id = $this->input('resource_id', null);
+        }
+        // Exemple de var_dump pour valider la bonne réception
+        try {
+            $pdo = Database::getConnection();   
+            $Ai = new AiRepository($pdo);
+            $result=$Ai->addModel(
+                $department_id,
+                $resource_id,
+                $name,
+                $version,
+                $provider,
+                $adapter,
+                $apiUrl,
+                (int) $maxTokens,
+                (int) $contextWindow,
+                $isShareable
+            );
+            if ($result !=null) {
+                $this->flash('success', "Le modèle a été ajouté avec succès.");
+                $this->redirect('/chat');  
+            }else{
+                throw new \Exception("Erreur lors de l'insertion en base de données.");            
+            }
+        }catch (\Throwable $e){
+            $this->flash('error', "Impossible d'ajouter le modèle : " . $e->getMessage());
+            $this->redirect('/chat');
+        }
     }
 }
