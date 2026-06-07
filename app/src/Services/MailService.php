@@ -4,91 +4,149 @@ declare(strict_types=1);
 
 namespace Services;
 
+use RuntimeException;
+
 /**
  * Sends emails via raw SMTP sockets (no framework).
- * Compatible with Mailpit in dev, any SMTP server in prod.
+ * Supports plain SMTP (Mailpit in dev) and authenticated SMTP with
+ * STARTTLS or implicit TLS (any real provider in prod, e.g. AlwaysData).
  */
 final class MailService
 {
     private string $host;
-    private int $port;
+    private int    $port;
     private string $from;
-    private string $user;
-    private string $pass;
+    private ?string $username;
+    private ?string $password;
+    // 'none' (dev), 'tls' (STARTTLS, port 587), or 'ssl' (implicit TLS, port 465).
     private string $encryption;
 
     public function __construct()
     {
-        $config = require __DIR__ . '/../Config/config.php';
-        $this->host = $config['mail']['host'];
-        $this->port = $config['mail']['port'];
-        $this->from = $config['mail']['from'];
-        $this->user = (string)($config['mail']['user'] ?? '');
-        $this->pass = (string)($config['mail']['pass'] ?? '');
-        $this->encryption = (string)($config['mail']['encryption'] ?? '');
+        $config           = require __DIR__ . '/../Config/config.php';
+        $this->host       = $config['mail']['host'];
+        $this->port       = $config['mail']['port'];
+        $this->from       = $config['mail']['from'];
+        $this->username   = $config['mail']['username'] ?? null;
+        $this->password   = $config['mail']['password'] ?? null;
+        $this->encryption = $config['mail']['encryption'] ?? 'none';
     }
 
     public function send(string $to, string $subject, string $htmlBody): bool
     {
-        // Implicit TLS wraps the socket from the first byte (port 465 style);
-        // plain and STARTTLS both start as a clear connection.
-        $transport = $this->encryption === 'ssl'
-            ? "ssl://{$this->host}"
-            : $this->host;
+        // Implicit TLS (port 465) wraps the whole connection from the start.
+        $remote = $this->encryption === 'ssl'
+            ? "ssl://{$this->host}:{$this->port}"
+            : "{$this->host}:{$this->port}";
 
-        $socket = @fsockopen($transport, $this->port, $errno, $errstr, 10);
+        $socket = @stream_socket_client($remote, $errno, $errstr, 10);
         if (!$socket) {
-            error_log("MailService: connexion SMTP échouée — {$errstr} ({$errno})");
+            error_log("MailService: SMTP connection failed - {$errstr} ({$errno})");
             return false;
         }
-        stream_set_timeout($socket, 10);
 
         try {
-            $this->expect($this->read($socket), '220');
-            $this->ehlo($socket);
+            $this->expect($socket, 220);
 
-            // Upgrade a clear connection to TLS, then re-EHLO as required.
+            $this->command($socket, "EHLO localhost", 250);
+
+            // STARTTLS (port 587): upgrade the plain connection to TLS, then
+            // re-issue EHLO over the secured channel as required by the RFC.
             if ($this->encryption === 'tls') {
-                $this->expect($this->cmd($socket, 'STARTTLS'), '220');
-                if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
-                    throw new RuntimeException('échec de la négociation STARTTLS');
+                $this->command($socket, "STARTTLS", 220);
+                $ok = stream_socket_enable_crypto(
+                    $socket,
+                    true,
+                    STREAM_CRYPTO_METHOD_TLS_CLIENT
+                );
+                if ($ok !== true) {
+                    throw new RuntimeException('STARTTLS negotiation failed.');
                 }
-                $this->ehlo($socket);
+                $this->command($socket, "EHLO localhost", 250);
             }
 
-            // Authenticate only when credentials are configured (prod).
-            if ($this->user !== '') {
-                $this->expect($this->cmd($socket, 'AUTH LOGIN'), '334');
-                $this->expect($this->cmd($socket, base64_encode($this->user)), '334');
-                $this->expect($this->cmd($socket, base64_encode($this->pass)), '235');
+            // Authenticate when credentials are configured (prod). Skipped in
+            // dev against Mailpit, which accepts mail without auth.
+            if ($this->username !== null && $this->password !== null) {
+                $this->command($socket, "AUTH LOGIN", 334);
+                $this->command($socket, base64_encode($this->username), 334);
+                $this->command($socket, base64_encode($this->password), 235);
             }
 
-            $this->expect($this->cmd($socket, "MAIL FROM:<{$this->from}>"), '250');
-            $this->expect($this->cmd($socket, "RCPT TO:<{$to}>"), '250');
-            $this->expect($this->cmd($socket, 'DATA'), '354');
+            $this->command($socket, "MAIL FROM:<{$this->from}>", 250);
+            $this->command($socket, "RCPT TO:<{$to}>", 250);
+            $this->command($socket, "DATA", 354);
 
-            $headers = "From: I-AMU <{$this->from}>\r\n";
+            $headers  = "From: I-AMU <{$this->from}>\r\n";
             $headers .= "To: {$to}\r\n";
             $headers .= "Subject: {$subject}\r\n";
             $headers .= "MIME-Version: 1.0\r\n";
             $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
             $headers .= "\r\n";
 
-            // Dot-stuffing: a body line starting with '.' would otherwise be
-            // read as the end-of-data marker.
-            $body = str_replace("\r\n.", "\r\n..", $htmlBody);
-
-            $this->write($socket, $headers . $body . "\r\n.\r\n");
-            $this->expect($this->read($socket), '250');
-
+            // End-of-data marker is a lone dot on its own line.
+            $this->command($socket, $headers . $htmlBody . "\r\n.", 250);
             $this->write($socket, "QUIT\r\n");
+
+            return true;
         } catch (RuntimeException $e) {
             error_log('MailService: ' . $e->getMessage());
-            fclose($socket);
             return false;
+        } finally {
+            fclose($socket);
         }
+    }
 
-        fclose($socket);
-        return true;
+    /**
+     * Sends a command and asserts the reply starts with the expected code.
+     *
+     * @param resource $socket
+     */
+    private function command($socket, string $data, int $expectedCode): void
+    {
+        $this->write($socket, $data . "\r\n");
+        $this->expect($socket, $expectedCode);
+    }
+
+    /**
+     * Reads a reply and throws when the SMTP status code does not match.
+     *
+     * @param resource $socket
+     */
+    private function expect($socket, int $expectedCode): void
+    {
+        $response = $this->read($socket);
+        $code     = (int) substr($response, 0, 3);
+        if ($code !== $expectedCode) {
+            throw new RuntimeException(
+                "Unexpected SMTP reply: expected {$expectedCode}, got " . trim($response)
+            );
+        }
+    }
+
+    /**
+     * @param resource $socket
+     */
+    private function write($socket, string $data): void
+    {
+        fwrite($socket, $data);
+    }
+
+    /**
+     * Reads a full SMTP reply, handling multi-line responses (a line with a
+     * hyphen after the code continues; a space after the code ends it).
+     *
+     * @param resource $socket
+     */
+    private function read($socket): string
+    {
+        $response = '';
+        while ($line = fgets($socket, 515)) {
+            $response .= $line;
+            if (isset($line[3]) && $line[3] === ' ') {
+                break;
+            }
+        }
+        return $response;
     }
 }
