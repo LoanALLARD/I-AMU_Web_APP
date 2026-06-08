@@ -328,7 +328,7 @@ class UserRepository
         return (bool) $row;
     }
 
-    public function getDepartmentIdByUserId(int $userId){
+    public function getDepartmentIdByUserId(int $userId): mixed {
         $query = $this->pdo->prepare(
             'SELECT department_id FROM users WHERE id = :id'
         );

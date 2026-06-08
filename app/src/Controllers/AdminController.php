@@ -74,7 +74,7 @@ class AdminController extends Controller
         return $departmentId;
     }
 
-    public function fromModel(){
+    public function fromModel(): void {
         $this->requireAuth();
 
         $userId = $_SESSION["user_id"];
@@ -101,7 +101,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function addModel(){
+    public function addModel(): void {
         // Extraction et nettoyage des données reçues du formulaire
         $name          = $this->input('name', null);
         $size          = $this->input('size', null);

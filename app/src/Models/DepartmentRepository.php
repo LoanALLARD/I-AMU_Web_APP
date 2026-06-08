@@ -19,7 +19,10 @@ class DepartmentRepository
         $this->pdo = $pdo;
     }
 
-    public function getDepartementFromUserId(int $userId){
+    /**
+     * @return list<array<string, mixed>>|null
+     */
+    public function getDepartementFromUserId(int $userId): ?array {
         $query = $this->pdo->prepare(
             'SELECT name from departments d join users u on d.id = u.department_id where u.id = :id'
         );

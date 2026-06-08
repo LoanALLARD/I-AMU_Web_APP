@@ -17,6 +17,7 @@ $env = $env ?? null;
 $inSession = ($env['mode'] ?? 'libre') === 'session';
 $messages = $messages ?? [];
 $hasMessages = $messages !== [];
+$canAddModel = $canAddModel ?? false;
 ?>
 <div class="chat-container">
     <div class="chat-area">

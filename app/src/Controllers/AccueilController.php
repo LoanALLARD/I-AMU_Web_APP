@@ -86,7 +86,7 @@ class AccueilController extends Controller
         if (is_array($envBlock) && isset($envBlock['sessionId']) && $envBlock['sessionId'] !== null) {
             $sessionDocuments = (new DocumentService($pdo))->listForSession((int) $envBlock['sessionId']);
         }
-        $canAddModel = $_SESSION['isSpecialized'];
+        $canAddModel = $_SESSION['isSpecialized'] ?? false;
         $this->render('pages/home', [
             'user' => $user,
             'canAddModel' => $canAddModel,
@@ -117,7 +117,7 @@ class AccueilController extends Controller
         try {
             $pdo = Database::getConnection();
             $aiRepository = new \Models\AiRepository($pdo);
-            $models = $aiRepository->findAllActive();
+            $models = $aiRepository->findAllActiveBySession(null);
         } catch (\Throwable $e) {
             error_log('Impossible de charger les modèles : ' . $e->getMessage());
         }
