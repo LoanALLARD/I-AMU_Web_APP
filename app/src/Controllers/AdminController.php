@@ -108,7 +108,6 @@ class AdminController extends Controller
         $provider      = $this->input('provider', null);
         $adapter       = $this->input('adapter', null); 
         $apiUrl        = $this->input('api_url', null);
-        $maxTokens     = $this->input('max_tokens', null);
         $contextWindow = $this->input('context_window', null);
         
         // Récupère "1" (Oui) ou "0" (Non) depuis le groupe radio 'is_shareable'
@@ -133,7 +132,6 @@ class AdminController extends Controller
                 $provider,
                 $adapter,
                 $apiUrl,
-                (int) $maxTokens,
                 (int) $contextWindow,
                 $isShareable
             );

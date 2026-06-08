@@ -123,10 +123,10 @@ INSERT INTO resources (id, owner_id, department_id, code, name)
 
 -- A resource-scoped model owned by resource 1 (department 1) and a
 -- department-scoped model on department 1.
-INSERT INTO models (id, resource_id, name, provider, max_tokens, context_window, api_url, adapter, is_shareable)
-    VALUES (1, 1, 'res-model', 'ollama', 1024, 4096, 'http://x', 'ollama', TRUE);
-INSERT INTO models (id, department_id, name, provider, max_tokens, context_window, api_url, adapter)
-    VALUES (2, 1, 'dept-model', 'ollama', 1024, 4096, 'http://x', 'ollama');
+INSERT INTO models (id, resource_id, name, provider, context_window, api_url, adapter, is_shareable)
+    VALUES (1, 1, 'res-model', 'ollama', 4096, 'http://x', 'ollama', TRUE);
+INSERT INTO models (id, department_id, name, provider, context_window, api_url, adapter)
+    VALUES (2, 1, 'dept-model', 'ollama', 4096, 'http://x', 'ollama');
 
 SELECT lives_ok(
     $$INSERT INTO model_resource_accesses (model_id, resource_id) VALUES (1, 2)$$,

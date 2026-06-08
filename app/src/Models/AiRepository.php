@@ -120,10 +120,10 @@ class AiRepository{
         return $result;
     }
 
-    public function addModel(?int $department_id,?string $resource_id,string $name, string $size, string $provider, string $adapter, string $apiUrl, int $maxTokens, int $contextWindow, string $isShareable){
+    public function addModel(?int $department_id,?string $resource_id,string $name, string $size, string $provider, string $adapter, string $apiUrl, int $contextWindow, string $isShareable){
         $query = $this->pdo->prepare(
-            'INSERT INTO models (department_id,resource_id,name,size,provider,max_tokens,context_window,api_url,adapter,is_shareable)
-            VALUES (:department_id,:resource_id,:name,:size,:provider,:max_tokens,:context_window,:api_url,:adapter,:is_shareable)'
+            'INSERT INTO models (department_id,resource_id,name,size,provider,context_window,api_url,adapter,is_shareable)
+            VALUES (:department_id,:resource_id,:name,:size,:provider,:context_window,:api_url,:adapter,:is_shareable)'
         );
 
         $query->execute([
@@ -132,7 +132,6 @@ class AiRepository{
             'name'           => $name,
             'size'           => $size,
             'provider'       => $provider,
-            'max_tokens'     => $maxTokens,
             'context_window' => $contextWindow,
             'api_url'        => $apiUrl,
             'adapter'        => $adapter,

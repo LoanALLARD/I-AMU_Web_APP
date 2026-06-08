@@ -136,7 +136,6 @@ CREATE TABLE models (
     name VARCHAR(255) NOT NULL,
     size VARCHAR(50),
     provider VARCHAR(255) NOT NULL,
-    max_tokens INTEGER NOT NULL,
     context_window INTEGER NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -146,7 +145,6 @@ CREATE TABLE models (
     CONSTRAINT pk_models PRIMARY KEY (id),
     CONSTRAINT fk_models_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE SET NULL,
     CONSTRAINT fk_models_resource FOREIGN KEY (resource_id) REFERENCES resources (id) ON DELETE RESTRICT,
-    CONSTRAINT ck_models_max_tokens CHECK (max_tokens > 0),
     CONSTRAINT ck_models_context_window CHECK (context_window > 0),
     CONSTRAINT ck_models_scope CHECK (
         (resource_id IS NULL AND department_id IS NOT NULL) OR

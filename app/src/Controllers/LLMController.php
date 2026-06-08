@@ -151,7 +151,6 @@ class LLMController{
             $aiData["name"],
             $aiData["size"],
             $aiData["provider"],
-            $aiData["max_tokens"],
             $aiData["context_window"],
             $aiData["is_active"],
             $aiData["created_at"],
