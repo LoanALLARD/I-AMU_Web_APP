@@ -214,7 +214,7 @@ class DepartmentAdminController extends Controller
         }
         return $departmentId;
     }
-    public function fromModel(){
+    public function fromModel(): void {
         $this->requireAuth();
 
         $userId = $_SESSION["user_id"];
@@ -241,14 +241,13 @@ class DepartmentAdminController extends Controller
         ]);
     }
 
-    public function addModel(){
+    public function addModel(): void {
         // Extraction et nettoyage des données reçues du formulaire
         $name          = $this->input('name', null);
-        $version       = $this->input('version', null);
+        $size          = $this->input('size', null);
         $provider      = $this->input('provider', null);
         $adapter       = $this->input('adapter', null); 
         $apiUrl        = $this->input('api_url', null);
-        $maxTokens     = $this->input('max_tokens', null);
         $contextWindow = $this->input('context_window', null);
         
         // Récupère "1" (Oui) ou "0" (Non) depuis le groupe radio 'is_shareable'
@@ -269,11 +268,10 @@ class DepartmentAdminController extends Controller
                 $department_id,
                 $resource_id,
                 $name,
-                $version,
+                $size,
                 $provider,
                 $adapter,
                 $apiUrl,
-                (int) $maxTokens,
                 (int) $contextWindow,
                 $isShareable
             );

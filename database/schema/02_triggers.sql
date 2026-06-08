@@ -61,3 +61,38 @@ CREATE TRIGGER trg_researchers_role_exclusivity
 CREATE TRIGGER trg_dept_admins_role_exclusivity
     BEFORE INSERT ON department_administrators
     FOR EACH ROW EXECUTE FUNCTION enforce_role_exclusivity('department_administrator');
+
+-- A resource-scoped model may only be shared with resources of its own
+-- department; see the two RAISE EXCEPTION cases below.
+CREATE OR REPLACE FUNCTION enforce_model_resource_access_same_dept()
+RETURNS TRIGGER AS $$
+DECLARE
+    owner_department_id BIGINT;
+    target_department_id BIGINT;
+BEGIN
+    SELECT r.department_id INTO owner_department_id
+    FROM models m
+    JOIN resources r ON r.id = m.resource_id
+    WHERE m.id = NEW.model_id;
+
+    IF owner_department_id IS NULL THEN
+        RAISE EXCEPTION 'model % is not resource-scoped: use model_department_accesses', NEW.model_id
+            USING ERRCODE = '23514';
+    END IF;
+
+    SELECT department_id INTO target_department_id
+    FROM resources
+    WHERE id = NEW.resource_id;
+
+    IF target_department_id IS DISTINCT FROM owner_department_id THEN
+        RAISE EXCEPTION 'resource % is not in the model''s department %', NEW.resource_id, owner_department_id
+            USING ERRCODE = '23514';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_model_resource_access_same_dept
+    BEFORE INSERT OR UPDATE ON model_resource_accesses
+    FOR EACH ROW EXECUTE FUNCTION enforce_model_resource_access_same_dept();

@@ -7,13 +7,15 @@ use PDO;
 /*
  * This class use PDO to recover 
  * all data about AI in the database
-*/
+ */
 
-class AiRepository{
+class AiRepository
+{
 
     private PDO $pdo;
 
-    public function __construct(PDO $pdo){
+    public function __construct(PDO $pdo)
+    {
         $this->pdo = $pdo;
     }
 
@@ -93,14 +95,14 @@ class AiRepository{
         }
 
         $placeholders = [];
-        $params       = [];
+        $params = [];
         foreach ($ids as $i => $id) {
-            $key            = ':id' . $i;
+            $key = ':id' . $i;
             $placeholders[] = $key;
-            $params[$key]   = $id;
+            $params[$key] = $id;
         }
 
-        $sql   = 'SELECT id, name, version, context_window, is_active FROM models WHERE id IN (' . implode(', ', $placeholders) . ') ORDER BY name';
+        $sql = 'SELECT id, name, size, context_window, is_active FROM models WHERE id IN (' . implode(', ', $placeholders) . ') ORDER BY name';
         $query = $this->pdo->prepare($sql);
         $query->execute($params);
 
@@ -110,7 +112,8 @@ class AiRepository{
         return $rows;
     }
 
-    public function getAllTypeOfAdapters(){
+    public function getAllTypeOfAdapters(): mixed
+    {
         $query = $this->pdo->prepare(
             'SELECT adapter FROM models GROUP BY adapter'
         );
@@ -122,23 +125,26 @@ class AiRepository{
         return $result;
     }
 
-    public function addModel(?int $department_id,?string $resource_id,string $name, string $version, string $provider, string $adapter, string $apiUrl, int $maxTokens, int $contextWindow, string $isShareable){    
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function addModel(?int $department_id, ?string $resource_id, string $name, string $size, string $provider, string $adapter, string $apiUrl, int $contextWindow, string $isShareable): ?array
+    {
         $query = $this->pdo->prepare(
-            'INSERT INTO models (department_id,resource_id,name,version,provider,max_tokens,context_window,api_url,adapter,is_shareable)
-            VALUES (:department_id,:resource_id,:name,:version,:provider,:max_tokens,:context_window,:api_url,:adapter,:is_shareable)'
+            'INSERT INTO models (department_id,resource_id,name,size,provider,context_window,api_url,adapter,is_shareable)
+            VALUES (:department_id,:resource_id,:name,:size,:provider,:context_window,:api_url,:adapter,:is_shareable)'
         );
 
         $query->execute([
             'department_id' => $department_id,
-            'resource_id'    => $resource_id,
-            'name'           => $name,
-            'version'        => $version,
-            'provider'       => $provider,
-            'max_tokens'     => $maxTokens,
+            'resource_id' => $resource_id,
+            'name' => $name,
+            'size' => $size,
+            'provider' => $provider,
             'context_window' => $contextWindow,
-            'api_url'        => $apiUrl,
-            'adapter'        => $adapter,
-            'is_shareable'   => $isShareable
+            'api_url' => $apiUrl,
+            'adapter' => $adapter,
+            'is_shareable' => $isShareable
         ]);
 
         $idGenere = $this->pdo->lastInsertId();
@@ -149,9 +155,9 @@ class AiRepository{
 
         $querySelect = $this->pdo->prepare('SELECT * FROM models WHERE id = :id');
         $querySelect->execute(['id' => $idGenere]);
-        
+
         $result = $querySelect->fetch();
 
-        return $result ?: null; 
+        return $result ?: null;
     }
 }

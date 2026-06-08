@@ -220,7 +220,7 @@ class SessionService
         $models   = array_map(
             static fn (array $m): array => [
                 'name'    => (string) $m['name'],
-                'version' => $m['version'] ?? null,
+                'size'    => $m['size'] ?? null,
             ],
             $this->models->findByIds($modelIds)
         );
@@ -522,7 +522,7 @@ class SessionService
             static fn (array $m): array => [
                 'id'            => (int) $m['id'],
                 'name'          => (string) $m['name'],
-                'version'       => $m['version'] ?? null,
+                'size'          => $m['size'] ?? null,
                 'contextWindow' => isset($m['context_window']) && $m['context_window'] !== null ? (int) $m['context_window'] : null,
             ],
             $this->models->findAllActiveBySession(null)

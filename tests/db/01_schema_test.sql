@@ -6,7 +6,7 @@
 
 BEGIN;
 
-SELECT plan(15);
+SELECT plan(16);
 
 -- ENUM types must exist with exactly the expected labels.
 SELECT has_type('theme_type');
@@ -30,6 +30,7 @@ SELECT has_trigger('students', 'trg_students_role_exclusivity');
 SELECT has_trigger('teachers', 'trg_teachers_role_exclusivity');
 SELECT has_trigger('researchers', 'trg_researchers_role_exclusivity');
 SELECT has_trigger('department_administrators', 'trg_dept_admins_role_exclusivity');
+SELECT has_trigger('model_resource_accesses', 'trg_model_resource_access_same_dept');
 
 SELECT finish();
 

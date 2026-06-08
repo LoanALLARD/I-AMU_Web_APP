@@ -5,7 +5,7 @@
 
 BEGIN;
 
-SELECT plan(17);
+SELECT plan(16);
 
 -- ============================================================
 -- Fixtures
@@ -93,35 +93,26 @@ SELECT throws_ok(
 );
 
 -- ============================================================
--- models: max_tokens and context_window must be > 0
+-- models: context_window must be > 0
 -- ============================================================
 
 SELECT throws_ok(
-    $$INSERT INTO models (department_id, name, provider, max_tokens, context_window, api_url, adapter)
-      VALUES (1, 'm1', 'ollama', 0, 4096, 'http://x', 'ollama')$$,
-    '23514',
-    NULL,
-    'models.max_tokens = 0 is rejected'
-);
-
-SELECT throws_ok(
-    $$INSERT INTO models (department_id, name, provider, max_tokens, context_window, api_url, adapter)
-      VALUES (1, 'm2', 'ollama', 1024, 0, 'http://x', 'ollama')$$,
+    $$INSERT INTO models (department_id, name, provider, context_window, api_url, adapter)
+      VALUES (1, 'm2', 'ollama', 0, 'http://x', 'ollama')$$,
     '23514',
     NULL,
     'models.context_window = 0 is rejected'
 );
 
 -- ============================================================
--- models: resource-scoped model cannot be shareable
+-- models: resource-scoped model may be shareable (shared with
+-- other resources of the same department via model_resource_accesses)
 -- ============================================================
 
-SELECT throws_ok(
-    $$INSERT INTO models (resource_id, name, provider, max_tokens, context_window, api_url, adapter, is_shareable)
-      VALUES (1, 'm3', 'ollama', 1024, 4096, 'http://x', 'ollama', TRUE)$$,
-    '23514',
-    NULL,
-    'models: resource-scoped model with is_shareable=TRUE is rejected'
+SELECT lives_ok(
+    $$INSERT INTO models (resource_id, name, provider, context_window, api_url, adapter, is_shareable)
+      VALUES (1, 'm3', 'ollama', 4096, 'http://x', 'ollama', TRUE)$$,
+    'models: resource-scoped model with is_shareable=TRUE is accepted'
 );
 
 -- ============================================================
@@ -129,16 +120,16 @@ SELECT throws_ok(
 -- ============================================================
 
 SELECT throws_ok(
-    $$INSERT INTO models (name, provider, max_tokens, context_window, api_url, adapter)
-      VALUES ('m4', 'ollama', 1024, 4096, 'http://x', 'ollama')$$,
+    $$INSERT INTO models (name, provider, context_window, api_url, adapter)
+      VALUES ('m4', 'ollama', 4096, 'http://x', 'ollama')$$,
     '23514',
     NULL,
     'models: no resource_id and no department_id is rejected'
 );
 
 SELECT throws_ok(
-    $$INSERT INTO models (resource_id, department_id, name, provider, max_tokens, context_window, api_url, adapter)
-      VALUES (1, 1, 'm5', 'ollama', 1024, 4096, 'http://x', 'ollama')$$,
+    $$INSERT INTO models (resource_id, department_id, name, provider, context_window, api_url, adapter)
+      VALUES (1, 1, 'm5', 'ollama', 4096, 'http://x', 'ollama')$$,
     '23514',
     NULL,
     'models: resource_id AND department_id together is rejected'
@@ -148,8 +139,8 @@ SELECT throws_ok(
 -- interactions: user_feedback must be in (-1, 0, 1)
 -- ============================================================
 
-INSERT INTO models (id, department_id, name, provider, max_tokens, context_window, api_url, adapter)
-    VALUES (1, 1, 'llama3', 'ollama', 4096, 8192, 'http://localhost:11434', 'ollama');
+INSERT INTO models (id, department_id, name, provider, context_window, api_url, adapter)
+    VALUES (1, 1, 'llama3', 'ollama', 8192, 'http://localhost:11434', 'ollama');
 INSERT INTO conversations (id, user_id, model_id, name) VALUES (1, 1, 1, 'Conv 1');
 
 SELECT throws_ok(

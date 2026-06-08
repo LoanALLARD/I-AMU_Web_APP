@@ -6,6 +6,7 @@ namespace Controllers;
 
 use Core\Controller;
 use Services\ChatService;
+use Services\DocumentService;
 use Models\ConversationRepository;
 use Models\InteractionRepository;
 use Data\Database;
@@ -34,8 +35,8 @@ class AccueilController extends Controller
         $user = $this->currentUser();
 
         $conversationId = $id !== null && $id !== '' ? (int) $id : null;
-        $archived       = $this->query('archived') === '1';
-        $env            = $this->chat->environment((int) $user['id'], $conversationId, $archived);
+        $archived = $this->query('archived') === '1';
+        $env = $this->chat->environment((int) $user['id'], $conversationId, $archived);
         $models = [];
         try {
             $pdo = Database::getConnection();
@@ -57,7 +58,7 @@ class AccueilController extends Controller
         $pdo = Database::getConnection();
 
         $conversationRepo = new ConversationRepository($pdo);
-        $interactionRepo   = new InteractionRepository($pdo);
+        $interactionRepo = new InteractionRepository($pdo);
 
         $conversation = null;
         $interactions = [];
@@ -75,22 +76,31 @@ class AccueilController extends Controller
         }
 
         $conversations = array_map(
-            static fn ($v) => ['id' => $v['id'], 'name' => $v['name']],
+            static fn($v) => ['id' => $v['id'], 'name' => $v['name']],
             $conversationRepo->getConversationsByUserId($user['id'])
         );
-        $canAddModel = $_SESSION['isSpecialized'];
+
+        // Session documents (phase 1): shown read-only in the chat sidebar to
+        // the enrolled students of a session-bound environment.
+        $sessionDocuments = [];
+        $envBlock = $env['env'] ?? null;
+        if (is_array($envBlock) && isset($envBlock['sessionId']) && $envBlock['sessionId'] !== null) {
+            $sessionDocuments = (new DocumentService($pdo))->listForSession((int) $envBlock['sessionId']);
+        }
+        $canAddModel = $_SESSION['isSpecialized'] ?? false;
         $this->render('pages/home', [
-            'user'          => $user,
-            'canAddModel'   => $canAddModel,
-            'page'          => 'chat',
-            'models'        => $models,
-            'conversation'  => $env['conversation'],
+            'user' => $user,
+            'canAddModel' => $canAddModel,
+            'page' => 'chat',
+            'models' => $models,
+            'conversation' => $env['conversation'],
             'conversations' => $env['conversations'],
-            'messages'  => $env['messages'],
+            'messages' => $env['messages'],
             'sessionClosed' => $env['sessionClosed'],
-            'closedReason'  => $env['closedReason'],
-            'env'           => $env['env'],
-            'archivedView'  => $archived,
+            'closedReason' => $env['closedReason'],
+            'env' => $env['env'],
+            'sessionDocuments' => $sessionDocuments,
+            'archivedView' => $archived,
         ], 'chat');
     }
 
@@ -108,7 +118,7 @@ class AccueilController extends Controller
         try {
             $pdo = Database::getConnection();
             $aiRepository = new \Models\AiRepository($pdo);
-            $models = $aiRepository->findAllActive();
+            $models = $aiRepository->findAllActiveBySession(null);
         } catch (\Throwable $e) {
             error_log('Impossible de charger les modèles : ' . $e->getMessage());
         }
@@ -138,9 +148,9 @@ class AccueilController extends Controller
         $this->verifyCsrf();
         $user = $this->currentUser();
 
-        $id      = (int) $this->input('id', 0);
+        $id = (int) $this->input('id', 0);
         $current = (int) $this->input('current_id', 0);
-        $name    = (string) $this->input('name', '');
+        $name = (string) $this->input('name', '');
 
         try {
             $this->chat->rename((int) $user['id'], $id, $name);
@@ -164,7 +174,7 @@ class AccueilController extends Controller
         $this->verifyCsrf();
         $user = $this->currentUser();
 
-        $id      = (int) $this->input('id', 0);
+        $id = (int) $this->input('id', 0);
         $current = (int) $this->input('current_id', 0);
 
         try {

@@ -291,6 +291,9 @@ possibles :
 → Recommandation : version légère d'abord
 (`session.attached_document_text TEXT`).
 
+> 📄 **Détaillé en 3 phases** (gestion de fichiers → import chat → RAG) dans
+> [`SPEC-documents-rag.md`](./SPEC-documents-rag.md).
+
 ### 11.2 Vérification IP en examen
 
 Le rapport mentionne *« vérification des IP lors des examens pour

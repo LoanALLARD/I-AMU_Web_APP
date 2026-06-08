@@ -120,15 +120,15 @@ INSERT INTO student_resources (student_id, resource_id) VALUES
     ((SELECT id FROM users WHERE email = 'nathan.gris@etu.univ-amu.fr'),
      (SELECT id FROM resources WHERE code = 'MAT101'));
 
-INSERT INTO models (department_id, resource_id, name, version, provider,
-                    max_tokens, context_window, api_url, adapter, is_shareable) VALUES
+INSERT INTO models (department_id, resource_id, name, size, provider,
+                    context_window, api_url, adapter, is_shareable) VALUES
     ((SELECT id FROM departments WHERE name = 'Informatique'),
      NULL,
-     'llama3.2:1b', '8b', 'ollama', 4096, 8192,
+     'llama3.2:1b', '8b', 'ollama', 8192,
      'http://i-amu_web_app-ollama2-1:11434/api/generate', 'ollama', TRUE),
     (NULL,
      (SELECT id FROM resources WHERE code = 'INF202'),
-     'mistral', '7b', 'ollama', 4096, 8192,
+     'mistral', '7b', 'ollama', 8192,
      'http://host.docker.internal:11434', 'ollama', FALSE);
 
 INSERT INTO model_department_accesses (model_id, department_id) VALUES
@@ -359,10 +359,10 @@ INSERT INTO resources (owner_id, department_id, code, name, description, semeste
      (SELECT id FROM departments WHERE name = 'Info'
         AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix')),
      'code', 'dev', 'ressources pour le dev de l outils', 's3');
--- INSERT INTO models (department_id, resource_id, name, version, provider, max_tokens, context_window, api_url, adapter) VALUES
+-- INSERT INTO models (department_id, resource_id, name, size, provider, context_window, api_url, adapter) VALUES
 --     ((SELECT id FROM departments WHERE name = 'Info'
 --         AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix')),
---      NULL, 'llama3.2:1b', 'V1', 'meta', 100000, 128000,
+--      NULL, 'llama3.2:1b', 'V1', 'meta', 128000,
 --      'http://i-amu_web_app-ollama2-1:11434/api/generate', 'ollama');
 -- INSERT INTO sessions (resource_id, name) VALUES
 --     ((SELECT id FROM resources WHERE code = 'code'), 'session de dev');
