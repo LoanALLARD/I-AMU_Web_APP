@@ -436,7 +436,7 @@ textarea {
 .model-row.is-checked { background: var(--blue-light); }
 .model-row .model-name { font-family: var(--font-mono); color: var(--gray-800); font-weight: 600; }
 .model-row.is-unchecked .model-name { color: var(--gray-400); }
-.model-row .model-version { font-family: var(--font-mono); font-size: 11px; color: var(--gray-400); }
+.model-row .model-size { font-family: var(--font-mono); font-size: 11px; color: var(--gray-400); }
 
 .prompt-meta {
     font-family: var(--font-mono);

@@ -134,7 +134,7 @@ CREATE TABLE models (
     department_id BIGINT,
     resource_id BIGINT,
     name VARCHAR(255) NOT NULL,
-    version VARCHAR(50),
+    size VARCHAR(50),
     provider VARCHAR(255) NOT NULL,
     max_tokens INTEGER NOT NULL,
     context_window INTEGER NOT NULL,

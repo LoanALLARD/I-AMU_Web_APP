@@ -120,7 +120,7 @@ INSERT INTO student_resources (student_id, resource_id) VALUES
     ((SELECT id FROM users WHERE email = 'nathan.gris@etu.univ-amu.fr'),
      (SELECT id FROM resources WHERE code = 'MAT101'));
 
-INSERT INTO models (department_id, resource_id, name, version, provider,
+INSERT INTO models (department_id, resource_id, name, size, provider,
                     max_tokens, context_window, api_url, adapter, is_shareable) VALUES
     ((SELECT id FROM departments WHERE name = 'Informatique'),
      NULL,
@@ -359,7 +359,7 @@ INSERT INTO resources (owner_id, department_id, code, name, description, semeste
      (SELECT id FROM departments WHERE name = 'Info'
         AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix')),
      'code', 'dev', 'ressources pour le dev de l outils', 's3');
--- INSERT INTO models (department_id, resource_id, name, version, provider, max_tokens, context_window, api_url, adapter) VALUES
+-- INSERT INTO models (department_id, resource_id, name, size, provider, max_tokens, context_window, api_url, adapter) VALUES
 --     ((SELECT id FROM departments WHERE name = 'Info'
 --         AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix')),
 --      NULL, 'llama3.2:1b', 'V1', 'meta', 100000, 128000,

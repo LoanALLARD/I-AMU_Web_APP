@@ -138,8 +138,8 @@
                     <?php foreach ($view['authorizedModels'] as $m): ?>
                         <div class="preview-model">
                             <span><?= htmlspecialchars((string) $m['name']) ?></span>
-                            <?php if (!empty($m['version'])): ?>
-                                <span style="color:var(--gray-400);">· <?= htmlspecialchars((string) $m['version']) ?></span>
+                            <?php if (!empty($m['size'])): ?>
+                                <span style="color:var(--gray-400);">· <?= htmlspecialchars((string) $m['size']) ?></span>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>

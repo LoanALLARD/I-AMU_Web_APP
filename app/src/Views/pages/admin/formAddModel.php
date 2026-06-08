@@ -35,8 +35,8 @@ $themePref = match ($user['theme'] ?? null) {
                         <input type="text" class="form-control" id="name" name="name" required placeholder="ex: llama3.2:1b">
                     </div>
                     <div class="form-group">
-                        <label for="version" class="form-label">Taille</label>
-                        <input type="text" class="form-control" id="version" name="version" placeholder="ex: 1b">
+                        <label for="size" class="form-label">Taille</label>
+                        <input type="text" class="form-control" id="size" name="size" placeholder="ex: 1b">
                     </div>
                 </div>
 

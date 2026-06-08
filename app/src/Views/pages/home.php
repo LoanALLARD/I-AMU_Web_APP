@@ -47,8 +47,8 @@ $hasMessages = $messages !== [];
                                     <span class="model-dropdown-meta">
                                         <?php
                                         $meta = [];
-                                        if ($model['version'] ?? null) {
-                                            $meta[] = 'v' . $model['version'];
+                                        if ($model['size'] ?? null) {
+                                            $meta[] = $model['size'];
                                         }
                                         if ($model['context_window'] ?? null) {
                                             $meta[] = number_format($model['context_window']) . ' ctx';

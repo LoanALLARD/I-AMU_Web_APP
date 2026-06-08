@@ -244,7 +244,7 @@ class DepartmentAdminController extends Controller
     public function addModel(){
         // Extraction et nettoyage des données reçues du formulaire
         $name          = $this->input('name', null);
-        $version       = $this->input('version', null);
+        $size          = $this->input('size', null);
         $provider      = $this->input('provider', null);
         $adapter       = $this->input('adapter', null); 
         $apiUrl        = $this->input('api_url', null);
@@ -269,7 +269,7 @@ class DepartmentAdminController extends Controller
                 $department_id,
                 $resource_id,
                 $name,
-                $version,
+                $size,
                 $provider,
                 $adapter,
                 $apiUrl,

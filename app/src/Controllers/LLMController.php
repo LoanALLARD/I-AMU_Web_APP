@@ -149,7 +149,7 @@ class LLMController{
             $department_id = $aiData["department_id"],
             $resource_id = $aiData["resource_id"],
             $aiData["name"],
-            $aiData["version"],
+            $aiData["size"],
             $aiData["provider"],
             $aiData["max_tokens"],
             $aiData["context_window"],

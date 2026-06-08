@@ -16,7 +16,7 @@ class Ai {
     private ?int $department_id;
     private ?int $resource_id;
     private string $name;                   // name of the model
-    private string $version;
+    private string $size;
     private string $provider;           // compagny who delivery the model
     private int $max_tokens;
     private string $context_window;   // size of the context window of the model
@@ -26,12 +26,12 @@ class Ai {
     private string $url;                    // address of the api
     private LlmAdaptaterInterface $adaptater;   // type of adaptator
 
-    public function __construct(int $id, ?int $department_id, ?int $resource_id,string $name, string $version, string $provider, int $max_tokens, string $context_window, bool $is_active, bool $is_shareable, string $url, LlmAdaptaterInterface $adaptater) {
+    public function __construct(int $id, ?int $department_id, ?int $resource_id,string $name, string $size, string $provider, int $max_tokens, string $context_window, bool $is_active, bool $is_shareable, string $url, LlmAdaptaterInterface $adaptater) {
         $this->id = $id;
         $this->department_id = $department_id;
         $this->resource_id = $resource_id;
         $this->name = $name;
-        $this->version = $version;
+        $this->size = $size;
         $this->provider = $provider;
         $this->max_tokens = $max_tokens;
         $this->context_window = $context_window;
@@ -71,9 +71,9 @@ class Ai {
         return $this->name;
     }
 
-    public function getVersion(): string
+    public function getSize(): string
     {
-        return $this->version;
+        return $this->size;
     }
 
     public function getInfoContextWindow(): string
