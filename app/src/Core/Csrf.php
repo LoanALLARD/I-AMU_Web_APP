@@ -15,7 +15,7 @@ final class Csrf
 {
     /**
      * Returns the current session's CSRF token, generating it on first
-     * use. Subsequent calls in the same session reuse it ─ crucial so
+     * use. Subsequent calls in the same session reuse it - crucial so
      * a page rendering several forms (e.g. the session dashboard with
      * Start / End / Cancel buttons) emits the SAME token everywhere
      * and matches whatever the browser later submits.

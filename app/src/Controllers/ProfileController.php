@@ -49,7 +49,7 @@ class ProfileController extends Controller
             $this->redirect('/profile');
         }
 
-        // Destroy session ─ the user is now logged out.
+        // Destroy session - the user is now logged out.
         $this->auth->logout();
 
         // Start a fresh session just for the flash message.
@@ -60,7 +60,7 @@ class ProfileController extends Controller
         $this->redirect('/login');
     }
     /**
-     * POST /profile/update ─ edit the display name (first + last).
+     * POST /profile/update - edit the display name (first + last).
      */
     public function updateProfile(): void
     {
@@ -82,7 +82,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * POST /profile/password ─ change the password after verifying the old one.
+     * POST /profile/password - change the password after verifying the old one.
      */
     public function changePassword(): void
     {

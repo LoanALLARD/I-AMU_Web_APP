@@ -156,7 +156,7 @@
     background: var(--blue-dark);
 }
 
-/* ── Correction et forçage pour le Thème Sombre ── */
+/*  Correction et forçage pour le Thème Sombre  */
 [data-theme="dark"] .admin-card {
     background: #151b2c; /* Couleur sombre du fond de la sidebar / éléments */
     border-color: #222e4a;
@@ -205,7 +205,7 @@
     background: #2c3b5e;
 }
 
-/* ── Classes utilitaires pour le JavaScript ── */
+/*  Classes utilitaires pour le JavaScript  */
 .d-none {
     display: none !important;
 }

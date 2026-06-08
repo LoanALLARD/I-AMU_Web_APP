@@ -24,7 +24,7 @@ class PlaceController extends Controller
     }
 
     /**
-     * GET /places/{id}/departments ─ returns the active departments of a
+     * GET /places/{id}/departments - returns the active departments of a
      * place as JSON, for the dependent select on the registration form.
      */
     public function departments(string $id): never

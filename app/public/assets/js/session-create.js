@@ -18,9 +18,9 @@
     const fromDash = window.__IAMU_SESSION_DASHBOARD__ || null;
     const code     = (fromForm && fromForm.code) || (fromDash && fromDash.code) || '';
 
-    // ──────────────────────────────────────────────────────────
+    //
     // Type cards (kind-card): make the visual state follow the radio
-    // ──────────────────────────────────────────────────────────
+    //
     document.querySelectorAll('.kind-card').forEach((card) => {
         card.addEventListener('click', () => {
             const radio = card.querySelector('input[type="radio"]');
@@ -41,9 +41,9 @@
         tag.textContent = label;
     }
 
-    // ──────────────────────────────────────────────────────────
+    //
     // Live preview
-    // ──────────────────────────────────────────────────────────
+    //
     const nameInput     = document.getElementById('f-name');
     const durationInput = document.getElementById('f-duration');
     const promptInput   = document.getElementById('f-prompt');
@@ -86,12 +86,12 @@
         refresh();
     }
 
-    // ──────────────────────────────────────────────────────────
+    //
     // Marker icon helpers — inline SVGs matching the server-side
     // icon() helper output (Lucide check / alert-triangle, 12×12).
     // We swap the marker's innerHTML so a transition from warn → ok
     // changes both the colour AND the symbol.
-    // ──────────────────────────────────────────────────────────
+    //
     const SVG_CHECK = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
     const SVG_ALERT = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
 
@@ -102,9 +102,9 @@
         markerEl.innerHTML = state === 'ok' ? SVG_CHECK : SVG_ALERT;
     }
 
-    // ──────────────────────────────────────────────────────────
+    //
     // Resource picker : update preflight on change
-    // ──────────────────────────────────────────────────────────
+    //
     const resourceSelect = document.querySelector('select[name="resource_id"]');
     function refreshResource() {
         const pre = document.getElementById('preflight-resource');
@@ -127,9 +127,9 @@
         refreshResource();
     }
 
-    // ──────────────────────────────────────────────────────────
+    //
     // Models : count + preview list + preflight selection check
-    // ──────────────────────────────────────────────────────────
+    //
     function refreshModels() {
         const rows = document.querySelectorAll('.model-row');
         const checkedRows = Array.from(rows).filter((r) => {
@@ -195,9 +195,9 @@
     // Copy access code → handled globally by /assets/js/clipboard.js
     // (the "Copier" button carries data-copy / data-copy-feedback).
 
-    // ──────────────────────────────────────────────────────────
+    //
     // Fullscreen overlay
-    // ──────────────────────────────────────────────────────────
+    //
     const fsBtn = document.getElementById('btn-fullscreen-code');
     if (fsBtn && code) {
         fsBtn.addEventListener('click', () => {

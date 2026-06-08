@@ -6,7 +6,7 @@ namespace Domain;
 
 /**
  * Text from a PDF via the `pdftotext` CLI (poppler-utils). When the binary is
- * absent or the conversion yields nothing, throws ─ the caller then stores the
+ * absent or the conversion yields nothing, throws - the caller then stores the
  * document with status FAILED while keeping the file available for download.
  */
 final class PdfTextExtractor implements TextExtractorInterface

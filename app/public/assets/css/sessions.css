@@ -33,8 +33,8 @@
 
 .page-body { padding: 24px; flex: 1; min-height: 0; }
 
-/* ── Generic buttons (sessions surface uses .btn variants alongside
-       .btn-submit from style.css for auth forms) ──────────────────── */
+/*  Generic buttons (sessions surface uses .btn variants alongside
+       .btn-submit from style.css for auth forms)  */
 
 .btn, .btn-bordered, .btn-primary, .btn-ghost {
     display: inline-flex;
@@ -99,9 +99,9 @@
 .icon-btn.warning:hover { color: var(--warn); border-color: var(--warn); }
 .icon-btn.danger:hover  { color: var(--refuse); border-color: var(--refuse); }
 
-/* ── Sessions-page inputs (broad rule: style.css already styles
+/*  Sessions-page inputs (broad rule: style.css already styles
        the auth inputs; this widens it to datetime-local, number,
-       textarea, select used by the create form) ───────────────────── */
+       textarea, select used by the create form)  */
 
 input[type="datetime-local"],
 input[type="number"],
@@ -147,7 +147,7 @@ textarea {
     letter-spacing: .04em;
 }
 
-/* ── Badges ───────────────────────────────────────────────────────── */
+/*  Badges  */
 
 .badge {
     display: inline-flex; align-items: center; gap: 4px;
@@ -176,7 +176,7 @@ textarea {
 .badge-teacher     { background: var(--blue-light); color: var(--blue-dark); border-color: var(--blue); }
 .badge-student     { background: #dcfce7; color: #166534; border-color: #4ade80; }
 
-/* ── Sessions list ────────────────────────────────────────────────── */
+/*  Sessions list  */
 
 .session-toolbar {
     display: flex; align-items: center; gap: 12px;
@@ -1135,7 +1135,7 @@ textarea {
 }
 [data-theme="dark"] .model-dropdown-item:hover { background: rgba(128, 145, 180, .10); }
 
-/* ── Appearance / theme selector (profile page) ───────────────────── */
+/*  Appearance / theme selector (profile page)  */
 .theme-select { display: flex; gap: 8px; flex-wrap: wrap; }
 .theme-opt {
     flex: 1;
@@ -1159,7 +1159,7 @@ textarea {
     box-shadow: var(--shadow-sm);
 }
 
-/* ── Account forms (profile: edit name, change password) ──────────────── */
+/*  Account forms (profile: edit name, change password)  */
 .profile-form {
     display: flex;
     flex-direction: column;

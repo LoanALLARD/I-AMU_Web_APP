@@ -180,7 +180,7 @@ class ResearcherAuthorizationRepository
      * Revokes an already-granted access: stamps rejected_at (keeping
      * authorized_at, so the grant history survives). The researcher loses
      * access to THIS department only; the user account (users.is_active) is
-     * untouched ─ that is the super admin's lever, not a department admin's.
+     * untouched - that is the super admin's lever, not a department admin's.
      */
     public function revoke(int $researcherId, int $departmentId, int $adminId): int
     {

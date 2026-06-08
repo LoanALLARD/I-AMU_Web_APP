@@ -27,7 +27,7 @@ class DocumentController extends Controller
         $this->sessions  = new SessionService($pdo);
     }
 
-    /** POST /sessions/{id}/documents ─ the owner attaches a document. */
+    /** POST /sessions/{id}/documents - the owner attaches a document. */
     public function uploadToSession(string $id): void
     {
         $this->requireRole('teacher');
@@ -49,7 +49,7 @@ class DocumentController extends Controller
     }
 
     /**
-     * GET /documents/session_{sessionId}/{docId} ─ stream a session document
+     * GET /documents/session_{sessionId}/{docId} - stream a session document
      * to an authorised viewer (owner or enrolled student).
      */
     public function download(string $sessionId, string $docId): void
@@ -71,7 +71,7 @@ class DocumentController extends Controller
         exit;
     }
 
-    /** POST /documents/{id}/delete ─ the owner removes a session document. */
+    /** POST /documents/{id}/delete - the owner removes a session document. */
     public function delete(string $id): void
     {
         $this->requireRole('teacher');

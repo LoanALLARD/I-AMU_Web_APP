@@ -14,7 +14,7 @@ use LogicException;
  * Holds its own lifecycle rules (start / end / cancel), derived status and
  * presentation helpers, so controllers and services never reimplement the
  * state machine. Built from a DB row via {@see fromRow()} and serialised back
- * for persistence via {@see toRow()} ─ the Model layer only handles arrays.
+ * for persistence via {@see toRow()} - the Model layer only handles arrays.
  */
 class Session
 {

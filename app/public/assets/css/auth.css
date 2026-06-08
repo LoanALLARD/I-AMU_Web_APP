@@ -145,7 +145,7 @@ body.auth-body > main {
 .alert-success { background: #f0fdf4; color: #15803d; border-color: #22c55e; }
 .alert-info   { background: var(--blue-light); color: var(--blue-dark); border-color: var(--blue); }
 
-/* ── Auth form elements */
+/* Auth form elements */
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;

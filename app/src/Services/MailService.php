@@ -26,7 +26,7 @@ final class MailService
     {
         $socket = @fsockopen($this->host, $this->port, $errno, $errstr, 5);
         if (!$socket) {
-            error_log("MailService: connexion SMTP échouée ─ {$errstr} ({$errno})");
+            error_log("MailService: connexion SMTP échouée - {$errstr} ({$errno})");
             return false;
         }
 

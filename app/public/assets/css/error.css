@@ -1,4 +1,4 @@
-/* ── Error page (404 / 403 / 500 …) ───────────────────────────────────── */
+/*  Error page (404 / 403 / 500 …)  */
 .error-page {
     max-width: 600px;
     margin: clamp(2.5rem, 11vh, 7rem) auto;

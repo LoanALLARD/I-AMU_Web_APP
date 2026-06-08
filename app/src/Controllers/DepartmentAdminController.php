@@ -76,7 +76,7 @@ class DepartmentAdminController extends Controller
 
     /**
      * Activates or deactivates a teacher/student of the department. Scoped to
-     * members only ─ researchers are handled by revokeResearcher (their global
+     * members only - researchers are handled by revokeResearcher (their global
      * account state is the super admin's lever, not a department admin's).
      */
     public function setUserActive(): void
@@ -121,7 +121,7 @@ class DepartmentAdminController extends Controller
 
     /**
      * Revokes a researcher's access to this department. Does not touch the
-     * researcher's user account (global is_active) ─ a department admin only
+     * researcher's user account (global is_active) - a department admin only
      * controls access to its own department; account state is the super
      * admin's responsibility.
      */

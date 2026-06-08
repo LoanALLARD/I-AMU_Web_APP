@@ -8,7 +8,7 @@ use DomainException;
 
 /**
  * Single domain exception for the Session aggregate. Named factories replace
- * the per-rule exception classes of the previous hexagonal design ─ the HTTP
+ * the per-rule exception classes of the previous hexagonal design - the HTTP
  * layer only needs the message to flash, not the concrete type.
  */
 final class SessionException extends DomainException

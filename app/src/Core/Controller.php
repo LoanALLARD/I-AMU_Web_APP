@@ -24,7 +24,7 @@ abstract class Controller
      * Renders a view inside a layout.
      * Example: $this->render('pages/auth/login', ['email' => $email])
      *
-     * IMPORTANT ─ the parameter is named `$template` (not `$view`) so a
+     * IMPORTANT - the parameter is named `$template` (not `$view`) so a
      * `'view' => ...` key in `$data` can extract correctly. With `$view`
      * as the parameter name, EXTR_SKIP would silently keep the path
      * string instead of injecting the view-model, producing broken pages
@@ -60,7 +60,7 @@ abstract class Controller
     }
 
     /**
-     * Renders a view without any layout ─ useful for AJAX fragments.
+     * Renders a view without any layout - useful for AJAX fragments.
      *
      * @param array<string, mixed> $data
      */

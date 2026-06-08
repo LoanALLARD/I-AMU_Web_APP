@@ -2,8 +2,8 @@
 /**
  * Generic error page (404 / 403 / 500 …), rendered by ErrorController and by
  * Core\Controller::renderForbidden(). Shows the status code, a friendly
- * adapted message (or an explicit exception message), and ─ only when
- * APP_DEBUG is on ─ the technical details.
+ * adapted message (or an explicit exception message), and - only when
+ * APP_DEBUG is on - the technical details.
  *
  * @var int                                                              $code
  * @var string                                                           $title
@@ -26,7 +26,7 @@ $exception = $exception ?? null;
             <summary>Détails techniques (mode debug)</summary>
             <div class="error-debug-body">
                 <p><strong><?= htmlspecialchars($exception['type']) ?></strong>
-                    <?= $exception['msg'] !== '' ? '─ ' . htmlspecialchars($exception['msg']) : '' ?></p>
+                    <?= $exception['msg'] !== '' ? '- ' . htmlspecialchars($exception['msg']) : '' ?></p>
                 <p class="mono error-debug-where"><?= htmlspecialchars($exception['where']) ?></p>
                 <pre><?= htmlspecialchars($exception['trace']) ?></pre>
             </div>

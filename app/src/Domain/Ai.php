@@ -15,29 +15,29 @@ class Ai {
 
 
     private int $id;
-    private ?int $department_id;
-    private ?int $resource_id;
+    private ?int $departmentId;
+    private ?int $resourceId;
     private string $name;                   // name of the model
     private string $size;
     private string $provider;           // compagny who delivery the model
-    private ?int $max_tokens;
-    private string $context_window;   // size of the context window of the model
-    private bool $is_active;
-    private bool $is_shareable;
+    private ?int $maxTokens;
+    private string $contextWindow;   // size of the context window of the model
+    private bool $isActive;
+    private bool $isShareable;
     private string $url;                    // address of the api
     private LlmAdaptaterInterface $adaptater;   // type of adaptator
 
     public function __construct(int $id, ?int $departmentId, ?int $resourceId,string $name, string $size, string $provider, ?int $maxTokens, string $contextWindow, bool $isActive, bool $isShareable, string $url, LlmAdaptaterInterface $adaptater) {
         $this->id = $id;
-        $this->department_id = $departmentId;
-        $this->resource_id = $resourceId;
+        $this->departmentId = $departmentId;
+        $this->resourceId = $resourceId;
         $this->name = $name;
         $this->size = $size;
         $this->provider = $provider;
-        $this->max_tokens = $maxTokens;
-        $this->context_window = $contextWindow;
-        $this->is_active = $isActive;
-        $this->is_shareable = $isShareable;
+        $this->maxTokens = $maxTokens;
+        $this->contextWindow = $contextWindow;
+        $this->isActive = $isActive;
+        $this->isShareable = $isShareable;
         $this->url = $url;
         $this->adaptater = $adaptater;
     }
@@ -45,8 +45,8 @@ class Ai {
     /**
      * @param array<int, int> $context
      */
-    public function ask(string $message, array $context, ?string $postprompt, ?string $preprompt): string {
-        return $this->adaptater->generate($message, $context, $postprompt, $preprompt,null);
+    public function ask(string $message, array $context, ?string $preprompt, ?string $postprompt): string {
+        return $this->adaptater->generate($message, $context, $preprompt, $postprompt,null);
     }
 
 
@@ -58,12 +58,12 @@ class Ai {
 
     public function getDepartmentId(): ?int
     {
-        return $this->department_id;
+        return $this->departmentId;
     }
 
     public function getResourceId(): ?int
     {
-        return $this->resource_id;
+        return $this->resourceId;
     }
 
     public function getName(): string
@@ -78,7 +78,7 @@ class Ai {
 
     public function getInfoContextWindow(): string
     {
-        return $this->context_window;
+        return $this->contextWindow;
     }
 
     public function getInfoCompagny(): string
@@ -88,12 +88,12 @@ class Ai {
 
     public function isActive(): bool
     {
-        return $this->is_active;
+        return $this->isActive;
     }
 
     public function isShareable(): bool
     {
-        return $this->is_shareable;
+        return $this->isShareable;
     }
 
     public function getUrl(): string

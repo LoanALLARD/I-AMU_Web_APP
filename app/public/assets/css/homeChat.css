@@ -1059,7 +1059,7 @@
     color: inherit;
 }
 
-/* ── Markdown-rendered AI replies ─────────────────────────────────────
+/* Markdown-rendered AI replies
    marked + DOMPurify produce structured HTML; highlight.js (github-dark)
    colours the code tokens. These rules style the non-code elements and
    keep code blocks on their existing dark <pre> background. */
