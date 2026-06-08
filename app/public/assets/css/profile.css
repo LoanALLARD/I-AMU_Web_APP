@@ -38,8 +38,23 @@
     display: grid;
     grid-template-columns: 1fr 280px;
     gap: 24px;
+    align-items: start;
     max-width: 880px;
     margin: 0 auto;
+}
+
+/* Each column stacks its cards with a single, uniform gap so both columns
+   share the same vertical rhythm (card margin-bottom is zeroed below). */
+.profile-grid > div,
+.profile-grid > aside {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.profile-grid .profile-card,
+.profile-grid .profile-aside-card,
+.profile-grid .dashboard-card {
+    margin-bottom: 0;
 }
 
 /* Cards */
@@ -114,10 +129,13 @@
 
 .theme-select {
     display: flex;
+    flex-direction: column;
     gap: 8px;
 }
 
 .theme-opt {
+    width: 100%;
+    text-align: center;
     font-family: var(--font-sans);
     font-size: 0.82rem;
     font-weight: 600;
@@ -264,6 +282,31 @@
     font-size: 11px;
     color: var(--gray-400);
     margin-top: 8px;
+}
+
+/* Logout, now living inside the identity card. */
+.profile-logout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin-top: 18px;
+    padding: 9px 16px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-1);
+    background: var(--white);
+    color: var(--refuse);
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color 0.18s, background 0.18s, transform 0.12s;
+}
+.profile-logout:hover {
+    border-color: var(--refuse);
+    background: var(--refuse-bg);
+    transform: translateY(-1px);
 }
 
 /* Role badges */
