@@ -75,6 +75,20 @@ abstract class Controller
     }
 
     /**
+     * Renders a partial into a string instead of echoing it. Lets an action
+     * return server-rendered HTML (CSRF, icons, escaping all done by PHP) in a
+     * JSON payload, so the front never has to rebuild markup itself.
+     *
+     * @param array<string, mixed> $data
+     */
+    protected function capturePartial(string $template, array $data = []): string
+    {
+        ob_start();
+        $this->renderPartial($template, $data);
+        return (string) ob_get_clean();
+    }
+
+    /**
      * Emits a JSON response and terminates the request.
      */
     protected function json(mixed $payload, int $status = 200): never
@@ -115,6 +129,16 @@ abstract class Controller
     protected function query(string $key, mixed $default = null): mixed
     {
         return $_GET[$key] ?? $default;
+    }
+
+    /**
+     * Tells whether the request expects a JSON response (fetch/XHR), so an
+     * action can answer with json() instead of redirecting. The front sets
+     * the X-Requested-With header on its AJAX calls.
+     */
+    protected function wantsJson(): bool
+    {
+        return ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest';
     }
 
     // ----------------------------------------------------------------
@@ -197,6 +221,7 @@ abstract class Controller
             'first_name' => (string) ($_SESSION['user_first_name'] ?? ''),
             'last_name' => (string) ($_SESSION['user_last_name'] ?? ''),
             'roles' => $_SESSION['roles'] ?? [],
+            'isSpecialized'=> $_SESSION['isSpecialized'] ?? FALSE,
             'theme' => $_SESSION['user_theme'] ?? null,
             'department_id' => isset($_SESSION['user_department_id'])
                 ? (int) $_SESSION['user_department_id']

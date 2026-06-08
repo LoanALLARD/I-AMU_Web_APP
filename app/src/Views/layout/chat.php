@@ -14,7 +14,6 @@
  *   $pageTitle  — breadcrumb text shown in the topbar on non-chat pages
  *   $content    — view output, injected by Core\Controller::render()
  */
-
 $user = $user ?? null;
 $page = $page ?? 'other';
 $pageTitle = $pageTitle ?? '';
@@ -106,7 +105,7 @@ $themePref = match ($user['theme'] ?? null) {
 <body class="app-body page-<?= htmlspecialchars($page) ?>">
 
     <header class="app-topbar">
-        <a href="<?= $isDeptAdmin ? '/admin' : '/chat' ?>" class="topbar-brand" aria-label="Accueil I-AMU">
+        <a href="<?= $isDeptAdmin ? '/department-admin' : '/chat' ?>" class="topbar-brand" aria-label="Accueil I-AMU">
             <img src="/assets/img/logo.png" alt="">
             <div class="topbar-brand-text">
                 <span><?= htmlspecialchars($roleLabel) ?></span>

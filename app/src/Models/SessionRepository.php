@@ -350,9 +350,9 @@ class SessionRepository
     /**
      * Retrun the value of preprompt in the table Session in the DB.
      * 
-     * @return list<array<string, mixed>> 
+     * @return array<string, mixed>
      */
-    public function getPreAndPostPromptBySessionId(int $sessionId):array{
+    public function getPreAndPostPromptBySessionId(int $sessionId): array {
         $query = $this->pdo->prepare(
             'SELECT pre_prompt_override,post_prompt_override
             FROM sessions 

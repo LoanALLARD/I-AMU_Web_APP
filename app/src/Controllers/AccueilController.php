@@ -33,7 +33,7 @@ class AccueilController extends Controller
     public function index(?string $id = null): void
     {
         $this->requireAuth();
-        $this->redirectAdminToConsole();
+        $this->redirectNonChatRoles();
         $user = $this->currentUser();
 
         $conversationId = $id !== null && $id !== '' ? (int) $id : null;
@@ -97,9 +97,10 @@ class AccueilController extends Controller
             static fn ($v) => ['id' => $v['id'], 'name' => $v['name']],
             $conversationRepo->getConversationsByUserId($user['id'])
         );
-
+        $canAddModel = $_SESSION['isSpecialized'];
         $this->render('pages/home', [
             'user'          => $user,
+            'canAddModel'   => $canAddModel,
             'page'          => 'chat',
             'models'        => $models,
             'conversation'  => $env['conversation'],
@@ -120,7 +121,7 @@ class AccueilController extends Controller
     public function newChat(): void
     {
         $this->requireAuth();
-        $this->redirectAdminToConsole();
+        $this->redirectNonChatRoles();
         $this->verifyCsrf();
         $this->blockIfExamLocked();
         $user = $this->currentUser();
@@ -154,7 +155,7 @@ class AccueilController extends Controller
     public function renameChat(): void
     {
         $this->requireAuth();
-        $this->redirectAdminToConsole();
+        $this->redirectNonChatRoles();
         $this->verifyCsrf();
         $this->blockIfExamLocked();
         $user = $this->currentUser();
@@ -181,7 +182,7 @@ class AccueilController extends Controller
     public function archiveChat(): void
     {
         $this->requireAuth();
-        $this->redirectAdminToConsole();
+        $this->redirectNonChatRoles();
         $this->verifyCsrf();
         $this->blockIfExamLocked();
         $user = $this->currentUser();
@@ -211,7 +212,7 @@ class AccueilController extends Controller
     public function unarchiveChat(): void
     {
         $this->requireAuth();
-        $this->redirectAdminToConsole();
+        $this->redirectNonChatRoles();
         $this->verifyCsrf();
         $this->blockIfExamLocked();
         $user = $this->currentUser();
@@ -229,15 +230,14 @@ class AccueilController extends Controller
         $this->redirect('/chat/' . $id);
     }
 
-    /**
-     * Department admins have no business in the chat: send them back to
-     * their console. Call after requireAuth() so the redirect target is a
-     * known, authenticated role. Other roles fall through untouched.
-     */
-    private function redirectAdminToConsole(): void
+    /** Sends roles with no chat access back to their own space. */
+    private function redirectNonChatRoles(): void
     {
         if ($this->hasRole('department_admin')) {
-            $this->redirect('/admin');
+            $this->redirect('/department-admin');
+        }
+        if ($this->hasRole('researcher')) {
+            $this->redirect('/researcher');
         }
     }
 

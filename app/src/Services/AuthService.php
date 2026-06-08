@@ -76,10 +76,13 @@ final class AuthService
         $_SESSION['user_first_name'] = (string) $row['first_name'];
         $_SESSION['user_last_name']  = (string) $row['last_name'];
         $_SESSION['roles']           = $this->resolveRoles($userId);
+        $_SESSION['isSpecialized']   = $this->users->isTeacherSpecialized($userId);
+        $_SESSION['department_id']   = $this->users->getDepartmentIdByUserId($userId);
         $_SESSION['user_theme']      = $row['theme'] ?? null;
         $_SESSION['user_department_id'] = $row['department_id'] !== null
             ? (int) $row['department_id']
             : null;
+
         session_regenerate_id(true);
 
         return ['success' => true];

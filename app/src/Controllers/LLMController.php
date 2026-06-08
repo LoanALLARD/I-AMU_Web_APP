@@ -32,8 +32,6 @@ class LLMController{
 
         $modelName = $data['model'];
         $userMessage = $data['message'];
-        // $context = $data['context'] ?? [];
-        //$user_email = $data['user_email'] ?? null;
         $context = [];
 
         $conversation_id = $data['conversation_id'] ?? null;
@@ -46,6 +44,15 @@ class LLMController{
             header('Content-Type: application/json');
             http_response_code(401);
             echo json_encode(['error' => 'Non authentifié.']);
+            return;
+        }
+
+        // Roles with no chat access: refuse even a forged request.
+        $roles = $_SESSION['roles'] ?? [];
+        if (in_array('researcher', $roles, true) || in_array('department_admin', $roles, true)) {
+            header('Content-Type: application/json');
+            http_response_code(403);
+            echo json_encode(['error' => 'Acces non autorise.']);
             return;
         }
 

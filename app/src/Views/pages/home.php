@@ -7,9 +7,7 @@
  * @var array  $user           currentUser() snapshot (id, email, first_name, last_name, roles)
  * @var bool   $sessionClosed  true when the linked session is over (read-only chat)
  * @var string $closedReason   why the session is closed (ended / cancelled)
- * @var list<\App\Application\DTOs\ModelMetaView> $models active models from DB
  */
-
 $firstModel = $models[0] ?? null;
 $defaultModelName = $firstModel ? $firstModel['name'] : 'llama3.2:1b';
 $sessionClosed = $sessionClosed ?? false;
@@ -39,7 +37,7 @@ $hasMessages = $messages !== [];
                     <?php if (empty($models)): ?>
                         <div class="model-dropdown-empty">Aucun modèle disponible</div>
                     <?php else: ?>
-                        <?php foreach ($models as $i => $model): ?>
+                        <?php foreach ($models as $i => $model):?>
                             <button class="model-dropdown-item<?= $i === 0 ? ' active' : '' ?>"
                                     data-model="<?= htmlspecialchars($model['name']) ?>"
                                     type="button">
@@ -65,6 +63,16 @@ $hasMessages = $messages !== [];
                                 </svg>
                             </button>
                         <?php endforeach; ?>
+                        <?php if ($canAddModel): ?>
+                            <a class="model-dropdown-item admin-action-item" href="/department-admin/addModel">
+                                <span class="model-dropdown-letter">
+                                    <img src="/assets/img/add.svg" style="height: 20px;">
+                                </span>
+                                <div class="model-dropdown-info">
+                                    <span class="model-dropdown-name">Ajouter un Modèle d'IA</span>
+                                </div>
+                            </a>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -181,7 +189,7 @@ $hasMessages = $messages !== [];
         }
     });
 
-    document.querySelectorAll('.model-dropdown-item').forEach(item => {
+    document.querySelectorAll('.model-dropdown-item:not(.admin-action-item)').forEach(item => {
         item.addEventListener('click', () => {
             const model = item.dataset.model;
             selectedModel = model;

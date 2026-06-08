@@ -12,7 +12,8 @@
     use Controllers\SessionController;
     use Controllers\ProfileController;
     use Controllers\PlaceController;
-    use Controllers\AdminController;
+    use Controllers\DepartmentAdminController;
+    use Controllers\ResearcherController;
     use Controllers\ErrorController;
     use Core\HttpException;
 
@@ -53,9 +54,20 @@
     $router->add('POST', '/profile/password',    function()     { (new ProfileController())->changePassword(); });
 
     // --- Department-admin console (department_admin role) --------------
-    $router->add('GET',  '/admin',                         function() { (new AdminController())->index(); });
-    $router->add('POST', '/admin/researchers/approve',     function() { (new AdminController())->approveResearcher(); });
-    $router->add('POST', '/admin/researchers/reject',      function() { (new AdminController())->rejectResearcher(); });
+    $router->add('GET',  '/department-admin',                         function() { (new DepartmentAdminController())->index(); });
+    $router->add('GET',  '/department-admin/addModel',                function() { (new DepartmentAdminController())->fromModel(); });
+    $router->add('POST', '/department-admin/addModel',                function() { (new DepartmentAdminController())->addModel(); });
+    $router->add('POST', '/department-admin/researchers/approve',     function() { (new DepartmentAdminController())->approveResearcher(); });
+    $router->add('POST', '/department-admin/researchers/reject',      function() { (new DepartmentAdminController())->rejectResearcher(); });
+    $router->add('POST', '/department-admin/researchers/revoke',      function() { (new DepartmentAdminController())->revokeResearcher(); });
+    $router->add('POST', '/department-admin/researchers/reauthorize', function() { (new DepartmentAdminController())->reauthorizeResearcher(); });
+    $router->add('POST', '/department-admin/users/set-active',        function() { (new DepartmentAdminController())->setUserActive(); });
+
+    // --- Researcher space (researcher role) ---------------------------
+    $router->add('GET',  '/researcher',                 function() { (new ResearcherController())->index(); });
+    $router->add('GET',  '/researcher/data',            function() { (new ResearcherController())->data(); });
+    $router->add('POST', '/researcher/requests',        function() { (new ResearcherController())->requestAccess(); });
+    $router->add('POST', '/researcher/requests/cancel', function() { (new ResearcherController())->cancelRequest(); });
 
 // --- Sessions (teacher) + join (student) --------------------------
     // Literal routes are registered before the `{id}` wildcard so they win.

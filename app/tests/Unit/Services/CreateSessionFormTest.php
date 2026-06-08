@@ -26,7 +26,7 @@ final class CreateSessionFormTest extends TestCase
     {
         return array_merge([
             'name'        => 'Algo TD',
-            'type'        => 'COURSE',
+            'type'        => 'TUTORIAL',
             'resource_id' => 7,
             'models'      => [1, 2],
         ], $overrides);
@@ -51,7 +51,7 @@ final class CreateSessionFormTest extends TestCase
         $data = $result['data'];
 
         self::assertSame('Algo TD', $data['name']);
-        self::assertSame(SessionType::Course, $data['type']);
+        self::assertSame(SessionType::Tutorial, $data['type']);
         self::assertSame(7, $data['resourceId']);
         self::assertSame(90, $data['durationMinutes']);
         self::assertSame([1, 2], $data['modelIds']);
@@ -84,7 +84,7 @@ final class CreateSessionFormTest extends TestCase
 
     public function testInvalidTypeIsRejectedOnCreate(): void
     {
-        $result = CreateSessionForm::fromPost($this->validCreatePost(['type' => 'LAB']));
+        $result = CreateSessionForm::fromPost($this->validCreatePost(['type' => 'INVALID']));
 
         self::assertContains('Type de session invalide.', $result['errors']);
     }

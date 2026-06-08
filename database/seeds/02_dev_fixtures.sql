@@ -139,12 +139,12 @@ INSERT INTO sessions (resource_id, name, status, starts_at, ends_at, type,
                       max_input_size, instructions) VALUES
     ((SELECT id FROM resources WHERE code = 'INF101'),
      'TP Algo - brouillon',         'DRAFT',
-     NULL, NULL, 'COURSE',
+     NULL, NULL, 'TUTORIAL',
      2000, 'Brouillon de TP, pas encore publie.'),
 
     ((SELECT id FROM resources WHERE code = 'INF101'),
      'TP Algo - seance 1',          'SCHEDULED',
-     NOW() + INTERVAL '2 days', NOW() + INTERVAL '2 days 2 hours', 'COURSE',
+     NOW() + INTERVAL '2 days', NOW() + INTERVAL '2 days 2 hours', 'TUTORIAL',
      2000, 'Premier TP: tri et complexite.'),
 
     ((SELECT id FROM resources WHERE code = 'INF202'),
@@ -154,17 +154,17 @@ INSERT INTO sessions (resource_id, name, status, starts_at, ends_at, type,
 
     ((SELECT id FROM resources WHERE code = 'INF202'),
      'TD BDD - en cours',           'ACTIVE',
-     NOW() - INTERVAL '1 hour', NOW() + INTERVAL '1 hour', 'COURSE',
+     NOW() - INTERVAL '1 hour', NOW() + INTERVAL '1 hour', 'TUTORIAL',
      1500, 'TD interactif sur les jointures.'),
 
     ((SELECT id FROM resources WHERE code = 'INF101'),
      'TP Algo - archive',           'ENDED',
-     NOW() - INTERVAL '14 days', NOW() - INTERVAL '14 days' + INTERVAL '2 hours', 'COURSE',
+     NOW() - INTERVAL '14 days', NOW() - INTERVAL '14 days' + INTERVAL '2 hours', 'TUTORIAL',
      2000, 'TP termine. Code d''acces conserve pour traces.'),
 
     ((SELECT id FROM resources WHERE code = 'MAT101'),
      'CM Analyse - annule',         'CANCELLED',
-     NULL, NULL, 'COURSE',
+     NULL, NULL, 'TUTORIAL',
      NULL, 'Session annulee suite au changement de planning.');
 
 UPDATE sessions
@@ -207,6 +207,14 @@ INSERT INTO researcher_authorizations (researcher_id, department_id, request) VA
     ((SELECT id FROM users WHERE email = 'chercheur2@univ-amu.fr'),
      (SELECT id FROM departments WHERE name = 'Informatique'),
      'Je souhaite analyser les interactions du departement Informatique dans le cadre d''une etude sur les usages pedagogiques des LLM. Donnees agregees uniquement.');
+
+-- A revoked authorization:
+INSERT INTO researcher_authorizations (researcher_id, department_id, authorized_by_id, authorized_at, rejected_at) VALUES
+    ((SELECT id FROM users WHERE email = 'chercheur1@univ-amu.fr'),
+     (SELECT id FROM departments WHERE name = 'Mathematiques'),
+     (SELECT id FROM users WHERE email = 'admin.maths@univ-amu.fr'),
+     NOW() - INTERVAL '1 day',
+     NOW());
 
 INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
     ((SELECT id FROM users WHERE email = 'emma.blanc@etu.univ-amu.fr'),
@@ -323,6 +331,22 @@ INSERT INTO interactions (conversation_id, prompt, response,
      'Merci.',
      'Avec plaisir.',
      150, 3, 15, NULL);
+
+-- RGPD: some users object to having their data used for research.
+UPDATE users SET research_opposed = TRUE
+ WHERE email IN ('lea.vert@etu.univ-amu.fr', 'orphan@univ-amu.fr');
+
+-- Export audit trail: who exported which conversation, from which IP and when.
+INSERT INTO conversation_exports (conversation_id, researcher_id, ip_address, exported_at) VALUES
+    ((SELECT id FROM conversations WHERE name = 'TD jointures - Emma'),
+     (SELECT id FROM users WHERE email = 'chercheur1@univ-amu.fr'),
+     '147.94.0.10', NOW() - INTERVAL '2 days'),
+    ((SELECT id FROM conversations WHERE name = 'TP archive - Alice'),
+     (SELECT id FROM users WHERE email = 'chercheur1@univ-amu.fr'),
+     '147.94.0.10', NOW() - INTERVAL '1 day'),
+    ((SELECT id FROM conversations WHERE name = 'TD jointures - Hugo'),
+     (SELECT id FROM users WHERE email = 'chercheur2@univ-amu.fr'),
+     '2001:660:6201::42', NOW() - INTERVAL '3 hours');
 
 INSERT INTO users (department_id, email, password_hash, first_name, last_name, consent_version) VALUES
     ((SELECT id FROM departments WHERE name = 'Info'

@@ -42,10 +42,20 @@ class AiRepository{
      *
      * @return list<array<string, mixed>>
      */
-    public function findAllActive(): array
+    public function findAllActiveBySession(?int $sessionID): array
     {
-        $query = $this->pdo->prepare('SELECT id, name, version, context_window, is_active FROM models WHERE is_active = :a ORDER BY name');
-        $query->bindValue(':a', true, PDO::PARAM_BOOL);
+        if ($sessionID == null){
+            $query = $this->pdo->prepare('SELECT id, name, version, context_window, is_active FROM models WHERE is_active = :a AND resource_id IS NULL ORDER BY name');
+            $query->bindValue(':a', true, PDO::PARAM_BOOL);
+        }
+        else{
+            $query = $this->pdo->prepare('SELECT id, name, version, context_window, is_active FROM models WHERE is_active = :a AND resource_id = :r_id ORDER BY name');
+            var_dump($sessionID);
+            $query->execute([
+                ":a"    => true,
+                "r_id"  => $sessionID
+                ]);
+        }
         $query->execute();
 
         /** @var list<array<string, mixed>> $rows */
@@ -96,5 +106,50 @@ class AiRepository{
         $rows = $query->fetchAll();
 
         return $rows;
+    }
+
+    public function getAllTypeOfAdapters(){
+        $query = $this->pdo->prepare(
+            'SELECT adapter FROM models GROUP BY adapter'
+        );
+
+        $query->execute();
+
+        $result = $query->fetch();
+
+        return $result;
+    }
+
+    public function addModel(?int $department_id,?string $resource_id,string $name, string $version, string $provider, string $adapter, string $apiUrl, int $maxTokens, int $contextWindow, string $isShareable){    
+        $query = $this->pdo->prepare(
+            'INSERT INTO models (department_id,resource_id,name,version,provider,max_tokens,context_window,api_url,adapter,is_shareable)
+            VALUES (:department_id,:resource_id,:name,:version,:provider,:max_tokens,:context_window,:api_url,:adapter,:is_shareable)'
+        );
+
+        $query->execute([
+            'department_id' => $department_id,
+            'resource_id'    => $resource_id,
+            'name'           => $name,
+            'version'        => $version,
+            'provider'       => $provider,
+            'max_tokens'     => $maxTokens,
+            'context_window' => $contextWindow,
+            'api_url'        => $apiUrl,
+            'adapter'        => $adapter,
+            'is_shareable'   => $isShareable
+        ]);
+
+        $idGenere = $this->pdo->lastInsertId();
+
+        if (!$idGenere) {
+            return null;
+        }
+
+        $querySelect = $this->pdo->prepare('SELECT * FROM models WHERE id = :id');
+        $querySelect->execute(['id' => $idGenere]);
+        
+        $result = $querySelect->fetch();
+
+        return $result ?: null; 
     }
 }
