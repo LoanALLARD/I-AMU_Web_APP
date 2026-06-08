@@ -9,7 +9,7 @@ interface LlmAdaptaterInterface {
      *
      * @param array<int, int> $context conversation context (provider token ids)
      */
-    public function generate(string $message, array $context, ?string $preprompt): string;
+    public function generate(string $message, array $context, ?string $preprompt,?string $posprompt): string;
 
     public function formatMetadata(object $response): string;
 

@@ -51,6 +51,23 @@ class LLMController{
 
         $pdo = Database::getConnection();                                   // Instance of the database
 
+        // Exam lockdown: a student inside a running exam may only post to
+        // their exam conversation. Free chat (no id) or any other
+        // conversation is rejected, so the locked UI cannot be bypassed by
+        // calling this endpoint directly.
+        if (in_array('student', $_SESSION['roles'] ?? [], true)) {
+            $lock = (new \Services\ExamLockService($pdo))->activeLockFor($userId);
+            if ($lock !== null) {
+                $targetId = $conversation_id !== null ? (int) $conversation_id : null;
+                if ($lock['conversationId'] === null || $targetId !== $lock['conversationId']) {
+                    header('Content-Type: application/json');
+                    http_response_code(403);
+                    echo json_encode(['error' => "Examen en cours : seule la conversation de l'examen est autorisée."]);
+                    return;
+                }
+            }
+        }
+
         $aiRepository = new AiRepository($pdo);
         $aiData = $aiRepository->getModelByName($modelName);                // Read Data from the DataBase
 
@@ -102,10 +119,44 @@ class LLMController{
 
         // Get the preprompt of the session
         $preprompt = null;
+        $postprompt = null;
         if ($conversationData["session_id"] !=null){
             $sessionRepo = new SessionRepository($pdo);
-            $prepromptRaw = $sessionRepo->getPrepromptBySessionId($conversationData["session_id"]);
-            $preprompt = $prepromptRaw["pre_prompt_override"];
+            // The requested model must be authorized for the session.
+            $allowedModelIds = $sessionRepo->authorizedModelIdsOf((int) $conversationData["session_id"]);
+            if (!in_array((int) $aiData['id'], $allowedModelIds, true)) {
+                header('Content-Type: application/json');
+                http_response_code(403);
+                echo json_encode(['error' => "Ce modèle n'est pas autorisé pour cette session."]);
+                return;
+            }
+            $sessionRow  = $sessionRepo->findById((int) $conversationData["session_id"]);
+            // Per-prompt character limit (max_input_size). Counts characters of the raw user message
+            $maxInputSize = isset($sessionRow['max_input_size']) && $sessionRow['max_input_size'] !== null
+                ? (int) $sessionRow['max_input_size']
+                : null;
+            if ($maxInputSize !== null && mb_strlen($userMessage) > $maxInputSize) {
+                header('Content-Type: application/json');
+                http_response_code(422);
+                echo json_encode(['error' => "Message trop long : " . mb_strlen($userMessage) . "/$maxInputSize caractères."]);
+                return;
+            }
+            // Enforce the teacher-set request limit per session, blocking further prompts once reached (NULL denotes unlimited).
+            $max_tokens  = isset($sessionRow['max_tokens']) && $sessionRow['max_tokens'] !== null
+                ? (int) $sessionRow['max_tokens']
+                : null;
+            if ($max_tokens  !== null) {
+                $used = $sessionRepo->tokenUsageForStudent($userId, (int) $conversationData["session_id"]);
+                if ($used  >= $max_tokens ) {
+                    header('Content-Type: application/json');
+                    http_response_code(429);
+                    echo json_encode(['error' => "Limite de tokens atteinte pour cette session ($used/$max_tokens)."]);
+                    return;
+                }
+            }
+            $promptRaw = $sessionRepo->getPreAndPostPromptBySessionId($conversationData["session_id"]);
+            $preprompt = $promptRaw["pre_prompt_override"];
+            $postprompt = $promptRaw["post_prompt_override"];
         }
 
         $metadata = $conversationRepository->getContextByConversationIdAndUserId($conversationData['id'], $userId);
@@ -149,7 +200,7 @@ class LLMController{
             $aiData["api_url"],
             $adapter,
         );
-        $responseRaw = $ai->ask($userMessage, $context,$preprompt);
+        $responseRaw = $ai->ask($userMessage, $context,$preprompt,$postprompt);
         $response = json_decode($responseRaw);
 
         if ($response === null || (is_object($response) && isset($response->error))) {
@@ -187,3 +238,4 @@ class LLMController{
         
     }
 }
+

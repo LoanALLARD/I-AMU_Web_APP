@@ -155,6 +155,8 @@ $hasMessages = $messages !== [];
 <script>
     const conversationId = <?= json_encode($conversation['id'] ?? null) ?>;
     const conversationContext = <?= json_encode($messages ?? []) ?>;
+    const sessionMaxInputSize = <?= json_encode($env['maxInputSize'] ?? null) ?>;
+    const sessionMaxTokens = <?= json_encode($env['maxTokens'] ?? null) ?>;
 
     const input = document.getElementById('promptInput');
     const sendBtn = document.getElementById('btnSend');
@@ -300,6 +302,17 @@ $hasMessages = $messages !== [];
         const message = input.value.trim();
         if (!message) return;
 
+        // Validate max_input_size limit if set
+        if (sessionMaxInputSize !== null && message.length > sessionMaxInputSize) {
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'msg msg-error';
+            errorMsg.innerHTML = `<div class="msg-content"><p class="msg-error">Votre message dépasse la limite de ${sessionMaxInputSize} caractères.</p></div>`;
+            const messagesEl = document.getElementById('messages');
+            messagesEl.appendChild(errorMsg);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return;
+        }
+
         const messagesEl = document.getElementById('messages');
         const emptyState = document.getElementById('emptyState');
         if (emptyState) emptyState.style.display = 'none';
@@ -351,9 +364,17 @@ $hasMessages = $messages !== [];
                 return;
             }
 
+            // Server-side limits / auth: the endpoint returns an error JSON
+            // with a non-2xx status (429 token cap, 422 char cap, 403, etc.).
+            if (!res.ok || data.error) {
+                const msg = data.error ?? 'Une erreur est survenue.';
+                aiMsg.querySelector('.msg-content').innerHTML =
+                    `<p class="msg-error">${escapeHtml(msg)}</p>`;
+                return;
+            }
+
             const endTime = performance.now();
             const durationStr = ((endTime - startTime) / 1000).toFixed(2) + 's';
-
 
             const responseText = data.response ?? 'Pas de réponse.';
             renderMarkdown(responseText, aiMsg.querySelector('.msg-content'));
@@ -398,10 +419,6 @@ $hasMessages = $messages !== [];
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                         Copier
                     </button>
-                    <button class="msg-action">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-                        Garder
-                    </button>
 
                     <span class="msg-stat" title="Temps de réponse">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -438,3 +455,5 @@ $hasMessages = $messages !== [];
     }
 
 </script>
+
+

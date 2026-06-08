@@ -1,4 +1,4 @@
-<div class="register-card">
+<div class="register-card auth-card-login">
 
     <div class="card-header">
         <div class="logo-wrap">

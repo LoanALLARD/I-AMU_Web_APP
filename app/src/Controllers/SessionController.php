@@ -307,6 +307,9 @@ class SessionController extends Controller
     public function showJoin(): void
     {
         $this->requireRole('student');
+        if ($this->redirectIfExamLocked()) {
+            return;
+        }
         $this->render('pages/session/join', [
             'title' => 'Rejoindre une session',
         ]);
@@ -317,6 +320,9 @@ class SessionController extends Controller
     {
         $this->requireRole('student');
         $this->verifyCsrf();
+        if ($this->redirectIfExamLocked()) {
+            return;
+        }
 
         $rawCode = (string) $this->input('access_code', '');
         $user    = $this->currentUser();
@@ -339,12 +345,35 @@ class SessionController extends Controller
     // ----------------------------------------------------------------
 
     /**
+     * Redirects an exam-locked student back to their exam conversation and
+     * returns true; returns false when free to proceed. Keeps a student from
+     * joining a second session while an exam is running.
+     */
+    private function redirectIfExamLocked(): bool
+    {
+        if (!$this->hasRole('student')) {
+            return false;
+        }
+        $user = $this->currentUser();
+        $lock = (new \Services\ExamLockService(Database::getConnection()))
+            ->activeLockFor((int) ($user['id'] ?? 0));
+        if ($lock === null) {
+            return false;
+        }
+        $this->flash('error', 'Action indisponible pendant un examen.');
+        $this->redirect($lock['conversationId'] !== null
+            ? '/chat/' . $lock['conversationId']
+            : '/chat');
+
+        return true;
+    }
+
+    /**
      * Loads a session, redirecting on miss and 403-ing if it is not owned by
      * the current teacher. Returns the (owned) session on success.
      */
     private function loadOwned(int $sessionId): \Domain\Session
-    {
-        $session = $this->sessions->find($sessionId);
+    {       $session = $this->sessions->find($sessionId);
         if ($session === null) {
             $this->flash('error', 'Session introuvable.');
             $this->redirect('/sessions');

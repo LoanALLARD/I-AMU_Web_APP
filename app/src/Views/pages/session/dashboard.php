@@ -85,8 +85,15 @@
                 <span class="kv-key">prompt max</span>
                 <span class="kv-val mono">
                     <?= $view['maxInputSize'] !== null
-                        ? number_format((float) $view['maxInputSize'], 0, ',', ' ') . ' tok'
+                        ? number_format((float) $view['maxInputSize'], 0, ',', ' ') . ' caractères'
                         : 'sans limite' ?>
+                </span>
+                </span>
+                <span class="kv-key">tokens session</span>
+                <span class="kv-val mono">
+                    <?= $view['maxTokens'] !== null
+                    ? number_format((float) $view['maxTokens'], 0, ',', ' ') . ' tok'
+                    : 'sans limite' ?>
                 </span>
             </div>
         </div>
