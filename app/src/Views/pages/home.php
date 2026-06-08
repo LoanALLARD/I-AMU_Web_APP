@@ -47,7 +47,7 @@ $hasMessages = $messages !== [];
                                     <span class="model-dropdown-meta">
                                         <?php
                                         $meta = [];
-                                        if ($model['version'] ?? null) {
+                                        if ($model['size'] ?? null) {
                                             $meta[] = 'v' . $model['version'];
                                         }
                                         if ($model['context_window'] ?? null) {
