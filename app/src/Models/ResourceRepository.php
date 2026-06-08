@@ -21,7 +21,7 @@ class ResourceRepository
      */
     public function findAllByOwner(int $teacherId): array
     {
-        $stmt = $this->pdo->prepare('SELECT id, owner_id, code, name, state FROM resources WHERE owner_id = :tid ORDER BY code');
+        $stmt = $this->pdo->prepare('SELECT id,department_id, owner_id, code, name, state FROM resources WHERE owner_id = :tid ORDER BY code');
         $stmt->execute(['tid' => $teacherId]);
 
         /** @var list<array<string, mixed>> $rows */

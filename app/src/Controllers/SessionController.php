@@ -10,6 +10,7 @@ use Domain\SessionException;
 use Services\CreateSessionForm;
 use Services\DocumentService;
 use Services\SessionService;
+use Models\AiRepository;
 use Throwable;
 
 /**
@@ -392,5 +393,29 @@ class SessionController extends Controller
         unset($_SESSION['_old_input']);
 
         return is_array($old) ? $old : [];
+    }
+    
+    public function getModelsByResource(): void
+    {
+        $resourceId = (int) $this->query('resource_id', 0);
+        $depId = $this->currentUser()['department_id'];
+
+        $pdo = Database::getConnection();
+        $aiRepo = new AiRepository($pdo);
+        
+        $modelsByResource = $aiRepo->findAllActiveByResource($resourceId);
+        $modelsByDeptAndShared = $aiRepo->findAllActiveBySession(null, $depId);
+
+        $allModels = array_merge($modelsByResource, $modelsByDeptAndShared);
+
+        $allModels = array_intersect_key(
+            $allModels, 
+            array_unique(array_column($allModels, 'id'))
+        );
+        $allModels = array_values($allModels);
+
+        header('Content-Type: application/json');
+        echo json_encode(['models' => $allModels]);
+        exit;
     }
 }

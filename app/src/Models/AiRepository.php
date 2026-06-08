@@ -44,25 +44,61 @@ class AiRepository
      *
      * @return list<array<string, mixed>>
      */
-    public function findAllActiveBySession(?int $sessionID,int $dep_id): array
+    public function findAllActiveBySession(?int $sessionID,?int $dep_id): array
     {
         if ($sessionID == null){
-            $query = $this->pdo->prepare('SELECT id, name, version, context_window, is_active FROM models WHERE is_active = :a AND resource_id IS NULL AND department_id = :dep_id ORDER BY name');
+            $query = $this->pdo->prepare(
+                'SELECT m.name,m.id 
+                from models m 
+                where resource_id is NULL
+                and department_id = :dep_id 
+                and is_active = :a
+                UNION
+                SELECT name,id 
+                FROM models 
+                where resource_id is NULL
+                and is_shareable = true'
+                );
             $query->execute([
                 ":a"    => true,
                 "dep_id"  => $dep_id
                 ]);
         }
         else{
-            $query = $this->pdo->prepare('SELECT id, name, version, context_window, is_active FROM models WHERE is_active = :a AND resource_id = :r_id ORDER BY name');
+            $query = $this->pdo->prepare(
+                'SELECT m.name,m.id from models m
+                INNER JOIN model_resource_accesses mra
+                on m.id = mra.model_id 
+                INNER JOIN resources r
+                on r.id = mra.resource_id
+                INNER JOIN sessions s
+                on s.resource_id = r.id
+                where s.id = :session_id
+                and is_active = :a'
+            );
             $query->execute([
                 ":a"    => true,
-                "r_id"  => $sessionID
+                "session_id"  => $sessionID
                 ]);
         }
         $query->execute();
 
         /** @var list<array<string, mixed>> $rows */
+        $rows = $query->fetchAll();
+
+        return $rows;
+    }
+
+    public function findAllActiveByResource(int $resource_id){
+        $query = $this->pdo->prepare(
+            'SELECT m.name,m.id from models m
+            INNER JOIN model_resource_accesses mra
+            on m.resource_id = mra.model_id
+            where mra.resource_id = :r_id
+        ');
+        $query->execute([
+            ":r_id" => $resource_id
+        ]);
         $rows = $query->fetchAll();
 
         return $rows;

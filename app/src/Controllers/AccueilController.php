@@ -45,7 +45,7 @@ class AccueilController extends Controller
                 $depId = $user['department_id'];
                 $models = $aiRepository->findAllActiveBySession(null,$depId);
             }else{
-                $models = $aiRepository->findAllActiveBySession($env["env"]["sessionId"]);
+                $models = $aiRepository->findAllActiveBySession($env["env"]["sessionId"],null);
             }
         } catch (\Throwable $e) {
             error_log('Impossible de charger les modèles : ' . $e->getMessage());

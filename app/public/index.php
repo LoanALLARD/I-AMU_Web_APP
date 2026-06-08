@@ -74,6 +74,7 @@
     // Literal routes are registered before the `{id}` wildcard so they win.
     $router->add('GET',  '/sessions',         function() { (new SessionController())->index(); });
     $router->add('GET',  '/sessions/create',  function() { (new SessionController())->create(); });
+    $router->add('GET',  '/session/models-by-resource', function(){ (new SessionController())->getModelsByResource();});
     $router->add('POST', '/sessions/store',   function() { (new SessionController())->store(); });
     $router->add('GET',  '/sessions/join',    function() { (new SessionController())->showJoin(); });
     $router->add('POST', '/sessions/join',    function() { (new SessionController())->join(); });
