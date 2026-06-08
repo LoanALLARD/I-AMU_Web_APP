@@ -229,6 +229,51 @@ abstract class Controller
         ];
     }
 
+    // ----------------------------------------------------------------
+    // Super admin auth (isolated identity, see SPEC-superadmin-auth.md)
+    // ----------------------------------------------------------------
+
+    /**
+     * Ensures a super administrator is authenticated. Redirects to the
+     * super admin login otherwise. Super admins are NOT users: their
+     * identity lives under the dedicated `super_admin_id` session key, and
+     * the two sessions are mutually exclusive.
+     */
+    protected function requireSuperAdmin(): void
+    {
+        if (empty($_SESSION['super_admin_id'])) {
+            $this->redirect('/super-admin/login');
+        }
+    }
+
+    /**
+     * Non-blocking check: tells whether the current session is a super
+     * admin one. Use it to branch (e.g. redirect an already-logged-in
+     * super admin away from the login form).
+     */
+    protected function isSuperAdmin(): bool
+    {
+        return !empty($_SESSION['super_admin_id']);
+    }
+
+    /**
+     * Returns the currently logged-in super admin as a flat array, or null.
+     *
+     * @return array{id:int, email:string, first_name:string, last_name:string}|null
+     */
+    protected function currentSuperAdmin(): ?array
+    {
+        if (empty($_SESSION['super_admin_id'])) {
+            return null;
+        }
+        return [
+            'id'         => (int) $_SESSION['super_admin_id'],
+            'email'      => (string) ($_SESSION['super_admin_email'] ?? ''),
+            'first_name' => (string) ($_SESSION['super_admin_first_name'] ?? ''),
+            'last_name'  => (string) ($_SESSION['super_admin_last_name'] ?? ''),
+        ];
+    }
+
     protected function renderForbidden(): never
     {
         http_response_code(403);

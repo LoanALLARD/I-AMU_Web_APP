@@ -69,6 +69,16 @@ final class AuthService
 
         $userId = (int) $row['id'];
 
+        // Exclusivity with the super admin session (see SPEC-superadmin-auth.md,
+        // D3): a normal user login must never leave a super admin identity
+        // behind. Drop the dedicated keys before keying as a user.
+        unset(
+            $_SESSION['super_admin_id'],
+            $_SESSION['super_admin_email'],
+            $_SESSION['super_admin_first_name'],
+            $_SESSION['super_admin_last_name']
+        );
+
         $this->users->touchLastLogin($userId);
 
         $_SESSION['user_id']         = $userId;

@@ -32,6 +32,13 @@ L'administration est **hiérarchisée sur deux niveaux**, stockés dans
 
 #### A.0.1 Super administrateur
 
+> **Connexion & panel** — le *mécanisme d'authentification* du super admin
+> (route dédiée `/super-admin/login` non liée dans l'UI, session isolée et
+> exclusive de celle des `users`, guards `requireSuperAdmin`, script de
+> bootstrap run-once, coquille du panel) est spécifié et implémenté dans
+> [`SPEC-superadmin-auth.md`](./SPEC-superadmin-auth.md). La présente section
+> décrit les *pouvoirs* du super admin, qui s'appuieront dessus.
+
 - **Bootstrap** : le **premier** super admin est inséré par un **script
   qui ne s'exécute qu'une seule fois** (idempotent / verrou — refuse de
   recréer si la table est non vide). Pas de seed rejouable, pas de mot de

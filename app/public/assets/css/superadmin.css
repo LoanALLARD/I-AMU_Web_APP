@@ -1,0 +1,82 @@
+/*
+ * Super admin zone — login + panel.
+ * Reuses the auth card classes (auth.css) but overrides the palette to a
+ * dark "restricted area" theme, so this surface is visibly distinct from the
+ * regular user login. Loaded after auth.css in layout/superadmin.php.
+ */
+
+body.superadmin-body {
+    background-image:
+            radial-gradient(ellipse 600px 400px at 10% 10%, rgba(15, 23, 42, .10) 0%, transparent 70%),
+            radial-gradient(ellipse 400px 300px at 90% 90%, rgba(220, 38, 38, .07) 0%, transparent 70%);
+}
+
+/* Dark header instead of the brand blue */
+.superadmin-body .card-header {
+    background: #0f172a;
+}
+.superadmin-body .card-header::after {
+    background: rgba(220, 38, 38, .10);
+}
+
+.superadmin-body .accent-bar {
+    background: linear-gradient(90deg, #0f172a 0%, #dc2626 100%);
+}
+
+/* Restricted-area badge under the title */
+.superadmin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .15rem;
+    padding: .25rem .7rem;
+    border-radius: 999px;
+    background: rgba(220, 38, 38, .14);
+    color: #fca5a5;
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    position: relative;
+    z-index: 1;
+}
+.superadmin-badge svg {
+    width: 13px;
+    height: 13px;
+}
+
+/* Dark submit button to match the header */
+.superadmin-body .btn-submit {
+    background: #0f172a;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, .3);
+}
+.superadmin-body .btn-submit:hover {
+    background: #1e293b;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, .35);
+}
+
+/* Panel shell (dashboard) */
+.superadmin-panel {
+    width: 100%;
+    max-width: 560px;
+}
+.superadmin-panel .panel-greeting {
+    font-size: .82rem;
+    color: rgba(255, 255, 255, .72);
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}
+.superadmin-panel .panel-body {
+    padding: 1.75rem 2rem 2rem;
+    text-align: center;
+}
+.superadmin-panel .panel-body p {
+    color: var(--gray-600);
+    font-size: .9rem;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+}
+.superadmin-panel form.logout-form {
+    margin: 0;
+}
