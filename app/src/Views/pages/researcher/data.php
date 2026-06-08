@@ -12,8 +12,8 @@ require __DIR__ . '/_header.php';
 <div class="page-body">
 
     <div class="admin-section">
-        <h2><?= icon('database', '', 16) ?> Donnees &amp; export</h2>
-        <p class="no-message">La consultation et l'export des donnees seront disponibles prochainement.</p>
+        <h2><?= icon('database', '', 16) ?> Données &amp; export</h2>
+        <p class="no-message">La consultation et l'export des données seront disponibles prochainement.</p>
     </div>
 
 </div>

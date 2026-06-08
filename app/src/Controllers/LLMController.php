@@ -53,7 +53,7 @@ class LLMController{
         if (in_array('researcher', $roles, true) || in_array('department_admin', $roles, true)) {
             header('Content-Type: application/json');
             http_response_code(403);
-            echo json_encode(['error' => 'Acces non autorise.']);
+            echo json_encode(['error' => 'Accès non autorisé.']);
             return;
         }
 

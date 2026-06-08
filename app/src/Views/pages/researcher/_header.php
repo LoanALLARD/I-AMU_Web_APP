@@ -16,14 +16,14 @@ $activeTab   = $activeTab ?? 'access';
         <h1>Espace chercheur</h1>
         <span class="badge badge-draft"><?= icon('flask-conical', '', 13) ?> chercheur</span>
     </div>
-    <p class="page-sub">Connecte en tant que <strong><?= htmlspecialchars($displayName !== '' ? $displayName : 'chercheur') ?></strong> &middot; <?= htmlspecialchars($user['email'] ?? '') ?></p>
+    <p class="page-sub">Connecté en tant que <strong><?= htmlspecialchars($displayName !== '' ? $displayName : 'chercheur') ?></strong> &middot; <?= htmlspecialchars($user['email'] ?? '') ?></p>
 </div>
 
 <nav class="tabs" aria-label="Espace chercheur">
     <a href="/researcher" class="tab<?= $activeTab === 'access' ? ' is-active' : '' ?>"<?= $activeTab === 'access' ? ' aria-current="page"' : '' ?>>
-        <?= icon('key-round', '', 15) ?> Mes acces
+        <?= icon('key-round', '', 15) ?> Mes accès
     </a>
     <a href="/researcher/data" class="tab<?= $activeTab === 'data' ? ' is-active' : '' ?>"<?= $activeTab === 'data' ? ' aria-current="page"' : '' ?>>
-        <?= icon('database', '', 15) ?> Donnees &amp; export
+        <?= icon('database', '', 15) ?> Données &amp; export
     </a>
 </nav>

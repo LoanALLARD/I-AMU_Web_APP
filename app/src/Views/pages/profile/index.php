@@ -81,7 +81,7 @@ $themeCur = match ($user['theme'] ?? null) {
                         Délai de traitement : 30 jours.
                     </p>
                 </div>
-                <a href="/rgpd_çonsent" class="rgpd-link">Consulter les mentions d'information RGPD</a>
+                <a href="/rgpd_consent" class="rgpd-link">Consulter les mentions d'information RGPD</a>
             </div>
         </div>
 

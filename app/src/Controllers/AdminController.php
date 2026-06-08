@@ -46,7 +46,7 @@ class AdminController extends Controller
             ->approve($researcherId, $this->currentDepartmentId(), (int) $this->currentUser()['id']);
 
         $this->flash($result['success'] ? 'success' : 'error',
-            $result['success'] ? 'Demande chercheur validee.' : $result['error']);
+            $result['success'] ? 'Demande chercheur validée.' : $result['error']);
         $this->redirect('/admin');
     }
 
@@ -60,7 +60,7 @@ class AdminController extends Controller
             ->reject($researcherId, $this->currentDepartmentId(), (int) $this->currentUser()['id']);
 
         $this->flash($result['success'] ? 'success' : 'error',
-            $result['success'] ? 'Demande chercheur refusee.' : $result['error']);
+            $result['success'] ? 'Demande chercheur refusée.' : $result['error']);
         $this->redirect('/admin');
     }
 
