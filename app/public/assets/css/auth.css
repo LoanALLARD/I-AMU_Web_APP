@@ -137,6 +137,11 @@ body.auth-body {
     gap: 1rem;
 }
 
+/* `hidden` must win over the grid display above (researcher toggle). */
+.form-row[hidden] {
+    display: none;
+}
+
 .form-group {
     display: flex;
     flex-direction: column;

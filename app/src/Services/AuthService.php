@@ -117,6 +117,7 @@ final class AuthService
         $lastName        = trim((string) ($data['last_name']       ?? ''));
         $placeId         = (int) ($data['place_id']                ?? 0);
         $departmentId    = (int) ($data['department_id']           ?? 0);
+        $isResearcher    = (bool)  ($data['is_researcher']         ?? false);
         $rgpdConsent     = (bool)  ($data['rgpd_consent']          ?? false);
 
         // ----- Format validation ------------------------------------
@@ -132,28 +133,18 @@ final class AuthService
             return ['success' => false, 'error' => $validationError];
         }
 
-        // ----- Place / department --------------------------------------
-        // The dependent select is filled by client-side JS, so we re-check
-        // server-side that the department exists and belongs to the place.
-        if ($placeId === 0 || $departmentId === 0) {
-            return ['success' => false, 'error' => 'Veuillez choisir un lieu et un département.'];
-        }
-        if (!$this->places->departmentBelongsToPlace($departmentId, $placeId)) {
-            return ['success' => false, 'error' => 'Le département sélectionné est invalide.'];
-        }
-
-        // ----- Role lookup ------------------------------------------
-        $role = $this->resolveRoleFromDomain($email);
-        if ($role === null) {
-            return [
-                'success' => false,
-                'error'   => "Ce domaine email n'est pas autorisé.",
-            ];
-        }
-
         // ----- Email uniqueness -------------------------------------
         if ($this->users->emailExists($email)) {
             return ['success' => false, 'error' => 'Cet email est déjà utilisé.'];
+        }
+
+        if ($isResearcher) {
+            $registration = $this->prepareResearcherRegistration($email);
+        } else {
+            $registration = $this->prepareMemberRegistration($email, $placeId, $departmentId);
+        }
+        if (isset($registration['error'])) {
+            return ['success' => false, 'error' => $registration['error']];
         }
 
         // ----- Insert (user + role row, atomically) -----------------
@@ -164,10 +155,11 @@ final class AuthService
                     'password_hash'   => password_hash($password, PASSWORD_DEFAULT),
                     'first_name'      => $firstName,
                     'last_name'       => $lastName,
-                    'department_id'   => $departmentId,
+                    'department_id'   => $registration['department_id'],
+                    'laboratory_id'   => $registration['laboratory_id'],
                     'consent_version' => '1.0',
                 ],
-                $role
+                $registration['role']
             );
             //  Email verification token
             $token = bin2hex(random_bytes(32));
@@ -351,6 +343,77 @@ final class AuthService
     }
 
     /**
+     * Registration for a researcher: lab derived from the email domain, no
+     * department. Refused when no active domain links to a lab.
+     *
+     * @return array{role: string, department_id: null, laboratory_id: int}
+     *       | array{error: string}
+     */
+    private function prepareResearcherRegistration(string $email): array
+    {
+        $domain = $this->domainOf($email);
+        if ($domain === null) {
+            return ['error' => 'Email invalide.'];
+        }
+
+        $laboratoryId = $this->emailDomains->findLaboratoryIdByDomain($domain);
+        if ($laboratoryId === null) {
+            return ['error' => "Ce domaine email n'est associé à aucun laboratoire."];
+        }
+
+        return [
+            'role'          => 'researcher',
+            'department_id' => null,
+            'laboratory_id' => $laboratoryId,
+        ];
+    }
+
+    /**
+     * Registration for a student/teacher: department (validated against the
+     * place) and role derived from the email domain.
+     *
+     * @return array{role: string, department_id: int, laboratory_id: null}
+     *       | array{error: string}
+     */
+    private function prepareMemberRegistration(string $email, int $placeId, int $departmentId): array
+    {
+        // The dependent select is filled by client-side JS, so we re-check
+        // server-side that the department exists and belongs to the place.
+        if ($placeId === 0 || $departmentId === 0) {
+            return ['error' => 'Veuillez choisir un lieu et un département.'];
+        }
+        if (!$this->places->departmentBelongsToPlace($departmentId, $placeId)) {
+            return ['error' => 'Le département sélectionné est invalide.'];
+        }
+
+        // A researcher domain is not a valid member domain: reject it with the
+        // same message rather than failing later on the NOT NULL laboratory_id.
+        $role = $this->resolveRoleFromDomain($email);
+        if ($role === null || $role === 'researcher') {
+            return ['error' => "Ce domaine email n'est pas autorisé."];
+        }
+
+        return [
+            'role'          => $role,
+            'department_id' => $departmentId,
+            'laboratory_id' => null,
+        ];
+    }
+
+    /**
+     * Returns the lowercased domain part of an email, or null when malformed.
+     */
+    private function domainOf(string $email): ?string
+    {
+        $atPos = strrpos($email, '@');
+        if ($atPos === false) {
+            return null;
+        }
+
+        return strtolower(substr($email, $atPos + 1));
+    }
+
+    /**
      * Maps an email to its role by looking up the part after the `@` in the
      * `email_domain_configs` table. Only active domains match. Returns the
      * role in the lowercase form createUserWithRole() expects
@@ -358,11 +421,10 @@ final class AuthService
      */
     private function resolveRoleFromDomain(string $email): ?string
     {
-        $atPos = strrpos($email, '@');
-        if ($atPos === false) {
+        $domain = $this->domainOf($email);
+        if ($domain === null) {
             return null;
         }
-        $domain = strtolower(substr($email, $atPos + 1));
 
         // The table stores the SQL enum (UPPERCASE); the rest of the code
         // (createUserWithRole) works with lowercase role names.
