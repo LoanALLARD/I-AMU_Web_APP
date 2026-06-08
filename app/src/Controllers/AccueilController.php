@@ -41,7 +41,8 @@ class AccueilController extends Controller
             $pdo = Database::getConnection();
             $aiRepository = new \Models\AiRepository($pdo);
             if ($env["env"]["sessionId"] == null){
-                $models = $aiRepository->findAllActiveBySession(null);
+                $depId = $user['department_id'];
+                $models = $aiRepository->findAllActiveBySession(null,$depId);
             }else{
                 $models = $aiRepository->findAllActiveBySession($env["env"]["sessionId"]);
             }
