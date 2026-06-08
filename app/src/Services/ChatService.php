@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Domain\Session;
 use Domain\SessionStatus;
 use Models\ConversationRepository;
+use Models\EnrollmentRepository;
 use Models\InteractionRepository;
 use Models\SessionRepository;
 use PDO;
@@ -25,12 +26,50 @@ class ChatService
     private ConversationRepository $conversations;
     private SessionRepository $sessions;
     private InteractionRepository $interactions;
+    private EnrollmentRepository $enrollments;
 
     public function __construct(PDO $pdo)
     {
         $this->conversations = new ConversationRepository($pdo);
         $this->sessions      = new SessionRepository($pdo);
         $this->interactions  = new InteractionRepository($pdo);
+        $this->enrollments   = new EnrollmentRepository($pdo);
+    }
+
+    /**
+     * Lightweight check used by the chat page's live poller: is the user's
+     * session conversation now read-only (session ended/cancelled, or the
+     * student deactivated by the teacher)?
+     *
+     * @return array{closed: bool, reason: string}
+     */
+    public function sessionStatusFor(int $userId, int $conversationId): array
+    {
+        $row = $this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId);
+        if ($row === null || $row['session_id'] === null) {
+            return ['closed' => false, 'reason' => ''];
+        }
+        $sessionId = (int) $row['session_id'];
+
+        $sessionRow = $this->sessions->findById($sessionId);
+        if ($sessionRow !== null) {
+            $status = Session::fromRow($sessionRow)->computedStatus(new DateTimeImmutable('now'));
+            if ($status === SessionStatus::Ended) {
+                return ['closed' => true, 'reason' => 'Cette session est terminée.'];
+            }
+            if ($status === SessionStatus::Cancelled) {
+                return ['closed' => true, 'reason' => 'Cette session a été annulée.'];
+            }
+        }
+
+        if (
+            $this->enrollments->exists($userId, $sessionId)
+            && !$this->enrollments->isActive($userId, $sessionId)
+        ) {
+            return ['closed' => true, 'reason' => "Vous avez été retiré de cette session par l'enseignant."];
+        }
+
+        return ['closed' => false, 'reason' => ''];
     }
 
     /**
@@ -83,6 +122,17 @@ class ChatService
                     $closedReason  = 'Cette session a été annulée.';
                 }
             }
+
+            // A student deactivated by the teacher sees the session as closed
+            // (read-only) on their next load — the soft "disconnect".
+            if (
+                $this->enrollments->exists($userId, $sessionId)
+                && !$this->enrollments->isActive($userId, $sessionId)
+            ) {
+                $sessionClosed = true;
+                $closedReason  = "Vous avez été retiré de cette session par l'enseignant.";
+            }
+
             $rows = $this->conversations->listByUserAndSession($userId, $sessionId, $archived);
         } else {
             $envMode  = 'libre';
