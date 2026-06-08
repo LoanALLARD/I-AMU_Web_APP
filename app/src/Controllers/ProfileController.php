@@ -115,11 +115,11 @@ class ProfileController extends Controller
 
         $user = $this->currentUser();
 
-        // UI choice → stored enum value (null = AUTO, follow the OS).
+        // UI choice → stored enum value. AUTO = follow the OS preference.
         $theme = match ((string) $this->input('theme', 'auto')) {
             'light' => 'LIGHT',
             'dark'  => 'DARK',
-            default => null,
+            default => 'AUTO',
         };
 
         (new UserRepository(Database::getConnection()))->updateTheme((int) $user['id'], $theme);

@@ -1,4 +1,4 @@
-CREATE TYPE theme_type AS ENUM ('LIGHT', 'DARK');
+CREATE TYPE theme_type AS ENUM ('LIGHT', 'DARK', 'AUTO');
 CREATE TYPE resource_state_type AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED');
 CREATE TYPE domain_role_type AS ENUM ('STUDENT', 'TEACHER', 'RESEARCHER');
 CREATE TYPE session_type AS ENUM ('EXAM', 'TUTORIAL', 'LAB', 'FREE_STUDY');
@@ -37,7 +37,7 @@ CREATE TABLE users (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     consent_at TIMESTAMPTZ,
     consent_version VARCHAR(50),
-    theme theme_type NOT NULL DEFAULT 'LIGHT',
+    theme theme_type NOT NULL DEFAULT 'AUTO',
     archive_duration_days SMALLINT,
     email_verified_at TIMESTAMPTZ,
     email_verify_token VARCHAR(255),

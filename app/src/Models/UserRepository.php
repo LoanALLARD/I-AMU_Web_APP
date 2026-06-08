@@ -41,11 +41,11 @@ class UserRepository
     }
 
     /**
-     * Persists the user's UI theme preference. Pass null for "follow the OS".
+     * Persists the user's UI theme preference. AUTO follows the OS setting.
      *
-     * @param 'LIGHT'|'DARK'|null $theme
+     * @param 'LIGHT'|'DARK'|'AUTO' $theme
      */
-    public function updateTheme(int $userId, ?string $theme): void
+    public function updateTheme(int $userId, string $theme): void
     {
         $stmt = $this->pdo->prepare(
             'UPDATE users SET theme = CAST(:theme AS theme_type) WHERE id = :id'
