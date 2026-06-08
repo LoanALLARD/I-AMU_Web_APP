@@ -3,6 +3,7 @@ CREATE TYPE resource_state_type AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED');
 CREATE TYPE domain_role_type AS ENUM ('STUDENT', 'TEACHER');
 CREATE TYPE session_type AS ENUM ('EXAM', 'TUTORIAL', 'LAB', 'FREE_STUDY');
 CREATE TYPE session_status_type AS ENUM ('DRAFT', 'SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED');
+CREATE TYPE document_status_type AS ENUM ('PENDING', 'READY', 'FAILED');
 
 CREATE TABLE places (
     id BIGSERIAL,
@@ -283,3 +284,27 @@ CREATE TABLE model_resource_accesses (
     CONSTRAINT fk_model_resource_accesses_model FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE CASCADE,
     CONSTRAINT fk_model_resource_accesses_resource FOREIGN KEY (resource_id) REFERENCES resources (id) ON DELETE CASCADE
 );
+CREATE TABLE documents (
+    id BIGSERIAL,
+    session_id BIGINT,
+    conversation_id BIGINT,
+    uploaded_by_id BIGINT NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    stored_path VARCHAR(255) NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    size_bytes INTEGER NOT NULL,
+    extracted_text TEXT,
+    status document_status_type NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT pk_documents PRIMARY KEY (id),
+    CONSTRAINT fk_documents_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE,
+    CONSTRAINT fk_documents_conversation FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
+    CONSTRAINT fk_documents_uploaded_by FOREIGN KEY (uploaded_by_id) REFERENCES users (id) ON DELETE RESTRICT,
+    CONSTRAINT ck_documents_scope CHECK (
+        (session_id IS NOT NULL AND conversation_id IS NULL) OR
+        (session_id IS NULL AND conversation_id IS NOT NULL)
+    ),
+    CONSTRAINT ck_documents_size CHECK (size_bytes > 0)
+);
+CREATE INDEX idx_documents_session ON documents (session_id);
+CREATE INDEX idx_documents_conversation ON documents (conversation_id);

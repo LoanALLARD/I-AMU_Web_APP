@@ -8,6 +8,7 @@ use Core\Controller;
 use Data\Database;
 use Domain\SessionException;
 use Services\CreateSessionForm;
+use Services\DocumentService;
 use Services\SessionService;
 use Throwable;
 
@@ -22,10 +23,13 @@ use Throwable;
 class SessionController extends Controller
 {
     private SessionService $sessions;
+    private DocumentService $documents;
 
     public function __construct()
     {
-        $this->sessions = new SessionService(Database::getConnection());
+        $pdo = Database::getConnection();
+        $this->sessions  = new SessionService($pdo);
+        $this->documents = new DocumentService($pdo);
     }
 
     /**
@@ -230,6 +234,7 @@ class SessionController extends Controller
             'navSection' => 'sessions',
             'view'       => $view,
             'students'   => $this->sessions->enrolledStudents((int) $id),
+            'documents'  => $this->documents->listForSession((int) $id),
             'user'       => $this->currentUser(),
         ]);
     }

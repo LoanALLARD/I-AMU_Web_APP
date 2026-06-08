@@ -10,6 +10,7 @@
     use Controllers\LLMController;
     use Controllers\AuthController;
     use Controllers\SessionController;
+    use Controllers\DocumentController;
     use Controllers\ProfileController;
     use Controllers\PlaceController;
     use Controllers\DepartmentAdminController;
@@ -84,7 +85,11 @@
     $router->add('POST', '/sessions/{id}/cancel', function($id) { (new SessionController())->cancel($id); });
     $router->add('GET',  '/sessions/{id}/monitor', function($id) { (new SessionController())->monitor($id); });
     $router->add('GET',  '/sessions/{id}/export',  function($id) { (new SessionController())->export($id); });
+    $router->add('POST', '/sessions/{id}/documents', function($id) { (new DocumentController())->uploadToSession($id); });
     $router->add('GET',  '/sessions/{id}',        function($id) { (new SessionController())->dashboard($id); });
+
+    $router->add('POST', '/documents/{id}/delete', function($id) { (new DocumentController())->delete($id); });
+    $router->add('GET',  '/documents/session_{sessionId}/{docId}', function($sessionId, $docId) { (new DocumentController())->download($sessionId, $docId); });
 
     try {
         $router->compare($uri, $method);
