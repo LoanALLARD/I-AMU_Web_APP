@@ -47,6 +47,7 @@
 
     // --- Chat home + profile (authenticated) --------------------------
     $router->add('GET',  '/chat',                function()     { (new AccueilController())->index(); });
+    $router->add('GET',  '/chat/session-status', function()     { (new AccueilController())->sessionStatus(); });
     $router->add('GET',  '/chat/{id}',           function($id)  { (new AccueilController())->index($id); });
     $router->add('GET',  '/profile',             function()     { (new ProfileController())->index(); });
     $router->add('POST', '/profile/theme',       function()     { (new ProfileController())->updateTheme(); });
@@ -87,6 +88,7 @@
     $router->add('GET',  '/sessions/{id}/monitor', function($id) { (new SessionController())->monitor($id); });
     $router->add('GET',  '/sessions/{id}/export',  function($id) { (new SessionController())->export($id); });
     $router->add('POST', '/sessions/{id}/documents', function($id) { (new DocumentController())->uploadToSession($id); });
+    $router->add('POST', '/sessions/{id}/student-status', function($id) { (new SessionController())->setStudentActive($id); });
     $router->add('GET',  '/sessions/{id}',        function($id) { (new SessionController())->dashboard($id); });
 
     $router->add('POST', '/documents/{id}/delete', function($id) { (new DocumentController())->delete($id); });

@@ -52,31 +52,7 @@ $themeCur = match ($user['theme'] ?? null) {
             </div>
 
             <div class="profile-card">
-                <h2>Apparence</h2>
-                <p class="page-sub">
-                    Thème de l'interface. « Automatique » suit le réglage de votre appareil.
-                </p>
-                <hr>
-                <form method="POST" action="/profile/theme" class="theme-select">
-                    <?= csrf_field() ?>
-                    <button type="submit" name="theme" value="auto" class="theme-opt<?= $themeCur === 'auto' ? ' is-active' : '' ?>">Automatique</button>
-                    <button type="submit" name="theme" value="light" class="theme-opt<?= $themeCur === 'light' ? ' is-active' : '' ?>">Clair</button>
-                    <button type="submit" name="theme" value="dark" class="theme-opt<?= $themeCur === 'dark' ? ' is-active' : '' ?>">Sombre</button>
-                </form>
-            </div>
-
-            <div class="profile-card">
                 <h2>Compte et données</h2>
-
-                <!-- Session -->
-                <p class="section-desc">
-                    Vous pouvez vous déconnecter de votre session active.
-                </p>
-                <a href="/logout" class="btn danger">
-                    <?= icon('lock', '', 12) ?> Se déconnecter
-                </a>
-
-                <hr>
 
                 <!-- Deactivation -->
                 <h3>Désactiver mon compte</h3>
@@ -105,7 +81,7 @@ $themeCur = match ($user['theme'] ?? null) {
                         Délai de traitement : 30 jours.
                     </p>
                 </div>
-                <a href="/rgpd_çonsent" class="rgpd-link">Consulter les mentions d'information RGPD</a>
+                <a href="/rgpd_consent" class="rgpd-link">Consulter les mentions d'information RGPD</a>
             </div>
         </div>
 
@@ -124,6 +100,23 @@ $themeCur = match ($user['theme'] ?? null) {
                 <?php else: ?>
                     <div class="profile-no-role">aucun rôle</div>
                 <?php endif; ?>
+                <a href="/logout" class="profile-logout">
+                    <?= icon('lock', '', 12) ?> Se déconnecter
+                </a>
+            </div>
+
+            <div class="profile-card">
+                <h2>Apparence</h2>
+                <p class="page-sub">
+                    Thème de l'interface. « Automatique » suit le réglage de votre appareil.
+                </p>
+                <hr>
+                <form method="POST" action="/profile/theme" class="theme-select">
+                    <?= csrf_field() ?>
+                    <button type="submit" name="theme" value="auto" class="theme-opt<?= $themeCur === 'auto' ? ' is-active' : '' ?>">Automatique</button>
+                    <button type="submit" name="theme" value="light" class="theme-opt<?= $themeCur === 'light' ? ' is-active' : '' ?>">Clair</button>
+                    <button type="submit" name="theme" value="dark" class="theme-opt<?= $themeCur === 'dark' ? ' is-active' : '' ?>">Sombre</button>
+                </form>
             </div>
         </aside>
     </div>

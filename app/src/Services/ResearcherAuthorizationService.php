@@ -38,7 +38,7 @@ final class ResearcherAuthorizationService
     public function approve(int $researcherId, int $departmentId, int $adminId): array
     {
         if ($this->repo->findPendingDepartmentId($researcherId, $departmentId) === null) {
-            return ['success' => false, 'error' => 'Cette demande est introuvable ou deja traitee.'];
+            return ['success' => false, 'error' => 'Cette demande est introuvable ou déjà traitée.'];
         }
 
         $this->repo->approve($researcherId, $departmentId, $adminId);
@@ -52,7 +52,7 @@ final class ResearcherAuthorizationService
     public function reject(int $researcherId, int $departmentId, int $adminId): array
     {
         if ($this->repo->findPendingDepartmentId($researcherId, $departmentId) === null) {
-            return ['success' => false, 'error' => 'Cette demande est introuvable ou deja traitee.'];
+            return ['success' => false, 'error' => 'Cette demande est introuvable ou déjà traitée.'];
         }
 
         $this->repo->reject($researcherId, $departmentId, $adminId);
@@ -89,7 +89,7 @@ final class ResearcherAuthorizationService
     public function revoke(int $researcherId, int $departmentId, int $adminId): array
     {
         if (!$this->repo->isAuthorized($researcherId, $departmentId)) {
-            return ['success' => false, 'error' => 'Ce chercheur n\'a pas d\'acces actif a votre departement.'];
+            return ['success' => false, 'error' => 'Ce chercheur n\'a pas d\'accès actif à votre département.'];
         }
 
         $this->repo->revoke($researcherId, $departmentId, $adminId);
@@ -106,7 +106,7 @@ final class ResearcherAuthorizationService
     public function reauthorize(int $researcherId, int $departmentId, int $adminId): array
     {
         if (!$this->repo->isRevoked($researcherId, $departmentId)) {
-            return ['success' => false, 'error' => 'Ce chercheur n\'a pas d\'acces revoque a reactiver.'];
+            return ['success' => false, 'error' => 'Ce chercheur n\'a pas d\'accès révoqué à réactiver.'];
         }
 
         $this->repo->reauthorize($researcherId, $departmentId, $adminId);
@@ -127,16 +127,16 @@ final class ResearcherAuthorizationService
     public function requestAccess(int $researcherId, int $placeId, int $departmentId, string $request): array
     {
         if ($placeId === 0 || $departmentId === 0) {
-            return ['success' => false, 'error' => 'Veuillez choisir un lieu et un departement.'];
+            return ['success' => false, 'error' => 'Veuillez choisir un lieu et un département.'];
         }
         if (!$this->places->departmentBelongsToPlace($departmentId, $placeId)) {
-            return ['success' => false, 'error' => 'Le departement selectionne est invalide.'];
+            return ['success' => false, 'error' => 'Le département sélectionné est invalide.'];
         }
         if ($this->repo->isAuthorized($researcherId, $departmentId)) {
-            return ['success' => false, 'error' => 'Vous avez deja un acces actif a ce departement.'];
+            return ['success' => false, 'error' => 'Vous avez déjà un accès actif à ce département.'];
         }
         if ($this->repo->findPendingDepartmentId($researcherId, $departmentId) !== null) {
-            return ['success' => false, 'error' => 'Une demande est deja en attente pour ce departement.'];
+            return ['success' => false, 'error' => 'Une demande est déjà en attente pour ce département.'];
         }
 
         $request = trim($request);
@@ -156,7 +156,7 @@ final class ResearcherAuthorizationService
             return ['success' => false, 'error' => 'Demande introuvable.'];
         }
         if ($this->repo->cancelPending($researcherId, $departmentId) === 0) {
-            return ['success' => false, 'error' => 'Cette demande ne peut plus etre annulee.'];
+            return ['success' => false, 'error' => 'Cette demande ne peut plus être annulée.'];
         }
 
         return ['success' => true];

@@ -105,6 +105,23 @@ class AccueilController extends Controller
     }
 
     /**
+     * GET /chat/session-status — live poll for the read-only state of a session
+     * conversation, so the chat page reacts to the teacher deactivating the
+     * student (or closing the session) without a manual reload.
+     */
+    public function sessionStatus(): void
+    {
+        $this->requireAuth();
+        $user   = $this->currentUser();
+        $convId = (int) $this->query('conversation', 0);
+        $status = $convId > 0
+            ? $this->chat->sessionStatusFor((int) ($user['id'] ?? 0), $convId)
+            : ['closed' => false, 'reason' => ''];
+
+        $this->json($status);
+    }
+
+    /**
      * POST /chat/new — create a conversation in the current environment.
      * A `session_id` field means a session conversation; absent means free.
      */

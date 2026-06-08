@@ -41,11 +41,11 @@ class UserRepository
     }
 
     /**
-     * Persists the user's UI theme preference. Pass null for "follow the OS".
+     * Persists the user's UI theme preference. AUTO follows the OS setting.
      *
-     * @param 'LIGHT'|'DARK'|null $theme
+     * @param 'LIGHT'|'DARK'|'AUTO' $theme
      */
-    public function updateTheme(int $userId, ?string $theme): void
+    public function updateTheme(int $userId, string $theme): void
     {
         $stmt = $this->pdo->prepare(
             'UPDATE users SET theme = CAST(:theme AS theme_type) WHERE id = :id'
@@ -114,15 +114,20 @@ class UserRepository
      * transaction, so a half-created account can never linger. Returns the
      * new user id.
      *
+     * A researcher carries no department (department_id is NULL) and is tied
+     * to a laboratory instead: pass the resolved laboratory id. Students and
+     * teachers carry a department_id and no laboratory.
+     *
      * @param array{
      *     email: string,
      *     password_hash: string,
      *     first_name: string,
      *     last_name: string,
-     *     department_id: int,
-     *     consent_version: string
+     *     department_id: int|null,
+     *     consent_version: string,
+     *     laboratory_id?: int|null
      * } $user
-     * @param 'teacher'|'student' $role
+     * @param 'teacher'|'student'|'researcher' $role
      *
      * @throws Throwable if any statement fails (the transaction is rolled back).
      */
@@ -145,12 +150,16 @@ class UserRepository
             ]);
             $userId = (int) $stmt->fetchColumn();
 
-            // The role table only carries the FK to users.id; default values
-            // are good for is_specialised (false) / title (null) /
-            // student_number (null) — the user can fill them later.
-            $table = $role === 'teacher' ? 'teachers' : 'students';
-            $roleStmt = $this->pdo->prepare("INSERT INTO {$table} (id) VALUES (:id)");
-            $roleStmt->execute(['id' => $userId]);
+            if ($role === 'researcher') {
+                $roleStmt = $this->pdo->prepare(
+                    'INSERT INTO researchers (id, laboratory_id) VALUES (:id, :lab)'
+                );
+                $roleStmt->execute(['id' => $userId, 'lab' => $user['laboratory_id'] ?? null]);
+            } else {
+                $table = $role === 'teacher' ? 'teachers' : 'students';
+                $roleStmt = $this->pdo->prepare("INSERT INTO {$table} (id) VALUES (:id)");
+                $roleStmt->execute(['id' => $userId]);
+            }
 
             $this->pdo->commit();
 

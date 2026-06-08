@@ -191,14 +191,15 @@ class SessionRepository
                  c.created_at    AS conversation_created,
                  COUNT(i.id)     AS prompt_count,
                  MAX(i.sent_at)  AS last_activity,
-                 mdl.name        AS last_model
+                 mdl.name        AS last_model,
+                 e.is_active::int AS is_active
                FROM enrollments e
                JOIN users u ON u.id = e.student_id
                LEFT JOIN conversations c ON c.user_id = e.student_id AND c.session_id = e.session_id
                LEFT JOIN models mdl ON mdl.id = c.model_id
                LEFT JOIN interactions i ON i.conversation_id = c.id
               WHERE e.session_id = :sid
-              GROUP BY u.id, u.first_name, u.last_name, c.id, c.name, c.created_at, mdl.name
+              GROUP BY u.id, u.first_name, u.last_name, c.id, c.name, c.created_at, mdl.name, e.is_active
               ORDER BY u.last_name, u.first_name, c.created_at'
         );
         $stmt->execute(['sid' => $sessionId]);

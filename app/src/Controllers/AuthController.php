@@ -138,6 +138,7 @@ class AuthController extends Controller
             'last_name'        => trim($this->input('last_name', '')),
             'place_id'         => $this->input('place_id', ''),
             'department_id'    => $this->input('department_id', ''),
+            'is_researcher'    => (bool) $this->input('is_researcher', false),
             'rgpd_consent'     => (bool) $this->input('rgpd_consent', false),
         ];
 

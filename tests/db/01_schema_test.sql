@@ -16,7 +16,7 @@ SELECT has_type('resource_state_type');
 SELECT enum_has_labels('resource_state_type', ARRAY['DRAFT', 'PUBLISHED', 'ARCHIVED']);
 
 SELECT has_type('domain_role_type');
-SELECT enum_has_labels('domain_role_type', ARRAY['STUDENT', 'TEACHER']);
+SELECT enum_has_labels('domain_role_type', ARRAY['STUDENT', 'TEACHER', 'RESEARCHER']);
 
 SELECT has_type('session_type');
 SELECT enum_has_labels('session_type', ARRAY['EXAM', 'TUTORIAL', 'LAB', 'FREE_STUDY']);

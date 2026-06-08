@@ -58,7 +58,7 @@ class ResearcherController extends Controller
 
         $this->flash(
             $result['success'] ? 'success' : 'error',
-            $result['success'] ? 'Demande envoyee au departement.' : $result['error']
+            $result['success'] ? 'Demande envoyée au département.' : $result['error']
         );
         $this->redirect('/researcher');
     }
@@ -75,7 +75,7 @@ class ResearcherController extends Controller
 
         $this->flash(
             $result['success'] ? 'success' : 'error',
-            $result['success'] ? 'Demande annulee.' : $result['error']
+            $result['success'] ? 'Demande annulée.' : $result['error']
         );
         $this->redirect('/researcher');
     }

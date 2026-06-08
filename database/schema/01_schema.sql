@@ -1,6 +1,6 @@
-CREATE TYPE theme_type AS ENUM ('LIGHT', 'DARK');
+CREATE TYPE theme_type AS ENUM ('LIGHT', 'DARK', 'AUTO');
 CREATE TYPE resource_state_type AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED');
-CREATE TYPE domain_role_type AS ENUM ('STUDENT', 'TEACHER');
+CREATE TYPE domain_role_type AS ENUM ('STUDENT', 'TEACHER', 'RESEARCHER');
 CREATE TYPE session_type AS ENUM ('EXAM', 'TUTORIAL', 'LAB', 'FREE_STUDY');
 CREATE TYPE session_status_type AS ENUM ('DRAFT', 'SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED');
 CREATE TYPE document_status_type AS ENUM ('PENDING', 'READY', 'FAILED');
@@ -37,7 +37,7 @@ CREATE TABLE users (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     consent_at TIMESTAMPTZ,
     consent_version VARCHAR(50),
-    theme theme_type NOT NULL DEFAULT 'LIGHT',
+    theme theme_type NOT NULL DEFAULT 'AUTO',
     archive_duration_days SMALLINT,
     email_verified_at TIMESTAMPTZ,
     email_verify_token VARCHAR(255),
@@ -47,18 +47,6 @@ CREATE TABLE users (
     CONSTRAINT uq_users_email UNIQUE (email),
     CONSTRAINT uq_users_email_verify_token UNIQUE (email_verify_token),
     CONSTRAINT ck_users_archive_duration_days CHECK (archive_duration_days IS NULL OR archive_duration_days > 0)
-);
-
-CREATE TABLE laboratories (
-    id BIGSERIAL,
-    code VARCHAR(50) NOT NULL,
-    name VARCHAR(50) NOT NULL,
-    address VARCHAR(100),
-    email VARCHAR(255),
-    phone VARCHAR(20),
-    website VARCHAR(255),
-    CONSTRAINT pk_laboratories PRIMARY KEY (id),
-    CONSTRAINT uq_laboratories_code UNIQUE (code)
 );
 
 CREATE TABLE super_administrators (
@@ -88,16 +76,6 @@ CREATE TABLE students (
     CONSTRAINT ck_students_year CHECK (year IS NULL OR year > 0)
 );
 
-CREATE TABLE researchers (
-    id BIGINT,
-    approved_by_id BIGINT,
-    laboratory_id BIGINT NOT NULL,
-    CONSTRAINT pk_researchers PRIMARY KEY (id),
-    CONSTRAINT fk_researchers_user FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT fk_researchers_approved_by FOREIGN KEY (approved_by_id) REFERENCES super_administrators (id) ON DELETE SET NULL,
-    CONSTRAINT fk_researchers_laboratory FOREIGN KEY (laboratory_id) REFERENCES laboratories (id)
-);
-
 CREATE TABLE department_administrators (
     id BIGINT,
     invited_by_id BIGINT,
@@ -114,6 +92,29 @@ CREATE TABLE email_domain_configs (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT pk_email_domain_configs PRIMARY KEY (id),
     CONSTRAINT fk_email_domain_configs_added_by FOREIGN KEY (added_by_id) REFERENCES super_administrators (id) ON DELETE SET NULL
+);
+
+CREATE TABLE laboratories (
+    id BIGSERIAL,
+    email_domain_config_id BIGINT,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    address VARCHAR(100),
+    email VARCHAR(255),
+    phone VARCHAR(20),
+    CONSTRAINT pk_laboratories PRIMARY KEY (id),
+    CONSTRAINT uq_laboratories_code UNIQUE (code),
+    CONSTRAINT fk_laboratories_email_domain_config FOREIGN KEY (email_domain_config_id) REFERENCES email_domain_configs (id) ON DELETE SET NULL
+);
+
+CREATE TABLE researchers (
+    id BIGINT,
+    approved_by_id BIGINT,
+    laboratory_id BIGINT NOT NULL,
+    CONSTRAINT pk_researchers PRIMARY KEY (id),
+    CONSTRAINT fk_researchers_user FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_researchers_approved_by FOREIGN KEY (approved_by_id) REFERENCES super_administrators (id) ON DELETE SET NULL,
+    CONSTRAINT fk_researchers_laboratory FOREIGN KEY (laboratory_id) REFERENCES laboratories (id)
 );
 
 CREATE TABLE resources (
