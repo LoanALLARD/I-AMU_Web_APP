@@ -53,11 +53,11 @@ class AccueilController extends Controller
         try {
             $pdo = Database::getConnection();
             $aiRepository = new \Models\AiRepository($pdo);
-            $models = $aiRepository->findAllActive();
             // Session-bound chat (course/exam): Display only teacher-authorized models
             // to maintain UI integrity. The backend validates this on submit to prevent
             // unauthorized access via API bypass.
             $sessionId = $env['env']['sessionId'] ?? null;
+            $models = $aiRepository->findAllActiveBySession($sessionId);
             if ($sessionId !== null) {
                 $allowed = (new \Models\SessionRepository($pdo))->authorizedModelIdsOf((int) $sessionId);
                 $models  = array_values(array_filter(
@@ -129,7 +129,7 @@ class AccueilController extends Controller
         try {
             $pdo = Database::getConnection();
             $aiRepository = new \Models\AiRepository($pdo);
-            $models = $aiRepository->findAllActive();
+            $models = $aiRepository->findAllActiveBySession(null);
         } catch (\Throwable $e) {
             error_log('Impossible de charger les modèles : ' . $e->getMessage());
         }

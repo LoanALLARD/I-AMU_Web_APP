@@ -44,19 +44,19 @@ class AiRepository{
      */
     public function findAllActiveBySession(?int $sessionID): array
     {
-        if ($sessionID == null){
-            $query = $this->pdo->prepare('SELECT id, name, version, context_window, is_active FROM models WHERE is_active = :a AND resource_id IS NULL ORDER BY name');
-            $query->bindValue(':a', true, PDO::PARAM_BOOL);
+        if ($sessionID === null) {
+            $query = $this->pdo->prepare(
+                'SELECT id, name, size, context_window, is_active
+                   FROM models WHERE is_active = TRUE AND resource_id IS NULL ORDER BY name'
+            );
+            $query->execute();
+        } else {
+            $query = $this->pdo->prepare(
+                'SELECT id, name, size, context_window, is_active
+                   FROM models WHERE is_active = TRUE AND resource_id = :r_id ORDER BY name'
+            );
+            $query->execute(['r_id' => $sessionID]);
         }
-        else{
-            $query = $this->pdo->prepare('SELECT id, name, version, context_window, is_active FROM models WHERE is_active = :a AND resource_id = :r_id ORDER BY name');
-            var_dump($sessionID);
-            $query->execute([
-                ":a"    => true,
-                "r_id"  => $sessionID
-                ]);
-        }
-        $query->execute();
 
         /** @var list<array<string, mixed>> $rows */
         $rows = $query->fetchAll();
