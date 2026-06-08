@@ -22,7 +22,6 @@ class Ai {
     private string $context_window;   // size of the context window of the model
     private bool $is_active;
     private bool $is_shareable;
-    // private string $infoSizeOfModel;        // size of the model
     private string $url;                    // address of the api
     private LlmAdaptaterInterface $adaptater;   // type of adaptator
 
@@ -37,7 +36,6 @@ class Ai {
         $this->context_window = $context_window;
         $this->is_active = $is_active;
         $this->is_shareable = $is_shareable;
-        // $this->infoSizeOfModel = $infoSizeOfModel;
         $this->url = $url;
         $this->adaptater = $adaptater;
     }
@@ -81,11 +79,6 @@ class Ai {
         return $this->context_window;
     }
 
-    public function getInfoSizeOfModel(): int
-    {
-        return $this->max_tokens;
-    }
-
     public function getInfoCompagny(): string
     {
         return $this->provider;
@@ -116,10 +109,6 @@ class Ai {
     }
 
     public function setInfoContextWindow(string $infoContextWindow): void
-    {
-    }
-
-    public function setInfoSizeOfModel(string $infoSizeOfModel): void
     {
     }
 

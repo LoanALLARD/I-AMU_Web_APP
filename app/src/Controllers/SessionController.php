@@ -8,6 +8,7 @@ use Core\Controller;
 use Data\Database;
 use Domain\SessionException;
 use Services\CreateSessionForm;
+use Services\DocumentService;
 use Services\SessionService;
 use Throwable;
 
@@ -22,10 +23,13 @@ use Throwable;
 class SessionController extends Controller
 {
     private SessionService $sessions;
+    private DocumentService $documents;
 
     public function __construct()
     {
-        $this->sessions = new SessionService(Database::getConnection());
+        $pdo = Database::getConnection();
+        $this->sessions  = new SessionService($pdo);
+        $this->documents = new DocumentService($pdo);
     }
 
     /**
@@ -230,6 +234,7 @@ class SessionController extends Controller
             'navSection' => 'sessions',
             'view'       => $view,
             'students'   => $this->sessions->enrolledStudents((int) $id),
+            'documents'  => $this->documents->listForSession((int) $id),
             'user'       => $this->currentUser(),
         ]);
     }
@@ -254,6 +259,33 @@ class SessionController extends Controller
             'view'       => $view,
             'user'       => $this->currentUser(),
         ]);
+    }
+
+    /**
+     * POST /sessions/{id}/student-status — the owner (de)activates a student's
+     * enrollment from the monitor view. Deactivating removes the student from
+     * the session chat (read-only on next load) and bars re-joining.
+     */
+    public function setStudentActive(string $id): void
+    {
+        $this->requireRole('teacher');
+        $this->verifyCsrf();
+        $session = $this->loadOwned((int) $id);
+
+        $studentId = (int) $this->input('student_id', 0);
+        $active    = $this->input('active') === '1';
+
+        if ($studentId > 0) {
+            $this->sessions->setStudentActive((int) $session->id(), $studentId, $active);
+            $this->flash(
+                'success',
+                $active
+                    ? 'Étudiant réactivé dans la session.'
+                    : 'Étudiant désactivé : il est déconnecté de la session et ne peut plus la rejoindre.'
+            );
+        }
+
+        $this->redirect('/sessions/' . (int) $id . '/monitor');
     }
 
     /**

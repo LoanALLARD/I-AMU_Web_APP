@@ -173,8 +173,8 @@ $typeCards = [
                     <label class="model-row <?= $checked ? 'is-checked' : 'is-unchecked' ?>">
                         <input type="checkbox" name="models[]" value="<?= (int) $m['id'] ?>" <?= $checked ? 'checked' : '' ?>>
                         <span class="model-name"><?= htmlspecialchars((string) $m['name']) ?></span>
-                        <span class="model-version">
-                            <?= htmlspecialchars((string) ($m['version'] ?? '—')) ?>
+                        <span class="model-size">
+                            <?= htmlspecialchars((string) ($m['size'] ?? '—')) ?>
                             <?php if (!empty($m['contextWindow'])): ?>
                                 · ctx <?= number_format((float) $m['contextWindow'] / 1000, 0) ?>k
                             <?php endif; ?>

@@ -13,6 +13,7 @@ use Models\InteractionRepository;
 use Models\UserRepository;
 use Models\ConversationRepository;
 use Models\SessionRepository;
+use Models\EnrollmentRepository;
 
 class LLMController{
 
@@ -52,7 +53,7 @@ class LLMController{
         if (in_array('researcher', $roles, true) || in_array('department_admin', $roles, true)) {
             header('Content-Type: application/json');
             http_response_code(403);
-            echo json_encode(['error' => 'Acces non autorise.']);
+            echo json_encode(['error' => 'Accès non autorisé.']);
             return;
         }
 
@@ -123,6 +124,19 @@ class LLMController{
             // throw new \Exception ("Error, this user has no conversation corresponding");
             return;
         }    
+
+        // A student deactivated by the teacher cannot send in the session
+        // (server-side enforcement of the "disconnect").
+        if ($conversationData["session_id"] != null) {
+            $enrollments = new EnrollmentRepository($pdo);
+            $sid = (int) $conversationData["session_id"];
+            if ($enrollments->exists($userId, $sid) && !$enrollments->isActive($userId, $sid)) {
+                header('Content-Type: application/json');
+                http_response_code(403);
+                echo json_encode(['error' => "Vous avez été retiré de cette session par l'enseignant."]);
+                return;
+            }
+        }
 
         // Get the preprompt of the session
         $preprompt = null;
@@ -198,9 +212,8 @@ class LLMController{
             $department_id = $aiData["department_id"],
             $resource_id = $aiData["resource_id"],
             $aiData["name"],
-            $aiData["version"],
+            $aiData["size"],
             $aiData["provider"],
-            $aiData["max_tokens"],
             $aiData["context_window"],
             $aiData["is_active"],
             $aiData["created_at"],

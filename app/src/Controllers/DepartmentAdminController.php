@@ -54,7 +54,7 @@ class DepartmentAdminController extends Controller
 
         // Approving moves the request into the "authorized researchers" table.
         $this->respond($result['success'],
-            $result['success'] ? 'Demande chercheur validee.' : $result['error'],
+            $result['success'] ? 'Demande chercheur validée.' : $result['error'],
             $result['success']
                 ? $this->researcherRowPayload($service, $researcherId, $departmentId, 'authorized')
                 : []);
@@ -71,7 +71,7 @@ class DepartmentAdminController extends Controller
 
         // Rejecting just drops the request: no target list (target stays null).
         $this->respond($result['success'],
-            $result['success'] ? 'Demande chercheur refusee.' : $result['error']);
+            $result['success'] ? 'Demande chercheur refusée.' : $result['error']);
     }
 
     /**
@@ -97,7 +97,7 @@ class DepartmentAdminController extends Controller
         // Scope guard: only act on members of this department, so a forged
         // user_id cannot reach accounts outside the department (IDOR).
         if (!$userRepository->isDepartmentMember($targetId, $departmentId)) {
-            $this->respond(false, 'Utilisateur introuvable dans votre departement.');
+            $this->respond(false, 'Utilisateur introuvable dans votre département.');
         }
 
         $changed = $activate
@@ -105,13 +105,13 @@ class DepartmentAdminController extends Controller
             : $userRepository->deactivate($targetId);
 
         if ($changed === 0) {
-            $this->respond(false, 'Aucune modification effectuee.');
+            $this->respond(false, 'Aucune modification effectuée.');
         }
 
         // Re-render the row server-side instead of rebuilding the markup.
         $member = $userRepository->findMemberRow($targetId, $departmentId);
         $this->respond(true,
-            $activate ? 'Compte reactive.' : 'Compte desactive.',
+            $activate ? 'Compte réactivé.' : 'Compte désactivé.',
             $member === null ? [] : [
                 'user_id' => $targetId,
                 'row'     => $this->capturePartial('partials/department_admin/member_row',
@@ -136,7 +136,7 @@ class DepartmentAdminController extends Controller
         $result = $service->revoke($researcherId, $departmentId, (int) $this->currentUser()['id']);
 
         $this->respond($result['success'],
-            $result['success'] ? 'Acces chercheur revoque.' : $result['error'],
+            $result['success'] ? 'Accès chercheur révoqué.' : $result['error'],
             $result['success']
                 ? $this->researcherRowPayload($service, $researcherId, $departmentId, 'revoked')
                 : []);
@@ -157,7 +157,7 @@ class DepartmentAdminController extends Controller
         $result = $service->reauthorize($researcherId, $departmentId, (int) $this->currentUser()['id']);
 
         $this->respond($result['success'],
-            $result['success'] ? 'Acces chercheur retabli.' : $result['error'],
+            $result['success'] ? 'Accès chercheur rétabli.' : $result['error'],
             $result['success']
                 ? $this->researcherRowPayload($service, $researcherId, $departmentId, 'authorized')
                 : []);
@@ -214,7 +214,7 @@ class DepartmentAdminController extends Controller
         }
         return $departmentId;
     }
-    public function fromModel(){
+    public function fromModel(): void {
         $this->requireAuth();
 
         $userId = $_SESSION["user_id"];
@@ -241,14 +241,13 @@ class DepartmentAdminController extends Controller
         ]);
     }
 
-    public function addModel(){
+    public function addModel(): void {
         // Extraction et nettoyage des données reçues du formulaire
         $name          = $this->input('name', null);
-        $version       = $this->input('version', null);
+        $size          = $this->input('size', null);
         $provider      = $this->input('provider', null);
         $adapter       = $this->input('adapter', null); 
         $apiUrl        = $this->input('api_url', null);
-        $maxTokens     = $this->input('max_tokens', null);
         $contextWindow = $this->input('context_window', null);
         
         // Récupère "1" (Oui) ou "0" (Non) depuis le groupe radio 'is_shareable'
@@ -269,11 +268,10 @@ class DepartmentAdminController extends Controller
                 $department_id,
                 $resource_id,
                 $name,
-                $version,
+                $size,
                 $provider,
                 $adapter,
                 $apiUrl,
-                (int) $maxTokens,
                 (int) $contextWindow,
                 $isShareable
             );

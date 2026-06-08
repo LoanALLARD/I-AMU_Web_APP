@@ -1,7 +1,9 @@
 <?php
 /**
- * @var array<string, mixed> $view  Dashboard data from SessionService::dashboard()
+ * @var array<string, mixed>      $view       Dashboard data from SessionService::dashboard()
+ * @var list<\Domain\Document>    $documents  Documents attached to the session
  */
+$documents = $documents ?? [];
 ?>
 <div class="dashboard-header">
     <div>
@@ -115,6 +117,51 @@
                 <?php endif; ?>
             </div>
         <?php endif; ?>
+
+        <div class="dashboard-card">
+            <h2>Documents</h2>
+            <p class="kv-key" style="margin:2px 0 12px;line-height:1.5;">
+                Joints à la session et consultables par les étudiants inscrits.
+                PDF, Markdown ou TXT — 10 Mo max.
+            </p>
+
+            <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/documents"
+                  enctype="multipart/form-data"
+                  style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <?= csrf_field() ?>
+                <input type="file" name="document" required
+                       accept=".pdf,.md,.markdown,.txt,application/pdf,text/plain,text/markdown"
+                       style="flex:1;min-width:180px;font-size:12px;">
+                <button type="submit" class="btn primary"><?= icon('upload', '', 12) ?> Ajouter</button>
+            </form>
+
+            <?php if ($documents === []): ?>
+                <p style="color:var(--gray-400);font-size:12px;margin-top:12px;">Aucun document pour l'instant.</p>
+            <?php else: ?>
+                <div style="display:flex;flex-direction:column;gap:6px;margin-top:14px;">
+                    <?php foreach ($documents as $doc): ?>
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--gray-200);border-radius:8px;">
+                            <div style="min-width:0;">
+                                <a href="/documents/session_<?= (int) $doc->sessionId() ?>/<?= (int) $doc->id() ?>" target="_blank" rel="noopener"
+                                   style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-800);text-decoration:none;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                    <?= icon('book', '', 13) ?> <?= htmlspecialchars($doc->originalName()) ?>
+                                </a>
+                                <span style="font-size:11px;color:var(--gray-400);">
+                                    <?= htmlspecialchars($doc->kindLabel()) ?> · <?= htmlspecialchars($doc->humanSize()) ?> · <?= htmlspecialchars($doc->status()->label()) ?>
+                                </span>
+                            </div>
+                            <form method="POST" action="/documents/<?= (int) $doc->id() ?>/delete"
+                                  style="margin:0;flex-shrink:0;"
+                                  onsubmit="return confirm('Supprimer ce document ?')">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="btn bordered" title="Supprimer"
+                                        style="padding:4px 8px;"><?= icon('x-circle', '', 13) ?></button>
+                            </form>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
     </div>
 
     <aside>
@@ -145,8 +192,8 @@
                     <?php foreach ($view['authorizedModels'] as $m): ?>
                         <div class="preview-model">
                             <span><?= htmlspecialchars((string) $m['name']) ?></span>
-                            <?php if (!empty($m['version'])): ?>
-                                <span style="color:var(--gray-400);">· <?= htmlspecialchars((string) $m['version']) ?></span>
+                            <?php if (!empty($m['size'])): ?>
+                                <span style="color:var(--gray-400);">· <?= htmlspecialchars((string) $m['size']) ?></span>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>

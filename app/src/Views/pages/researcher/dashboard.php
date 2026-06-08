@@ -19,9 +19,9 @@ $history = array_filter($requests, static fn (array $r): bool => in_array($r['st
 // Status -> (French label, badge CSS class). Mirrors the service's deriveStatus.
 $statusMeta = [
     'pending'    => ['En attente', 'badge-scheduled'],
-    'authorized' => ['Acces accorde', 'badge-active'],
-    'rejected'   => ['Refusee', 'badge-cancelled'],
-    'revoked'    => ['Acces revoque', 'badge-cancelled'],
+    'authorized' => ['Accès accordé', 'badge-active'],
+    'rejected'   => ['Refusée', 'badge-cancelled'],
+    'revoked'    => ['Accès révoqué', 'badge-cancelled'],
 ];
 require __DIR__ . '/_header.php';
 ?>
@@ -35,15 +35,15 @@ require __DIR__ . '/_header.php';
     <?php endif; ?>
 
     <div class="admin-section">
-        <h2><?= icon('building', '', 16) ?> Mes acces</h2>
+        <h2><?= icon('building', '', 16) ?> Mes accès</h2>
 
         <?php if ($granted === []): ?>
-            <p class="no-message">Vous n'avez acces aux donnees d'aucun departement pour le moment.</p>
+            <p class="no-message">Vous n'avez accès aux données d'aucun département pour le moment.</p>
         <?php else: ?>
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>Departement</th>
+                        <th>Département</th>
                         <th>Lieu</th>
                     </tr>
                 </thead>
@@ -60,8 +60,8 @@ require __DIR__ . '/_header.php';
     </div>
 
     <div class="admin-section">
-        <h2><?= icon('book', '', 16) ?> Demander l'acces a un departement</h2>
-        <p class="page-sub">Choisissez le departement dont vous souhaitez consulter les donnees. Votre demande sera traitee par l'administrateur de ce departement. Une seule demande par departement.</p>
+        <h2><?= icon('book', '', 16) ?> Demander l'accès à un département</h2>
+        <p class="page-sub">Choisissez le département dont vous souhaitez consulter les données. Votre demande sera traitée par l'administrateur de ce département. Une seule demande par département.</p>
 
         <form method="POST" action="/researcher/requests" class="researcher-request-form">
             <?= csrf_field() ?>
@@ -70,16 +70,16 @@ require __DIR__ . '/_header.php';
                 <div class="form-group">
                     <label for="place_id">Lieu</label>
                     <select id="place_id" name="place_id" required>
-                        <option value="">Choisir un lieu...</option>
+                        <option value="">Choisir un lieu…</option>
                         <?php foreach ($places as $place): ?>
                             <option value="<?= (int) $place['id'] ?>"><?= htmlspecialchars($place['name']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="department_id">Departement</label>
+                    <label for="department_id">Département</label>
                     <select id="department_id" name="department_id" required disabled data-selected="">
-                        <option value="">Choisir d'abord un lieu...</option>
+                        <option value="">Choisir d'abord un lieu…</option>
                     </select>
                 </div>
             </div>
@@ -87,7 +87,7 @@ require __DIR__ . '/_header.php';
             <div class="form-group">
                 <label for="request">Message (optionnel)</label>
                 <textarea id="request" name="request" rows="3"
-                          placeholder="Precisez l'objet de votre demande (etude, donnees concernees...)."></textarea>
+                          placeholder="Précisez l'objet de votre demande (étude, données concernées…)."></textarea>
             </div>
 
             <button type="submit" class="btn success"><?= icon('check', '', 14) ?> Envoyer la demande</button>
@@ -103,7 +103,7 @@ require __DIR__ . '/_header.php';
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>Departement</th>
+                        <th>Département</th>
                         <th>Lieu</th>
                         <th>Message</th>
                         <th>Actions</th>
@@ -123,7 +123,7 @@ require __DIR__ . '/_header.php';
                             </td>
                             <td>
                                 <form method="POST" action="/researcher/requests/cancel"
-                                      data-confirm="Annuler cette demande d'acces ?">
+                                      data-confirm="Annuler cette demande d'accès ?">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="department_id" value="<?= (int) $req['department_id'] ?>">
                                     <button class="btn danger sm" type="submit"><?= icon('x', '', 13) ?> Annuler</button>
@@ -143,7 +143,7 @@ require __DIR__ . '/_header.php';
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>Departement</th>
+                        <th>Département</th>
                         <th>Lieu</th>
                         <th>Statut</th>
                     </tr>

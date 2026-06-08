@@ -2,7 +2,7 @@
 
 BEGIN;
 
-SELECT plan(9);
+SELECT plan(12);
 
 -- ============================================================
 -- Fixtures
@@ -105,6 +105,46 @@ SELECT isnt(
     (SELECT access_code FROM sessions WHERE id = 2),
     NULL,
     'SCHEDULED→ENDED UPDATE: access_code is kept (not cleared)'
+);
+
+-- ============================================================
+-- Trigger: enforce_model_resource_access_same_dept
+-- A resource-scoped model is shared only with resources of its
+-- own department; cross-department or department-scoped models are
+-- rejected.
+-- ============================================================
+
+-- A second resource in the SAME department, plus a resource in ANOTHER one.
+INSERT INTO resources (id, owner_id, department_id, code, name)
+    VALUES (2, 1, 1, 'INF102', 'Algorithmique');
+INSERT INTO departments (id, place_id, name) VALUES (2, 1, 'Mathematiques');
+INSERT INTO resources (id, owner_id, department_id, code, name)
+    VALUES (3, 1, 2, 'MAT101', 'Analyse');
+
+-- A resource-scoped model owned by resource 1 (department 1) and a
+-- department-scoped model on department 1.
+INSERT INTO models (id, resource_id, name, provider, context_window, api_url, adapter, is_shareable)
+    VALUES (1, 1, 'res-model', 'ollama', 4096, 'http://x', 'ollama', TRUE);
+INSERT INTO models (id, department_id, name, provider, context_window, api_url, adapter)
+    VALUES (2, 1, 'dept-model', 'ollama', 4096, 'http://x', 'ollama');
+
+SELECT lives_ok(
+    $$INSERT INTO model_resource_accesses (model_id, resource_id) VALUES (1, 2)$$,
+    'model_resource_accesses: share with a resource of the same department is accepted'
+);
+
+SELECT throws_ok(
+    $$INSERT INTO model_resource_accesses (model_id, resource_id) VALUES (1, 3)$$,
+    '23514',
+    NULL,
+    'model_resource_accesses: share with a resource of another department is rejected'
+);
+
+SELECT throws_ok(
+    $$INSERT INTO model_resource_accesses (model_id, resource_id) VALUES (2, 2)$$,
+    '23514',
+    NULL,
+    'model_resource_accesses: sharing a department-scoped model this way is rejected'
 );
 
 SELECT finish();

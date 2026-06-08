@@ -35,8 +35,8 @@ $themePref = match ($user['theme'] ?? null) {
                         <input type="text" class="form-control" id="name" name="name" required placeholder="ex: llama3.2:1b">
                     </div>
                     <div class="form-group">
-                        <label for="version" class="form-label">Taille</label>
-                        <input type="text" class="form-control" id="version" name="version" placeholder="ex: 1b">
+                        <label for="size" class="form-label">Taille</label>
+                        <input type="text" class="form-control" id="size" name="size" placeholder="ex: 1b">
                     </div>
                 </div>
 
@@ -65,15 +65,9 @@ $themePref = match ($user['theme'] ?? null) {
                     <input type="text" class="form-control" id="api_url" name="api_url" required placeholder="http://localhost:11434/api/generate">
                 </div>
 
-                <div class="form-grid-2">
-                    <div class="form-group">
-                        <label for="max_tokens" class="form-label">Max Tokens *</label>
-                        <input type="number" class="form-control" id="max_tokens" name="max_tokens" min="1" required placeholder="4096">
-                    </div>
-                    <div class="form-group">
-                        <label for="context_window" class="form-label">Fenêtre de contexte *</label>
-                        <input type="number" class="form-control" id="context_window" name="context_window" min="1" required placeholder="128000">
-                    </div>
+                <div class="form-group">
+                    <label for="context_window" class="form-label">Fenêtre de contexte *</label>
+                    <input type="number" class="form-control" id="context_window" name="context_window" min="1" required placeholder="128000">
                 </div>
 
                 <div class="form-group">

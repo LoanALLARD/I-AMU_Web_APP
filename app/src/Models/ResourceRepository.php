@@ -41,7 +41,10 @@ class ResourceRepository
         return $stmt->fetch() ?: null;
     }
 
-    public function getResourcesFromUserId(int $userId){
+    /**
+     * @return list<array<string, mixed>>|null
+     */
+    public function getResourcesFromUserId(int $userId): ?array {
         $query = $this->pdo->prepare(
             'SELECT r.id, r.name from resources r join users u on r.id = u.department_id where u.id = :id'
         );

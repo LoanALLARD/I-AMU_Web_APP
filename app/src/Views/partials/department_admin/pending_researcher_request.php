@@ -30,7 +30,7 @@ $p = $pending;
                 <?php if (trim((string) ($p['request'] ?? '')) !== ''): ?>
                     <span class="request-text"><?= htmlspecialchars((string) $p['request']) ?></span>
                 <?php else: ?>
-                    <span class="no-message">Aucun message joint a la demande.</span>
+                    <span class="no-message">Aucun message joint à la demande.</span>
                 <?php endif; ?>
             </dd>
         </dl>

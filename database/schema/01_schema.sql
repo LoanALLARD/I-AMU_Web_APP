@@ -1,8 +1,9 @@
-CREATE TYPE theme_type AS ENUM ('LIGHT', 'DARK');
+CREATE TYPE theme_type AS ENUM ('LIGHT', 'DARK', 'AUTO');
 CREATE TYPE resource_state_type AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED');
-CREATE TYPE domain_role_type AS ENUM ('STUDENT', 'TEACHER');
+CREATE TYPE domain_role_type AS ENUM ('STUDENT', 'TEACHER', 'RESEARCHER');
 CREATE TYPE session_type AS ENUM ('EXAM', 'TUTORIAL', 'LAB', 'FREE_STUDY');
 CREATE TYPE session_status_type AS ENUM ('DRAFT', 'SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED');
+CREATE TYPE document_status_type AS ENUM ('PENDING', 'READY', 'FAILED');
 
 CREATE TABLE places (
     id BIGSERIAL,
@@ -36,7 +37,7 @@ CREATE TABLE users (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     consent_at TIMESTAMPTZ,
     consent_version VARCHAR(50),
-    theme theme_type NOT NULL DEFAULT 'LIGHT',
+    theme theme_type NOT NULL DEFAULT 'AUTO',
     archive_duration_days SMALLINT,
     email_verified_at TIMESTAMPTZ,
     email_verify_token VARCHAR(255),
@@ -46,18 +47,6 @@ CREATE TABLE users (
     CONSTRAINT uq_users_email UNIQUE (email),
     CONSTRAINT uq_users_email_verify_token UNIQUE (email_verify_token),
     CONSTRAINT ck_users_archive_duration_days CHECK (archive_duration_days IS NULL OR archive_duration_days > 0)
-);
-
-CREATE TABLE laboratories (
-    id BIGSERIAL,
-    code VARCHAR(50) NOT NULL,
-    name VARCHAR(50) NOT NULL,
-    address VARCHAR(100),
-    email VARCHAR(255),
-    phone VARCHAR(20),
-    website VARCHAR(255),
-    CONSTRAINT pk_laboratories PRIMARY KEY (id),
-    CONSTRAINT uq_laboratories_code UNIQUE (code)
 );
 
 CREATE TABLE super_administrators (
@@ -87,16 +76,6 @@ CREATE TABLE students (
     CONSTRAINT ck_students_year CHECK (year IS NULL OR year > 0)
 );
 
-CREATE TABLE researchers (
-    id BIGINT,
-    approved_by_id BIGINT,
-    laboratory_id BIGINT NOT NULL,
-    CONSTRAINT pk_researchers PRIMARY KEY (id),
-    CONSTRAINT fk_researchers_user FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT fk_researchers_approved_by FOREIGN KEY (approved_by_id) REFERENCES super_administrators (id) ON DELETE SET NULL,
-    CONSTRAINT fk_researchers_laboratory FOREIGN KEY (laboratory_id) REFERENCES laboratories (id)
-);
-
 CREATE TABLE department_administrators (
     id BIGINT,
     invited_by_id BIGINT,
@@ -113,6 +92,29 @@ CREATE TABLE email_domain_configs (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT pk_email_domain_configs PRIMARY KEY (id),
     CONSTRAINT fk_email_domain_configs_added_by FOREIGN KEY (added_by_id) REFERENCES super_administrators (id) ON DELETE SET NULL
+);
+
+CREATE TABLE laboratories (
+    id BIGSERIAL,
+    email_domain_config_id BIGINT,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    address VARCHAR(100),
+    email VARCHAR(255),
+    phone VARCHAR(20),
+    CONSTRAINT pk_laboratories PRIMARY KEY (id),
+    CONSTRAINT uq_laboratories_code UNIQUE (code),
+    CONSTRAINT fk_laboratories_email_domain_config FOREIGN KEY (email_domain_config_id) REFERENCES email_domain_configs (id) ON DELETE SET NULL
+);
+
+CREATE TABLE researchers (
+    id BIGINT,
+    approved_by_id BIGINT,
+    laboratory_id BIGINT NOT NULL,
+    CONSTRAINT pk_researchers PRIMARY KEY (id),
+    CONSTRAINT fk_researchers_user FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_researchers_approved_by FOREIGN KEY (approved_by_id) REFERENCES super_administrators (id) ON DELETE SET NULL,
+    CONSTRAINT fk_researchers_laboratory FOREIGN KEY (laboratory_id) REFERENCES laboratories (id)
 );
 
 CREATE TABLE resources (
@@ -134,9 +136,8 @@ CREATE TABLE models (
     department_id BIGINT,
     resource_id BIGINT,
     name VARCHAR(255) NOT NULL,
-    version VARCHAR(50),
+    size VARCHAR(50),
     provider VARCHAR(255) NOT NULL,
-    max_tokens INTEGER NOT NULL,
     context_window INTEGER NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -146,9 +147,7 @@ CREATE TABLE models (
     CONSTRAINT pk_models PRIMARY KEY (id),
     CONSTRAINT fk_models_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE SET NULL,
     CONSTRAINT fk_models_resource FOREIGN KEY (resource_id) REFERENCES resources (id) ON DELETE RESTRICT,
-    CONSTRAINT ck_models_max_tokens CHECK (max_tokens > 0),
     CONSTRAINT ck_models_context_window CHECK (context_window > 0),
-    CONSTRAINT ck_models_shareable CHECK (NOT (resource_id IS NOT NULL AND is_shareable = TRUE)),
     CONSTRAINT ck_models_scope CHECK (
         (resource_id IS NULL AND department_id IS NOT NULL) OR
         (resource_id IS NOT NULL AND department_id IS NULL)
@@ -278,3 +277,37 @@ CREATE TABLE model_department_accesses (
     CONSTRAINT fk_model_department_accesses_model FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE CASCADE,
     CONSTRAINT fk_model_department_accesses_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE CASCADE
 );
+
+-- Resource-scoped model shared with other resources of the same department
+-- (rule enforced by trg_model_resource_access_same_dept).
+CREATE TABLE model_resource_accesses (
+    model_id BIGINT,
+    resource_id BIGINT,
+    CONSTRAINT pk_model_resource_accesses PRIMARY KEY (model_id, resource_id),
+    CONSTRAINT fk_model_resource_accesses_model FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE CASCADE,
+    CONSTRAINT fk_model_resource_accesses_resource FOREIGN KEY (resource_id) REFERENCES resources (id) ON DELETE CASCADE
+);
+CREATE TABLE documents (
+    id BIGSERIAL,
+    session_id BIGINT,
+    conversation_id BIGINT,
+    uploaded_by_id BIGINT NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    stored_path VARCHAR(255) NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    size_bytes INTEGER NOT NULL,
+    extracted_text TEXT,
+    status document_status_type NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT pk_documents PRIMARY KEY (id),
+    CONSTRAINT fk_documents_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE,
+    CONSTRAINT fk_documents_conversation FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
+    CONSTRAINT fk_documents_uploaded_by FOREIGN KEY (uploaded_by_id) REFERENCES users (id) ON DELETE RESTRICT,
+    CONSTRAINT ck_documents_scope CHECK (
+        (session_id IS NOT NULL AND conversation_id IS NULL) OR
+        (session_id IS NULL AND conversation_id IS NOT NULL)
+    ),
+    CONSTRAINT ck_documents_size CHECK (size_bytes > 0)
+);
+CREATE INDEX idx_documents_session ON documents (session_id);
+CREATE INDEX idx_documents_conversation ON documents (conversation_id);

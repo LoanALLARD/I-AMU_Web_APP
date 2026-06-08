@@ -34,8 +34,8 @@ INSERT INTO department_administrators (id, invited_by_id) VALUES (40, 1);
 INSERT INTO resources (id, owner_id, department_id, code, name)
     VALUES (1, 15, 1, 'INF101', 'BDD');
 
-INSERT INTO models (id, department_id, name, provider, max_tokens, context_window, api_url, adapter)
-    VALUES (1, 1, 'llama3', 'ollama', 4096, 8192, 'http://x', 'ollama');
+INSERT INTO models (id, department_id, name, provider, context_window, api_url, adapter)
+    VALUES (1, 1, 'llama3', 'ollama', 8192, 'http://x', 'ollama');
 
 INSERT INTO sessions (id, resource_id, name, status) VALUES (1, 1, 'S1', 'DRAFT');
 INSERT INTO conversations (id, user_id, model_id, name) VALUES (1, 50, 1, 'Conv');
@@ -288,8 +288,8 @@ INSERT INTO users (id, email, password_hash) VALUES
     (70, 'export-owner@univ-amu.fr', 'h'),
     (71, 'export-researcher@amu.fr', 'h');
 INSERT INTO researchers (id, approved_by_id, laboratory_id) VALUES (71, 1, 1);
-INSERT INTO models (id, department_id, name, provider, max_tokens, context_window, api_url, adapter)
-    VALUES (2, 1, 'llama3', 'ollama', 4096, 8192, 'http://x', 'ollama');
+INSERT INTO models (id, department_id, name, provider, context_window, api_url, adapter)
+    VALUES (2, 1, 'llama3', 'ollama', 8192, 'http://x', 'ollama');
 INSERT INTO conversations (id, user_id, model_id, name) VALUES (2, 70, 2, 'Exported conv');
 INSERT INTO conversation_exports (conversation_id, researcher_id, ip_address)
     VALUES (2, 71, '147.94.0.1');

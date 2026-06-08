@@ -17,20 +17,25 @@ $env = $env ?? null;
 $inSession = ($env['mode'] ?? 'libre') === 'session';
 $messages = $messages ?? [];
 $hasMessages = $messages !== [];
+$canAddModel = $canAddModel ?? false;
 ?>
 <div class="chat-container">
     <div class="chat-area">
 
         <div class="model-bar">
-            <div class="model-selector-wrapper">
-                <button class="model-selector-btn" id="modelSelectorBtn" type="button">
-                    <span class="model-tag-letter" id="modelLetter"><?= strtoupper(substr($defaultModelName, 0, 1)) ?></span>
-                    <span class="model-tag-name" id="modelNameDisplay"><?= htmlspecialchars($defaultModelName) ?></span>
-                    <svg class="model-selector-chevron" id="modelChevron" width="14" height="14" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 12 15 18 9"/>
-                    </svg>
-                </button>
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                <div class="model-selector-wrapper">
+                    <button class="model-selector-btn" id="modelSelectorBtn" type="button">
+                        <span class="model-tag-letter"
+                              id="modelLetter"><?= strtoupper(substr($defaultModelName, 0, 1)) ?></span>
+                        <span class="model-tag-name"
+                              id="modelNameDisplay"><?= htmlspecialchars($defaultModelName) ?></span>
+                        <svg class="model-selector-chevron" id="modelChevron" width="14" height="14" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                    </button>
 
                 <div class="model-dropdown" id="modelDropdown">
                     <div class="model-dropdown-header">Modèles disponibles</div>
@@ -48,7 +53,7 @@ $hasMessages = $messages !== [];
                                         <?php
                                         $meta = [];
                                         if ($model['size'] ?? null) {
-                                            $meta[] = 'v' . $model['version'];
+                                            $meta[] = $model['size'];
                                         }
                                         if ($model['context_window'] ?? null) {
                                             $meta[] = number_format($model['context_window']) . ' ctx';
@@ -75,6 +80,41 @@ $hasMessages = $messages !== [];
                         <?php endif; ?>
                     <?php endif; ?>
                 </div>
+
+                <?php if ($inSession && ($sessionDocuments ?? []) !== []): ?>
+                    <div class="model-selector-wrapper">
+                        <button class="model-selector-btn" id="docSelectorBtn" type="button">
+                            <?= icon('book', '', 14) ?>
+                            <span class="model-tag-name">Documents (<?= count($sessionDocuments) ?>)</span>
+                            <svg class="model-selector-chevron" id="docChevron" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
+                        <div class="model-dropdown" id="docDropdown">
+                            <div class="model-dropdown-header">Documents de la session</div>
+                            <?php foreach ($sessionDocuments as $doc): ?>
+                                <a class="model-dropdown-item"
+                                    href="/documents/session_<?= (int) $doc->sessionId() ?>/<?= (int) $doc->id() ?>"
+                                    target="_blank" rel="noopener" style="text-decoration:none;color:inherit;"
+                                    title="<?= htmlspecialchars($doc->originalName()) ?>">
+                                    <span class="model-dropdown-letter"><?= icon('book', '', 13) ?></span>
+                                    <div class="model-dropdown-info" style="min-width:0;">
+                                        <span class="model-dropdown-name"
+                                            style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                            <?= htmlspecialchars($doc->originalName()) ?>
+                                        </span>
+                                        <span class="model-dropdown-meta">
+                                            <?= htmlspecialchars($doc->kindLabel()) ?> ·
+                                            <?= htmlspecialchars($doc->humanSize()) ?>
+                                        </span>
+                                    </div>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -88,14 +128,15 @@ $hasMessages = $messages !== [];
                         <div class="msg-meta">
                             <span class="msg-model"><?= htmlspecialchars($m['model']) ?></span>
                         </div>
-                        <div class="msg-content" data-markdown="<?= htmlspecialchars($m['response'], ENT_QUOTES, 'UTF-8') ?>"></div>
+                        <div class="msg-content" data-markdown="<?= htmlspecialchars($m['response'], ENT_QUOTES, 'UTF-8') ?>">
+                        </div>
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
                 <div class="empty-state" id="emptyState">
                     <div class="empty-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
+                            stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
                     </div>
@@ -107,13 +148,14 @@ $hasMessages = $messages !== [];
                         <p>Posez une question à l'IA ou sélectionnez un modèle pour commencer.</p>
                         <div class="empty-suggestions">
                             <button class="suggestion-chip" onclick="fillPrompt(this)">Explique-moi les pointeurs en C</button>
-                            <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en Python</button>
+                            <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en
+                                Python</button>
                             <button class="suggestion-chip" onclick="fillPrompt(this)">Qu'est-ce que le pattern MVC ?</button>
                         </div>
                         <?php if (!$inSession && in_array('student', $user['roles'] ?? [], true)): ?>
                             <a href="/sessions/join" class="empty-join-link">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                     stroke-linecap="round" stroke-linejoin="round">
+                                    stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
                                     <polyline points="10 17 15 12 10 7" />
                                     <line x1="15" y1="12" x2="3" y2="12" />
@@ -129,7 +171,7 @@ $hasMessages = $messages !== [];
             <?php if ($sessionClosed): ?>
                 <div class="session-closed-banner">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                         stroke-linecap="round" stroke-linejoin="round">
+                        stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
@@ -138,16 +180,16 @@ $hasMessages = $messages !== [];
             <?php endif; ?>
             <div class="input-wrapper">
                 <textarea id="promptInput"
-                          placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
-                          rows="1" <?= $sessionClosed ? 'disabled' : 'autofocus' ?>></textarea>
+                    placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
+                    rows="1" <?= $sessionClosed ? 'disabled' : 'autofocus' ?>></textarea>
                 <button class="btn-send" id="btnSend" disabled title="Envoyer">
                     <svg class="icon-send" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13" />
                         <polygon points="22 2 15 22 11 13 2 9 22 2" />
                     </svg>
                     <svg class="icon-stop" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"
-                         aria-hidden="true">
+                        aria-hidden="true">
                         <rect x="6" y="6" width="12" height="12" rx="2" />
                     </svg>
                 </button>
@@ -176,16 +218,35 @@ $hasMessages = $messages !== [];
     const modelDisplay  = document.getElementById('modelNameDisplay');
     let   selectedModel = modelDisplay?.textContent?.trim() || 'mistral:latest';
 
+    // Documents dropdown (session env) — reuses the model picker widget.
+    const docBtn = document.getElementById('docSelectorBtn');
+    const docDropdown = document.getElementById('docDropdown');
+    const docChevron = document.getElementById('docChevron');
+
     selectorBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
+        docDropdown?.classList.remove('open');
+        docChevron?.classList.remove('rotated');
         const isOpen = dropdown.classList.toggle('open');
         chevron.classList.toggle('rotated', isOpen);
+    });
+
+    docBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown?.classList.remove('open');
+        chevron?.classList.remove('rotated');
+        const isOpen = docDropdown.classList.toggle('open');
+        docChevron?.classList.toggle('rotated', isOpen);
     });
 
     document.addEventListener('click', (e) => {
         if (!dropdown?.contains(e.target) && !selectorBtn?.contains(e.target)) {
             dropdown?.classList.remove('open');
             chevron?.classList.remove('rotated');
+        }
+        if (!docDropdown?.contains(e.target) && !docBtn?.contains(e.target)) {
+            docDropdown?.classList.remove('open');
+            docChevron?.classList.remove('rotated');
         }
     });
 
@@ -195,9 +256,9 @@ $hasMessages = $messages !== [];
             selectedModel = model;
 
             modelDisplay.textContent = model;
-            modelLetter.textContent  = model.charAt(0).toUpperCase();
+            modelLetter.textContent = model.charAt(0).toUpperCase();
 
-            document.querySelectorAll('.model-dropdown-item').forEach(el => el.classList.remove('active'));
+            dropdown.querySelectorAll('.model-dropdown-item').forEach(el => el.classList.remove('active'));
             item.classList.add('active');
 
             dropdown.classList.remove('open');
@@ -384,27 +445,28 @@ $hasMessages = $messages !== [];
             const endTime = performance.now();
             const durationStr = ((endTime - startTime) / 1000).toFixed(2) + 's';
 
+
             const responseText = data.response ?? 'Pas de réponse.';
             renderMarkdown(responseText, aiMsg.querySelector('.msg-content'));
 
-            
-            const newConvId   = data.conversation_id   ?? null;
-            const newConvName = data.conversation_name ?? 'Nouvelle conversation';
-            const reply =  data.response || 'Pas de réponse.';
-            const inputTokens  =  data.prompt_eval_count || 0;
-            const outputTokens =  data.eval_count || 0;
-            const totalTokens  = inputTokens + outputTokens;
 
-            
+            const newConvId = data.conversation_id ?? null;
+            const newConvName = data.conversation_name ?? 'Nouvelle conversation';
+            const reply = data.response || 'Pas de réponse.';
+            const inputTokens = data.prompt_eval_count || 0;
+            const outputTokens = data.eval_count || 0;
+            const totalTokens = inputTokens + outputTokens;
+
+
             if (newConvId && !conversationId) {
                 window._activeConvId = newConvId;
                 history.replaceState(null, '', `/chat/${newConvId}`);
-                
+
                 const convNameEl = document.getElementById('convName');
                 if (convNameEl) convNameEl.textContent = newConvName;
             }
 
-            if (newConvName){
+            if (newConvName) {
                 const convNameEl = document.getElementById('convName');
                 if (convNameEl) convNameEl.textContent = newConvName;
 
@@ -462,6 +524,29 @@ $hasMessages = $messages !== [];
         setTimeout(() => btn.innerHTML = original, 1500);
     }
 
+<?php if ($inSession && !$sessionClosed): ?>
+    // Live enforcement: poll the session status so that a student deactivated
+    // by the teacher (or a session that closes) flips to read-only within a few
+    // seconds, without a manual reload. The reloaded page is server-rendered
+    // read-only, so the poller stops itself (it isn't emitted when closed).
+    (function () {
+        if (!conversationId) return;
+        const tick = async () => {
+            try {
+                const r = await fetch('/chat/session-status?conversation=' + conversationId, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!r.ok) return;
+                const s = await r.json();
+                if (s && s.closed) {
+                    clearInterval(timer);
+                    location.reload();
+                }
+            } catch (e) { /* transient network error — keep polling */ }
+        };
+        const timer = setInterval(tick, 8000);
+    })();
+<?php endif; ?>
 </script>
 
 

@@ -255,7 +255,10 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                     <?php if (!empty($env['sessionId'])): ?>
                         <input type="hidden" name="session_id" value="<?= (int) $env['sessionId'] ?>">
                     <?php endif; ?>
-                    <button type="submit" class="btn-new-chat" id="btnNewChat">
+                    <button type="submit" class="btn-new-chat" id="btnNewChat"
+                        <?= !empty($sessionClosed)
+                            ? 'disabled style="opacity:.45;cursor:not-allowed;" title="Vous ne pouvez plus créer de conversation dans cette session."'
+                            : '' ?>>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
                             stroke-linecap="round" stroke-linejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19" />

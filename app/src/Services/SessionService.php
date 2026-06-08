@@ -61,6 +61,16 @@ class SessionService
     }
 
     /**
+     * Activates or deactivates a student's enrollment in a session (teacher
+     * action from the monitor view). Deactivating bars the student from the
+     * session chat and from re-joining with the access code.
+     */
+    public function setStudentActive(int $sessionId, int $studentId, bool $active): void
+    {
+        $this->enrollments->setActive($studentId, $sessionId, $active);
+    }
+
+    /**
      * Research export of a whole session: the session header plus every
      * enrolled student, their conversations and the interactions of each.
      * Identity is included on purpose (no platform-side anonymisation —
@@ -220,7 +230,7 @@ class SessionService
         $models   = array_map(
             static fn (array $m): array => [
                 'name'    => (string) $m['name'],
-                'version' => $m['version'] ?? null,
+                'size'    => $m['size'] ?? null,
             ],
             $this->models->findByIds($modelIds)
         );
@@ -279,6 +289,7 @@ class SessionService
                 $byStudent[$sid] = [
                     'id'            => $sid,
                     'name'          => trim(((string) $r['first_name']) . ' ' . ((string) $r['last_name'])),
+                    'isActive'      => (int) ($r['is_active'] ?? 1) === 1,
                     'conversations' => [],
                     'totalPrompts'  => 0,
                 ];
@@ -463,7 +474,16 @@ class SessionService
             });
         }
 
-        $sessionId     = (int) $session->id();
+        $sessionId = (int) $session->id();
+
+        // A student deactivated by the teacher cannot re-join.
+        if (
+            $this->enrollments->exists($studentUserId, $sessionId)
+            && !$this->enrollments->isActive($studentUserId, $sessionId)
+        ) {
+            throw SessionException::notAvailable("Vous avez été retiré de cette session par l'enseignant.");
+        }
+
         $alreadyJoined = $this->enrollments->exists($studentUserId, $sessionId);
         if (!$alreadyJoined) {
             $this->enrollments->enroll($studentUserId, $sessionId);
@@ -524,7 +544,7 @@ class SessionService
             static fn (array $m): array => [
                 'id'            => (int) $m['id'],
                 'name'          => (string) $m['name'],
-                'version'       => $m['version'] ?? null,
+                'size'          => $m['size'] ?? null,
                 'contextWindow' => isset($m['context_window']) && $m['context_window'] !== null ? (int) $m['context_window'] : null,
             ],
             $this->models->findAllActiveBySession(null)

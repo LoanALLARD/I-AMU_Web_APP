@@ -9,11 +9,13 @@ use PDO;
  * all data about AI in the database
 */
 
-class AiRepository{
+class AiRepository
+{
 
     private PDO $pdo;
 
-    public function __construct(PDO $pdo){
+    public function __construct(PDO $pdo)
+    {
         $this->pdo = $pdo;
     }
 
@@ -91,11 +93,11 @@ class AiRepository{
         }
 
         $placeholders = [];
-        $params       = [];
+        $params = [];
         foreach ($ids as $i => $id) {
-            $key            = ':id' . $i;
+            $key  = ':id' . $i;
             $placeholders[] = $key;
-            $params[$key]   = $id;
+            $params[$key] = $id;
         }
 
         $sql   = 'SELECT id, name, size, context_window, is_active FROM models WHERE id IN (' . implode(', ', $placeholders) . ') ORDER BY name';
@@ -108,7 +110,8 @@ class AiRepository{
         return $rows;
     }
 
-    public function getAllTypeOfAdapters(){
+    public function getAllTypeOfAdapters(): mixed
+    {
         $query = $this->pdo->prepare(
             'SELECT adapter FROM models GROUP BY adapter'
         );
@@ -119,8 +122,11 @@ class AiRepository{
 
         return $result;
     }
-
-    public function addModel(?int $department_id,?string $resource_id,string $name, string $size, string $provider, string $adapter, string $apiUrl, int $maxTokens, int $contextWindow, string $isShareable){
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function addModel(?int $department_id,?string $resource_id,string $name, string $size, string $provider, string $adapter, string $apiUrl, int $maxTokens, int $contextWindow, string $isShareable)
+    {
         $query = $this->pdo->prepare(
             'INSERT INTO models (department_id,resource_id,name,size,provider,max_tokens,context_window,api_url,adapter,is_shareable)
             VALUES (:department_id,:resource_id,:name,:size,:provider,:max_tokens,:context_window,:api_url,:adapter,:is_shareable)'

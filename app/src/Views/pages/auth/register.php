@@ -59,7 +59,15 @@
                        placeholder="Répétez votre mot de passe" required>
             </div>
 
-            <div class="form-row">
+            <div class="rgpd-group">
+                <input type="checkbox" id="is_researcher" name="is_researcher" value="1"
+                       <?= !empty($data['is_researcher']) ? 'checked' : '' ?>>
+                <label for="is_researcher" class="rgpd-label">
+                    Je suis un chercheur (mon laboratoire est déduit de mon adresse e-mail).
+                </label>
+            </div>
+
+            <div class="form-row" id="affiliation-fields">
                 <div class="form-group">
                     <label for="place_id">Lieu</label>
                     <select id="place_id" name="place_id" required>

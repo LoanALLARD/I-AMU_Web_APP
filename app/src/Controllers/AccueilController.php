@@ -6,6 +6,7 @@ namespace Controllers;
 
 use Core\Controller;
 use Services\ChatService;
+use Services\DocumentService;
 use Models\ConversationRepository;
 use Models\InteractionRepository;
 use Data\Database;
@@ -37,11 +38,9 @@ class AccueilController extends Controller
         $user = $this->currentUser();
 
         $conversationId = $id !== null && $id !== '' ? (int) $id : null;
-        $archived       = $this->query('archived') === '1';
+        $archived  = $this->query('archived') === '1';
 
-        // Exam lockdown: a student inside a running exam may only see their
-        // exam conversation. Any other target (free chat, another session,
-        // history) is bounced back to it.
+        // Exam lockdown: a student inside a running exam may only see their exam conversation.
         $examLock = $this->examLock();
         if ($examLock !== null && $examLock['conversationId'] !== null
             && $conversationId !== $examLock['conversationId']) {
@@ -76,7 +75,7 @@ class AccueilController extends Controller
         $pdo = Database::getConnection();
 
         $conversationRepo = new ConversationRepository($pdo);
-        $interactionRepo   = new InteractionRepository($pdo);
+        $interactionRepo  = new InteractionRepository($pdo);
 
         $conversation = null;
         $interactions = [];
@@ -97,7 +96,15 @@ class AccueilController extends Controller
             static fn ($v) => ['id' => $v['id'], 'name' => $v['name']],
             $conversationRepo->getConversationsByUserId($user['id'])
         );
-        $canAddModel = $_SESSION['isSpecialized'];
+
+        // Session documents (phase 1): shown read-only in the chat sidebar to
+        // the enrolled students of a session-bound environment.
+        $sessionDocuments = [];
+        $envBlock = $env['env'] ?? null;
+        if (is_array($envBlock) && isset($envBlock['sessionId']) && $envBlock['sessionId'] !== null) {
+            $sessionDocuments = (new DocumentService($pdo))->listForSession((int) $envBlock['sessionId']);
+        }
+        $canAddModel = $_SESSION['isSpecialized'] ?? false;
         $this->render('pages/home', [
             'user'          => $user,
             'canAddModel'   => $canAddModel,
@@ -112,6 +119,23 @@ class AccueilController extends Controller
             'archivedView'  => $archived,
             'examLock'      => $examLock,
         ], 'chat');
+    }
+
+    /**
+     * GET /chat/session-status — live poll for the read-only state of a session
+     * conversation, so the chat page reacts to the teacher deactivating the
+     * student (or closing the session) without a manual reload.
+     */
+    public function sessionStatus(): void
+    {
+        $this->requireAuth();
+        $user   = $this->currentUser();
+        $convId = (int) $this->query('conversation', 0);
+        $status = $convId > 0
+            ? $this->chat->sessionStatusFor((int) ($user['id'] ?? 0), $convId)
+            : ['closed' => false, 'reason' => ''];
+
+        $this->json($status);
     }
 
     /**
@@ -160,9 +184,9 @@ class AccueilController extends Controller
         $this->blockIfExamLocked();
         $user = $this->currentUser();
 
-        $id      = (int) $this->input('id', 0);
+        $id = (int) $this->input('id', 0);
         $current = (int) $this->input('current_id', 0);
-        $name    = (string) $this->input('name', '');
+        $name = (string) $this->input('name', '');
 
         try {
             $this->chat->rename((int) $user['id'], $id, $name);
@@ -187,7 +211,7 @@ class AccueilController extends Controller
         $this->blockIfExamLocked();
         $user = $this->currentUser();
 
-        $id      = (int) $this->input('id', 0);
+        $id = (int) $this->input('id', 0);
         $current = (int) $this->input('current_id', 0);
 
         try {

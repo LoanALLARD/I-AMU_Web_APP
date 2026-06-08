@@ -24,7 +24,7 @@ $currentUserId = (int) ($user['id'] ?? 0);
             <span class="badge badge-teacher"><?= icon('building', '', 13) ?> <?= htmlspecialchars($department['name']) ?></span>
         <?php endif; ?>
     </div>
-    <p class="page-sub">Espace d'administration de votre departement.</p>
+    <p class="page-sub">Espace d'administration de votre département.</p>
 </div>
 
 <div class="page-body">
@@ -34,19 +34,19 @@ $currentUserId = (int) ($user['id'] ?? 0);
             <span class="admin-identity-icon"><?= icon('user', '', 18) ?></span>
             <div>
                 <div class="admin-identity-name">
-                    Connecte en tant que <strong><?= htmlspecialchars($displayName !== '' ? $displayName : 'administrateur') ?></strong>
-                    <span class="badge badge-draft" style="margin-left:6px;">admin de departement</span>
+                    Connecté en tant que <strong><?= htmlspecialchars($displayName !== '' ? $displayName : 'administrateur') ?></strong>
+                    <span class="badge badge-draft" style="margin-left:6px;">admin de département</span>
                 </div>
                 <div class="admin-identity-meta">
                     <?= icon('message-circle', '', 12) ?> <?= htmlspecialchars($user['email'] ?? '') ?>
                     <?php if ($department !== null): ?>
-                        &middot; <?= icon('building', '', 12) ?> departement <?= htmlspecialchars($department['name']) ?>
+                        &middot; <?= icon('building', '', 12) ?> département <?= htmlspecialchars($department['name']) ?>
                         &middot; <?= icon('graduation-cap', '', 12) ?> <?= htmlspecialchars($department['place_name']) ?>
                     <?php endif; ?>
                 </div>
             </div>
             <a href="/logout" class="btn danger sm" style="margin-left:auto;">
-                <?= icon('lock', '', 13) ?> Se deconnecter
+                <?= icon('lock', '', 13) ?> Se déconnecter
             </a>
         </div>
     </div>
@@ -64,11 +64,11 @@ $currentUserId = (int) ($user['id'] ?? 0);
     </div>
 
     <div class="admin-section">
-        <h2><?= icon('users', '', 16) ?> Utilisateurs du departement (<?= count($departmentMembers) ?>)</h2>
+        <h2><?= icon('users', '', 16) ?> Utilisateurs du département (<?= count($departmentMembers) ?>)</h2>
         <?php if ($departmentMembers === []): ?>
             <div class="dashboard-card">
                 <p style="color:var(--gray-400);font-size:13px;margin:0;">
-                    Aucun enseignant ni etudiant rattache a votre departement.
+                    Aucun enseignant ni étudiant rattaché à votre département.
                 </p>
             </div>
         <?php else: ?>
@@ -77,7 +77,7 @@ $currentUserId = (int) ($user['id'] ?? 0);
                     <tr>
                         <th data-sort="text">Nom</th>
                         <th>Email</th>
-                        <th data-sort="text">Role</th>
+                        <th data-sort="text">Rôle</th>
                         <th data-sort="text">Statut</th>
                         <th></th>
                     </tr>
@@ -92,14 +92,14 @@ $currentUserId = (int) ($user['id'] ?? 0);
     </div>
 
     <div class="admin-section">
-        <h2><?= icon('flask-conical', '', 16) ?> Chercheurs autorises (<span data-count="authorized"><?= count($researchers) ?></span>)</h2>
+        <h2><?= icon('flask-conical', '', 16) ?> Chercheurs autorisés (<span data-count="authorized"><?= count($researchers) ?></span>)</h2>
         <table class="admin-table sortable" data-researcher-table="authorized">
             <thead>
                 <tr>
                     <th data-sort="text">Nom</th>
                     <th>Email</th>
                     <th>Laboratoire</th>
-                    <th>Acces</th>
+                    <th>Accès</th>
                     <th></th>
                 </tr>
             </thead>
@@ -110,17 +110,17 @@ $currentUserId = (int) ($user['id'] ?? 0);
             </tbody>
         </table>
         <p class="admin-empty" data-empty="authorized"<?= $researchers === [] ? '' : ' hidden' ?>>
-            Aucun chercheur autorise sur votre departement.
+            Aucun chercheur autorisé sur votre département.
         </p>
 
-        <h3 class="admin-subhead"><?= icon('x-circle', '', 14) ?> Acces revoques (<span data-count="revoked"><?= count($revokedResearchers) ?></span>)</h3>
+        <h3 class="admin-subhead"><?= icon('x-circle', '', 14) ?> Accès révoqués (<span data-count="revoked"><?= count($revokedResearchers) ?></span>)</h3>
         <table class="admin-table sortable" data-researcher-table="revoked">
             <thead>
                 <tr>
                     <th data-sort="text">Nom</th>
                     <th>Email</th>
                     <th>Laboratoire</th>
-                    <th>Acces</th>
+                    <th>Accès</th>
                     <th></th>
                 </tr>
             </thead>
@@ -131,7 +131,7 @@ $currentUserId = (int) ($user['id'] ?? 0);
             </tbody>
         </table>
         <p class="admin-empty" data-empty="revoked"<?= $revokedResearchers === [] ? '' : ' hidden' ?>>
-            Aucun acces revoque.
+            Aucun accès révoqué.
         </p>
     </div>
 
