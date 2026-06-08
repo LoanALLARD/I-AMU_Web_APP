@@ -214,6 +214,7 @@ class LLMController{
             $aiData["name"],
             $aiData["size"],
             $aiData["provider"],
+            null,
             $aiData["context_window"],
             $aiData["is_active"],
             $aiData["created_at"],

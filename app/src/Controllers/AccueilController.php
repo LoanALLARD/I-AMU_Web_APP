@@ -56,7 +56,7 @@ class AccueilController extends Controller
             // to maintain UI integrity. The backend validates this on submit to prevent
             // unauthorized access via API bypass.
             $sessionId = $env['env']['sessionId'] ?? null;
-            $models = $aiRepository->findAllActiveBySession($sessionId);
+            $models = $aiRepository->findAllActiveBySession(null);
             if ($sessionId !== null) {
                 $allowed = (new \Models\SessionRepository($pdo))->authorizedModelIdsOf((int) $sessionId);
                 $models  = array_values(array_filter(

@@ -49,7 +49,7 @@ class AiRepository
         if ($sessionID === null) {
             $query = $this->pdo->prepare(
                 'SELECT id, name, size, context_window, is_active
-                   FROM models WHERE is_active = TRUE AND resource_id IS NULL ORDER BY name'
+           FROM models WHERE is_active = TRUE ORDER BY name' // all active models
             );
             $query->execute();
         } else {

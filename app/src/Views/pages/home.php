@@ -36,7 +36,6 @@ $canAddModel = $canAddModel ?? false;
                             <polyline points="6 9 12 15 18 9" />
                         </svg>
                     </button>
-
                 <div class="model-dropdown" id="modelDropdown">
                     <div class="model-dropdown-header">Modèles disponibles</div>
                     <?php if (empty($models)): ?>
@@ -79,6 +78,7 @@ $canAddModel = $canAddModel ?? false;
                             </a>
                         <?php endif; ?>
                     <?php endif; ?>
+                </div>
                 </div>
 
                 <?php if ($inSession && ($sessionDocuments ?? []) !== []): ?>
@@ -148,8 +148,7 @@ $canAddModel = $canAddModel ?? false;
                         <p>Posez une question à l'IA ou sélectionnez un modèle pour commencer.</p>
                         <div class="empty-suggestions">
                             <button class="suggestion-chip" onclick="fillPrompt(this)">Explique-moi les pointeurs en C</button>
-                            <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en
-                                Python</button>
+                            <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en Python</button>
                             <button class="suggestion-chip" onclick="fillPrompt(this)">Qu'est-ce que le pattern MVC ?</button>
                         </div>
                         <?php if (!$inSession && in_array('student', $user['roles'] ?? [], true)): ?>
@@ -180,8 +179,9 @@ $canAddModel = $canAddModel ?? false;
             <?php endif; ?>
             <div class="input-wrapper">
                 <textarea id="promptInput"
-                    placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
-                    rows="1" <?= $sessionClosed ? 'disabled' : 'autofocus' ?>></textarea>
+                      placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
+                      <?php if (!empty($env['maxInputSize'])): ?>maxlength="<?= (int) $env['maxInputSize'] ?>"<?php endif; ?>
+                      rows="1" <?= $sessionClosed ? 'disabled' : 'autofocus' ?>></textarea>
                 <button class="btn-send" id="btnSend" disabled title="Envoyer">
                     <svg class="icon-send" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -331,9 +331,15 @@ $canAddModel = $canAddModel ?? false;
     input?.addEventListener('input', () => {
         input.style.height = 'auto';
         input.style.height = Math.min(input.scrollHeight, 200) + 'px';
-        sendBtn.disabled = !input.value.trim();
-        counter.textContent = input.value.length + ' car.';
+        const len = input.value.length;
+        const over = sessionMaxInputSize !== null && len >= sessionMaxInputSize;
+        sendBtn.disabled = !input.value.trim() || over;
+        counter.textContent = sessionMaxInputSize !== null
+            ? len + ' / ' + sessionMaxInputSize + ' car.'
+            : len + ' car.';
+        counter.classList.toggle('is-limit', over);
     });
+    input?.dispatchEvent(new Event('input'));
 
     input?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
