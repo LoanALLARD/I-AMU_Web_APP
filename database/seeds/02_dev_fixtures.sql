@@ -29,8 +29,12 @@ INSERT INTO departments (place_id, name, description) VALUES
     ((SELECT id FROM places WHERE name = 'IUT Aix'),
      'MLT', 'Management de la Logistique et des Transports');
 
-INSERT INTO laboratories (code, name, address, email) VALUES
-    ('LIS', 'Laboratoire d''Informatique et Systemes',
+INSERT INTO email_domain_configs (domain, role, is_active) VALUES
+    ('lis-lab.fr', 'RESEARCHER', TRUE);
+
+INSERT INTO laboratories (email_domain_config_id, code, name, address, email) VALUES
+    ((SELECT id FROM email_domain_configs WHERE domain = 'lis-lab.fr'),
+     'LIS', 'Laboratoire d''Informatique et Systemes',
      '163 Avenue de Luminy', 'contact@lis-lab.fr');
 
 INSERT INTO super_administrators (email, password_hash, first_name, last_name) VALUES
