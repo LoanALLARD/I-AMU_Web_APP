@@ -192,6 +192,14 @@ class ChatService
             throw new RuntimeException("Cette session n'est pas active.");
         }
 
+        // A student deactivated by the teacher cannot create new conversations.
+        if (
+            $this->enrollments->exists($userId, $sessionId)
+            && !$this->enrollments->isActive($userId, $sessionId)
+        ) {
+            throw new RuntimeException("Vous avez été retiré de cette session par l'enseignant.");
+        }
+
         $code = $session->accessCodeFormatted() ?? ('S' . $sessionId);
         $n    = $this->conversations->countByUserAndSession($userId, $sessionId) + 1;
 
