@@ -148,7 +148,6 @@ CREATE TABLE models (
     CONSTRAINT fk_models_resource FOREIGN KEY (resource_id) REFERENCES resources (id) ON DELETE RESTRICT,
     CONSTRAINT ck_models_max_tokens CHECK (max_tokens > 0),
     CONSTRAINT ck_models_context_window CHECK (context_window > 0),
-    CONSTRAINT ck_models_shareable CHECK (NOT (resource_id IS NOT NULL AND is_shareable = TRUE)),
     CONSTRAINT ck_models_scope CHECK (
         (resource_id IS NULL AND department_id IS NOT NULL) OR
         (resource_id IS NOT NULL AND department_id IS NULL)
@@ -275,4 +274,14 @@ CREATE TABLE model_department_accesses (
     CONSTRAINT pk_model_department_accesses PRIMARY KEY (model_id, department_id),
     CONSTRAINT fk_model_department_accesses_model FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE CASCADE,
     CONSTRAINT fk_model_department_accesses_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE CASCADE
+);
+
+-- Resource-scoped model shared with other resources of the same department
+-- (rule enforced by trg_model_resource_access_same_dept).
+CREATE TABLE model_resource_accesses (
+    model_id BIGINT,
+    resource_id BIGINT,
+    CONSTRAINT pk_model_resource_accesses PRIMARY KEY (model_id, resource_id),
+    CONSTRAINT fk_model_resource_accesses_model FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE CASCADE,
+    CONSTRAINT fk_model_resource_accesses_resource FOREIGN KEY (resource_id) REFERENCES resources (id) ON DELETE CASCADE
 );

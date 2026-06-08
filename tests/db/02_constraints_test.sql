@@ -113,15 +113,14 @@ SELECT throws_ok(
 );
 
 -- ============================================================
--- models: resource-scoped model cannot be shareable
+-- models: resource-scoped model may be shareable (shared with
+-- other resources of the same department via model_resource_accesses)
 -- ============================================================
 
-SELECT throws_ok(
+SELECT lives_ok(
     $$INSERT INTO models (resource_id, name, provider, max_tokens, context_window, api_url, adapter, is_shareable)
       VALUES (1, 'm3', 'ollama', 1024, 4096, 'http://x', 'ollama', TRUE)$$,
-    '23514',
-    NULL,
-    'models: resource-scoped model with is_shareable=TRUE is rejected'
+    'models: resource-scoped model with is_shareable=TRUE is accepted'
 );
 
 -- ============================================================
