@@ -262,6 +262,33 @@ class SessionController extends Controller
     }
 
     /**
+     * POST /sessions/{id}/student-status — the owner (de)activates a student's
+     * enrollment from the monitor view. Deactivating removes the student from
+     * the session chat (read-only on next load) and bars re-joining.
+     */
+    public function setStudentActive(string $id): void
+    {
+        $this->requireRole('teacher');
+        $this->verifyCsrf();
+        $session = $this->loadOwned((int) $id);
+
+        $studentId = (int) $this->input('student_id', 0);
+        $active    = $this->input('active') === '1';
+
+        if ($studentId > 0) {
+            $this->sessions->setStudentActive((int) $session->id(), $studentId, $active);
+            $this->flash(
+                'success',
+                $active
+                    ? 'Étudiant réactivé dans la session.'
+                    : 'Étudiant désactivé : il est déconnecté de la session et ne peut plus la rejoindre.'
+            );
+        }
+
+        $this->redirect('/sessions/' . (int) $id . '/monitor');
+    }
+
+    /**
      * GET /sessions/{id}/export — JSON research export of the whole session
      * (students -> conversations -> interactions). No platform-side
      * anonymisation (cf. spec 06): the export carries identity.

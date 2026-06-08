@@ -502,4 +502,27 @@ $canAddModel = $canAddModel ?? false;
         setTimeout(() => btn.innerHTML = original, 1500);
     }
 
+<?php if ($inSession && !$sessionClosed): ?>
+    // Live enforcement: poll the session status so that a student deactivated
+    // by the teacher (or a session that closes) flips to read-only within a few
+    // seconds, without a manual reload. The reloaded page is server-rendered
+    // read-only, so the poller stops itself (it isn't emitted when closed).
+    (function () {
+        if (!conversationId) return;
+        const tick = async () => {
+            try {
+                const r = await fetch('/chat/session-status?conversation=' + conversationId, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!r.ok) return;
+                const s = await r.json();
+                if (s && s.closed) {
+                    clearInterval(timer);
+                    location.reload();
+                }
+            } catch (e) { /* transient network error — keep polling */ }
+        };
+        const timer = setInterval(tick, 8000);
+    })();
+<?php endif; ?>
 </script>
