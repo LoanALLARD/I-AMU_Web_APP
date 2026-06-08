@@ -98,7 +98,7 @@ class AiRepository{
             $params[$key]   = $id;
         }
 
-        $sql   = 'SELECT id, name, version, context_window, is_active FROM models WHERE id IN (' . implode(', ', $placeholders) . ') ORDER BY name';
+        $sql   = 'SELECT id, name, size, context_window, is_active FROM models WHERE id IN (' . implode(', ', $placeholders) . ') ORDER BY name';
         $query = $this->pdo->prepare($sql);
         $query->execute($params);
 
