@@ -22,7 +22,7 @@ use Services\MailService;
  *     `users.id`, `users.last_login_at`, `teachers.id`, `students.id`.
  *   - `users` no longer carries `gdpr_consent` / `gdpr_consent_at`; the
  *     equivalent is now `consent_at` + `consent_version`. We do not touch
- *     these fields here — they are owned by spec 06 (RGPD).
+ *     these fields here ─they are owned by spec 06 (RGPD).
  */
 final class AuthService
 {
@@ -96,7 +96,7 @@ final class AuthService
      *     password_confirm match, RGPD consent ticked).
      *   - Looks up the email domain in `email_domain_configs` to derive the
      *     role (active domains only). An unknown / disabled domain is
-     *     rejected — only domains an admin configured can register.
+     *     rejected ─only domains an admin configured can register.
      *   - Hashes the password with bcrypt.
      *   - Delegates persistence to UserRepository::createUserWithRole(),
      *     which creates the user + role row in a single transaction so a
@@ -172,7 +172,7 @@ final class AuthService
             $mail = new MailService();
             $mail->send(
                 $email,
-                'Vérifiez votre adresse email — I-AMU',
+                'Vérifiez votre adresse email ─I-AMU',
                 '<h2>Bienvenue sur I-AMU !</h2>'
                 . '<p>Cliquez sur le lien ci-dessous pour activer votre compte :</p>'
                 . '<p><a href="' . htmlspecialchars($link) . '">Vérifier mon email</a></p>'

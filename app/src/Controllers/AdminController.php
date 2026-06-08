@@ -102,7 +102,7 @@ class AdminController extends Controller
     }
 
     public function addModel(): void {
-        // Extraction et nettoyage des données reçues du formulaire
+        // Extracting and cleaning data received from the form
         $name          = $this->input('name', null);
         $size          = $this->input('size', null);
         $provider      = $this->input('provider', null);
@@ -110,23 +110,23 @@ class AdminController extends Controller
         $apiUrl        = $this->input('api_url', null);
         $contextWindow = $this->input('context_window', null);
         
-        // Récupère "1" (Oui) ou "0" (Non) depuis le groupe radio 'is_shareable'
+        // Retrieves ‘1’ (Yes) or ‘0’ (No) from the “is_shareable” radio group
         $isShareable   = $this->input('is_shareable', '0');
         $user = $this->currentUser();
         if ($isShareable === '1'){
-            $department_id = $user["department_id"];
-            $resource_id = null;
+            $departmentId = $user["department_id"];
+            $resourceId = null;
         }else {
-            $department_id = null;
-            $resource_id = $this->input('resource_id', null);
+            $departmentId = null;
+            $resourceId = $this->input('resource_id', null);
         }
-        // Exemple de var_dump pour valider la bonne réception
+        // Example of a var_dump to verify successful reception
         try {
             $pdo = Database::getConnection();   
             $Ai = new AiRepository($pdo);
             $result=$Ai->addModel(
-                $department_id,
-                $resource_id,
+                $departmentId,
+                $resourceId,
                 $name,
                 $size,
                 $provider,

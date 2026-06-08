@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Domain;
 
 /**
- * Text from plain-text documents (TXT, Markdown) — a direct read.
+ * Text from plain-text documents (TXT, Markdown) ─ a direct read.
  */
 final class PlainTextExtractor implements TextExtractorInterface
 {

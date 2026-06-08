@@ -99,7 +99,7 @@ class UserRepository
     /**
      * Tells whether the user owns the given role, i.e. has a row in the
      * matching specialisation table. The table name is whitelisted by the
-     * caller (teachers / students) — never pass user input here.
+     * caller (teachers / students) ─ never pass user input here.
      */
     public function hasRole(int $userId, string $table): bool
     {

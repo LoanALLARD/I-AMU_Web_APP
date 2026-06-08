@@ -257,7 +257,7 @@ class SessionRepository
      * with no interaction, still appear (LEFT JOINs). The caller nests the rows
      * into students -> conversations -> interactions.
      *
-     * No anonymisation (per the project's RGPD stance) — identity is included.
+     * No anonymisation (per the project's RGPD stance) ─ identity is included.
      *
      * @return list<array<string, mixed>>
      */

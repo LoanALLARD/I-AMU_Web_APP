@@ -122,7 +122,7 @@ class AccueilController extends Controller
     }
 
     /**
-     * GET /chat/session-status — live poll for the read-only state of a session
+     * GET /chat/session-status ─ live poll for the read-only state of a session
      * conversation, so the chat page reacts to the teacher deactivating the
      * student (or closing the session) without a manual reload.
      */
@@ -139,7 +139,7 @@ class AccueilController extends Controller
     }
 
     /**
-     * POST /chat/new — create a conversation in the current environment.
+     * POST /chat/new ─ create a conversation in the current environment.
      * A `session_id` field means a session conversation; absent means free.
      */
     public function newChat(): void
@@ -173,7 +173,7 @@ class AccueilController extends Controller
     }
 
     /**
-     * POST /chat/rename — rename a free-mode conversation. `current_id` is
+     * POST /chat/rename ─ rename a free-mode conversation. `current_id` is
      * the conversation currently open, used to return there afterwards.
      */
     public function renameChat(): void
@@ -199,7 +199,7 @@ class AccueilController extends Controller
     }
 
     /**
-     * POST /chat/archive — archive a conversation. If the archived one was
+     * POST /chat/archive ─ archive a conversation. If the archived one was
      * open, land on the next conversation in the same environment (or free
      * chat when none remains); otherwise stay on the current conversation.
      */
@@ -230,7 +230,7 @@ class AccueilController extends Controller
     }
 
     /**
-     * POST /chat/unarchive — restore an archived conversation and open it in
+     * POST /chat/unarchive ─ restore an archived conversation and open it in
      * the active view.
      */
     public function unarchiveChat(): void
@@ -267,7 +267,7 @@ class AccueilController extends Controller
 
     /**
      * Returns the active exam lock for the current student, or null. Only
-     * students can be locked — teachers and admins monitor freely.
+     * students can be locked ─ teachers and admins monitor freely.
      *
      * @return array{sessionId:int, conversationId:?int, sessionName:string, endsAt:?string}|null
      */

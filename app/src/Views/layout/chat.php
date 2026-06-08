@@ -1,6 +1,6 @@
 <?php
 /**
- * Universal authenticated layout — sidebar + topbar shell.
+ * Universal authenticated layout ─ sidebar + topbar shell.
  *
  * Used by every page behind requireAuth(): /chat, /sessions/*, /profile.
  * Hosts the sidebar (brand + nav + footer) and topbar (burger +
@@ -8,11 +8,11 @@
  * injected as the main content area.
  *
  * Variables consumed (all optional, with defaults):
- *   $user       — currentUser() array, drives role gating and avatar
- *   $page       — string flag: 'chat' | 'sessions' | 'profile' | 'other'
+ *   $user       ─ currentUser() array, drives role gating and avatar
+ *   $page       ─ string flag: 'chat' | 'sessions' | 'profile' | 'other'
  *                 Drives the chat-specific sidebar widgets and active pill
- *   $pageTitle  — breadcrumb text shown in the topbar on non-chat pages
- *   $content    — view output, injected by Core\Controller::render()
+ *   $pageTitle  ─ breadcrumb text shown in the topbar on non-chat pages
+ *   $content    ─ view output, injected by Core\Controller::render()
  */
 $user = $user ?? null;
 $page = $page ?? 'other';
@@ -205,7 +205,7 @@ $themePref = match ($user['theme'] ?? null) {
                 </svg>
             </button>
 
-            <?php /* Drawer header brand — mobile only. On desktop the brand
+            <?php /* Drawer header brand ─ mobile only. On desktop the brand
 lives in the topbar; inside the drawer it gives the slide-out menu
 its own identity above the navigation. */ ?>
             <div class="sidebar-brand">
@@ -215,7 +215,7 @@ its own identity above the navigation. */ ?>
                 </div>
             </div>
 
-            <?php /* Primary navigation — shown inside the drawer on mobile only.
+            <?php /* Primary navigation ─ shown inside the drawer on mobile only.
 On desktop these live as pills in the topbar (.topbar-tabs), so
 .sidebar-nav stays display:none there to avoid duplication. */ ?>
             <nav class="sidebar-nav" aria-label="Navigation principale">
@@ -311,7 +311,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                         <?php $scopeBase = !empty($conversation['id']) ? '/chat/' . (int) $conversation['id'] : '/chat'; ?>
                         <?php if ($isSessionEnv): ?>
                             <?php /* Session conversations are driven by the session
-                                   lifecycle: no rename, no archive — hence no scope
+                                   lifecycle: no rename, no archive ─ hence no scope
                                    switch either (a session never has an archive). */ ?>
                             <span class="conv-group-label">Conversations</span>
                         <?php else: ?>
@@ -503,7 +503,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
     </div><!-- /.app-body-row -->
 
     <script>
-        // Universal sidebar drawer for mobile — runs on every page using this layout.
+        // Universal sidebar drawer for mobile ─ runs on every page using this layout.
         (function () {
             const sidebar = document.getElementById('sidebar');
             const burgerBtn = document.getElementById('burgerBtn');
@@ -543,7 +543,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
 
         // Conversation sidebar menus: the scope switch (Conversations /
         // Archivées) and the per-conversation kebab (rename / archive /
-        // unarchive). Kebab actions drive shared hidden forms — we just fill
+        // unarchive). Kebab actions drive shared hidden forms ─ we just fill
         // the id (and name) and submit.
         (function () {
             const convList = document.getElementById('convList');

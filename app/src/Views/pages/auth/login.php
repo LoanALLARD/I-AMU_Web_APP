@@ -77,7 +77,7 @@
         the password they typed in the login form into the reactivation
         form (which is a separate <form> pointing at /reactivate).
         The password field value is NOT pre-filled by the server for
-        security reasons — it is copied client-side at submit time.
+        security reasons ─ it is copied client-side at submit time.
     -->
     <script>
         (function() {

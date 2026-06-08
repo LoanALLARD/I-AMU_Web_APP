@@ -45,7 +45,7 @@ class SessionController extends Controller
         parent::render($template, $data, $layout);
     }
 
-    /** GET /sessions — teacher's list. */
+    /** GET /sessions ─ teacher's list. */
     public function index(): void
     {
         $this->requireRole('teacher');
@@ -59,7 +59,7 @@ class SessionController extends Controller
         ]);
     }
 
-    /** GET /sessions/create — create form. */
+    /** GET /sessions/create -create form. */
     public function create(): void
     {
         $this->requireRole('teacher');
@@ -81,7 +81,7 @@ class SessionController extends Controller
         ]);
     }
 
-    /** POST /sessions/store — create handler. */
+    /** POST /sessions/store ─ create handler. */
     public function store(): void
     {
         $this->requireRole('teacher');
@@ -118,7 +118,7 @@ class SessionController extends Controller
         $this->redirect('/sessions/' . $session->id());
     }
 
-    /** GET /sessions/{id}/edit — edit form. */
+    /** GET /sessions/{id}/edit ─ edit form. */
     public function edit(string $id): void
     {
         $this->requireRole('teacher');
@@ -142,7 +142,7 @@ class SessionController extends Controller
         ]);
     }
 
-    /** POST /sessions/{id}/update — edit handler. */
+    /** POST /sessions/{id}/update ─ edit handler. */
     public function update(string $id): void
     {
         $this->requireRole('teacher');
@@ -221,7 +221,7 @@ class SessionController extends Controller
         $this->redirect('/sessions/' . $sessionId);
     }
 
-    /** GET /sessions/{id} — dashboard. */
+    /** GET /sessions/{id} ─ dashboard. */
     public function dashboard(string $id): void
     {
         $this->requireRole('teacher');
@@ -239,7 +239,7 @@ class SessionController extends Controller
         ]);
     }
 
-    /** GET /sessions/{id}/monitor — read-only supervision of enrolled students. */
+    /** GET /sessions/{id}/monitor ─ read-only supervision of enrolled students. */
     public function monitor(string $id): void
     {
         $this->requireRole('teacher');
@@ -262,7 +262,7 @@ class SessionController extends Controller
     }
 
     /**
-     * POST /sessions/{id}/student-status — the owner (de)activates a student's
+     * POST /sessions/{id}/student-status ─ the owner (de)activates a student's
      * enrollment from the monitor view. Deactivating removes the student from
      * the session chat (read-only on next load) and bars re-joining.
      */
@@ -289,7 +289,7 @@ class SessionController extends Controller
     }
 
     /**
-     * GET /sessions/{id}/export — JSON research export of the whole session
+     * GET /sessions/{id}/export ─ JSON research export of the whole session
      * (students -> conversations -> interactions). No platform-side
      * anonymisation (cf. spec 06): the export carries identity.
      *
@@ -335,7 +335,7 @@ class SessionController extends Controller
         exit;
     }
 
-    /** GET /sessions/join — student form. */
+    /** GET /sessions/join ─ student form. */
     public function showJoin(): void
     {
         $this->requireRole('student');
@@ -347,7 +347,7 @@ class SessionController extends Controller
         ]);
     }
 
-    /** POST /sessions/join — student joins and lands in the conversation. */
+    /** POST /sessions/join ─ student joins and lands in the conversation. */
     public function join(): void
     {
         $this->requireRole('student');
@@ -367,7 +367,7 @@ class SessionController extends Controller
         }
 
         $this->flash('success', $result['alreadyJoined']
-            ? "Vous êtes déjà inscrit à « {$result['sessionName']} » — voici votre conversation."
+            ? "Vous êtes déjà inscrit à « {$result['sessionName']} » ─ voici votre conversation."
             : "Vous avez rejoint la session « {$result['sessionName']} ».");
         $this->redirect('/chat/' . $result['conversationId']);
     }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Chat placeholder — temporary landing until spec 03 (Chat & LLM) ships.
+ * Chat placeholder ─ temporary landing until spec 03 (Chat & LLM) ships.
  * Provides a real GET /chat target so the navbar link doesn't 404.
  */
 ?>

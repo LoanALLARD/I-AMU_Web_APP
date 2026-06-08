@@ -179,7 +179,7 @@ $canAddModel = $canAddModel ?? false;
             <?php endif; ?>
             <div class="input-wrapper">
                 <textarea id="promptInput"
-                      placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
+                      placeholder="<?= $sessionClosed ? 'Session terminée ─ envoi désactivé' : 'Écrivez votre message…' ?>"
                       <?php if (!empty($env['maxInputSize'])): ?>maxlength="<?= (int) $env['maxInputSize'] ?>"<?php endif; ?>
                       rows="1" <?= $sessionClosed ? 'disabled' : 'autofocus' ?>></textarea>
                 <button class="btn-send" id="btnSend" disabled title="Envoyer">
@@ -218,7 +218,7 @@ $canAddModel = $canAddModel ?? false;
     const modelDisplay  = document.getElementById('modelNameDisplay');
     let   selectedModel = modelDisplay?.textContent?.trim() || 'mistral:latest';
 
-    // Documents dropdown (session env) — reuses the model picker widget.
+    // Documents dropdown (session env) ─ reuses the model picker widget.
     const docBtn = document.getElementById('docSelectorBtn');
     const docDropdown = document.getElementById('docDropdown');
     const docChevron = document.getElementById('docChevron');
@@ -548,7 +548,7 @@ $canAddModel = $canAddModel ?? false;
                     clearInterval(timer);
                     location.reload();
                 }
-            } catch (e) { /* transient network error — keep polling */ }
+            } catch (e) { /* transient network error ─ keep polling */ }
         };
         const timer = setInterval(tick, 8000);
     })();

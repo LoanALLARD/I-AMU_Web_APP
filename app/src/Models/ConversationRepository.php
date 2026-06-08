@@ -1,4 +1,6 @@
-<?php 
+<?php
+
+declare(strict_types=1);
 
 namespace Models;
 
@@ -15,7 +17,7 @@ class ConversationRepository {
     /**
      * Creates a conversation and returns its new id. `session_id` is null
      * for a free-mode conversation. (The `conversations` table has no
-     * model_id column — the model is chosen per interaction.)
+     * model_id column ─ the model is chosen per interaction.)
      *
      * @return array<string, mixed>|null
      */
@@ -55,7 +57,7 @@ class ConversationRepository {
      */
     public function listByUserAndSession(int $userId, int $sessionId, bool $archived = false): array
     {
-        // Controlled boolean literal (never user input) — safe to inline,
+        // Controlled boolean literal (never user input) ─ safe to inline,
         // and avoids PDO boolean-binding quirks on the pgsql driver.
         $flag = $archived ? 'TRUE' : 'FALSE';
         $stmt = $this->pdo->prepare(

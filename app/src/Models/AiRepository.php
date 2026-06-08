@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Models;
 
 use PDO;
@@ -125,7 +127,7 @@ class AiRepository
     /**
      * @return array<string, mixed>|null
      */
-    public function addModel(?int $department_id,?string $resource_id,string $name, string $size, string $provider, string $adapter, string $apiUrl, int $maxTokens, int $contextWindow, string $isShareable)
+    public function addModel(?int $departmentId,?string $resourceId,string $name, string $size, string $provider, string $adapter, string $apiUrl, int $maxTokens, int $contextWindow, string $isShareable)
     {
         $query = $this->pdo->prepare(
             'INSERT INTO models (department_id,resource_id,name,size,provider,max_tokens,context_window,api_url,adapter,is_shareable)
@@ -133,8 +135,8 @@ class AiRepository
         );
 
         $query->execute([
-            'department_id' => $department_id,
-            'resource_id'    => $resource_id,
+            'department_id' => $departmentId,
+            'resource_id'    => $resourceId,
             'name'           => $name,
             'size'           => $size,
             'provider'       => $provider,

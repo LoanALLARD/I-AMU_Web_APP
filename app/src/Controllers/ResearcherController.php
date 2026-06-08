@@ -30,7 +30,7 @@ class ResearcherController extends Controller
         ]);
     }
 
-    /** GET /researcher/data — browse and export accessible department data. */
+    /** GET /researcher/data ─ browse and export accessible department data. */
     public function data(): void
     {
         $this->requireRole('researcher');
@@ -41,7 +41,7 @@ class ResearcherController extends Controller
         ]);
     }
 
-    /** POST /researcher/requests — files (or re-files) an access request. */
+    /** POST /researcher/requests ─ files (or re-files) an access request. */
     public function requestAccess(): void
     {
         $this->requireRole('researcher');
@@ -63,7 +63,7 @@ class ResearcherController extends Controller
         $this->redirect('/researcher');
     }
 
-    /** POST /researcher/requests/cancel — cancels a still-pending request. */
+    /** POST /researcher/requests/cancel ─ cancels a still-pending request. */
     public function cancelRequest(): void
     {
         $this->requireRole('researcher');

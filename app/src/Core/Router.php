@@ -13,7 +13,7 @@ namespace Core;
  * order.
  *
  * Refactor of the original literal-match version. The dispatch entry point
- * is renamed `dispatch()` (was `compare()` — kept as an alias for the few
+ * is renamed `dispatch()` (was `compare()` ─ kept as an alias for the few
  * existing callers).
  */
 final class Router
@@ -79,7 +79,7 @@ final class Router
             return;
         }
 
-        // No route matched — let the global handler render the 404 page.
+        // No route matched ─ let the global handler render the 404 page.
         throw new HttpException(404, 'Cette page n\'existe pas.');
     }
 

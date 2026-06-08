@@ -125,7 +125,6 @@ Do:
 
 Don't (project-specific cases; general rules live in [`conventions/php.md`](conventions/php.md)):
 
-- Hardcode LLM model tags in seeds — the tag must come from Ollama via sync.
 - Instantiate PDO outside `Data\Database` — always go through `Database::getConnection()`.
 - Write `new OllamaAdaptater()` inside the `Ai` entity — reach the LLM through `LlmAdaptaterInterface`.
 - Use `extends Model` ActiveRecord style (`$entity->save()`) — data access is the repository's job.

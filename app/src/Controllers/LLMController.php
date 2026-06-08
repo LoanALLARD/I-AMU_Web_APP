@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Controllers;
 
 use Data\Database;
@@ -163,15 +165,15 @@ class LLMController{
                 return;
             }
             // Enforce the teacher-set request limit per session, blocking further prompts once reached (NULL denotes unlimited).
-            $max_tokens  = isset($sessionRow['max_tokens']) && $sessionRow['max_tokens'] !== null
+            $maxTokens  = isset($sessionRow['max_tokens']) && $sessionRow['max_tokens'] !== null
                 ? (int) $sessionRow['max_tokens']
                 : null;
-            if ($max_tokens  !== null) {
+            if ($maxTokens  !== null) {
                 $used = $sessionRepo->tokenUsageForStudent($userId, (int) $conversationData["session_id"]);
-                if ($used  >= $max_tokens ) {
+                if ($used  >= $maxTokens ) {
                     header('Content-Type: application/json');
                     http_response_code(429);
-                    echo json_encode(['error' => "Limite de tokens atteinte pour cette session ($used/$max_tokens)."]);
+                    echo json_encode(['error' => "Limite de tokens atteinte pour cette session ($used/$maxTokens)."]);
                     return;
                 }
             }
@@ -210,14 +212,14 @@ class LLMController{
         $ai = new Ai (
             $id = $aiData["id"],
             $department_id = $aiData["department_id"],
-            $resource_id = $aiData["resource_id"],
+            $conversationId = $aiData["resource_id"],
             $aiData["name"],
             $aiData["size"],
             $aiData["provider"],
             null,
             $aiData["context_window"],
             $aiData["is_active"],
-            $aiData["created_at"],
+            $aiData["is_shareable"],
             $aiData["api_url"],
             $adapter,
         );

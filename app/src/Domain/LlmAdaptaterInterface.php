@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Domain;
 
 interface LlmAdaptaterInterface {
     /**
-     * Reçoit un message et un contexte, s'occupe de formater la requête
-     * spécifique à l'API cible, l'exécute, et renvoie une chaîne standard.
+     * Takes a message and a context, formats the request
+     * * specific to the target API, executes it, and returns a standard string.
      *
      * @param array<int, int> $context conversation context (provider token ids)
      */

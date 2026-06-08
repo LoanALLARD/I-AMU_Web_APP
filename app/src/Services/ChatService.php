@@ -124,7 +124,7 @@ class ChatService
             }
 
             // A student deactivated by the teacher sees the session as closed
-            // (read-only) on their next load — the soft "disconnect".
+            // (read-only) on their next load ─ the soft "disconnect".
             if (
                 $this->enrollments->exists($userId, $sessionId)
                 && !$this->enrollments->isActive($userId, $sessionId)

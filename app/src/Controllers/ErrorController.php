@@ -10,7 +10,7 @@ use Throwable;
 
 /**
  * Central error page. Renders pages/error for any HTTP status code, with a
- * friendly per-code message — or the explicit message of an HttpException —
+ * friendly per-code message ─ or the explicit message of an HttpException ─
  * plus technical details (type, location, trace) when APP_DEBUG is on.
  */
 class ErrorController extends Controller

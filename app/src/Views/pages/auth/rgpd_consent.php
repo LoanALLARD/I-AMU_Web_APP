@@ -38,7 +38,7 @@
             </tr>
             <tr>
                 <td>Référent projet</td>
-                <td>IUT d'Informatique — Département Informatique</td>
+                <td>IUT d'Informatique ─ Département Informatique</td>
             </tr>
         </table>
     </div>
@@ -108,7 +108,7 @@
         <div class="rgpd-warning" style="margin-top:1rem;">
             <span class="warn-icon">⚠</span>
             <div>
-                <strong>Absence d'anonymisation</strong> — La plateforme I-AMU ne procède à aucune
+                <strong>Absence d'anonymisation</strong> ─ La plateforme I-AMU ne procède à aucune
                 anonymisation des données. Cette opération relève de la responsabilité des chercheurs
                 habilités qui traitent les données en aval, conformément à leurs protocoles de recherche.
             </div>
@@ -214,7 +214,7 @@
         <div class="rgpd-contact">
             <strong>Délégué à la Protection des Données (DPO)</strong>
             Aix-Marseille Université<br>
-            58 Boulevard Charles Livon — 13284 Marseille Cedex 07<br>
+            58 Boulevard Charles Livon ─ 13284 Marseille Cedex 07<br>
             <a href="mailto:dpo@univ-amu.fr">dpo@univ-amu.fr</a>
         </div>
 
@@ -224,7 +224,7 @@
         </p>
         <div class="rgpd-contact">
             <strong>Commission Nationale de l'Informatique et des Libertés</strong>
-            3 Place de Fontenoy — TSA 80715 — 75334 Paris Cedex 07<br>
+            3 Place de Fontenoy ─ TSA 80715 ─ 75334 Paris Cedex 07<br>
             <a href="https://www.cnil.fr" target="_blank" rel="noopener">www.cnil.fr</a>
             &nbsp;·&nbsp;
             <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener">Déposer une plainte</a>

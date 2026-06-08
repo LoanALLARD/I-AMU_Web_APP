@@ -43,11 +43,11 @@ $themeCur = match ($user['theme'] ?? null) {
                 <h2>Identité</h2>
                 <div class="kv-grid">
                     <span class="kv-key">prénom</span>
-                    <span class="kv-val"><?= htmlspecialchars($user['first_name'] ?? '—') ?></span>
+                    <span class="kv-val"><?= htmlspecialchars($user['first_name'] ?? '─') ?></span>
                     <span class="kv-key">nom</span>
-                    <span class="kv-val"><?= htmlspecialchars($user['last_name'] ?? '—') ?></span>
+                    <span class="kv-val"><?= htmlspecialchars($user['last_name'] ?? '─') ?></span>
                     <span class="kv-key">email</span>
-                    <span class="kv-val mono"><?= htmlspecialchars($user['email'] ?? '—') ?></span>
+                    <span class="kv-val mono"><?= htmlspecialchars($user['email'] ?? '─') ?></span>
                 </div>
             </div>
 
