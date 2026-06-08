@@ -60,24 +60,20 @@ class AiRepository
                 and is_shareable = true'
                 );
             $query->execute([
-                ":a"    => true,
+                "a"    => true,
                 "dep_id"  => $dep_id
                 ]);
         }
         else{
             $query = $this->pdo->prepare(
-                'SELECT m.name,m.id from models m
-                INNER JOIN model_resource_accesses mra
-                on m.id = mra.model_id 
-                INNER JOIN resources r
-                on r.id = mra.resource_id
-                INNER JOIN sessions s
-                on s.resource_id = r.id
-                where s.id = :session_id
-                and is_active = :a'
+                'SELECT name FROM models m
+                INNER JOIN session_models sm
+                on sm.model_id = m.id
+                where sm.session_id = :session_id 
+                and m.is_active = :a '
             );
             $query->execute([
-                ":a"    => true,
+                "a"    => true,
                 "session_id"  => $sessionID
                 ]);
         }

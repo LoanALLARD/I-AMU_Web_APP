@@ -16,6 +16,7 @@ use Domain\SessionType;
 
 $isEdit = $mode === 'edit';
 $action = $isEdit ? '/sessions/' . $session->id() . '/update' : '/sessions/store';
+var_dump($action);
 
 $val = static function (string $key, mixed $default = '') use ($session, $oldInput, $isEdit) {
     if (array_key_exists($key, $oldInput)) {
