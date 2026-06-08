@@ -16,24 +16,24 @@ $isAuthorized = ($mode ?? 'authorized') === 'authorized';
     <td><?= htmlspecialchars($r['lab_name']) ?> (<?= htmlspecialchars($r['lab_code']) ?>)</td>
     <td>
         <?php if ($isAuthorized): ?>
-            <span class="badge badge-active"><?= icon('check', '', 12) ?> Autorise</span>
+            <span class="badge badge-active"><?= icon('check', '', 12) ?> Autorisé</span>
         <?php else: ?>
-            <span class="badge badge-draft"><?= icon('x', '', 12) ?> Revoque</span>
+            <span class="badge badge-draft"><?= icon('x', '', 12) ?> Révoqué</span>
         <?php endif; ?>
     </td>
     <td>
         <?php if ($isAuthorized): ?>
             <form method="POST" action="/department-admin/researchers/revoke" data-ajax-action="move-row"
-                  data-confirm="Revoquer l'acces de ce chercheur a votre departement ?">
+                  data-confirm="Révoquer l'accès de ce chercheur à votre département ?">
                 <?= csrf_field() ?>
                 <input type="hidden" name="researcher_id" value="<?= (int) $r['researcher_id'] ?>">
-                <button class="btn danger sm" type="submit"><?= icon('x', '', 13) ?> Revoquer l'acces</button>
+                <button class="btn danger sm" type="submit"><?= icon('x', '', 13) ?> Révoquer l'accès</button>
             </form>
         <?php else: ?>
             <form method="POST" action="/department-admin/researchers/reauthorize" data-ajax-action="move-row">
                 <?= csrf_field() ?>
                 <input type="hidden" name="researcher_id" value="<?= (int) $r['researcher_id'] ?>">
-                <button class="btn success sm" type="submit"><?= icon('check', '', 13) ?> Reautoriser</button>
+                <button class="btn success sm" type="submit"><?= icon('check', '', 13) ?> Réautoriser</button>
             </form>
         <?php endif; ?>
     </td>
