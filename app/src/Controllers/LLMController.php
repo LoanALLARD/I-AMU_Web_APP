@@ -20,7 +20,7 @@ class LLMController{
         // raw data of the request
         $jsonRaw = file_get_contents('php://input');
 
-        // Transaltion of the raw data to a associative array  
+        // Transaltion of the raw data to a associative array
         $data = json_decode($jsonRaw, true);
         if (!$data || !isset($data['model']) || !isset($data['message'])) {
             header('Content-Type: application/json');
@@ -218,44 +218,61 @@ class LLMController{
             $aiData["api_url"],
             $adapter,
         );
-        $responseRaw = $ai->ask($userMessage, $context,$preprompt,$postprompt);
-        $response = json_decode($responseRaw);
+        // Switch to a streamed response. From here we stop sending a single
+        // JSON body: each token is pushed as a Server-Sent Event the moment
+        // Ollama produces it. All validation errors above already returned
+        // a normal JSON error before reaching this point.
+        while (ob_get_level() > 0) {
+            ob_end_flush();
+        }
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache');
+        header('X-Accel-Buffering: no');
+        ob_implicit_flush(true);
 
-        if ($response === null || (is_object($response) && isset($response->error))) {
-            $detail = is_object($response) && isset($response->error)
-                ? (string) $response->error
-                : 'Le modele est indisponible.';
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => $detail]);
+        $onChunk = static function (string $piece): void {
+            echo "event: token\n";
+            echo 'data: ' . json_encode(['text' => $piece]) . "\n\n";
+            flush();
+        };
+
+        try {
+            $result = $ai->askStream($userMessage, $context, $preprompt, $postprompt, $onChunk);
+        } catch (\Throwable $e) {
+            echo "event: error\n";
+            echo 'data: ' . json_encode(['error' => 'Le modele est indisponible.']) . "\n\n";
+            flush();
             return;
         }
 
-        // Persist the interaction only for a session-bound conversation.
-        if ($conversationData !== null && $response !== false && isset($response->response)) {
+        // Persist the interaction, same as the non-streaming path did.
+        if ($conversationData !== null && $result['response'] !== '') {
             $interaction = new InteractionRepository($pdo);
-            $input_tokens  = isset($response->prompt_eval_count) ? (int) $response->prompt_eval_count : null;
-            $output_tokens = isset($response->eval_count) ? (int) $response->eval_count : null;
-
             $interactionData = $interaction->newInteration(
                 (int) $conversationData['id'],
                 $userMessage,
-                (string) $response->response,
-                $input_tokens,
-                $output_tokens
+                $result['response'],
+                $result['prompt_eval_count'],
+                $result['eval_count']
             );
-            $meta_data = $adapter->formatMetadata($response);
-            $var=$interaction->setContext($meta_data,$interactionData['id']);
+            // Store the provider context so the next turn keeps the thread.
+            $meta_data = json_encode(json_encode([
+                'context'        => $result['context'],
+                'total_duration' => null,
+                'done_reason'    => 'stop'
+            ]));
+            $interaction->setContext($meta_data, $interactionData['id']);
         }
 
-        header('Content-Type: application/json');
-        echo json_encode([
-            'response'          => $response->response,
-            'prompt_eval_count' => $response->prompt_eval_count ?? null,
-            'eval_count'        => $response->eval_count ?? null,
-            'conversation_id'   => $conversationData['id'] ?? null,
-            'conversation_name' => $conversationData['name'] ?? null,
-        ]);
+        // Final event: metadata the UI needs once generation is done.
+        echo "event: done\n";
+        echo 'data: ' . json_encode([
+                'prompt_eval_count' => $result['prompt_eval_count'],
+                'eval_count'        => $result['eval_count'],
+                'conversation_id'   => $conversationData['id'] ?? null,
+                'conversation_name' => $conversationData['name'] ?? null,
+            ]) . "\n\n";
+        flush();
 
     }
 }

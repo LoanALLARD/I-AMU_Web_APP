@@ -488,6 +488,7 @@ $canAddModel = $canAddModel ?? false;
 
             // Final markdown render once the full answer is in.
             renderMarkdown(fullText || 'Pas de réponse.', contentEl);
+
             const endTime = performance.now();
             const durationStr = ((endTime - startTime) / 1000).toFixed(2) + 's';
 

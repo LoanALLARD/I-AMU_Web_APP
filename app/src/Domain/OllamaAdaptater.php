@@ -59,17 +59,14 @@ class OllamaAdaptater implements LlmAdaptaterInterface {
     }
 
     /**
-     * Same as generate() but streams the answer. Each response token is passed to $onChunk as soon as it arrives.
-     *
-     * @param array<int, int> $context conversation context (provider token ids)
+     * @param array<int, int> $context conversation context (Ollama token ids)
      * @param callable(string): void $onChunk
      * @return array{response: string, context: list<int>, prompt_eval_count: ?int, eval_count: ?int}
      */
     public function generateStream(string $message, array $context, ?string $preprompt, ?string $posprompt, callable $onChunk): array {
-        if ($posprompt !== null) {
+        if ($posprompt != null) {
             $message = $message . $posprompt;
         }
-
         $payload = json_encode([
             "model"   => $this->modelName,
             "prompt"  => $message,
@@ -132,7 +129,12 @@ class OllamaAdaptater implements LlmAdaptaterInterface {
             curl_close($ch);
         }
 
-        return ['response' => $full, 'context' => $finalContext, 'prompt_eval_count' => $promptEval, 'eval_count' => $evalCount];
+        return [
+            'response'          => $full,
+            'context'           => $finalContext,
+            'prompt_eval_count' => $promptEval,
+            'eval_count'        => $evalCount
+        ];
     }
 
     public function formatMetadata(object $response): string {
