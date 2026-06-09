@@ -1,6 +1,26 @@
 # SPEC: session-chat-join — Lier le chat aux sessions à l'inscription
 
-> Date: 2026-06-02 | Branche: `Sessions` | Statut: IMPLÉMENTÉ — review APPROVE, en attente du commit
+> Date: 2026-06-02 | Branche: `Sessions` | Statut: **IMPLÉMENTÉ** (puis refondu en MVC)
+
+> ⚠️ **Recadrage 2026-06-09.** La fonctionnalité **est livrée**, mais le code a
+> depuis basculé en **MVC + Domain** : le plan ci-dessous (rédigé en Clean
+> Archi) ne reflète plus les noms réels. Correspondance :
+> - `Application\Services\JoinSessionService` → **`Services\SessionService::join(string $rawCode, int $studentUserId): array`**
+>   (renvoie `['conversationId', 'alreadyJoined', 'sessionName']`).
+> - `Domain\Repositories\ConversationRepositoryInterface` /
+>   `Infrastructure\…\PdoConversationRepository` → **`Models\ConversationRepository`**
+>   (`findIdByUserAndSession`, `newConversation`, …). **Pas d'interface.**
+> - `Domain\Repositories\EnrollmentRepositoryInterface` /
+>   `PdoEnrollmentRepository` → **`Models\EnrollmentRepository`**
+>   (`exists`, `enroll`, `isActive`, `setActive`).
+> - DTOs `ConversationView` / `JoinSessionResult` → **tableaux** simples.
+> - Vues : **`pages/home.php`** + **`layout/chat.php`** (pas `homeView.php` /
+>   `Layout/chat.php` ; le doublon `Views/Page/homeView.php` a été supprimé).
+> - **Nom de conversation réel** : `"SESSION - {CODE} #{n}"`
+>   (`ChatService::newSessionConversation`), pas `"SESSION - {code formaté}"`.
+> - `AccessCode::fromUserInput()` / `->formatted()` →
+>   `Session::normalizeAccessCode()` / `Session::formatAccessCode()`.
+> Le reste est conservé comme trace de conception.
 
 ## Écarts d'implémentation (Phase 4)
 

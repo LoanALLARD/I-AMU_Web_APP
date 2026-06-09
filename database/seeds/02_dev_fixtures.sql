@@ -1,37 +1,64 @@
+-- pgcrypto provides crypt()/gen_salt('bf'), used below to hash dev passwords
+-- in a format password_verify() accepts. Dev-only: production hashes in PHP
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 INSERT INTO places (name, address, city, zip_code) VALUES
-    ('Campus de Luminy',       '163 Avenue de Luminy',   'Marseille', '13288'),
-    ('Campus Saint-Charles',   '3 Place Victor Hugo',    'Marseille', '13003');
+    ('Campus de Luminy',       '163 Avenue de Luminy',   'Marseille',    '13288'),
+    ('Campus Saint-Charles',   '3 Place Victor Hugo',    'Marseille',    '13003'),
+    ('IUT Aix',                'Site Gaston Berger',     'Aix-en-Pce',   '13100');
 
 INSERT INTO departments (place_id, name, description) VALUES
     ((SELECT id FROM places WHERE name = 'Campus de Luminy'),
      'Informatique', 'Departement informatique de la FST Luminy'),
+    ((SELECT id FROM places WHERE name = 'Campus de Luminy'),
+     'Physique', 'Departement de physique de la FST Luminy'),
+    ((SELECT id FROM places WHERE name = 'Campus de Luminy'),
+     'Biologie', 'Departement de biologie de la FST Luminy'),
     ((SELECT id FROM places WHERE name = 'Campus Saint-Charles'),
-     'Mathematiques', 'Departement de mathematiques');
+     'Mathematiques', 'Departement de mathematiques'),
+    ((SELECT id FROM places WHERE name = 'Campus Saint-Charles'),
+     'Chimie', 'Departement de chimie'),
+    ((SELECT id FROM places WHERE name = 'IUT Aix'),
+     'Info', 'Informatique'),
+    ((SELECT id FROM places WHERE name = 'IUT Aix'),
+     'GMP', 'Genie Mecanique et Productique'),
+    ((SELECT id FROM places WHERE name = 'IUT Aix'),
+     'TC', 'Techniques de Commercialisation'),
+    ((SELECT id FROM places WHERE name = 'IUT Aix'),
+     'GEA', 'Gestion des Entreprises et des Administrations'),
+    ((SELECT id FROM places WHERE name = 'IUT Aix'),
+     'MLT', 'Management de la Logistique et des Transports');
 
-INSERT INTO laboratories (code, name, address, email) VALUES
-    ('LIS', 'Laboratoire d''Informatique et Systemes',
+INSERT INTO email_domain_configs (domain, role, is_active) VALUES
+    ('lis-lab.fr', 'RESEARCHER', TRUE);
+
+INSERT INTO laboratories (email_domain_config_id, code, name, address, email) VALUES
+    ((SELECT id FROM email_domain_configs WHERE domain = 'lis-lab.fr'),
+     'LIS', 'Laboratoire d''Informatique et Systemes',
      '163 Avenue de Luminy', 'contact@lis-lab.fr');
 
 INSERT INTO super_administrators (email, password_hash, first_name, last_name) VALUES
-    ('admin@univ-amu.fr', 'CHANGE_ME', 'Admin', 'Principal');
+    ('admin@univ-amu.fr', crypt('password', gen_salt('bf')), 'Admin', 'Principal');
 
 
-INSERT INTO users (department_id, email, password_hash, first_name, last_name, is_active, theme) VALUES
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'jean.martin@univ-amu.fr',       'CHANGE_ME', 'Jean',     'Martin',    TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'marie.dupont@univ-amu.fr',      'CHANGE_ME', 'Marie',    'Dupont',    TRUE, 'DARK'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'paul.bernard@univ-amu.fr',      'CHANGE_ME', 'Paul',     'Bernard',   TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'sophie.leroy@univ-amu.fr',      'CHANGE_ME', 'Sophie',   'Leroy',     TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'luc.moreau@univ-amu.fr',        'CHANGE_ME', 'Luc',      'Moreau',    TRUE, 'DARK'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'claire.petit@univ-amu.fr',      'CHANGE_ME', 'Claire',   'Petit',     TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'alice.durand@etu.univ-amu.fr',  'CHANGE_ME', 'Alice',    'Durand',    TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'thomas.roux@etu.univ-amu.fr',   'CHANGE_ME', 'Thomas',   'Roux',      TRUE, 'DARK'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'emma.blanc@etu.univ-amu.fr',    'CHANGE_ME', 'Emma',     'Blanc',     TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'hugo.noir@etu.univ-amu.fr',     'CHANGE_ME', 'Hugo',     'Noir',      TRUE, 'LIGHT'),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'lea.vert@etu.univ-amu.fr',      'CHANGE_ME', 'Lea',      'Vert',      TRUE, 'DARK'),
-    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'nathan.gris@etu.univ-amu.fr',   'CHANGE_ME', 'Nathan',   'Gris',      TRUE, 'LIGHT'),
-    (NULL,                                                       'chercheur1@univ-amu.fr',        'CHANGE_ME', 'Pierre',   'Curie',     TRUE, 'LIGHT'),
-    (NULL,                                                       'chercheur2@univ-amu.fr',        'CHANGE_ME', 'Henri',    'Poincare',  TRUE, 'DARK'),
-    (NULL,                                                       'orphan@univ-amu.fr',            'CHANGE_ME', 'Sans',     'Role',      TRUE, NULL);
+INSERT INTO users (department_id, email, password_hash, first_name, last_name, is_active, theme, email_verified_at) VALUES
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'jean.martin@univ-amu.fr',       crypt('password', gen_salt('bf')), 'Jean',     'Martin',    TRUE, 'LIGHT', NOW()),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'marie.dupont@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Marie',    'Dupont',    TRUE, 'DARK',  NOW()),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'paul.bernard@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Paul',     'Bernard',   TRUE, 'LIGHT', NOW()),
+    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'sophie.leroy@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Sophie',   'Leroy',     TRUE, 'LIGHT', NOW()),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'luc.moreau@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Luc',      'Moreau',    TRUE, 'DARK',  NOW()),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'claire.petit@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Claire',   'Petit',     TRUE, 'LIGHT', NOW()),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'alice.durand@etu.univ-amu.fr',  crypt('password', gen_salt('bf')), 'Alice',    'Durand',    TRUE, 'LIGHT', NOW()),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'thomas.roux@etu.univ-amu.fr',   crypt('password', gen_salt('bf')), 'Thomas',   'Roux',      TRUE, 'DARK',  NOW()),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'emma.blanc@etu.univ-amu.fr',    crypt('password', gen_salt('bf')), 'Emma',     'Blanc',     TRUE, 'LIGHT', NOW()),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'hugo.noir@etu.univ-amu.fr',     crypt('password', gen_salt('bf')), 'Hugo',     'Noir',      TRUE, 'LIGHT', NOW()),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'lea.vert@etu.univ-amu.fr',      crypt('password', gen_salt('bf')), 'Lea',      'Vert',      TRUE, 'DARK',  NOW()),
+    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'nathan.gris@etu.univ-amu.fr',   crypt('password', gen_salt('bf')), 'Nathan',   'Gris',      TRUE, 'LIGHT', NOW()),
+    (NULL,                                                       'chercheur1@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Pierre',   'Curie',     TRUE, 'LIGHT', NOW()),
+    (NULL,                                                       'chercheur2@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Henri',    'Poincare',  TRUE, 'DARK',  NOW()),
+    (NULL,                                                       'orphan@univ-amu.fr',            crypt('password', gen_salt('bf')), 'Sans',     'Role',      TRUE, 'LIGHT', NOW()),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'admin.info@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Admin',    'Info',      TRUE, 'LIGHT', NOW()),
+    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'admin.maths@univ-amu.fr',       crypt('password', gen_salt('bf')), 'Admin',    'Maths',     TRUE, 'LIGHT', NOW());
 
 INSERT INTO teachers (id, is_specialised, title) VALUES
     ((SELECT id FROM users WHERE email = 'jean.martin@univ-amu.fr'),  TRUE,  'Professeur'),
@@ -42,9 +69,9 @@ INSERT INTO teachers (id, is_specialised, title) VALUES
     ((SELECT id FROM users WHERE email = 'claire.petit@univ-amu.fr'), FALSE, 'Maitre de conferences');
 
 INSERT INTO department_administrators (id, invited_by_id) VALUES
-    ((SELECT id FROM users WHERE email = 'jean.martin@univ-amu.fr'),
+    ((SELECT id FROM users WHERE email = 'admin.info@univ-amu.fr'),
      (SELECT id FROM super_administrators WHERE email = 'admin@univ-amu.fr')),
-    ((SELECT id FROM users WHERE email = 'sophie.leroy@univ-amu.fr'),
+    ((SELECT id FROM users WHERE email = 'admin.maths@univ-amu.fr'),
      (SELECT id FROM super_administrators WHERE email = 'admin@univ-amu.fr'));
 
 INSERT INTO students (id, student_number, year) VALUES
@@ -97,31 +124,31 @@ INSERT INTO student_resources (student_id, resource_id) VALUES
     ((SELECT id FROM users WHERE email = 'nathan.gris@etu.univ-amu.fr'),
      (SELECT id FROM resources WHERE code = 'MAT101'));
 
-INSERT INTO models (department_id, resource_id, name, version, provider,
-                    max_tokens, context_window, api_url, adapter, is_shareable) VALUES
+INSERT INTO models (department_id, resource_id, name, size, provider,
+                    context_window, api_url, adapter, is_shareable) VALUES
     ((SELECT id FROM departments WHERE name = 'Informatique'),
      NULL,
-     'llama3', '8b', 'ollama', 4096, 8192,
-     'http://host.docker.internal:11434', 'ollama', TRUE),
+     'llama3.2:1b', '8b', 'ollama', 8192,
+     'http://i-amu_web_app-ollama2-1:11434/api/generate', 'ollama', TRUE),
     (NULL,
      (SELECT id FROM resources WHERE code = 'INF202'),
-     'mistral', '7b', 'ollama', 4096, 8192,
+     'mistral', '7b', 'ollama', 8192,
      'http://host.docker.internal:11434', 'ollama', FALSE);
 
 INSERT INTO model_department_accesses (model_id, department_id) VALUES
-    ((SELECT id FROM models WHERE name = 'llama3'),
+    ((SELECT id FROM models WHERE name = 'llama3.2:1b'),
      (SELECT id FROM departments WHERE name = 'Mathematiques'));
 
 INSERT INTO sessions (resource_id, name, status, starts_at, ends_at, type,
                       max_input_size, instructions) VALUES
     ((SELECT id FROM resources WHERE code = 'INF101'),
      'TP Algo - brouillon',         'DRAFT',
-     NULL, NULL, 'LAB',
+     NULL, NULL, 'TUTORIAL',
      2000, 'Brouillon de TP, pas encore publie.'),
 
     ((SELECT id FROM resources WHERE code = 'INF101'),
      'TP Algo - seance 1',          'SCHEDULED',
-     NOW() + INTERVAL '2 days', NOW() + INTERVAL '2 days 2 hours', 'LAB',
+     NOW() + INTERVAL '2 days', NOW() + INTERVAL '2 days 2 hours', 'TUTORIAL',
      2000, 'Premier TP: tri et complexite.'),
 
     ((SELECT id FROM resources WHERE code = 'INF202'),
@@ -136,12 +163,12 @@ INSERT INTO sessions (resource_id, name, status, starts_at, ends_at, type,
 
     ((SELECT id FROM resources WHERE code = 'INF101'),
      'TP Algo - archive',           'ENDED',
-     NOW() - INTERVAL '14 days', NOW() - INTERVAL '14 days' + INTERVAL '2 hours', 'LAB',
+     NOW() - INTERVAL '14 days', NOW() - INTERVAL '14 days' + INTERVAL '2 hours', 'TUTORIAL',
      2000, 'TP termine. Code d''acces conserve pour traces.'),
 
     ((SELECT id FROM resources WHERE code = 'MAT101'),
      'CM Analyse - annule',         'CANCELLED',
-     NULL, NULL, 'FREE_STUDY',
+     NULL, NULL, 'TUTORIAL',
      NULL, 'Session annulee suite au changement de planning.');
 
 UPDATE sessions
@@ -149,13 +176,13 @@ UPDATE sessions
  WHERE name = 'TP Algo - archive';
 
 INSERT INTO session_models (model_id, session_id) VALUES
-    ((SELECT id FROM models WHERE name = 'llama3'),
+    ((SELECT id FROM models WHERE name = 'llama3.2:1b'),
      (SELECT id FROM sessions WHERE name = 'TP Algo - seance 1')),
     ((SELECT id FROM models WHERE name = 'mistral'),
      (SELECT id FROM sessions WHERE name = 'Examen BDD - blanc')),
     ((SELECT id FROM models WHERE name = 'mistral'),
      (SELECT id FROM sessions WHERE name = 'TD BDD - en cours')),
-    ((SELECT id FROM models WHERE name = 'llama3'),
+    ((SELECT id FROM models WHERE name = 'llama3.2:1b'),
      (SELECT id FROM sessions WHERE name = 'TP Algo - archive'));
 
 INSERT INTO enrollments (student_id, session_id) VALUES
@@ -172,10 +199,26 @@ INSERT INTO enrollments (student_id, session_id) VALUES
     ((SELECT id FROM users WHERE email = 'alice.durand@etu.univ-amu.fr'),
      (SELECT id FROM sessions WHERE name = 'TP Algo - archive'));
 
-INSERT INTO researcher_authorizations (researcher_id, department_id, authorized_by_id) VALUES
+-- An already-approved authorization (authorized_at set).
+INSERT INTO researcher_authorizations (researcher_id, department_id, authorized_by_id, authorized_at) VALUES
     ((SELECT id FROM users WHERE email = 'chercheur1@univ-amu.fr'),
      (SELECT id FROM departments WHERE name = 'Informatique'),
-     (SELECT id FROM users WHERE email = 'jean.martin@univ-amu.fr'));
+     (SELECT id FROM users WHERE email = 'admin.info@univ-amu.fr'),
+     NOW());
+
+-- A pending request (authorized_at NULL) with a message, for the admin to review.
+INSERT INTO researcher_authorizations (researcher_id, department_id, request) VALUES
+    ((SELECT id FROM users WHERE email = 'chercheur2@univ-amu.fr'),
+     (SELECT id FROM departments WHERE name = 'Informatique'),
+     'Je souhaite analyser les interactions du departement Informatique dans le cadre d''une etude sur les usages pedagogiques des LLM. Donnees agregees uniquement.');
+
+-- A revoked authorization:
+INSERT INTO researcher_authorizations (researcher_id, department_id, authorized_by_id, authorized_at, rejected_at) VALUES
+    ((SELECT id FROM users WHERE email = 'chercheur1@univ-amu.fr'),
+     (SELECT id FROM departments WHERE name = 'Mathematiques'),
+     (SELECT id FROM users WHERE email = 'admin.maths@univ-amu.fr'),
+     NOW() - INTERVAL '1 day',
+     NOW());
 
 INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
     ((SELECT id FROM users WHERE email = 'emma.blanc@etu.univ-amu.fr'),
@@ -188,11 +231,11 @@ INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
      'TD jointures - Hugo'),
     ((SELECT id FROM users WHERE email = 'alice.durand@etu.univ-amu.fr'),
      (SELECT id FROM sessions WHERE name = 'TP Algo - archive'),
-     (SELECT id FROM models WHERE name = 'llama3'),
+     (SELECT id FROM models WHERE name = 'llama3.2:1b'),
      'TP archive - Alice'),
     ((SELECT id FROM users WHERE email = 'orphan@univ-amu.fr'),
      NULL,
-     (SELECT id FROM models WHERE name = 'llama3'),
+     (SELECT id FROM models WHERE name = 'llama3.2:1b'),
      'Discussion libre');
 
 INSERT INTO interactions (conversation_id, prompt, response,
@@ -293,28 +336,47 @@ INSERT INTO interactions (conversation_id, prompt, response,
      'Avec plaisir.',
      150, 3, 15, NULL);
 
-INSERT INTO places (name, address, city, zip_code) VALUES
-    ('IUT Aix', 'site gaston berger', 'Aix-en-Pce', '101010');
-INSERT INTO departments (place_id, name, description) VALUES
-    ((SELECT id FROM places WHERE name = 'IUT Aix'),
-     'departement informatique', 'departement de dev logiciel');
+-- RGPD: some users object to having their data used for research.
+UPDATE users SET research_opposed = TRUE
+ WHERE email IN ('lea.vert@etu.univ-amu.fr', 'orphan@univ-amu.fr');
+
+-- Export audit trail: who exported which conversation, from which IP and when.
+INSERT INTO conversation_exports (conversation_id, researcher_id, ip_address, exported_at) VALUES
+    ((SELECT id FROM conversations WHERE name = 'TD jointures - Emma'),
+     (SELECT id FROM users WHERE email = 'chercheur1@univ-amu.fr'),
+     '147.94.0.10', NOW() - INTERVAL '2 days'),
+    ((SELECT id FROM conversations WHERE name = 'TP archive - Alice'),
+     (SELECT id FROM users WHERE email = 'chercheur1@univ-amu.fr'),
+     '147.94.0.10', NOW() - INTERVAL '1 day'),
+    ((SELECT id FROM conversations WHERE name = 'TD jointures - Hugo'),
+     (SELECT id FROM users WHERE email = 'chercheur2@univ-amu.fr'),
+     '2001:660:6201::42', NOW() - INTERVAL '3 hours');
+
 INSERT INTO users (department_id, email, password_hash, first_name, last_name, consent_version) VALUES
-    ((SELECT id FROM departments WHERE name = 'departement informatique'),
-     'evan@gmail.com', '218937801', 'atherly', 'evan', 'v1');
+    ((SELECT id FROM departments WHERE name = 'Info'
+        AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix')),
+     'evan@univ-amu.fr', crypt('password', gen_salt('bf')), 'Atherly', 'Evan', '1.0');
 INSERT INTO teachers (id, title) VALUES
-    ((SELECT id FROM users WHERE email = 'evan@gmail.com'), 'dev_Evan');
+    ((SELECT id FROM users WHERE email = 'evan@univ-amu.fr'), 'Professeur');
 INSERT INTO resources (owner_id, department_id, code, name, description, semester) VALUES
-    ((SELECT id FROM users WHERE email = 'evan@gmail.com'),
-     (SELECT id FROM departments WHERE name = 'departement informatique'),
+    ((SELECT id FROM users WHERE email = 'evan@univ-amu.fr'),
+     (SELECT id FROM departments WHERE name = 'Info'
+        AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix')),
      'code', 'dev', 'ressources pour le dev de l outils', 's3');
-INSERT INTO models (department_id, resource_id, name, version, provider, max_tokens, context_window, api_url, adapter) VALUES
-    ((SELECT id FROM departments WHERE name = 'departement informatique'),
-     NULL, 'llama3.2:1b', 'V1', 'meta', 100000, 128000,
-     'http://i-amu_web_app-ollama2-1:11434/api/generate', 'ollama');
-INSERT INTO sessions (resource_id, name) VALUES
-    ((SELECT id FROM resources WHERE code = 'code'), 'session de dev');
-INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
-    ((SELECT id FROM users WHERE email = 'evan@gmail.com'),
-     (SELECT id FROM sessions WHERE name = 'session de dev'),
-     (SELECT id FROM models WHERE name = 'llama3.2:1b'),
-     'testconv');
+
+INSERT INTO model_resource_accesses (model_id,resource_id) VALUES (2,2);
+-- INSERT INTO models (department_id, resource_id, name, size, provider, context_window, api_url, adapter) VALUES
+--     ((SELECT id FROM departments WHERE name = 'Info'
+--         AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix')),
+--      NULL, 'llama3.2:1b', 'V1', 'meta', 128000,
+--      'http://i-amu_web_app-ollama2-1:11434/api/generate', 'ollama');
+-- INSERT INTO sessions (resource_id, name) VALUES
+--     ((SELECT id FROM resources WHERE code = 'code'), 'session de dev');
+-- INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
+--     ((SELECT id FROM users WHERE email = 'evan@univ-amu.fr'),
+--      (SELECT id FROM sessions WHERE name = 'session de dev'),
+--      (SELECT id FROM models
+--         WHERE name = 'llama3.2:1b'
+--           AND department_id = (SELECT id FROM departments WHERE name = 'Info'
+--             AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix'))),
+--      'testconv');

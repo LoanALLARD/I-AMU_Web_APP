@@ -21,7 +21,7 @@ class ResourceRepository
      */
     public function findAllByOwner(int $teacherId): array
     {
-        $stmt = $this->pdo->prepare('SELECT id, owner_id, code, name, state FROM resources WHERE owner_id = :tid ORDER BY code');
+        $stmt = $this->pdo->prepare('SELECT id,department_id, owner_id, code, name, state FROM resources WHERE owner_id = :tid ORDER BY code');
         $stmt->execute(['tid' => $teacherId]);
 
         /** @var list<array<string, mixed>> $rows */
@@ -39,5 +39,38 @@ class ResourceRepository
         $stmt->execute(['id' => $id]);
 
         return $stmt->fetch() ?: null;
+    }
+
+    /**
+     * Whether the teacher is attached to the resource via `teacher_resources`,
+     * i.e. a co-teacher / read-only supervisor. This is distinct from being the
+     * owner (`resources.owner_id`): ownership is checked separately.
+     */
+    public function isResourceTeacher(int $resourceId, int $teacherId): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM teacher_resources WHERE resource_id = :rid AND teacher_id = :tid'
+        );
+        $stmt->execute(['rid' => $resourceId, 'tid' => $teacherId]);
+
+        return $stmt->fetch() !== false;
+    }
+
+    /**
+     * @return list<array<string, mixed>>|null
+     */
+    public function getResourcesFromUserId(int $userId): ?array {
+        $query = $this->pdo->prepare(
+            'SELECT r.id, r.name from resources r join users u on r.id = u.department_id where u.id = :id'
+        );
+        $query->execute(['id' => $userId]);
+
+        $result = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        if ($result === false) {
+            return null;
+        }
+
+        return $result;
     }
 }

@@ -5,6 +5,7 @@
    - Models count + preflight check
    - Type cards: visual toggle when the radio underneath changes
    - Copy access code + fullscreen overlay
+   - Dynamic LLM models loading based on the selected resource (Fetch API)
 
    Loaded as a non-module on both create.php and dashboard.php; both
    pages publish data through `window.__IAMU_SESSION_FORM__` /
@@ -32,6 +33,9 @@
         });
     });
 
+    /**
+     * Updates the preview card badge context matching the session type selection
+     */
     function updatePreviewTag() {
         const tag = document.getElementById('preview-tag');
         if (!tag) return;
@@ -42,7 +46,7 @@
     }
 
     // ──────────────────────────────────────────────────────────
-    // Live preview
+    // Live preview inputs tracking
     // ──────────────────────────────────────────────────────────
     const nameInput     = document.getElementById('f-name');
     const durationInput = document.getElementById('f-duration');
@@ -89,12 +93,15 @@
     // ──────────────────────────────────────────────────────────
     // Marker icon helpers — inline SVGs matching the server-side
     // icon() helper output (Lucide check / alert-triangle, 12×12).
-    // We swap the marker's innerHTML so a transition from warn → ok
-    // changes both the colour AND the symbol.
     // ──────────────────────────────────────────────────────────
     const SVG_CHECK = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
     const SVG_ALERT = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
 
+    /**
+     * Swaps preflight visual indicators from state classes and inner icon schemas
+     * @param {HTMLElement} markerEl 
+     * @param {string} state 'ok' | 'warn'
+     */
     function setMarker(markerEl, state) {
         if (!markerEl) return;
         markerEl.classList.remove('ok', 'warn');
@@ -106,6 +113,10 @@
     // Resource picker : update preflight on change
     // ──────────────────────────────────────────────────────────
     const resourceSelect = document.querySelector('select[name="resource_id"]');
+    
+    /**
+     * Triggers verification validation for selected courses inside the aside panel
+     */
     function refreshResource() {
         const pre = document.getElementById('preflight-resource');
         const txt = document.getElementById('preflight-resource-text');
@@ -128,8 +139,12 @@
     }
 
     // ──────────────────────────────────────────────────────────
-    // Models : count + preview list + preflight selection check
+    // Models selection status indicators & dynamic builders
     // ──────────────────────────────────────────────────────────
+    
+    /**
+     * Refreshes model counters, limits alerts, and dynamic content cards inside preview frames
+     */
     function refreshModels() {
         const rows = document.querySelectorAll('.model-row');
         const checkedRows = Array.from(rows).filter((r) => {
@@ -137,7 +152,7 @@
             return cb && cb.checked;
         });
 
-        // Update row classes for visual state
+        // Update row background classes for visual state sync
         rows.forEach((r) => {
             const cb = r.querySelector('input[type="checkbox"]');
             if (!cb) return;
@@ -145,11 +160,11 @@
             r.classList.toggle('is-unchecked', !cb.checked);
         });
 
-        // Count badge
+        // Count badge total display updater
         const countEl = document.getElementById('models-count');
         if (countEl) countEl.textContent = String(checkedRows.length);
 
-        // Preview list
+        // Preview rendering list builder
         const previewList = document.getElementById('preview-models');
         if (previewList) {
             previewList.innerHTML = '';
@@ -162,7 +177,7 @@
             });
         }
 
-        // Preflight: at least one selected
+        // Preflight validation updates: enforce boundaries recommendations
         const pre = document.getElementById('preflight-selection');
         const txt = document.getElementById('preflight-selection-text');
         if (pre && txt) {
@@ -181,36 +196,104 @@
         }
     }
 
-    document.querySelectorAll('.model-row input[type="checkbox"]').forEach((cb) => {
-        cb.addEventListener('change', refreshModels);
-    });
-    refreshModels();
+    /**
+     * Binds input checkbox listening capabilities across active rows
+     */
+    function attachModelRowListeners() {
+        document.querySelectorAll('.model-row input[type="checkbox"]').forEach((cb) => {
+            cb.addEventListener('change', refreshModels);
+        });
+        
+        document.querySelectorAll('.model-row').forEach((r) => {
+            r.addEventListener('change', refreshModels);
+        });
 
-    // Click on the row toggles the inner checkbox (label catches the click
-    // but the visual update only runs through `change`).
-    document.querySelectorAll('.model-row').forEach((r) => {
-        r.addEventListener('change', refreshModels);
-    });
+        // Fire rendering calculation state parameters
+        refreshModels();
+    }
+
+    // Initialize listeners on initial page load rendering markup
+    attachModelRowListeners();
 
     // ──────────────────────────────────────────────────────────
-    // Copy access code
+    // Async Fetch API handling: load models when resource changes
     // ──────────────────────────────────────────────────────────
-    const copyBtn = document.getElementById('btn-copy-code');
-    if (copyBtn && code) {
-        copyBtn.addEventListener('click', async () => {
+    if (resourceSelect) {
+        resourceSelect.addEventListener('change', async (e) => {
+            const resourceId = e.target.value;
+            const modelsListContainer = document.querySelector('.models-list');
+            const countEl = document.getElementById('models-count');
+
+            if (!modelsListContainer) return;
+
+            // Reset view wrapper structure if fallback selection triggered
+            if (!resourceId) {
+                modelsListContainer.innerHTML = '<p class="fsection-hint">Veuillez sélectionner une ressource pour voir les modèles.</p>';
+                if (countEl) countEl.textContent = '0';
+                refreshModels();
+                return;
+            }
+
+            // Display transitional loader view
+            modelsListContainer.innerHTML = '<p class="fsection-hint">Chargement des modèles...</p>';
+
             try {
-                await navigator.clipboard.writeText(code);
-                const original = copyBtn.innerHTML;
-                copyBtn.textContent = 'Copié ✓';
-                setTimeout(() => { copyBtn.innerHTML = original; }, 1500);
-            } catch (err) {
-                console.error('Clipboard copy failed', err);
+                // Fetch query targeted towards query parameter endpoints
+                const response = await fetch(`/session/models-by-resource?resource_id=${resourceId}`);
+                if (!response.ok) throw new Error('Network resolution payload crash.');
+                
+                const data = await response.json();
+                const models = data.models || [];
+
+                if (models.length === 0) {
+                    modelsListContainer.innerHTML = '<p class="fsection-hint">Aucun modèle disponible pour cette ressource.</p>';
+                    refreshModels();
+                    return;
+                }
+
+                // Append dynamic markup mappings
+                modelsListContainer.innerHTML = models.map((m, index) => {
+                    const isChecked = index < 2 ? 'checked' : '';
+                    const rowClass = isChecked ? 'is-checked' : 'is-unchecked';
+                    const sizeStr = m.version ? m.version : '—';
+                    const ctxStr = m.context_window ? ` · ctx ${Math.round(m.context_window / 1000)}k` : '';
+
+                    return `
+                        <label class="model-row ${rowClass}">
+                            <input type="checkbox" name="models[]" value="${parseInt(m.id)}" ${isChecked}>
+                            <span class="model-name">${escapeHtml(m.name)}</span>
+                            <span class="model-size">${escapeHtml(sizeStr)}${ctxStr}</span>
+                        </label>
+                    `;
+                }).join('');
+
+                // Re-bind listeners for freshly added elements
+                attachModelRowListeners();
+
+            } catch (error) {
+                console.error("Failed to recover models asynchronous flow:", error);
+                modelsListContainer.innerHTML = '<p class="fsection-hint text-danger">Erreur lors du chargement des modèles.</p>';
             }
         });
     }
 
+    /**
+     * Prevents XSS script insertions during raw dynamic templates mapping injections
+     * @param {string} unsafe 
+     * @returns {string}
+     */
+    function escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe.toString()
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+    }
+
     // ──────────────────────────────────────────────────────────
-    // Fullscreen overlay
+    // Fullscreen access code visualization frame overlay
     // ──────────────────────────────────────────────────────────
     const fsBtn = document.getElementById('btn-fullscreen-code');
     if (fsBtn && code) {
@@ -239,6 +322,6 @@
         });
     }
 
-    // Initialise preview tag on page load
+    // Run preview parsing evaluations on boot lifecycle stages
     updatePreviewTag();
 })();

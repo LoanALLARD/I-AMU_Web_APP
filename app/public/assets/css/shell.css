@@ -1,0 +1,137 @@
+/* =====================================================================
+   I-AMU — Authenticated shell overrides
+   Loaded by Layout/chat.php after homeChat.css. Owns the topbar-brand
+   column, body-row flex, non-chat content-area behaviour, and the
+   mobile drawer that is shared across all authenticated pages.
+   ===================================================================== */
+
+/*Body + row layout*/
+.app-body {
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    height: 100vh;
+}
+
+.app-body-row {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+}
+
+.app-body-row > .sidebar {
+    height: auto;
+    position: relative;
+    top: auto;
+}
+
+.app-body-row > .app-main {
+    height: auto;
+    min-height: 0;
+}
+
+/*Topbar brand*/
+.topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    width: 260px;
+    flex-shrink: 0;
+    height: 100%;
+    padding-left: 1.25rem;
+    padding-right: 1rem;
+    margin-left: -1.25rem;
+    border-right: 1px solid var(--gray-200);
+    text-decoration: none;
+}
+.topbar-brand img { height: 30px; width: auto; }
+.topbar-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+.topbar-brand-text span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .62rem;
+    font-weight: 500;
+    color: var(--blue);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.app-body:not(.page-chat) .topbar-brand { border-right: none; }
+
+.sidebar > .sidebar-close {
+    position: absolute;
+    top: .75rem;
+    right: .75rem;
+    z-index: 1;
+}
+
+/*Authenticated content area*/
+.app-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-body.page-chat .app-content { overflow: hidden; }
+
+.app-body:not(.page-chat) .sidebar      { display: none; }
+.app-body:not(.page-chat) .topbar-burger { display: none; }
+.app-body:not(.page-chat) .app-content   {
+    display: block;
+    overflow-y: auto;
+    background: var(--gray-100);
+}
+
+.app-body:not(.page-chat) .page-container,
+.app-body:not(.page-chat) .page-header,
+.app-body:not(.page-chat) .page-body,
+.app-body:not(.page-chat) .dashboard-header,
+.app-body:not(.page-chat) .dashboard-grid,
+.app-body:not(.page-chat) .session-form-grid {
+    max-width: none;
+    margin: 0;
+    padding-left:  clamp(1rem, 5vw, 4rem);
+    padding-right: clamp(1rem, 5vw, 4rem);
+}
+
+.app-content .page-header { padding-top: 24px; padding-bottom: 18px; }
+.app-content .page-body { padding-top: 20px; padding-bottom: 32px; }
+
+/*Mobile drawer*/
+@media (max-width: 768px) {
+    .app-body-row > .sidebar,
+    .app-body:not(.page-chat) .sidebar {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: min(84vw, 300px);
+        min-width: 0;
+        transform: translateX(-100%);
+        z-index: 1000;
+    }
+    .app-body-row > .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .18);
+    }
+
+    .app-body .topbar-burger,
+    .app-body:not(.page-chat) .topbar-burger {
+        display: flex;
+        order: -1;
+    }
+
+    .app-body .topbar-brand {
+        width: auto;
+        margin-left: 0;
+        padding-left: 0;
+        padding-right: 0;
+        border-right: none;
+    }
+}

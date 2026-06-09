@@ -8,21 +8,33 @@
  *   selected|null (conversationId, conversationName, studentName, transcript[] (prompt, response, model, sentAt))
  */
 $activeConvId = $view['selected']['conversationId'] ?? null;
+// Owner = full control; a read-only responsible (teacher_resources) supervises
+// without any moderation control (cannot (de)activate a student).
+$canManage = $canManage ?? false;
 ?>
 <div class="page-header">
     <div class="page-header-row" style="align-items:center;">
         <div>
             <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
                 <h1>Suivi — <?= htmlspecialchars($view['name']) ?></h1>
-                <span class="badge <?= htmlspecialchars($view['statusClass']) ?>"><?= htmlspecialchars($view['statusLabel']) ?></span>
+                <span
+                    class="badge <?= htmlspecialchars($view['statusClass']) ?>"><?= htmlspecialchars($view['statusLabel']) ?></span>
             </div>
             <p class="page-sub" style="margin-top:6px;">
-                <?= (int) $view['studentCount'] ?> étudiant(s) lié(s)<?= $view['accessCode'] !== '' ? ' · session ' . htmlspecialchars($view['accessCode']) : '' ?>
+                <?= (int) $view['studentCount'] ?> étudiant(s)
+                lié(s)<?= $view['accessCode'] !== '' ? ' · session ' . htmlspecialchars($view['accessCode']) : '' ?>
             </p>
         </div>
-        <a href="/sessions/<?= (int) $view['id'] ?>" class="btn" style="margin-left:auto;">
-            <?= icon('book', '', 14) ?> Dashboard
-        </a>
+        <div style="margin-left:auto;display:flex;gap:10px;">
+            <?php if ($view['students'] !== []): ?>
+                <button type="button" class="btn" id="btn-open-students">
+                    <?= icon('users', '', 14) ?> Gérer les étudiants
+                </button>
+            <?php endif; ?>
+            <a href="/sessions/<?= (int) $view['id'] ?>" class="btn">
+                <?= icon('book', '', 14) ?> Tableau de bord
+            </a>
+        </div>
     </div>
 </div>
 
@@ -45,14 +57,20 @@ $activeConvId = $view['selected']['conversationId'] ?? null;
                             break;
                         }
                     }
+                    $active = $stu['isActive'] ?? true;
                     ?>
-                    <details class="monitor-student-group"<?= $hasActive ? ' open' : '' ?>>
+                    <details class="monitor-student-group" <?= $hasActive ? ' open' : '' ?>>
                         <summary class="monitor-student-head">
                             <svg class="monitor-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="9 18 15 12 9 6" />
                             </svg>
-                            <span class="monitor-student-name"><?= htmlspecialchars($stu['name']) ?></span>
+                            <span class="monitor-student-name"
+                                <?= $active ? '' : 'style="opacity:.55;text-decoration:line-through;"' ?>><?= htmlspecialchars($stu['name']) ?></span>
+                            <?php if (!$active): ?>
+                                <span class="badge"
+                                    style="font-size:10px;background:var(--gray-100);color:var(--gray-500);">désactivé</span>
+                            <?php endif; ?>
                             <span class="monitor-student-conv-count"><?= count($stu['conversations']) ?> conv.</span>
                             <span class="monitor-student-count" title="total prompts"><?= (int) $stu['totalPrompts'] ?></span>
                         </summary>
@@ -114,3 +132,70 @@ $activeConvId = $view['selected']['conversationId'] ?? null;
 
     </div>
 </div>
+
+<?php if ($view['students'] !== []): ?>
+<div id="modal-students"
+    style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+    <div
+        style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:24px 28px;max-width:520px;width:92%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+        <h2 style="margin:0 0 6px;font-size:18px;color:var(--gray-800);">Gérer les étudiants</h2>
+        <p style="font-size:12px;color:var(--gray-500);margin:0 0 18px;line-height:1.5;">
+            Désactiver un étudiant le déconnecte de la session (chat en lecture seule) et l'empêche de la rejoindre
+            avec le code.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+            <?php foreach ($view['students'] as $stu): ?>
+                <?php $active = $stu['isActive'] ?? true; ?>
+                <div
+                    style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--gray-200);border-radius:8px;">
+                    <span
+                        style="flex:1;min-width:0;font-size:13px;color:var(--gray-800);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;<?= $active ? '' : 'opacity:.6;text-decoration:line-through;' ?>">
+                        <?= htmlspecialchars($stu['name']) ?>
+                    </span>
+                    <?php if (!$active): ?>
+                        <span class="badge"
+                            style="font-size:10px;background:var(--gray-100);color:var(--gray-500);">désactivé</span>
+                    <?php endif; ?>
+                    <?php if ($canManage): ?>
+                        <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/student-status" style="margin:0;flex-shrink:0;"
+                            onsubmit="return confirm('<?= $active
+                                ? 'Désactiver cet étudiant et le déconnecter de la session ?'
+                                : 'Réactiver cet étudiant dans la session ?' ?>');">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="student_id" value="<?= (int) $stu['id'] ?>">
+                            <input type="hidden" name="active" value="<?= $active ? '0' : '1' ?>">
+                            <button type="submit" class="btn <?= $active ? 'danger' : 'success' ?>"
+                                style="padding:4px 12px;font-size:12px;">
+                                <?= $active
+                                    ? icon('x-circle', '', 12) . ' Désactiver'
+                                    : icon('play', '', 12) . ' Réactiver' ?>
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:18px;">
+            <button type="button" class="btn" id="btn-close-students"
+                style="background:var(--gray-100);color:var(--gray-700);">Fermer</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const open = document.getElementById('btn-open-students');
+        const modal = document.getElementById('modal-students');
+        const close = document.getElementById('btn-close-students');
+        if (!open || !modal) return;
+        const show = () => { modal.style.display = 'flex'; };
+        const hide = () => { modal.style.display = 'none'; };
+        open.addEventListener('click', show);
+        close?.addEventListener('click', hide);
+        modal.addEventListener('click', (e) => { if (e.target === modal) hide(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.style.display === 'flex') hide();
+        });
+    })();
+</script>
+<?php endif; ?>

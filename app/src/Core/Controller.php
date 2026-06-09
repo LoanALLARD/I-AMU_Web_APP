@@ -39,7 +39,7 @@ abstract class Controller
     ): void {
 
         $viewFile = self::$viewsPath . '/' . $template . '.php';
-        $layoutFile = self::$viewsPath . '/Layout/' . $layout . '.php';
+        $layoutFile = self::$viewsPath . '/layout/' . $layout . '.php';
 
         if (!is_file($viewFile)) {
             throw new \RuntimeException("View not found: {$viewFile}");
@@ -72,6 +72,20 @@ abstract class Controller
         }
         extract($data, EXTR_SKIP);
         require $viewFile;
+    }
+
+    /**
+     * Renders a partial into a string instead of echoing it. Lets an action
+     * return server-rendered HTML (CSRF, icons, escaping all done by PHP) in a
+     * JSON payload, so the front never has to rebuild markup itself.
+     *
+     * @param array<string, mixed> $data
+     */
+    protected function capturePartial(string $template, array $data = []): string
+    {
+        ob_start();
+        $this->renderPartial($template, $data);
+        return (string) ob_get_clean();
     }
 
     /**
@@ -117,6 +131,16 @@ abstract class Controller
         return $_GET[$key] ?? $default;
     }
 
+    /**
+     * Tells whether the request expects a JSON response (fetch/XHR), so an
+     * action can answer with json() instead of redirecting. The front sets
+     * the X-Requested-With header on its AJAX calls.
+     */
+    protected function wantsJson(): bool
+    {
+        return ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest';
+    }
+
     // ----------------------------------------------------------------
     // Auth + CSRF
     // ----------------------------------------------------------------
@@ -129,6 +153,16 @@ abstract class Controller
         if (empty($_SESSION['user_id'])) {
             $this->redirect('/login');
         }
+    }
+
+    /**
+     * Non-blocking role check: tells whether the current user carries the
+     * given role. Use this to branch (redirect, show a link); use
+     * requireRole() when the role is mandatory to proceed.
+     */
+    protected function hasRole(string $role): bool
+    {
+        return in_array($role, $_SESSION['roles'] ?? [], true);
     }
 
     /**
@@ -174,7 +208,7 @@ abstract class Controller
     /**
      * Returns the currently logged-in user as a flat array, or null.
      *
-     * @return array{id:int, email:string, first_name:string, last_name:string, roles:list<string>}|null
+     * @return array{id:int, email:string, first_name:string, last_name:string, roles:list<string>, department_id:int|null}|null
      */
     protected function currentUser(): ?array
     {
@@ -187,11 +221,60 @@ abstract class Controller
             'first_name' => (string) ($_SESSION['user_first_name'] ?? ''),
             'last_name' => (string) ($_SESSION['user_last_name'] ?? ''),
             'roles' => $_SESSION['roles'] ?? [],
+            'isSpecialized'=> $_SESSION['isSpecialized'] ?? FALSE,
             'theme' => $_SESSION['user_theme'] ?? null,
+            'department_id' => isset($_SESSION['user_department_id'])
+                ? (int) $_SESSION['user_department_id']
+                : null,
         ];
     }
 
-    private function renderForbidden(): never
+    // ----------------------------------------------------------------
+    // Super admin auth (isolated identity, see SPEC-superadmin-auth.md)
+    // ----------------------------------------------------------------
+
+    /**
+     * Ensures a super administrator is authenticated. Redirects to the
+     * super admin login otherwise. Super admins are NOT users: their
+     * identity lives under the dedicated `super_admin_id` session key, and
+     * the two sessions are mutually exclusive.
+     */
+    protected function requireSuperAdmin(): void
+    {
+        if (empty($_SESSION['super_admin_id'])) {
+            $this->redirect('/super-admin/login');
+        }
+    }
+
+    /**
+     * Non-blocking check: tells whether the current session is a super
+     * admin one. Use it to branch (e.g. redirect an already-logged-in
+     * super admin away from the login form).
+     */
+    protected function isSuperAdmin(): bool
+    {
+        return !empty($_SESSION['super_admin_id']);
+    }
+
+    /**
+     * Returns the currently logged-in super admin as a flat array, or null.
+     *
+     * @return array{id:int, email:string, first_name:string, last_name:string}|null
+     */
+    protected function currentSuperAdmin(): ?array
+    {
+        if (empty($_SESSION['super_admin_id'])) {
+            return null;
+        }
+        return [
+            'id'         => (int) $_SESSION['super_admin_id'],
+            'email'      => (string) ($_SESSION['super_admin_email'] ?? ''),
+            'first_name' => (string) ($_SESSION['super_admin_first_name'] ?? ''),
+            'last_name'  => (string) ($_SESSION['super_admin_last_name'] ?? ''),
+        ];
+    }
+
+    protected function renderForbidden(): never
     {
         http_response_code(403);
         $this->render('pages/error', [

@@ -59,6 +59,50 @@ class ProfileController extends Controller
         $this->flash('success', 'Votre compte a été désactivé. Pour demander la suppression définitive de vos données, veuillez envoyer un email à dpo@univ-amu.fr.');
         $this->redirect('/login');
     }
+    /**
+     * POST /profile/update — edit the display name (first + last).
+     */
+    public function updateProfile(): void
+    {
+        $this->requireAuth();
+        $this->verifyCsrf();
+        $user = $this->currentUser();
+
+        $result = $this->auth->updateProfile(
+            (int) $user['id'],
+            (string) $this->input('first_name', ''),
+            (string) $this->input('last_name', '')
+        );
+
+        $this->flash(
+            $result['success'] ? 'success' : 'error',
+            $result['success'] ? 'Profil mis à jour.' : $result['error']
+        );
+        $this->redirect('/profile');
+    }
+
+    /**
+     * POST /profile/password — change the password after verifying the old one.
+     */
+    public function changePassword(): void
+    {
+        $this->requireAuth();
+        $this->verifyCsrf();
+        $user = $this->currentUser();
+
+        $result = $this->auth->changePassword(
+            (int) $user['id'],
+            (string) $this->input('current_password', ''),
+            (string) $this->input('new_password', ''),
+            (string) $this->input('new_password_confirm', '')
+        );
+
+        $this->flash(
+            $result['success'] ? 'success' : 'error',
+            $result['success'] ? 'Mot de passe modifié.' : $result['error']
+        );
+        $this->redirect('/profile');
+    }
 
     /**
      * Persists the chosen interface theme (auto / light / dark) and keeps
@@ -71,11 +115,11 @@ class ProfileController extends Controller
 
         $user = $this->currentUser();
 
-        // UI choice → stored enum value (null = AUTO, follow the OS).
+        // UI choice → stored enum value. AUTO = follow the OS preference.
         $theme = match ((string) $this->input('theme', 'auto')) {
             'light' => 'LIGHT',
             'dark'  => 'DARK',
-            default => null,
+            default => 'AUTO',
         };
 
         (new UserRepository(Database::getConnection()))->updateTheme((int) $user['id'], $theme);
