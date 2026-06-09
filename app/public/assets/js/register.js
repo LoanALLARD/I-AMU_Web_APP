@@ -70,3 +70,88 @@
         applyResearcherMode(researcherCheckbox.checked);
     }
 })();
+document.addEventListener('DOMContentLoaded', function () {
+    const emailInput = document.getElementById('email');
+    
+    // Conteneur Étudiant
+    const promoContainer = document.getElementById('promo-container');
+    const promoInput = document.getElementById('promo_year'); // C'est un input type=number maintenant
+    
+    // Conteneur Chercheur
+    const researchContainer = document.getElementById('research-container');
+    const researcherCheckbox = document.getElementById('is_researcher');
+
+    if (!emailInput || !promoContainer || !promoInput || !researchContainer) return;
+
+    emailInput.addEventListener('blur', async function () {
+        const email = emailInput.value.trim();
+        
+        if (!email || !email.includes('@')) {
+            hideAllDynamicFields();
+            return;
+        }
+
+        const domain = email.split('@')[1].toLowerCase();
+
+        try {
+            const response = await fetch('/domain_name', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ email: email, domain: domain })
+            });
+
+            if (!response.ok) throw new Error('Erreur réseau');
+
+            const data = await response.json();
+
+            if (data.is_valid && data.role === 'STUDENT') {
+                showPromoField();
+                hideResearchField();
+            } else if (data.is_valid && data.role === 'RESEARCHER') {
+                showResearchField();
+                hidePromoField();
+            } else {
+                hideAllDynamicFields();
+            }
+
+        } catch (error) {
+            console.error("Erreur API Domaine :", error);
+            hideAllDynamicFields();
+        }
+    });
+
+    function showPromoField() {
+        promoContainer.classList.add('show');
+        promoInput.setAttribute('required', 'required');
+    }
+
+    function hidePromoField() {
+        promoContainer.classList.remove('show');
+        promoInput.removeAttribute('required');
+        promoInput.value = ""; 
+    }
+
+    function showResearchField() {
+        // Affiche la case, mais elle n'est pas "required"
+        researchContainer.classList.add('show');
+    }
+
+    function hideResearchField() {
+        researchContainer.classList.remove('show');
+        
+        // Si l'utilisateur avait coché la case et change d'email, 
+        // on la décoche pour réafficher les champs Département !
+        if (researcherCheckbox.checked) {
+            researcherCheckbox.checked = false;
+            researcherCheckbox.dispatchEvent(new Event('change')); 
+        }
+    }
+
+    function hideAllDynamicFields() {
+        hidePromoField();
+        hideResearchField();
+    }
+});

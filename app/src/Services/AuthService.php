@@ -129,6 +129,7 @@ final class AuthService
         $departmentId    = (int) ($data['department_id']           ?? 0);
         $isResearcher    = (bool)  ($data['is_researcher']         ?? false);
         $rgpdConsent     = (bool)  ($data['rgpd_consent']          ?? false);
+        $promo_year      = (int) ($data['promo_year']              ?? '');
 
         // ----- Format validation ------------------------------------
         $validationError = $this->validateRegistration(
@@ -168,6 +169,8 @@ final class AuthService
                     'department_id'   => $registration['department_id'],
                     'laboratory_id'   => $registration['laboratory_id'],
                     'consent_version' => '1.0',
+                    'promo_year'      => $promo_year
+
                 ],
                 $registration['role']
             );

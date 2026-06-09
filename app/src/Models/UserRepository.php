@@ -155,10 +155,12 @@ class UserRepository
                     'INSERT INTO researchers (id, laboratory_id) VALUES (:id, :lab)'
                 );
                 $roleStmt->execute(['id' => $userId, 'lab' => $user['laboratory_id'] ?? null]);
-            } else {
-                $table = $role === 'teacher' ? 'teachers' : 'students';
-                $roleStmt = $this->pdo->prepare("INSERT INTO {$table} (id) VALUES (:id)");
+            } else if ($role == 'teacher') {
+                $roleStmt = $this->pdo->prepare("INSERT INTO teacher (id) VALUES (:id)");
                 $roleStmt->execute(['id' => $userId]);
+            }else{
+                $roleStmt = $this->pdo->prepare("INSERT INTO students (id,year) VALUES (:id,:year)");
+                $roleStmt->execute(['id' => $userId, 'year' => $user['promo_year']]);
             }
 
             $this->pdo->commit();

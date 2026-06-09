@@ -37,6 +37,7 @@
 
     $router->add('GET',  '/login',       function() { (new AuthController())->showLogin(); });
     $router->add('POST', '/login',       function() { (new AuthController())->login(); });
+    $router->add('POST', '/domain_name', function() { (new AuthController())->getDomainName();});
     $router->add('GET',  '/register',    function() { (new AuthController())->showRegister(); });
     $router->add('POST', '/register',    function() { (new AuthController())->register(); });
     $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });

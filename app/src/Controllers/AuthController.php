@@ -6,6 +6,7 @@ use Core\Controller;
 use Data\Database;
 use Models\PlaceRepository;
 use Services\AuthService;
+use Models\EmailDomainRepository;
 
 class AuthController extends Controller
 {
@@ -140,6 +141,7 @@ class AuthController extends Controller
             'department_id'    => $this->input('department_id', ''),
             'is_researcher'    => (bool) $this->input('is_researcher', false),
             'rgpd_consent'     => (bool) $this->input('rgpd_consent', false),
+            'promo_year'       => $this->input('promo_year',null)
         ];
 
         $result = $this->authService->register($data);
@@ -181,5 +183,41 @@ class AuthController extends Controller
         }
 
         $this->redirect('/login');
+    }
+
+    /**
+     * POST /domain_name
+     * Vérifie le domaine en base de données et renvoie le rôle associé.
+     */
+    public function getDomainName(): void
+    {
+        // Lecture du JSON envoyé par le client (fetch)
+        $data = json_decode(file_get_contents('php://input'), true);
+        $domainToFind = isset($data['domain']) ? strtolower(trim($data['domain'])) : '';
+
+        $pdo  = \Data\Database::getConnection();
+        $domainRepo = new \Models\EmailDomainRepository($pdo);
+        
+        // Récupération de tous les domaines (selon ta méthode actuelle)
+        $domains = $domainRepo->findAll();
+
+        $role = null;
+        $isValid = false;
+
+        // Recherche du domaine exact dans la liste
+        foreach ($domains as $d) {
+            if (strtolower($d['domain']) === $domainToFind && !empty($d['is_active'])) {
+                $role = $d['role'];
+                $isValid = true;
+                break;
+            }
+        }
+
+        // On utilise la méthode json() héritée du Controller pour garantir un en-tête propre
+        $this->json([
+            'success'  => true,
+            'is_valid' => $isValid,
+            'role'     => $role
+        ]);
     }
 }
