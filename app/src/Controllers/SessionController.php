@@ -402,8 +402,6 @@ class SessionController extends Controller
         $this->redirect($lock['conversationId'] !== null
             ? '/chat/' . $lock['conversationId']
             : '/chat');
-
-        return true;
     }
 
     /**
