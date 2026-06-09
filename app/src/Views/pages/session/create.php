@@ -2,13 +2,6 @@
 /**
  * Create / Edit session form.
  *
- * Ported from `Downloads/I-AMU (1)/src/screens/03-session-modern.jsx`,
- * adapted to the live `sessions` schema:
- *   - 4 session types (EXAM, TUTORIAL, LAB, FREE_STUDY)
- *   - mandatory resource_id picker (sessions hangs off a resource)
- *   - single max_input_size cap (the 3-token-cap design was dropped)
- *   - pre_prompt_override (was system_prompt_override)
- *
  * @var string                       $mode                 'create' | 'edit'
  * @var \Domain\Session|null         $session              Existing entity in edit mode
  * @var list<array<string,mixed>>    $models               All active LLM models
@@ -23,6 +16,7 @@ use Domain\SessionType;
 
 $isEdit = $mode === 'edit';
 $action = $isEdit ? '/sessions/' . $session->id() . '/update' : '/sessions/store';
+var_dump($action);
 
 $val = static function (string $key, mixed $default = '') use ($session, $oldInput, $isEdit) {
     if (array_key_exists($key, $oldInput)) {
@@ -56,7 +50,6 @@ if (isset($oldInput['type'])) {
 }
 $selectedResourceId = (int) $val('resource_id', 0);
 
-// Cards declared once so the radio + label markup stays DRY.
 $typeCards = [
     SessionType::Tutorial->value  => ['icon' => 'book',  'label' => 'TD',          'desc' => 'Travaux dirigés guidés, historique scopé, prompts visibles.', 'kraft' => false],
     SessionType::Lab->value       => ['icon' => 'book',  'label' => 'TP',          'desc' => 'Travail pratique en salle, plusieurs modèles autorisés.',     'kraft' => false],
@@ -79,7 +72,6 @@ $typeCards = [
 
     <div class="session-form-main">
 
-        <!-- Type cards -->
         <section class="fsection">
             <div class="fsection-head">
                 <span class="fsection-label">Type de session</span>
@@ -102,7 +94,6 @@ $typeCards = [
             <?php endif; ?>
         </section>
 
-        <!-- Resource picker -->
         <?php if (!$isEdit): ?>
             <section class="fsection">
                 <div class="fsection-head">
@@ -124,7 +115,6 @@ $typeCards = [
             </section>
         <?php endif; ?>
 
-        <!-- Label -->
         <section class="fsection">
             <div class="fsection-head">
                 <span class="fsection-label">Libellé</span>
@@ -135,7 +125,6 @@ $typeCards = [
                    placeholder="INF302 — Bases de données · TD4" required maxlength="255">
         </section>
 
-        <!-- Schedule -->
         <section class="fsection">
             <div class="fsection-head">
                 <span class="fsection-label">Planification</span>
@@ -158,7 +147,6 @@ $typeCards = [
             </div>
         </section>
 
-        <!-- Models -->
         <section class="fsection">
             <div class="fsection-head">
                 <span class="fsection-label">Modèles autorisés</span>
@@ -174,9 +162,9 @@ $typeCards = [
                         <input type="checkbox" name="models[]" value="<?= (int) $m['id'] ?>" <?= $checked ? 'checked' : '' ?>>
                         <span class="model-name"><?= htmlspecialchars((string) $m['name']) ?></span>
                         <span class="model-size">
-                            <?= htmlspecialchars((string) ($m['size'] ?? '—')) ?>
-                            <?php if (!empty($m['contextWindow'])): ?>
-                                · ctx <?= number_format((float) $m['contextWindow'] / 1000, 0) ?>k
+                            <?= htmlspecialchars((string) ($m['version'] ?? '—')) ?>
+                            <?php if (!empty($m['context_window'])): ?>
+                                · ctx <?= number_format((float) $m['context_window'] / 1000, 0) ?>k
                             <?php endif; ?>
                         </span>
                     </label>
@@ -184,7 +172,6 @@ $typeCards = [
             </div>
         </section>
 
-        <!-- Pre-prompt -->
         <section class="fsection">
             <div class="fsection-head">
                 <span class="fsection-label">Pré-prompt</span>
@@ -198,7 +185,6 @@ $typeCards = [
             </div>
         </section>
 
-        <!-- Post-prompt -->
         <section class="fsection">
             <div class="fsection-head">
                 <span class="fsection-label">Post-prompt</span>
@@ -208,7 +194,6 @@ $typeCards = [
             <textarea name="post_prompt" placeholder="(optionnel)"><?= htmlspecialchars((string) $val('post_prompt')) ?></textarea>
         </section>
 
-        <!-- Instructions -->
         <section class="fsection">
             <div class="fsection-head">
                 <span class="fsection-label">Instructions affichées</span>
@@ -218,7 +203,6 @@ $typeCards = [
             <textarea name="instructions" placeholder="(optionnel)"><?= htmlspecialchars((string) $val('instructions')) ?></textarea>
         </section>
 
-        <!-- Single input cap (live schema) -->
         <section class="fsection">
             <div class="fsection-head">
                 <span class="fsection-label">Limite par prompt</span>
@@ -257,7 +241,6 @@ $typeCards = [
         </div>
     </div>
 
-    <!-- Right column : access code + preview + preflight -->
     <aside class="session-aside">
         <?php if ($previewCodeFormatted !== ''): ?>
         <div class="access-card">
@@ -308,7 +291,6 @@ $typeCards = [
                 <span class="fsection-rule"></span>
             </div>
             <ul class="preflight-list">
-                <!-- Static counts: what the teacher has available, not what they've picked. -->
                 <li>
                     <span class="preflight-marker ok"><?= icon('check', '', 12) ?></span>
                     <span><?= count($models) ?> modèle(s) disponible(s)</span>
@@ -318,7 +300,6 @@ $typeCards = [
                     <span><?= count($resources) ?> ressource(s) disponible(s)</span>
                 </li>
 
-                <!-- Dynamic selection state: updated by session-create.js. -->
                 <?php if (!$isEdit): ?>
                     <li id="preflight-resource">
                         <span class="preflight-marker warn"><?= icon('alert-triangle', '', 12) ?></span>
@@ -340,10 +321,6 @@ $typeCards = [
     };
 </script>
 <?php
-// Cache-bust the JS so we never debug a stale-cache issue again — the
-// query string changes whenever session-create.js is touched, forcing
-// the browser to fetch the new version while still allowing HTTP caching
-// across unchanged builds.
 $jsPath = __DIR__ . '/../../../../public/assets/js/session-create.js';
 $jsVer  = is_file($jsPath) ? filemtime($jsPath) : 0;
 ?>

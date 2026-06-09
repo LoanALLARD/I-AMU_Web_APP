@@ -52,17 +52,19 @@ class AccueilController extends Controller
         try {
             $pdo = Database::getConnection();
             $aiRepository = new \Models\AiRepository($pdo);
-            // Session-bound chat (course/exam): Display only teacher-authorized models
-            // to maintain UI integrity. The backend validates this on submit to prevent
-            // unauthorized access via API bypass.
             $sessionId = $env['env']['sessionId'] ?? null;
-            $models = $aiRepository->findAllActiveBySession(null);
+
             if ($sessionId !== null) {
+                // Session-bound chat: only teacher-authorized models.
+                $models  = $aiRepository->findActiveBySession((int) $sessionId);
                 $allowed = (new \Models\SessionRepository($pdo))->authorizedModelIdsOf((int) $sessionId);
                 $models  = array_values(array_filter(
                     $models,
                     static fn ($m) => in_array((int) $m['id'], $allowed, true)
                 ));
+            } else {
+                // Free chat: models of the user's department.
+                $models = $aiRepository->findActiveByDepartment((int) $user['department_id']);
             }
         } catch (\Throwable $e) {
             error_log('Impossible de charger les modèles : ' . $e->getMessage());
@@ -75,7 +77,7 @@ class AccueilController extends Controller
         $pdo = Database::getConnection();
 
         $conversationRepo = new ConversationRepository($pdo);
-        $interactionRepo  = new InteractionRepository($pdo);
+        $interactionRepo = new InteractionRepository($pdo);
 
         $conversation = null;
         $interactions = [];
@@ -93,7 +95,7 @@ class AccueilController extends Controller
         }
 
         $conversations = array_map(
-            static fn ($v) => ['id' => $v['id'], 'name' => $v['name']],
+            static fn($v) => ['id' => $v['id'], 'name' => $v['name']],
             $conversationRepo->getConversationsByUserId($user['id'])
         );
 
@@ -106,17 +108,18 @@ class AccueilController extends Controller
         }
         $canAddModel = $_SESSION['isSpecialized'] ?? false;
         $this->render('pages/home', [
-            'user'          => $user,
-            'canAddModel'   => $canAddModel,
-            'page'          => 'chat',
-            'models'        => $models,
-            'conversation'  => $env['conversation'],
+            'user' => $user,
+            'canAddModel' => $canAddModel,
+            'page' => 'chat',
+            'models' => $models,
+            'conversation' => $env['conversation'],
             'conversations' => $env['conversations'],
-            'messages'  => $env['messages'],
+            'messages' => $env['messages'],
             'sessionClosed' => $env['sessionClosed'],
-            'closedReason'  => $env['closedReason'],
-            'env'           => $env['env'],
-            'archivedView'  => $archived,
+            'closedReason' => $env['closedReason'],
+            'env' => $env['env'],
+            'sessionDocuments' => $sessionDocuments,
+            'archivedView' => $archived,
             'examLock'      => $examLock,
         ], 'chat');
     }

@@ -197,9 +197,11 @@ class SessionService
     {
         // No code to preview: the database trigger assigns one only when
         // the session becomes scheduled/active.
+        $resourceData = $this->resources->findAllByOwner($teacherId);
+        $depId = $resourceData[0]['department_id'];
         return [
-            'models'               => $this->modelOptions(),
-            'resources'            => $this->resources->findAllByOwner($teacherId),
+            'models'               => $this->modelOptions($depId),
+            'resources'            => $resourceData,
             'previewCode'          => '',
             'previewCodeFormatted' => '',
         ];
@@ -210,10 +212,12 @@ class SessionService
      */
     public function editFormData(Session $session, int $teacherId): array
     {
+        $resourceData = $this->resources->findAllByOwner($teacherId);
+        $depId = $resourceData[0]['department_id'];
         return [
             'session'              => $session,
-            'models'               => $this->modelOptions(),
-            'resources'            => $this->resources->findAllByOwner($teacherId),
+            'models'               => $this->modelOptions($depId),
+            'resources'            => $resourceData,
             'authorizedModelIds'   => $this->sessions->authorizedModelIdsOf((int) $session->id()),
             'previewCode'          => $session->accessCode() ?? '',
             'previewCodeFormatted' => $session->accessCodeFormatted() ?? '',
@@ -538,7 +542,7 @@ class SessionService
     /**
      * @return list<array<string, mixed>>
      */
-    private function modelOptions(): array
+    private function modelOptions(int $depId): array
     {
         return array_map(
             static fn (array $m): array => [
@@ -547,7 +551,7 @@ class SessionService
                 'size'          => $m['size'] ?? null,
                 'contextWindow' => isset($m['context_window']) && $m['context_window'] !== null ? (int) $m['context_window'] : null,
             ],
-            $this->models->findAllActiveBySession(null)
+            $this->models->findAllActiveBySession(null,$depId)
         );
     }
 

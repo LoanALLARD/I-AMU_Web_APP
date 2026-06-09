@@ -363,6 +363,8 @@ INSERT INTO resources (owner_id, department_id, code, name, description, semeste
      (SELECT id FROM departments WHERE name = 'Info'
         AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix')),
      'code', 'dev', 'ressources pour le dev de l outils', 's3');
+
+INSERT INTO model_resource_accesses (model_id,resource_id) VALUES (2,2);
 -- INSERT INTO models (department_id, resource_id, name, size, provider, context_window, api_url, adapter) VALUES
 --     ((SELECT id FROM departments WHERE name = 'Info'
 --         AND place_id = (SELECT id FROM places WHERE name = 'IUT Aix')),
