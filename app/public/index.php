@@ -81,6 +81,12 @@
     $router->add('POST', '/super-admin/email-domains',     function() { (new SuperAdminController())->addEmailDomain(); });
     $router->add('POST', '/super-admin/email-domains/role',   function() { (new SuperAdminController())->changeEmailDomainRole(); });
     $router->add('POST', '/super-admin/email-domains/toggle', function() { (new SuperAdminController())->toggleEmailDomain(); });
+    $router->add('POST', '/super-admin/department-admins/invite', function () { (new SuperAdminController())->inviteDepartmentAdmin(); });
+
+    //Admin invitation
+    $router->add('GET',  '/admin-invite/accept', function () { (new AuthController())->showAcceptInvite(); });
+    $router->add('POST', '/admin-invite/accept', function () { (new AuthController())->acceptInvite(); });
+
 
     // --- Researcher space (researcher role) ---------------------------
     $router->add('GET',  '/researcher',                 function() { (new ResearcherController())->index(); });

@@ -2,15 +2,7 @@
 
 /**
  * Application configuration.
- *
- * Values come from environment variables (injected by Docker or loaded
- * from app/.env via Dotenv in bootstrap.php).
- *
- * The DB block is consumed by
- * App\Infrastructure\Persistence\PdoConnection (the single connection
- * point). The legacy `db` key (used by the removed Data\Database
- * singleton) was dropped when the ServeurFolder chat stack was migrated
- * to Clean Architecture.
+ * Values come from environment variables (Docker or app/.env via Dotenv).
  */
 
 $dbHost     = $_ENV['DB_HOST']     ?? 'db';
@@ -43,6 +35,7 @@ return [
 
     'app' => [
         'url' => $_ENV['APP_URL'] ?? 'http://localhost:8085',
+        'secret' => $_ENV['APP_SECRET'] ?? '',
     ],
     // Debug mode (APP_DEBUG=true in dev). When on, the error page shows the
     // exception type, location and trace. Keep it OFF in production.
