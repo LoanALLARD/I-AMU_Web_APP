@@ -13,6 +13,8 @@ use Models\ConversationRepository;
 use Models\SessionRepository;
 use Models\EnrollmentRepository;
 
+use Services\DocumentService;
+
 class LLMController{
 
     public function handleChat(): void {
@@ -176,6 +178,15 @@ class LLMController{
             $promptRaw = $sessionRepo->getPreAndPostPromptBySessionId($conversationData["session_id"]);
             $preprompt = $promptRaw["pre_prompt_override"];
             $postprompt = $promptRaw["post_prompt_override"];
+        }
+
+        // Inject the conversation's documents (phase 2) into the system prompt
+        // so the model takes them into account. Empty when none are attached.
+        $docsBlock = (new DocumentService($pdo))->buildSystemContext((int) $conversationData['id']);
+        if ($docsBlock !== '') {
+            $preprompt = ($preprompt !== null && trim($preprompt) !== '')
+                ? trim($preprompt) . "\n\n" . $docsBlock
+                : $docsBlock;
         }
 
         $metadata = $conversationRepository->getContextByConversationIdAndUserId($conversationData['id'], $userId);

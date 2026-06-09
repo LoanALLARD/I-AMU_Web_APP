@@ -10,6 +10,7 @@ use Domain\DocumentStatus;
 use Domain\PdfTextExtractor;
 use Domain\PlainTextExtractor;
 use Domain\TextExtractorInterface;
+use Models\ConversationRepository;
 use Models\DocumentRepository;
 use Models\EnrollmentRepository;
 use Models\SessionRepository;
@@ -26,6 +27,10 @@ class DocumentService
 {
     private const MAX_BYTES = 10 * 1024 * 1024; // 10 Mo
     private const MAX_PER_SESSION = 20;
+    private const MAX_PER_CONVERSATION = 10;
+
+    /** Upper bound on the characters injected into the model's system prompt. */
+    public const MAX_INJECTED_CHARS = 12000;
 
     /** Real (finfo) MIME type → stored file extension. */
     private const ALLOWED = [
@@ -37,17 +42,19 @@ class DocumentService
     private DocumentRepository $documents;
     private SessionRepository $sessions;
     private EnrollmentRepository $enrollments;
+    private ConversationRepository $conversations;
     /** @var list<TextExtractorInterface> */
     private array $extractors;
     private string $storageDir;
 
     public function __construct(PDO $pdo)
     {
-        $this->documents   = new DocumentRepository($pdo);
-        $this->sessions    = new SessionRepository($pdo);
-        $this->enrollments = new EnrollmentRepository($pdo);
-        $this->extractors  = [new PlainTextExtractor(), new PdfTextExtractor()];
-        $this->storageDir  = dirname(__DIR__, 2) . '/storage/documents';
+        $this->documents     = new DocumentRepository($pdo);
+        $this->sessions      = new SessionRepository($pdo);
+        $this->enrollments   = new EnrollmentRepository($pdo);
+        $this->conversations = new ConversationRepository($pdo);
+        $this->extractors    = [new PlainTextExtractor(), new PdfTextExtractor()];
+        $this->storageDir    = dirname(__DIR__, 2) . '/storage/documents';
     }
 
     /**
@@ -59,68 +66,30 @@ class DocumentService
      */
     public function attachToSession(int $sessionId, int $userId, array $file): Document
     {
-        $error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
-        if ($error === UPLOAD_ERR_NO_FILE || ($file['tmp_name'] ?? '') === '') {
-            throw DocumentException::noFile();
-        }
-        if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
-            throw DocumentException::tooLarge((int) (self::MAX_BYTES / 1024 / 1024));
-        }
-        if ($error !== UPLOAD_ERR_OK) {
-            throw DocumentException::uploadFailed();
-        }
-
-        $tmp = (string) $file['tmp_name'];
-        if (!is_uploaded_file($tmp)) {
-            throw DocumentException::uploadFailed();
-        }
-
-        $size = (int) ($file['size'] ?? 0);
-        if ($size <= 0) {
-            throw DocumentException::noFile();
-        }
-        if ($size > self::MAX_BYTES) {
-            throw DocumentException::tooLarge((int) (self::MAX_BYTES / 1024 / 1024));
-        }
+        $size = $this->assertUploadOk($file);
         if ($this->documents->countBySession($sessionId) >= self::MAX_PER_SESSION) {
             throw DocumentException::quotaReached(self::MAX_PER_SESSION);
         }
 
-        $originalName = $this->sanitizeName((string) ($file['name'] ?? 'document'));
-        [$mime, $ext] = $this->resolveMimeAndExtension($tmp, $originalName);
+        return $this->moveAndRecord($file, $size, $userId, $sessionId, null);
+    }
 
-        $dir = $this->storageDir . '/session_' . $sessionId;
-        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
-            throw DocumentException::uploadFailed();
-        }
-        $stored   = 'session_' . $sessionId . '/' . bin2hex(random_bytes(16)) . '.' . $ext;
-        $absolute = $this->storageDir . '/' . $stored;
-        if (!move_uploaded_file($tmp, $absolute)) {
-            throw DocumentException::uploadFailed();
-        }
-
-        $row = $this->documents->insert([
-            'session_id'      => $sessionId,
-            'conversation_id' => null,
-            'uploaded_by_id'  => $userId,
-            'original_name'   => $originalName,
-            'stored_path'     => $stored,
-            'mime_type'       => $mime,
-            'size_bytes'      => $size,
-            'status'          => DocumentStatus::Pending->value,
-        ]);
-
-        try {
-            $text = $this->extractText($absolute, $mime);
-            $this->documents->updateExtraction((int) $row['id'], $text, DocumentStatus::Ready->value);
-            $row['extracted_text'] = $text;
-            $row['status']         = DocumentStatus::Ready->value;
-        } catch (Throwable) {
-            $this->documents->updateExtraction((int) $row['id'], null, DocumentStatus::Failed->value);
-            $row['status'] = DocumentStatus::Failed->value;
+    /**
+     * Validates and stores an uploaded file as a CONVERSATION document (phase 2),
+     * then best-effort extracts its text. The caller must own the conversation;
+     * importing is refused during an EXAM session.
+     *
+     * @param array<string, mixed> $file a single $_FILES entry
+     */
+    public function attachToConversation(int $conversationId, int $userId, array $file): Document
+    {
+        $this->assertCanImportToConversation($conversationId, $userId);
+        $size = $this->assertUploadOk($file);
+        if ($this->documents->countByConversation($conversationId) >= self::MAX_PER_CONVERSATION) {
+            throw DocumentException::quotaReachedConversation(self::MAX_PER_CONVERSATION);
         }
 
-        return Document::fromRow($row);
+        return $this->moveAndRecord($file, $size, $userId, null, $conversationId);
     }
 
     /**
@@ -177,8 +146,218 @@ class DocumentService
     }
 
     // ----------------------------------------------------------------
+    // Conversation documents (phase 2)
+    // ----------------------------------------------------------------
+
+    /**
+     * Documents attached to a conversation the caller owns.
+     *
+     * @return list<Document>
+     */
+    public function listForConversation(int $conversationId, int $userId): array
+    {
+        if ($this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId) === null) {
+            throw DocumentException::forbidden();
+        }
+
+        return array_map(
+            static fn (array $r): Document => Document::fromRow($r),
+            $this->documents->listByConversation($conversationId)
+        );
+    }
+
+    /**
+     * Resolves a conversation document for download after checking the caller
+     * owns the conversation and the document belongs to it.
+     *
+     * @return array{path: string, name: string, mime: string}
+     */
+    public function openConversationDownload(int $conversationId, int $documentId, int $userId): array
+    {
+        if ($this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId) === null) {
+            throw DocumentException::forbidden();
+        }
+        $doc = $this->loadOr404($documentId);
+        if ($doc->conversationId() !== $conversationId) {
+            throw DocumentException::forbidden();
+        }
+        $absolute = $this->storageDir . '/' . $doc->storedPath();
+        if (!is_file($absolute)) {
+            throw DocumentException::notFound();
+        }
+
+        return ['path' => $absolute, 'name' => $doc->originalName(), 'mime' => $doc->mimeType()];
+    }
+
+    /**
+     * Deletes a conversation document owned by the caller. Returns the
+     * conversation id so the caller can refresh.
+     */
+    public function deleteFromConversation(int $documentId, int $userId): int
+    {
+        $doc            = $this->loadOr404($documentId);
+        $conversationId = $doc->conversationId();
+        if (
+            $conversationId === null
+            || $this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId) === null
+        ) {
+            throw DocumentException::forbidden();
+        }
+        $absolute = $this->storageDir . '/' . $doc->storedPath();
+        if (is_file($absolute)) {
+            @unlink($absolute);
+        }
+        $this->documents->delete($documentId);
+
+        return $conversationId;
+    }
+
+    /**
+     * Builds the "documents provided by the user" block injected into the model's
+     * system prompt (phase 2). Concatenates the READY documents' extracted text,
+     * capped at MAX_INJECTED_CHARS overall; returns '' when there is nothing to
+     * inject. Caller-agnostic: it does not read the session pre-prompt.
+     */
+    public function buildSystemContext(int $conversationId): string
+    {
+        $rows = $this->documents->listByConversation($conversationId);
+        if ($rows === []) {
+            return '';
+        }
+
+        $budget = self::MAX_INJECTED_CHARS;
+        $parts  = [];
+        // Oldest first so the earliest documents are the ones kept under the cap.
+        foreach (array_reverse($rows) as $row) {
+            if ($budget <= 0) {
+                break;
+            }
+            $doc  = Document::fromRow($row);
+            $text = $doc->extractedText();
+            if ($doc->status() !== DocumentStatus::Ready || $text === null || trim($text) === '') {
+                continue;
+            }
+            $truncated = false;
+            if (mb_strlen($text) > $budget) {
+                $text      = mb_substr($text, 0, $budget);
+                $truncated = true;
+            }
+            $budget -= mb_strlen($text);
+            $parts[] = '--- ' . $doc->originalName() . " ---\n" . $text
+                . ($truncated ? "\n(document tronqué)" : '');
+        }
+
+        if ($parts === []) {
+            return '';
+        }
+
+        return "Documents fournis par l'utilisateur (extraits) :\n" . implode("\n\n", $parts);
+    }
+
+    // ----------------------------------------------------------------
     // internals
     // ----------------------------------------------------------------
+
+    /**
+     * Shared upload guards (presence, PHP upload error, real upload, size).
+     * Returns the byte size. The per-scope quota is checked by the caller.
+     *
+     * @param array<string, mixed> $file
+     */
+    private function assertUploadOk(array $file): int
+    {
+        $error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($error === UPLOAD_ERR_NO_FILE || ($file['tmp_name'] ?? '') === '') {
+            throw DocumentException::noFile();
+        }
+        if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
+            throw DocumentException::tooLarge((int) (self::MAX_BYTES / 1024 / 1024));
+        }
+        if ($error !== UPLOAD_ERR_OK) {
+            throw DocumentException::uploadFailed();
+        }
+        if (!is_uploaded_file((string) $file['tmp_name'])) {
+            throw DocumentException::uploadFailed();
+        }
+
+        $size = (int) ($file['size'] ?? 0);
+        if ($size <= 0) {
+            throw DocumentException::noFile();
+        }
+        if ($size > self::MAX_BYTES) {
+            throw DocumentException::tooLarge((int) (self::MAX_BYTES / 1024 / 1024));
+        }
+
+        return $size;
+    }
+
+    /**
+     * Moves a validated upload under its scope folder (session_<id> or
+     * conversation_<id>), records the row, then best-effort extracts the text.
+     * Exactly one of $sessionId / $conversationId is non-null (DB scope check).
+     *
+     * @param array<string, mixed> $file
+     */
+    private function moveAndRecord(array $file, int $size, int $userId, ?int $sessionId, ?int $conversationId): Document
+    {
+        $tmp   = (string) $file['tmp_name'];
+        $scope = $sessionId !== null ? 'session_' . $sessionId : 'conversation_' . $conversationId;
+
+        $originalName = $this->sanitizeName((string) ($file['name'] ?? 'document'));
+        [$mime, $ext] = $this->resolveMimeAndExtension($tmp, $originalName);
+
+        $dir = $this->storageDir . '/' . $scope;
+        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+            throw DocumentException::uploadFailed();
+        }
+        $stored   = $scope . '/' . bin2hex(random_bytes(16)) . '.' . $ext;
+        $absolute = $this->storageDir . '/' . $stored;
+        if (!move_uploaded_file($tmp, $absolute)) {
+            throw DocumentException::uploadFailed();
+        }
+
+        $row = $this->documents->insert([
+            'session_id'      => $sessionId,
+            'conversation_id' => $conversationId,
+            'uploaded_by_id'  => $userId,
+            'original_name'   => $originalName,
+            'stored_path'     => $stored,
+            'mime_type'       => $mime,
+            'size_bytes'      => $size,
+            'status'          => DocumentStatus::Pending->value,
+        ]);
+
+        try {
+            $text = $this->extractText($absolute, $mime);
+            $this->documents->updateExtraction((int) $row['id'], $text, DocumentStatus::Ready->value);
+            $row['extracted_text'] = $text;
+            $row['status']         = DocumentStatus::Ready->value;
+        } catch (Throwable) {
+            $this->documents->updateExtraction((int) $row['id'], null, DocumentStatus::Failed->value);
+            $row['status'] = DocumentStatus::Failed->value;
+        }
+
+        return Document::fromRow($row);
+    }
+
+    /**
+     * The caller may import into the conversation only if they own it; and the
+     * import is refused when the conversation belongs to an EXAM session.
+     */
+    private function assertCanImportToConversation(int $conversationId, int $userId): void
+    {
+        $conv = $this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId);
+        if ($conv === null) {
+            throw DocumentException::forbidden();
+        }
+        $sessionId = isset($conv['session_id']) && $conv['session_id'] !== null ? (int) $conv['session_id'] : null;
+        if ($sessionId !== null) {
+            $session = $this->sessions->findById($sessionId);
+            if ($session !== null && ($session['type'] ?? null) === 'EXAM') {
+                throw DocumentException::examImportDisabled();
+            }
+        }
+    }
 
     private function loadOr404(int $documentId): Document
     {

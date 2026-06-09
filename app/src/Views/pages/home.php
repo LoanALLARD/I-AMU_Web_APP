@@ -177,7 +177,19 @@ $canAddModel = $canAddModel ?? false;
                     <?= htmlspecialchars($closedReason) ?> Vous ne pouvez plus envoyer de message.
                 </div>
             <?php endif; ?>
+            <div class="chat-attachments" id="chatAttachments" hidden></div>
             <div class="input-wrapper">
+                <?php if (!$sessionClosed): ?>
+                <button type="button" class="btn-attach" id="btnAttach"
+                    title="Joindre un document (PDF, Markdown, TXT)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                    </svg>
+                </button>
+                <input type="file" id="docFileInput" hidden multiple
+                    accept=".pdf,.md,.markdown,.txt,application/pdf,text/markdown,text/plain">
+                <?php endif; ?>
                 <textarea id="promptInput"
                       placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
                       <?php if (!empty($env['maxInputSize'])): ?>maxlength="<?= (int) $env['maxInputSize'] ?>"<?php endif; ?>
@@ -202,11 +214,46 @@ $canAddModel = $canAddModel ?? false;
     </div>
 </div>
 
+<style>
+    .input-wrapper .btn-attach {
+        align-self: flex-end;
+        margin-bottom: 4px;
+        background: transparent;
+        border: none;
+        color: var(--text-muted, #8a8a8a);
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+    }
+    .input-wrapper .btn-attach:hover:not(:disabled) { background: rgba(127, 127, 127, .15); color: inherit; }
+    .input-wrapper .btn-attach:disabled { opacity: .4; cursor: not-allowed; }
+    .chat-attachments { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 2px .5rem; }
+    .chat-attachments[hidden] { display: none; }
+    .attach-chip {
+        display: inline-flex; align-items: center; gap: 6px; max-width: 240px;
+        padding: 4px 8px; border-radius: 999px;
+        background: rgba(127, 127, 127, .14); font-size: 12px;
+    }
+    .attach-chip a {
+        color: inherit; text-decoration: none; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis; max-width: 170px;
+    }
+    .attach-chip a:hover { text-decoration: underline; }
+    .attach-chip .attach-remove {
+        background: none; border: none; color: inherit; cursor: pointer;
+        font-size: 15px; line-height: 1; opacity: .6; padding: 0 2px;
+    }
+    .attach-chip .attach-remove:hover { opacity: 1; }
+</style>
 <script>
     const conversationId = <?= json_encode($conversation['id'] ?? null) ?>;
     const conversationContext = <?= json_encode($messages ?? []) ?>;
     const sessionMaxInputSize = <?= json_encode($env['maxInputSize'] ?? null) ?>;
     const sessionMaxTokens = <?= json_encode($env['maxTokens'] ?? null) ?>;
+    let activeConvId = conversationId;
+    const csrfToken = <?= json_encode(\Core\Csrf::generateToken()) ?>;
 
     const input = document.getElementById('promptInput');
     const sendBtn = document.getElementById('btnSend');
@@ -422,7 +469,7 @@ $canAddModel = $canAddModel ?? false;
                 body: JSON.stringify({
                     model: selectedModel,
                     message: message,
-                    conversation_id: conversationId,
+                    conversation_id: activeConvId,
                     context: conversationContext
                 })
             });
@@ -463,6 +510,8 @@ $canAddModel = $canAddModel ?? false;
             const outputTokens = data.eval_count || 0;
             const totalTokens = inputTokens + outputTokens;
 
+            // Reuse the same conversation for the next messages of a fresh chat.
+            if (newConvId) activeConvId = newConvId;
 
             if (newConvId && !conversationId) {
                 window._activeConvId = newConvId;
@@ -476,9 +525,9 @@ $canAddModel = $canAddModel ?? false;
                 const convNameEl = document.getElementById('convName');
                 if (convNameEl) convNameEl.textContent = newConvName;
 
-                const activeConvId = newConvId ?? conversationId;
+                const linkConvId = newConvId ?? conversationId;
                 const sidebarLink = document.querySelector(
-                    `#convList .conv-item[href="/chat/${activeConvId}"]`
+                    `#convList .conv-item[href="/chat/${linkConvId}"]`
                 );
                 if (sidebarLink) {
                     const titleEl = sidebarLink.querySelector('.conv-title');
@@ -529,6 +578,95 @@ $canAddModel = $canAddModel ?? false;
         btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> copié`;
         setTimeout(() => btn.innerHTML = original, 1500);
     }
+
+    // ---- Document attachments (phase 2): join files to the conversation so the
+    // model takes them into account. New chat → the upload lazily creates the
+    // conversation, whose id we then adopt. ----
+    (function () {
+        const btnAttach = document.getElementById('btnAttach');
+        const fileInput = document.getElementById('docFileInput');
+        const chipsEl   = document.getElementById('chatAttachments');
+        if (!btnAttach || !fileInput || !chipsEl) return;
+
+        let docs = [];
+
+        function renderChips() {
+            chipsEl.hidden = docs.length === 0;
+            chipsEl.innerHTML = docs.map((d) => `
+                <span class="attach-chip" title="${escapeHtml(d.name)} — ${escapeHtml(d.kind)}, ${escapeHtml(d.size)}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <a href="/documents/conversation_${activeConvId}/${d.id}" target="_blank" rel="noopener">${escapeHtml(d.name)}</a>
+                    <button type="button" class="attach-remove" title="Retirer" data-id="${d.id}">&times;</button>
+                </span>`).join('');
+        }
+
+        async function refresh() {
+            if (!activeConvId) { docs = []; renderChips(); return; }
+            try {
+                const r = await fetch('/chat/documents/' + activeConvId, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!r.ok) return;
+                const data = await r.json();
+                docs = data.documents || [];
+                renderChips();
+            } catch (e) { /* transient — ignore */ }
+        }
+
+        async function upload(files) {
+            if (!files || !files.length) return;
+            const fd = new FormData();
+            fd.append('_csrf_token', csrfToken);
+            fd.append('model', selectedModel);
+            fd.append('conversation_id', activeConvId ?? '');
+            for (const f of files) fd.append('document[]', f);
+
+            btnAttach.disabled = true;
+            try {
+                const r = await fetch('/chat/documents', { method: 'POST', body: fd });
+                const data = await r.json().catch(() => ({}));
+                if (!r.ok) {
+                    alert(data.error || "Le document n'a pas pu être joint.");
+                    return;
+                }
+                // Adopt the conversation created on the fly for a brand-new chat.
+                if (data.conversation_id && !activeConvId) {
+                    activeConvId = data.conversation_id;
+                    history.replaceState(null, '', '/chat/' + activeConvId);
+                    if (data.conversation && data.conversation.name) {
+                        const convNameEl = document.getElementById('convName');
+                        if (convNameEl) convNameEl.textContent = data.conversation.name;
+                    }
+                    const emptyState = document.getElementById('emptyState');
+                    if (emptyState) emptyState.style.display = 'none';
+                }
+                (data.documents || []).forEach((d) => docs.push(d));
+                renderChips();
+                if (data.errors && data.errors.length) alert(data.errors.join('\n'));
+            } catch (e) {
+                alert('Erreur réseau pendant le téléversement.');
+            } finally {
+                btnAttach.disabled = false;
+                fileInput.value = '';
+            }
+        }
+
+        async function removeDoc(id) {
+            const fd = new FormData();
+            fd.append('_csrf_token', csrfToken);
+            try {
+                const r = await fetch('/chat/documents/' + id + '/delete', { method: 'POST', body: fd });
+                if (r.ok) { docs = docs.filter((d) => String(d.id) !== String(id)); renderChips(); }
+            } catch (e) { /* ignore */ }
+        }
+
+        btnAttach.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => upload(fileInput.files));
+        chipsEl.addEventListener('click', (e) => {
+            const btn = e.target.closest('.attach-remove');
+            if (btn) removeDoc(btn.dataset.id);
+        });
+
+        refresh();
+    })();
 
 <?php if ($inSession && !$sessionClosed): ?>
     // Live enforcement: poll the session status so that a student deactivated

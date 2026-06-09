@@ -83,6 +83,30 @@ class DocumentRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function listByConversation(int $conversationId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM documents WHERE conversation_id = :cid ORDER BY created_at DESC, id DESC'
+        );
+        $stmt->execute(['cid' => $conversationId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
+
+    public function countByConversation(int $conversationId): int
+    {
+        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM documents WHERE conversation_id = :cid');
+        $stmt->execute(['cid' => $conversationId]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
     public function updateExtraction(int $id, ?string $text, string $status): void
     {
         $stmt = $this->pdo->prepare(
