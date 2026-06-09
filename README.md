@@ -8,7 +8,7 @@ Ce plugin permettra :
 - Proposera une environnement d'apprentissage encadré par des **règles sur le models** ainsi que sur les **nombres de tokens disponibles**.
 - Permettra aux professeurs d'avoir accès aux échanges entre le model et ses étudiants de sorte à pouvoir analyser la facon dont les élèves utilisent l'IA.
 
---- 
+---
 
 ## Tests et qualité du code
 
@@ -136,7 +136,6 @@ Tester l'endpoint de l'application en envoyant du JSON brut via une commande `cu
 ```bash
 curl -X POST http://localhost:8085/chat \
   -H "Content-Type: application/json" \
-  -b cookies.txt \
   -d '{
     "model" : "llama3.2:1b",
     "message" : "Présente toi",

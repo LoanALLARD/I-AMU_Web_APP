@@ -16,22 +16,15 @@ class OllamaAdaptater implements LlmAdaptaterInterface {
     /**
      * @param array<int, int> $context conversation context (Ollama token ids)
      */
-    public function generate(string $message, array $context, ?string $preprompt, ?string $posprompt,?bool $isTesting): string {
-        if ($posprompt != null){
-            $message = $message . $posprompt;
-        };
+    public function generate(string $message, array $context): string {
         $payload = json_encode([
             "model" => $this->modelName,
             "prompt" => $message,
             "context" => $context,
-            "system"   => $preprompt,
             "stream" => false
         ]);
 
-        if ($isTesting) {
-            return $payload;
-        };
-
+        // Code cURL...
         try {
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $this->url);
@@ -58,7 +51,7 @@ class OllamaAdaptater implements LlmAdaptaterInterface {
         }
     }
 
-    public function formatMetadata(object $response): string {
+    public function formatMetadata(object $response){
         // json-- Ollama
         // {
         // "context": [128006, 9125, 128007, ...],
@@ -73,34 +66,24 @@ class OllamaAdaptater implements LlmAdaptaterInterface {
             'done_reason'=>$response->done_reason
         ]);
         header('Content-Type: application/json');
-        return json_encode($contextFormated) ?: '';
+        return json_encode($contextFormated);
     }
 
-    /**
-     * @param array<string, mixed> $metaDataRaw
-     * @return list<int>
-     */
-    public function readContextFromMetadata(array $metaDataRaw): array
-    {
+    public function readContextFromMetadata(array $metaDataRaw) : array{
         $rawString = $metaDataRaw['api_metadata'];
-
+        
         $decodedOnce = json_decode($rawString, true);
-
+        
         if (is_string($decodedOnce)) {
             $data = json_decode($decodedOnce, true);
         } else {
             $data = $decodedOnce;
         }
 
-        if (
-            json_last_error() !== JSON_ERROR_NONE
-            || !is_array($data)
-            || !isset($data["context"])
-            || !is_array($data["context"])
-        ) {
-            return [];
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($data) || !isset($data["context"])) {
+            return null;
         }
 
-        return array_values(array_map('intval', $data["context"]));
+        return $data['context'];
     }
 }

@@ -3,30 +3,12 @@
 ## 0. Statut
 - **Priorité** : must-have
 - **Dépend de** : 00-foundations, 01-auth-account, 02-sessions
-- **État (2026-06-09)** : **implémenté** (chat libre + chat de session) — mais
-  **sans streaming** ni sync Ollama (voir recadrage).
-
-> ⚠️ **Recadrage — divergences majeures avec le code :**
-> - **Pas de streaming SSE.** Le chat est une **requête/réponse JSON** :
->   `POST /chat` → `LLMController::handleChat()` renvoie un JSON
->   (`response`, `prompt_eval_count`, `eval_count`, `conversation_id`,
->   `conversation_name`, `documents`). Pas de `/chat/stream`, pas de SSE.
-> - **L'abstraction LLM réelle** est `Domain\LlmAdaptaterInterface` (impl.
->   `Domain\OllamaAdaptater`), atteinte via l'entité `Domain\Ai::ask()` —
->   **pas** `LlmProviderInterface` (`chat`/`chatStream`/`listModels`).
-> - **Pas de sync Ollama** (`SyncOllamaModelsService`) : les modèles sont
->   ajoutés **manuellement** par l'admin de département (formulaire
->   `addModel`), pas synchronisés depuis l'API Ollama.
-> - **Pas d'entités `Interaction` / `LlmModel`** : ce sont des repositories
->   (`InteractionRepository`, `AiRepository`) renvoyant des tableaux.
-> - **Pas de `teacher_flag`** sur `interactions` (cf. [spec 04](./04-supervise.md)).
-> L'archi réelle est **MVC** : `Services\ChatService` (liste/CRUD des
-> conversations) + `Controllers\LLMController` (appel modèle).
+- **État POC** : implémenté (mais couplé à Ollama — à abstraire)
 
 ## 1. Objectifs
 
-Permettre à un utilisateur d'avoir une conversation avec un modèle LLM
-(**réponse JSON en un bloc**, pas de streaming aujourd'hui), avec :
+Permettre à un utilisateur d'avoir une conversation avec un modèle LLM,
+en streaming (réponse mot par mot), avec :
 - soit un **mode libre** : la conversation n'est liée à aucune session
   (`session_id IS NULL`) ;
 - soit un **mode session** : la conversation est liée à une session
@@ -62,19 +44,6 @@ OpenAI ou Anthropic demain — sans changer le métier.
   ceux réellement installés sur le serveur Ollama (sync automatique).
 
 ## 3. Domaine
-
-> ⚠️ **Design hexagonal historique — non représentatif du code.** Réalité :
-> - **`Domain\Conversation`** est minimal (`userId`, `sessionId`, `name` +
->   accesseurs) ; la persistance/lecture passe par `Models\ConversationRepository`.
-> - **`Domain\Ai`** porte le modèle LLM + l'appel : `Ai::ask($message, $context,
->   $postprompt, $preprompt): string` délègue à `LlmAdaptaterInterface`.
-> - **`Domain\LlmAdaptaterInterface`** : `generate($message, $context,
->   $preprompt, $posprompt, $isTesting)`, `formatMetadata()`,
->   `readContextFromMetadata()`. Impl. unique : `Domain\OllamaAdaptater`.
-> - Les **interactions** et **modèles** vivent dans `Models\InteractionRepository`
->   / `Models\AiRepository` (tableaux), **pas** d'entités `Interaction`/`LlmModel`.
-> - Le feedback utilisateur (`interactions.user_feedback ∈ {-1,0,1}`) existe au
->   schéma ; **pas** de `teacher_flag` (le signalement de la spec 04 n'existe pas).
 
 ### Entities — `App\Domain\Entities`
 
@@ -260,56 +229,40 @@ final class SyncResult {
 
 ## 6. HTTP
 
-### Routes *(réellement déclarées dans [`public/index.php`](../../app/public/index.php))*
+### Routes
 
 ```
-GET   /chat                          AccueilController::index          # shell + dernière conv
-GET   /chat/{id}                     AccueilController::index($id)     # conversation ouverte
-GET   /chat/session-status           AccueilController::sessionStatus  # AJAX (clôture session)
-POST  /chat                          LLMController::handleChat         # appel modèle -> JSON
-POST  /chat/new                      AccueilController::newChat        # nouvelle conversation
-POST  /chat/rename                   AccueilController::renameChat
-POST  /chat/archive                  AccueilController::archiveChat
-POST  /chat/unarchive                AccueilController::unarchiveChat
-POST  /chat/documents                DocumentController::uploadToConversation
-GET   /chat/documents/{convId}       DocumentController::conversationDocuments
-POST  /chat/documents/{id}/delete    DocumentController::deleteFromConversation
+GET   /chat                          ChatController::index
+GET   /chat/{id}                     ChatController::show
+POST  /chat/create                   ChatController::createConversation
+POST  /chat/send                     ChatController::sendPrompt
+POST  /chat/stream                   ChatController::sendPromptStream     # SSE
+POST  /chat/{id}/archive             ChatController::archive
+GET   /chat/ollama/status            ChatController::ollamaStatus         # AJAX, pour la pastille navbar
 ```
-
-> Le contrôleur de page est **`AccueilController`** (pas `ChatController`,
-> qui existe mais n'est **pas** routé — code mort). L'appel modèle est isolé
-> dans **`LLMController::handleChat`**.
 
 ### Views
 
-- `pages/home.php` — sidebar conversations + zone de chat + select modèle.
-- Rendu Markdown **côté client**, librairies **bundlées** dans
-  `public/assets/vendor/` (`marked.min.js`, `highlight/`, `purify.min.js`) —
-  **pas** de CDN.
+- `chat/index.php` — sidebar conversations + zone de chat + select modèle.
+- Markdown render côté client (`marked.js` chargé en CDN — à conserver).
 
-### Réponse (pas de streaming)
+### Streaming SSE
 
-`LLMController::handleChat` lit un payload JSON (`model`, `message`,
-`conversation_id?`, `session_id?`), applique les gardes (auth ; refus
-researcher/department_admin ; en examen, refus d'accès aux conversations
-hors-examen ; quota de tokens en session), appelle `Ai::ask(...)`, **persiste
-l'interaction** (`InteractionRepository::newInteration` + `setContext`), lie
-les documents en attente, puis renvoie le tout en **un seul JSON**. La
-réponse n'arrive pas « mot par mot » : le streaming reste un objectif non
-implémenté.
+Le controller `sendPromptStream` ouvre un flux SSE et appelle
+`StreamStudentPromptService` avec une closure qui fait :
+
+```php
+echo "event: chunk\ndata: " . json_encode(['text' => $chunk]) . "\n\n";
+ob_flush(); flush();
+```
+
+> ⚠️ Apache requiert `output_buffering = Off` et le header
+> `X-Accel-Buffering: no` (déjà fait dans `docker/apache.conf` du POC).
 
 ## 7. Base de données
 
-Tables existantes (pluriel, [`01_schema.sql`](../../database/schema/01_schema.sql)) :
-- `conversations` (`user_id` NN, `session_id` nullable = libre, `model_id` NN
-  — **une conv = un modèle**, `name`, `is_archived`).
-- `interactions` (`conversation_id`, `prompt` + `response` dans **la même
-  ligne**, `sent_at`, `latency`, `input_tokens`, `output_tokens`,
-  `user_feedback ∈ {-1,0,1}`, `api_metadata JSONB`).
-- `models` (`department_id` **XOR** `resource_id` — `ck_models_scope` ;
-  `provider`, `context_window`, `api_url`, `adapter`, `is_shareable`,
-  `is_active`).
-- `session_models` (modèles autorisés par session). Pas de migration nouvelle.
+Tables existantes : `conversation`, `interaction`, `model`, `authorizes`.
+Pas de migration nouvelle dans cette spec.
 
 ## 8. Réutilisation POC
 

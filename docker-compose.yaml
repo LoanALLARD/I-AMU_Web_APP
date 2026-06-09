@@ -6,13 +6,14 @@ services :
       - "8082:11434"
     volumes : # pour sauvegarder les modeles téléchargés
       - ollama_data:/root/.ollama
-
     dns:
       - 8.8.8.8
       - 1.1.1.1
     entrypoint: ["/bin/sh", "-c"]
 
     command: ["/bin/ollama serve & sleep 5 && /bin/ollama pull llama3.2:1b && wait"]
+
+
   db:
     build: ./docker/db
     restart: always

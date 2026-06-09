@@ -49,24 +49,4 @@
     if (placeSelect.value) {
         loadDepartments(placeSelect.value);
     }
-
-    // Researcher: lab comes from the email, so hide place/department and drop
-    // `required` (a hidden required select would block submission).
-    const researcherCheckbox = document.getElementById('is_researcher');
-    const affiliationFields  = document.getElementById('affiliation-fields');
-
-    function applyResearcherMode(isResearcher) {
-        affiliationFields.hidden = isResearcher;
-        placeSelect.required = !isResearcher;
-        if (isResearcher) {
-            deptSelect.required = false;
-        }
-    }
-
-    if (researcherCheckbox && affiliationFields) {
-        researcherCheckbox.addEventListener('change', () => {
-            applyResearcherMode(researcherCheckbox.checked);
-        });
-        applyResearcherMode(researcherCheckbox.checked);
-    }
 })();

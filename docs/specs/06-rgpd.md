@@ -8,19 +8,6 @@
 - **Référence externe** : [Guide RGPD du développeur — CNIL](https://www.cnil.fr/fr/guide-rgpd-du-developpeur),
   rapport d'analyse préliminaire §5.
 
-## 0bis. État d'implémentation (dev)
-
-> Mise à jour **2026-06-09**. RGPD **largement non couvert** — reste bloquant
-> pour une mise en production.
-
-- 🟡 **Consentement** : checkbox bloquante à l'inscription + mention via `GET /rgpd_consent` ; `users.consent_at` / `consent_version` (posé à `'1.0'` à l'inscription). Pas de retrait post-inscription ni d'interception bloquante au login.
-- 🟡 **Effacement** : manuel — désactivation du compte (`is_active = false`) + demande à `dpo@univ-amu.fr` ; pas de `DeleteAccountService` ni d'anonymisation automatique.
-- 🟡 **Opposition recherche** : la colonne **`users.research_opposed BOOLEAN NOT NULL DEFAULT FALSE` existe désormais** au schéma (corrige l'ancien « absente »), **mais aucun code ne l'écrit ni ne la lit** : pas d'endpoint `/account/oppose-research`, pas de toggle compte, et **l'export par session ne la filtre pas** (cf. [SPEC-session-export](./SPEC-session-export.md) — dette RGPD).
-- ❌ **Information** : pas de page publique `/privacy` (`legal/privacy.php`).
-- ❌ **Accès** : pas d'export de données utilisateur (`/account/data-export`).
-- ❌ **Journalisation** (`data_access_log`, `LogDataAccessService`) : table absente, aucun log.
-- ❌ **Journal admin** et **filtre d'opposition** automatique dans les exports.
-
 ## 1. Objectifs
 
 Mettre la plateforme **en conformité RGPD** sur ses 4 axes :
@@ -168,36 +155,32 @@ avec les placeholders remplacés par la config (`config.rgpd.controller`,
 
 ## 7. Base de données
 
-### Schéma
-
-> ⚠️ Pas de dossier `database/migrations/` : la source de vérité est
-> [`01_schema.sql`](../../database/schema/01_schema.sql). La table de base est
-> **`users`** (PK `id BIGSERIAL`), **pas** `"user"(user_id)`.
->
-> **Déjà au schéma** : `users.research_opposed BOOLEAN NOT NULL DEFAULT FALSE`
-> et `users.consent_at` / `consent_version`. **Reste à ajouter** : la table
-> `data_access_log` (à intégrer dans `01_schema.sql`, types alignés sur le
-> reste : `BIGSERIAL`, FK vers `users(id)`).
+### Migration
 
 ```sql
--- À ajouter dans database/schema/01_schema.sql (non créé) :
-CREATE TABLE data_access_log (
-    id              BIGSERIAL,
-    actor_user_id   BIGINT REFERENCES users (id) ON DELETE SET NULL,
-    action          VARCHAR(64) NOT NULL,
-    target_user_id  BIGINT REFERENCES users (id) ON DELETE SET NULL,
-    context         JSONB,
-    ip_address      INET NOT NULL,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT pk_data_access_log PRIMARY KEY (id)
-);
-CREATE INDEX idx_data_access_log_actor  ON data_access_log (actor_user_id, created_at DESC);
-CREATE INDEX idx_data_access_log_action ON data_access_log (action, created_at DESC);
-```
+-- database/migrations/AAAA-MM-DD-rgpd-compliance.sql
+BEGIN;
 
-> Note : une table `conversation_exports` (researcher_id, conversation_id,
-> ip_address, exported_at) **existe déjà** au schéma — base possible pour la
-> traçabilité des exports, non encore alimentée par le code.
+-- Opposition spécifique à la finalité recherche (séparé du consentement global)
+ALTER TABLE "user"
+    ADD COLUMN IF NOT EXISTS research_opposed BOOLEAN DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS gdpr_consent_revoked_at TIMESTAMP;
+
+-- Journal d'accès aux données
+CREATE TABLE IF NOT EXISTS data_access_log (
+    id              SERIAL PRIMARY KEY,
+    actor_user_id   INT NOT NULL REFERENCES "user"(user_id) ON DELETE SET NULL,
+    action          VARCHAR(64) NOT NULL,
+    target_user_id  INT REFERENCES "user"(user_id) ON DELETE SET NULL,
+    context         JSONB,
+    ip_address      VARCHAR(45) NOT NULL,
+    at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_data_access_log_actor ON data_access_log (actor_user_id, at DESC);
+CREATE INDEX idx_data_access_log_action ON data_access_log (action, at DESC);
+
+COMMIT;
+```
 
 ### Config à exposer
 

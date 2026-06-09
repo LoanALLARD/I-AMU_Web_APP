@@ -30,7 +30,7 @@ class AuthController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('pages/auth/login', ['titrePage' => 'Connexion'], 'auth');
+        $this->render('pages/Auth/login', ['titrePage' => 'Connexion'], 'auth');
     }
 
     /**
@@ -54,7 +54,7 @@ class AuthController extends Controller
         $result = $this->authService->login($email, $password);
 
         if (!$result['success']) {
-            $this->render('pages/auth/login', [
+            $this->render('pages/Auth/login', [
                 'titrePage' => 'Connexion',
                 'error'     => $result['error'],
                 'email'     => $email,
@@ -63,13 +63,6 @@ class AuthController extends Controller
             return;
         }
 
-        // Each role lands on its own space; everyone else on the chat.
-        if ($this->hasRole('department_admin')) {
-            $this->redirect('/department-admin');
-        }
-        if ($this->hasRole('researcher')) {
-            $this->redirect('/researcher');
-        }
         $this->redirect('/chat');
     }
 
@@ -83,7 +76,7 @@ class AuthController extends Controller
         $result = $this->authService->reactivateAccount($email, $password);
 
         if (!$result['success']) {
-            $this->render('pages/home', [
+            $this->render('pages/homeView', [
                 'titrePage' => 'Connexion',
                 'error'     => $result['error'],
                 'email'     => $email,
@@ -94,7 +87,7 @@ class AuthController extends Controller
         $loginResult = $this->authService->login($email, $password);
 
         if (!$loginResult['success']) {
-            $this->render('pages/auth/login', [
+            $this->render('pages/Auth/login', [
                 'titrePage' => 'Connexion',
                 'error'     => $loginResult['error'],
                 'email'     => $email,
@@ -114,7 +107,7 @@ class AuthController extends Controller
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/chat');
         }
-        $this->render('pages/auth/register', [
+        $this->render('pages/Auth/register', [
             'titrePage' => 'Inscription',
             'places'    => $this->places->all()],
          'auth');
@@ -122,7 +115,7 @@ class AuthController extends Controller
 
     public function showRGPD(): void
     {
-        $this->render('pages/auth/rgpd_consent', ['titrePage' => 'Mentions RGPD']);
+        $this->render('pages/Auth/RGPDConsent', ['titrePage' => 'Mentions RGPD']);
     }
 
     /**
@@ -138,19 +131,20 @@ class AuthController extends Controller
             'last_name'        => trim($this->input('last_name', '')),
             'place_id'         => $this->input('place_id', ''),
             'department_id'    => $this->input('department_id', ''),
-            'is_researcher'    => (bool) $this->input('is_researcher', false),
             'rgpd_consent'     => (bool) $this->input('rgpd_consent', false),
         ];
 
         $result = $this->authService->register($data);
 
-        if (empty($result['success'])) {
-            $this->flash('error', $result['error'] ?? "Erreur lors de l'inscription.");
-            $this->redirect('/register');
+        if (!empty($result['pending_verification'])) {
+            $this->flash('success', 'Inscription réussie ! Un email de vérification a été envoyé. Vérifiez votre boîte de réception.');
+            $this->redirect('/login');
+            return;
         }
 
-        $this->flash('success', 'Inscription réussie ! Un email de vérification a été envoyé. Vérifiez votre boîte de réception.');
-        $this->redirect('/login');
+        // register() auto-logs-in the new user, so go straight to the app.
+        $this->flash('success', 'Inscription reussie! Bienvenue.');
+        $this->redirect('/chat');
     }
 
     /**

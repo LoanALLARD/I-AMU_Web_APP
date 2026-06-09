@@ -3,10 +3,8 @@ FROM php:8.3-apache
 
 # PostgreSQL client lib + PHP PDO driver. Required by PdoConnection;
 # without this the runtime fails with "could not find driver".
-# libpq-dev: PDO pgsql driver. poppler-utils: `pdftotext`, used to extract
-# text from uploaded PDF documents (documents/RAG feature).
 RUN apt-get update \
- && apt-get install -y --no-install-recommends libpq-dev poppler-utils \
+ && apt-get install -y --no-install-recommends libpq-dev \
  && docker-php-ext-install pdo pdo_pgsql \
  && rm -rf /var/lib/apt/lists/*
 

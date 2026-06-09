@@ -16,10 +16,8 @@ class ConversationRepository {
      * Creates a conversation and returns its new id. `session_id` is null
      * for a free-mode conversation. (The `conversations` table has no
      * model_id column — the model is chosen per interaction.)
-     *
-     * @return array<string, mixed>|null
      */
-    public function newConversation(int $user_id, int $model_id, ?int $session_id, string $name): ?array
+    public function newConversation(int $user_id,int $model_id, ?int $session_id, string $name)
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO conversations (user_id, session_id, model_id, name)
@@ -112,7 +110,7 @@ class ConversationRepository {
     /**
      * @return array<string, mixed>|null
      */
-    public function getConversationByUserIdAndConversationId(int $user_id, int $conversation_id): ?array
+    public function getConversationByUserId(int $user_id, int $conversation_id): ?array
     {
         $query = $this->pdo->prepare('
         SELECT * FROM conversations where user_id = :user_id AND id = :id
@@ -158,25 +156,6 @@ class ConversationRepository {
 
         return $result;
     }
-    /**
-     * @return array<int, array<string,mixed>>
-     */
-    public function getConversationsByUserId(int $user_id): array
-    {
-        $query = $this->pdo->prepare('
-            SELECT *
-            FROM conversations
-            WHERE user_id = :user_id
-            ORDER BY id DESC
-        ');
-
-        $query->execute([
-            'user_id' => $user_id,
-        ]);
-
-        return $query->fetchAll(PDO::FETCH_ASSOC);
-    }
-
     /**
      * Id of the (first) conversation a user already has for a session, or null.
      * Used to keep "join session" idempotent.

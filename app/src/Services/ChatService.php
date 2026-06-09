@@ -8,7 +8,6 @@ use DateTimeImmutable;
 use Domain\Session;
 use Domain\SessionStatus;
 use Models\ConversationRepository;
-use Models\EnrollmentRepository;
 use Models\InteractionRepository;
 use Models\SessionRepository;
 use PDO;
@@ -26,50 +25,12 @@ class ChatService
     private ConversationRepository $conversations;
     private SessionRepository $sessions;
     private InteractionRepository $interactions;
-    private EnrollmentRepository $enrollments;
 
     public function __construct(PDO $pdo)
     {
         $this->conversations = new ConversationRepository($pdo);
         $this->sessions      = new SessionRepository($pdo);
         $this->interactions  = new InteractionRepository($pdo);
-        $this->enrollments   = new EnrollmentRepository($pdo);
-    }
-
-    /**
-     * Lightweight check used by the chat page's live poller: is the user's
-     * session conversation now read-only (session ended/cancelled, or the
-     * student deactivated by the teacher)?
-     *
-     * @return array{closed: bool, reason: string}
-     */
-    public function sessionStatusFor(int $userId, int $conversationId): array
-    {
-        $row = $this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId);
-        if ($row === null || $row['session_id'] === null) {
-            return ['closed' => false, 'reason' => ''];
-        }
-        $sessionId = (int) $row['session_id'];
-
-        $sessionRow = $this->sessions->findById($sessionId);
-        if ($sessionRow !== null) {
-            $status = Session::fromRow($sessionRow)->computedStatus(new DateTimeImmutable('now'));
-            if ($status === SessionStatus::Ended) {
-                return ['closed' => true, 'reason' => 'Cette session est terminée.'];
-            }
-            if ($status === SessionStatus::Cancelled) {
-                return ['closed' => true, 'reason' => 'Cette session a été annulée.'];
-            }
-        }
-
-        if (
-            $this->enrollments->exists($userId, $sessionId)
-            && !$this->enrollments->isActive($userId, $sessionId)
-        ) {
-            return ['closed' => true, 'reason' => "Vous avez été retiré de cette session par l'enseignant."];
-        }
-
-        return ['closed' => false, 'reason' => ''];
     }
 
     /**
@@ -90,7 +51,7 @@ class ChatService
         $sessionId    = null;
 
         if ($conversationId !== null) {
-            $row = $this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId);
+            $row = $this->conversations->getConversationByUserId($userId, $conversationId);
             if ($row === null) {
                 return ['notFound' => true];
             }
@@ -122,17 +83,6 @@ class ChatService
                     $closedReason  = 'Cette session a été annulée.';
                 }
             }
-
-            // A student deactivated by the teacher sees the session as closed
-            // (read-only) on their next load — the soft "disconnect".
-            if (
-                $this->enrollments->exists($userId, $sessionId)
-                && !$this->enrollments->isActive($userId, $sessionId)
-            ) {
-                $sessionClosed = true;
-                $closedReason  = "Vous avez été retiré de cette session par l'enseignant.";
-            }
-
             $rows = $this->conversations->listByUserAndSession($userId, $sessionId, $archived);
         } else {
             $envMode  = 'libre';
@@ -146,12 +96,11 @@ class ChatService
         if ($conversation !== null) {
             $messages = array_map(
                 static fn (array $m): array => [
-                    'id'       => (int) $m['id'],
                     'prompt'   => (string) $m['prompt'],
                     'response' => (string) $m['response'],
                     'model'    => (string) ($m['model_name'] ?? ''),
                 ],
-             $this->interactions->listByConversation((int) $conversation['id'])
+                $this->interactions->listByConversation((int) $conversation['id'])
             );
         }
 
@@ -170,11 +119,9 @@ class ChatService
             'sessionClosed' => $sessionClosed,
             'closedReason'  => $closedReason,
             'env'           => [
-                'mode'           => $envMode,
-                'sessionId'      => $sessionId,
-                'label'          => $envLabel,
-                'maxInputSize'   => $sessionId !== null && $row !== null ? ($row['max_input_size'] ?? null) : null,
-                'maxTokens'      => $sessionId !== null && $row !== null ? ($row['max_tokens'] ?? null) : null,
+                'mode'      => $envMode,
+                'sessionId' => $sessionId,
+                'label'     => $envLabel,
             ],
         ];
     }
@@ -183,7 +130,7 @@ class ChatService
      * Creates a new conversation in a session ("SESSION - CODE #N"). The
      * session must be active.
      */
-    public function newSessionConversation(int $userId, int $sessionId, int $modelId): int
+    public function newSessionConversation(int $userId, int $sessionId): int
     {
         $row = $this->sessions->findById($sessionId);
         if ($row === null) {
@@ -195,19 +142,20 @@ class ChatService
             throw new RuntimeException("Cette session n'est pas active.");
         }
 
-        // A student deactivated by the teacher cannot create new conversations.
-        if (
-            $this->enrollments->exists($userId, $sessionId)
-            && !$this->enrollments->isActive($userId, $sessionId)
-        ) {
-            throw new RuntimeException("Vous avez été retiré de cette session par l'enseignant.");
-        }
-
         $code = $session->accessCodeFormatted() ?? ('S' . $sessionId);
         $n    = $this->conversations->countByUserAndSession($userId, $sessionId) + 1;
 
-        $conversation = $this->conversations->newConversation($userId, $modelId, $sessionId, 'SESSION - ' . $code . ' #' . $n);
-        return (int) $conversation['id'];
+        return $this->conversations->newConversation($userId, $sessionId, 'SESSION - ' . $code . ' #' . $n);
+    }
+
+    /**
+     * Creates a new free-mode conversation ("Conversation #N").
+     */
+    public function newFreeConversation(int $userId): int
+    {
+        $n = count($this->conversations->listFreeByUser($userId)) + 1;
+
+        return $this->conversations->newConversation($userId, null, 'Conversation #' . $n);
     }
 
     /**
@@ -216,7 +164,7 @@ class ChatService
      */
     public function rename(int $userId, int $conversationId, string $name): void
     {
-        $row = $this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId);
+        $row = $this->conversations->getConversationByUserId($userId, $conversationId);
         if ($row === null) {
             throw new RuntimeException('Conversation introuvable.');
         }
@@ -245,7 +193,7 @@ class ChatService
      */
     public function archive(int $userId, int $conversationId): array
     {
-        $row = $this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId);
+        $row = $this->conversations->getConversationByUserId($userId, $conversationId);
         if ($row === null) {
             throw new RuntimeException('Conversation introuvable.');
         }
@@ -266,7 +214,7 @@ class ChatService
      */
     public function unarchive(int $userId, int $conversationId): void
     {
-        $row = $this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId);
+        $row = $this->conversations->getConversationByUserId($userId, $conversationId);
         if ($row === null) {
             throw new RuntimeException('Conversation introuvable.');
         }

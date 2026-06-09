@@ -14,7 +14,7 @@ header {
     z-index: 100;
 }
 
-header nav {
+nav {
     max-width: 1100px;
     margin: 0 auto;
     padding: .75rem 1.5rem;
@@ -23,7 +23,7 @@ header nav {
     gap: 1.5rem;
 }
 
-header nav a {
+nav a {
     font-family: 'Nunito', sans-serif;
     font-size: .9rem;
     font-weight: 700;
@@ -33,7 +33,7 @@ header nav a {
     border-radius: 6px;
     transition: color .18s, background .18s;
 }
-header nav a:hover {
+nav a:hover {
     color: var(--blue);
     background: var(--blue-light);
 }
@@ -63,14 +63,14 @@ header nav a:hover {
 
 /* CTA-style for the last link (Déconnexion when auth, Inscription
    otherwise). Excludes the brand and any element already pilled. */
-header nav a:last-child:not(.navbar-brand):not(.nav-user) {
+nav a:last-child:not(.navbar-brand):not(.nav-user) {
     background: var(--blue);
     color: var(--white);
     padding: .45rem 1.1rem;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(26,115,200,.25);
 }
-header nav a:last-child:not(.navbar-brand):not(.nav-user):hover {
+nav a:last-child:not(.navbar-brand):not(.nav-user):hover {
     background: var(--blue-dark);
     color: var(--white);
 }
