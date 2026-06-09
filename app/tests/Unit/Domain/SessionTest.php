@@ -93,9 +93,9 @@ final class SessionTest extends TestCase
 
     public function testToRowRoundTripsEnumValues(): void
     {
-        $row = $this->session(['type' => 'TUTORIAL', 'status' => 'ACTIVE'])->toRow();
+        $row = $this->session(['type' => 'LAB', 'status' => 'ACTIVE'])->toRow();
 
-        self::assertSame('TUTORIAL', $row['type']);
+        self::assertSame('LAB', $row['type']);
         self::assertSame('ACTIVE', $row['status']);
         self::assertSame('ABC123', $row['access_code']);
         self::assertSame(7, $row['resource_id']);
@@ -440,14 +440,14 @@ final class SessionTest extends TestCase
         $session = $this->session(['status' => 'DRAFT', 'starts_at' => null]);
 
         $this->expectException(InvalidArgumentException::class);
-        $session->reconfigure(null, null, null, null,0, $this->now());
+        $session->reconfigure(null, null, null, 0, $this->now());
     }
 
     public function testReconfigureStoresOverrides(): void
     {
         $session = $this->session(['status' => 'DRAFT', 'starts_at' => null]);
 
-        $session->reconfigure('pre', 'post', 'do this', null,1500, $this->now());
+        $session->reconfigure('pre', 'post', 'do this', 1500, $this->now());
 
         self::assertSame('pre', $session->prePromptOverride());
         self::assertSame('post', $session->postPromptOverride());

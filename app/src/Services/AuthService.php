@@ -69,16 +69,6 @@ final class AuthService
 
         $userId = (int) $row['id'];
 
-        // Exclusivity with the super admin session (see SPEC-superadmin-auth.md,
-        // D3): a normal user login must never leave a super admin identity
-        // behind. Drop the dedicated keys before keying as a user.
-        unset(
-            $_SESSION['super_admin_id'],
-            $_SESSION['super_admin_email'],
-            $_SESSION['super_admin_first_name'],
-            $_SESSION['super_admin_last_name']
-        );
-
         $this->users->touchLastLogin($userId);
 
         $_SESSION['user_id']         = $userId;
@@ -86,13 +76,7 @@ final class AuthService
         $_SESSION['user_first_name'] = (string) $row['first_name'];
         $_SESSION['user_last_name']  = (string) $row['last_name'];
         $_SESSION['roles']           = $this->resolveRoles($userId);
-        $_SESSION['isSpecialized']   = $this->users->isTeacherSpecialized($userId);
-        $_SESSION['department_id']   = $this->users->getDepartmentIdByUserId($userId);
         $_SESSION['user_theme']      = $row['theme'] ?? null;
-        $_SESSION['user_department_id'] = $row['department_id'] !== null
-            ? (int) $row['department_id']
-            : null;
-
         session_regenerate_id(true);
 
         return ['success' => true];
@@ -127,7 +111,6 @@ final class AuthService
         $lastName        = trim((string) ($data['last_name']       ?? ''));
         $placeId         = (int) ($data['place_id']                ?? 0);
         $departmentId    = (int) ($data['department_id']           ?? 0);
-        $isResearcher    = (bool)  ($data['is_researcher']         ?? false);
         $rgpdConsent     = (bool)  ($data['rgpd_consent']          ?? false);
 
         // ----- Format validation ------------------------------------
@@ -143,18 +126,28 @@ final class AuthService
             return ['success' => false, 'error' => $validationError];
         }
 
+        // ----- Place / department --------------------------------------
+        // The dependent select is filled by client-side JS, so we re-check
+        // server-side that the department exists and belongs to the place.
+        if ($placeId === 0 || $departmentId === 0) {
+            return ['success' => false, 'error' => 'Veuillez choisir un lieu et un département.'];
+        }
+        if (!$this->places->departmentBelongsToPlace($departmentId, $placeId)) {
+            return ['success' => false, 'error' => 'Le département sélectionné est invalide.'];
+        }
+
+        // ----- Role lookup ------------------------------------------
+        $role = $this->resolveRoleFromDomain($email);
+        if ($role === null) {
+            return [
+                'success' => false,
+                'error'   => "Seuls les emails AMU sont acceptés (@etu.univ-amu.fr ou @univ-amu.fr).",
+            ];
+        }
+
         // ----- Email uniqueness -------------------------------------
         if ($this->users->emailExists($email)) {
             return ['success' => false, 'error' => 'Cet email est déjà utilisé.'];
-        }
-
-        if ($isResearcher) {
-            $registration = $this->prepareResearcherRegistration($email);
-        } else {
-            $registration = $this->prepareMemberRegistration($email, $placeId, $departmentId);
-        }
-        if (isset($registration['error'])) {
-            return ['success' => false, 'error' => $registration['error']];
         }
 
         // ----- Insert (user + role row, atomically) -----------------
@@ -165,11 +158,10 @@ final class AuthService
                     'password_hash'   => password_hash($password, PASSWORD_DEFAULT),
                     'first_name'      => $firstName,
                     'last_name'       => $lastName,
-                    'department_id'   => $registration['department_id'],
-                    'laboratory_id'   => $registration['laboratory_id'],
+                    'department_id'   => $departmentId,
                     'consent_version' => '1.0',
                 ],
-                $registration['role']
+                $role
             );
             //  Email verification token
             $token = bin2hex(random_bytes(32));
@@ -197,11 +189,13 @@ final class AuthService
                 'error'   => "Erreur lors de l'enregistrement. Merci de réessayer.",
             ];
         }
+
+        // Auto-login: reuse login() so the session is populated through the
+        // single code path (roles, session_regenerate_id). The plaintext
+        // password is still available here, before it goes out of scope.
+        return $this->login($email, $password);
     }
 
-    /**
-     * @return array{success: bool, error?: string}
-     */
     public function deactivateAccount(int $userId): array
     {
         try {
@@ -223,9 +217,6 @@ final class AuthService
         }
     }
 
-    /**
-     * @return array{success: bool, error?: string}
-     */
     public function reactivateAccount(string $email, string $password): array
     {
         if ($email === '' || $password === '') {
@@ -253,72 +244,6 @@ final class AuthService
         }
     }
 
-    /**
-     * Updates the current user's display name and keeps the session in sync
-     * so the layout (avatar, breadcrumb) reflects it right away.
-     *
-     * @return array{success: true} | array{success: false, error: string}
-     */
-    public function updateProfile(int $userId, string $firstName, string $lastName): array
-    {
-        $firstName = trim($firstName);
-        $lastName  = trim($lastName);
-
-        if ($firstName === '' || $lastName === '') {
-            return ['success' => false, 'error' => 'Le prénom et le nom sont obligatoires.'];
-        }
-        if (mb_strlen($firstName) > 50 || mb_strlen($lastName) > 100) {
-            return ['success' => false, 'error' => 'Prénom (max 50) ou nom (max 100) trop long.'];
-        }
-
-        try {
-            $this->users->updateName($userId, $firstName, $lastName);
-        } catch (\Throwable $e) {
-            return ['success' => false, 'error' => 'Erreur lors de la mise à jour du profil.'];
-        }
-
-        $_SESSION['user_first_name'] = $firstName;
-        $_SESSION['user_last_name']  = $lastName;
-
-        return ['success' => true];
-    }
-
-    /**
-     * Changes the current user's password after verifying the current one.
-     *
-     * @return array{success: true} | array{success: false, error: string}
-     */
-    public function changePassword(int $userId, string $current, string $new, string $confirm): array
-    {
-        if ($current === '' || $new === '' || $confirm === '') {
-            return ['success' => false, 'error' => 'Tous les champs sont obligatoires.'];
-        }
-        if (strlen($new) < 8) {
-            return ['success' => false, 'error' => 'Le nouveau mot de passe doit faire au moins 8 caractères.'];
-        }
-        if ($new !== $confirm) {
-            return ['success' => false, 'error' => 'Les nouveaux mots de passe ne correspondent pas.'];
-        }
-
-        $row = $this->users->findById($userId);
-        if ($row === null) {
-            return ['success' => false, 'error' => 'Compte introuvable.'];
-        }
-        if (!password_verify($current, (string) $row['password_hash'])) {
-            return ['success' => false, 'error' => 'Le mot de passe actuel est incorrect.'];
-        }
-        if (password_verify($new, (string) $row['password_hash'])) {
-            return ['success' => false, 'error' => "Le nouveau mot de passe doit être différent de l'ancien."];
-        }
-
-        try {
-            $this->users->updatePassword($userId, password_hash($new, PASSWORD_DEFAULT));
-        } catch (\Throwable $e) {
-            return ['success' => false, 'error' => 'Erreur lors du changement de mot de passe.'];
-        }
-
-        return ['success' => true];
-    }
 
 
     /**
@@ -353,75 +278,6 @@ final class AuthService
     }
 
     /**
-     * Registration for a researcher: lab derived from the email domain, no
-     * department. Refused when no active domain links to a lab.
-     *
-     * @return array{role: string, department_id: null, laboratory_id: int}|array{error: string}
-     */
-    private function prepareResearcherRegistration(string $email): array
-    {
-        $domain = $this->domainOf($email);
-        if ($domain === null) {
-            return ['error' => 'Email invalide.'];
-        }
-
-        $laboratoryId = $this->emailDomains->findLaboratoryIdByDomain($domain);
-        if ($laboratoryId === null) {
-            return ['error' => "Ce domaine email n'est associé à aucun laboratoire."];
-        }
-
-        return [
-            'role'          => 'researcher',
-            'department_id' => null,
-            'laboratory_id' => $laboratoryId,
-        ];
-    }
-
-    /**
-     * Registration for a student/teacher: department (validated against the
-     * place) and role derived from the email domain.
-     *
-     * @return array{role: string, department_id: int, laboratory_id: null}|array{error: string}
-     */
-    private function prepareMemberRegistration(string $email, int $placeId, int $departmentId): array
-    {
-        // The dependent select is filled by client-side JS, so we re-check
-        // server-side that the department exists and belongs to the place.
-        if ($placeId === 0 || $departmentId === 0) {
-            return ['error' => 'Veuillez choisir un lieu et un département.'];
-        }
-        if (!$this->places->departmentBelongsToPlace($departmentId, $placeId)) {
-            return ['error' => 'Le département sélectionné est invalide.'];
-        }
-
-        // A researcher domain is not a valid member domain: reject it with the
-        // same message rather than failing later on the NOT NULL laboratory_id.
-        $role = $this->resolveRoleFromDomain($email);
-        if ($role === null || $role === 'researcher') {
-            return ['error' => "Ce domaine email n'est pas autorisé."];
-        }
-
-        return [
-            'role'          => $role,
-            'department_id' => $departmentId,
-            'laboratory_id' => null,
-        ];
-    }
-
-    /**
-     * Returns the lowercased domain part of an email, or null when malformed.
-     */
-    private function domainOf(string $email): ?string
-    {
-        $atPos = strrpos($email, '@');
-        if ($atPos === false) {
-            return null;
-        }
-
-        return strtolower(substr($email, $atPos + 1));
-    }
-
-    /**
      * Maps an email to its role by looking up the part after the `@` in the
      * `email_domain_configs` table. Only active domains match. Returns the
      * role in the lowercase form createUserWithRole() expects
@@ -429,10 +285,11 @@ final class AuthService
      */
     private function resolveRoleFromDomain(string $email): ?string
     {
-        $domain = $this->domainOf($email);
-        if ($domain === null) {
+        $atPos = strrpos($email, '@');
+        if ($atPos === false) {
             return null;
         }
+        $domain = strtolower(substr($email, $atPos + 1));
 
         // The table stores the SQL enum (UPPERCASE); the rest of the code
         // (createUserWithRole) works with lowercase role names.
@@ -475,12 +332,8 @@ final class AuthService
         if ($this->users->hasRole($userId, 'students')) {
             $roles[] = 'student';
         }
-        if ($this->users->hasRole($userId, 'department_administrators')) {
-            $roles[] = 'department_admin';
-        }
-        if ($this->users->hasRole($userId, 'researchers')) {
-            $roles[] = 'researcher';
-        }
+        // researchers / department_administrators exist on the live
+        // schema but their HTTP surface belongs to spec 05.
 
         return $roles;
     }

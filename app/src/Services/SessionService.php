@@ -52,158 +52,6 @@ class SessionService
         return $resource !== null && (int) $resource['owner_id'] === $teacherId;
     }
 
-    /**
-     * Whether the teacher may VIEW the session read-only: either they own the
-     * resource (full rights) or they are attached to it via teacher_resources
-     * (responsible). Mutating actions stay owner-only at the controller.
-     */
-    public function canView(Session $session, int $teacherId): bool
-    {
-        if ($session->teacherId() === $teacherId) {
-            return true;
-        }
-
-        return $this->resources->isResourceTeacher($session->resourceId(), $teacherId);
-    }
-
-    /**
-     * Sessions the teacher supervises read-only (attached via teacher_resources,
-     * not owner). Same presentation rows as listForTeacher() so the view renders
-     * them identically.
-     *
-     * @return list<array<string, mixed>>
-     */
-    public function listSupervisedForTeacher(int $teacherId): array
-    {
-        $now = $this->now();
-
-        return array_map(
-            fn (array $row): array => $this->listRow(Session::fromRow($row), $now),
-            $this->sessions->findSupervisedByTeacher($teacherId)
-        );
-    }
-
-    /**
-     * @return list<array<string, mixed>>
-     */
-    public function enrolledStudents(int $sessionId): array
-    {
-        return $this->sessions->enrolledStudents($sessionId);
-    }
-
-    /**
-     * Activates or deactivates a student's enrollment in a session (teacher
-     * action from the monitor view). Deactivating bars the student from the
-     * session chat and from re-joining with the access code.
-     */
-    public function setStudentActive(int $sessionId, int $studentId, bool $active): void
-    {
-        $this->enrollments->setActive($studentId, $sessionId, $active);
-    }
-
-    /**
-     * Research export of a whole session: the session header plus every
-     * enrolled student, their conversations and the interactions of each.
-     * Identity is included on purpose (no platform-side anonymisation —
-     * cf. spec 06). Authorisation is the controller's job.
-     *
-     * $options filters the output:
-     *   - excludeIds: list<int> students to leave out,
-     *   - includePrompts / includeResponses: bool (default true).
-     *
-     * @param array<string, mixed> $options
-     * @return array<string, mixed>
-     */
-    public function exportSessionData(Session $session, array $options = []): array
-    {
-        $excludeIds       = is_array($options['excludeIds'] ?? null) ? $options['excludeIds'] : [];
-        $includePrompts   = ($options['includePrompts']   ?? true) !== false;
-        $includeResponses = ($options['includeResponses'] ?? true) !== false;
-        $excluded         = array_fill_keys(array_map('intval', $excludeIds), true);
-
-        $sessionId = (int) $session->id();
-
-        $students = [];
-        foreach ($this->sessions->exportRows($sessionId) as $r) {
-            $sid = (int) $r['student_id'];
-            if (isset($excluded[$sid])) {
-                continue; // student excluded by the teacher
-            }
-            if (!isset($students[$sid])) {
-                $students[$sid] = [
-                    'student_id'     => $sid,
-                    'first_name'     => $r['first_name'],
-                    'last_name'      => $r['last_name'],
-                    'email'          => $r['email'],
-                    'student_number' => $r['student_number'],
-                    'conversations'  => [],
-                ];
-            }
-
-            if ($r['conversation_id'] === null) {
-                continue; // enrolled student with no conversation yet
-            }
-
-            $cid = (int) $r['conversation_id'];
-            if (!isset($students[$sid]['conversations'][$cid])) {
-                $students[$sid]['conversations'][$cid] = [
-                    'id'           => $cid,
-                    'name'         => $r['conversation_name'],
-                    'created_at'   => $r['conversation_created'],
-                    'is_archived'  => (bool) $r['is_archived'],
-                    'interactions' => [],
-                ];
-            }
-
-            if ($r['interaction_id'] !== null) {
-                $turn = ['id' => (int) $r['interaction_id']];
-                if ($includePrompts) {
-                    $turn['prompt'] = $r['prompt'];
-                }
-                if ($includeResponses) {
-                    $turn['response'] = $r['response'];
-                }
-                $turn['model']         = $r['model_name'];
-                $turn['input_tokens']  = $r['input_tokens']  !== null ? (int) $r['input_tokens']  : null;
-                $turn['output_tokens'] = $r['output_tokens'] !== null ? (int) $r['output_tokens'] : null;
-                $turn['latency']       = $r['latency']       !== null ? (int) $r['latency']       : null;
-                $turn['user_feedback'] = $r['user_feedback'] !== null ? (int) $r['user_feedback'] : null;
-                $turn['sent_at']       = $r['sent_at'];
-
-                $students[$sid]['conversations'][$cid]['interactions'][] = $turn;
-            }
-        }
-
-        // Drop the assoc keys used for grouping -> plain lists.
-        $studentsList = array_values(array_map(
-            static function (array $s): array {
-                $s['conversations'] = array_values($s['conversations']);
-                return $s;
-            },
-            $students
-        ));
-
-        return [
-            'session' => [
-                'id'          => $sessionId,
-                'name'        => $session->name(),
-                'type'        => $session->type()->value,
-                'status'      => $session->status()->value,
-                'access_code' => $session->accessCode(),
-                'starts_at'   => $session->startsAt()?->format('c'),
-                'ends_at'     => $session->endsAt()?->format('c'),
-            ],
-            'exported_at'   => $this->now()->format('c'),
-            'filters'       => [
-                'excluded_student_ids' => array_values(array_map('intval', $excludeIds)),
-                'include_prompts'      => $includePrompts,
-                'include_responses'    => $includeResponses,
-            ],
-            'student_count' => count($studentsList),
-            'students'      => $studentsList,
-        ];
-    }
-
     // ----------------------------------------------------------------
     // Reads for views
     // ----------------------------------------------------------------
@@ -228,14 +76,9 @@ class SessionService
     {
         // No code to preview: the database trigger assigns one only when
         // the session becomes scheduled/active.
-        $resourceData = $this->resources->findAllByOwner($teacherId);
-        if ($resourceData == null){
-            throw new InvalidArgumentException("L'enseignent doit être associé à au minimum une ressource, \n veuillez contacter un administrateur");
-        }
-        $depId = $resourceData[0]['department_id'];
         return [
-            'models'               => $this->modelOptions($depId),
-            'resources'            => $resourceData,
+            'models'               => $this->modelOptions(),
+            'resources'            => $this->resources->findAllByOwner($teacherId),
             'previewCode'          => '',
             'previewCodeFormatted' => '',
         ];
@@ -246,15 +89,10 @@ class SessionService
      */
     public function editFormData(Session $session, int $teacherId): array
     {
-        $resourceData = $this->resources->findAllByOwner($teacherId);
-        if ($resourceData == null){
-            throw new InvalidArgumentException("L'enseignent doit être associé à au minimum une ressource, \n veuillez contacter un administrateur");
-        }
-        $depId = $resourceData[0]['department_id'];
         return [
             'session'              => $session,
-            'models'               => $this->modelOptions($depId),
-            'resources'            => $resourceData,
+            'models'               => $this->modelOptions(),
+            'resources'            => $this->resources->findAllByOwner($teacherId),
             'authorizedModelIds'   => $this->sessions->authorizedModelIdsOf((int) $session->id()),
             'previewCode'          => $session->accessCode() ?? '',
             'previewCodeFormatted' => $session->accessCodeFormatted() ?? '',
@@ -271,7 +109,7 @@ class SessionService
         $models   = array_map(
             static fn (array $m): array => [
                 'name'    => (string) $m['name'],
-                'size'    => $m['size'] ?? null,
+                'version' => $m['version'] ?? null,
             ],
             $this->models->findByIds($modelIds)
         );
@@ -294,7 +132,6 @@ class SessionService
             'postPromptOverride' => $session->postPromptOverride(),
             'instructions'       => $session->instructions(),
             'maxInputSize'       => $session->maxInputSize(),
-            'maxTokens'          => $session->maxTokens(),
             'authorizedModels'   => $models,
             'canEdit'            => $actions['can_edit'],
             'canStart'           => $actions['can_start'],
@@ -330,7 +167,6 @@ class SessionService
                 $byStudent[$sid] = [
                     'id'            => $sid,
                     'name'          => trim(((string) $r['first_name']) . ' ' . ((string) $r['last_name'])),
-                    'isActive'      => (int) ($r['is_active'] ?? 1) === 1,
                     'conversations' => [],
                     'totalPrompts'  => 0,
                 ];
@@ -426,8 +262,7 @@ class SessionService
             $data['prePrompt'],
             $data['postPrompt'],
             $data['instructions'],
-            $data['maxInputSize'] ?? null,
-            $data['maxTokens'] ?? null,
+            $data['maxInputSize'],
         );
 
         $result = $this->sessions->insert($session->toRow());
@@ -456,7 +291,7 @@ class SessionService
 
         $session->rename((string) $data['name'], $now);
         $session->reschedule($startsAt, $endsAt, $now);
-        $session->reconfigure($data['prePrompt'], $data['postPrompt'], $data['instructions'], $data['maxTokens'] ?? null, $data['maxInputSize'] ?? null, $now);
+        $session->reconfigure($data['prePrompt'], $data['postPrompt'], $data['instructions'], $data['maxInputSize'], $now);
 
         $this->sessions->update($id, $session->toRow());
         $this->sessions->setAuthorizedModels($id, $data['modelIds']);
@@ -515,16 +350,7 @@ class SessionService
             });
         }
 
-        $sessionId = (int) $session->id();
-
-        // A student deactivated by the teacher cannot re-join.
-        if (
-            $this->enrollments->exists($studentUserId, $sessionId)
-            && !$this->enrollments->isActive($studentUserId, $sessionId)
-        ) {
-            throw SessionException::notAvailable("Vous avez été retiré de cette session par l'enseignant.");
-        }
-
+        $sessionId     = (int) $session->id();
         $alreadyJoined = $this->enrollments->exists($studentUserId, $sessionId);
         if (!$alreadyJoined) {
             $this->enrollments->enroll($studentUserId, $sessionId);
@@ -534,21 +360,12 @@ class SessionService
         // one ("SESSION - CODE #1"). They can add more from the chat.
         $conversationId = $this->conversations->findIdByUserAndSession($studentUserId, $sessionId);
         if ($conversationId === null) {
-            // conversations.model_id is NOT NULL: use a model authorised for
-            // the session, falling back to any active model.
-            $modelId = $this->sessions->firstModelForSession($sessionId) ?? $this->models->firstActiveId();
-            if ($modelId === null) {
-                throw new \RuntimeException('Aucun modèle disponible pour cette session.');
-            }
-
-            $code    = $session->accessCodeFormatted() ?? ('S' . $sessionId);
-            $created = $this->conversations->newConversation(
+            $code           = $session->accessCodeFormatted() ?? ('S' . $sessionId);
+            $conversationId = $this->conversations->newConversation(
                 $studentUserId,
-                $modelId,
                 $sessionId,
                 'SESSION - ' . $code . ' #1'
             );
-            $conversationId = $created !== null ? (int) $created['id'] : null;
         }
 
         return [
@@ -579,16 +396,16 @@ class SessionService
     /**
      * @return list<array<string, mixed>>
      */
-    private function modelOptions(int $depId): array
+    private function modelOptions(): array
     {
         return array_map(
             static fn (array $m): array => [
                 'id'            => (int) $m['id'],
                 'name'          => (string) $m['name'],
-                'size'          => $m['size'] ?? null,
+                'version'       => $m['version'] ?? null,
                 'contextWindow' => isset($m['context_window']) && $m['context_window'] !== null ? (int) $m['context_window'] : null,
             ],
-            $this->models->findAllActiveBySession(null,$depId)
+            $this->models->findAllActive()
         );
     }
 

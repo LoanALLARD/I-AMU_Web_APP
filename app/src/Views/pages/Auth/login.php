@@ -1,4 +1,11 @@
-<div class="register-card auth-card-login">
+<?php if (!empty($_SESSION['_flash'])): ?>
+    <?php foreach ($_SESSION['_flash'] as $flash): ?>
+        <div class="alert alert-<?= $flash['type'] ?>"><?= htmlspecialchars($flash['message']) ?></div>
+    <?php endforeach; ?>
+    <?php unset($_SESSION['_flash']); ?>
+<?php endif; ?>
+
+<div class="register-card">
 
     <div class="card-header">
         <div class="logo-wrap">
@@ -11,7 +18,6 @@
     <div class="accent-bar"></div>
 
     <div class="card-body">
-        <?php require __DIR__ . '/../../partials/_flash.php'; ?>
 
         <?php if (!empty($error) && empty($deactivated)): ?>
             <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
@@ -21,8 +27,8 @@
             <div class="alert alert-error" style="margin-bottom:0;">
                 <?= htmlspecialchars($error) ?>
             </div>
-            <div class="deactivate-account-msg">
-                <p>
+            <div style="background:var(--blue-50, #eff6ff);border:1px solid var(--blue-200, #bfdbfe);border-radius:8px;padding:14px 16px;margin-top:12px;margin-bottom:16px;">
+                <p style="font-size:13px;color:var(--blue-800, #1e40af);line-height:1.5;margin:0 0 12px;">
                     Vous avez précédemment désactivé votre compte.
                     Souhaitez-vous le réactiver pour retrouver l'accès ?
                 </p>
@@ -30,7 +36,7 @@
                     <?= csrf_field() ?>
                     <input type="hidden" name="email" value="<?= htmlspecialchars($email ?? '') ?>">
                     <input type="hidden" name="password" id="reactivate-password" value="">
-                    <button type="submit" class="btn-submit" id="btn-reactivate" style="">
+                    <button type="submit" class="btn-submit" id="btn-reactivate" style="width:100%;background:var(--blue-600, #2563eb);">
                         Réactiver mon compte
                     </button>
                 </form>
@@ -44,7 +50,8 @@
                 <label for="email">Adresse e-mail</label>
                 <input type="email" id="email" name="email"
                        value="<?= htmlspecialchars($email ?? '') ?>"
-                       placeholder="prenom.nom@exemple.fr" required autofocus>
+                       placeholder="prenom.nom@etu.univ-amu.fr" required autofocus>
+                <span class="field-hint">Domaines acceptés : @etu.univ-amu.fr, @univ-amu.fr</span>
             </div>
 
             <div class="form-group">

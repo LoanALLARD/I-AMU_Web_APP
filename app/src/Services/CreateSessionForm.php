@@ -89,20 +89,11 @@ class CreateSessionForm
         }
 
         $maxInputSize = null;
-        $maxTokens  = null;
-
         $rawMax       = trim((string) ($post['max_input_size'] ?? ''));
         if ($rawMax !== '') {
             $maxInputSize = (int) $rawMax;
             if ($maxInputSize < 1 || $maxInputSize > 200000) {
                 $errors[] = "Plafond d'entrée invalide (1 à 200 000).";
-            }
-        }
-        $rawReq      = trim((string) ($post['max_tokens'] ?? ''));
-        if ($rawReq !== '') {
-            $maxTokens  = (int) $rawReq;
-            if ($maxTokens  < 1 || $maxTokens  > 500000) {
-                $errors[] = 'Limite de token invalide (1 à 500 000).';
             }
         }
 
@@ -123,7 +114,6 @@ class CreateSessionForm
                 'postPrompt'      => $optional($post['post_prompt'] ?? ''),
                 'instructions'    => $optional($post['instructions'] ?? ''),
                 'maxInputSize'    => $maxInputSize,
-                'maxTokens'       => $maxTokens,
                 'accessCode'      => $isCreate ? $optional($post['access_code'] ?? '') : null,
             ],
             'errors' => $errors,

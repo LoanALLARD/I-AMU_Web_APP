@@ -1,4 +1,9 @@
-<?php require __DIR__ . '/../../partials/_flash.php'; ?>
+<?php if (!empty($_SESSION['_flash'])): ?>
+    <?php foreach ($_SESSION['_flash'] as $flash): ?>
+        <div class="alert alert-<?= $flash['type'] ?>"><?= htmlspecialchars($flash['message']) ?></div>
+    <?php endforeach; ?>
+    <?php unset($_SESSION['_flash']); ?>
+<?php endif; ?>
 
 <?php if (!empty($error)): ?>
     <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
@@ -39,7 +44,8 @@
                 <label for="email">Adresse e-mail</label>
                 <input type="email" id="email" name="email"
                        value="<?= htmlspecialchars($data['email'] ?? '') ?>"
-                       placeholder="prenom.nom@exemple.fr" required>
+                       placeholder="prenom.nom@etu.univ-amu.fr" required>
+                <span class="field-hint">Domaines acceptés&nbsp;: @etu.univ-amu.fr, @univ-amu.fr</span>
             </div>
 
             <div class="form-group">
@@ -54,15 +60,7 @@
                        placeholder="Répétez votre mot de passe" required>
             </div>
 
-            <div class="rgpd-group">
-                <input type="checkbox" id="is_researcher" name="is_researcher" value="1"
-                       <?= !empty($data['is_researcher']) ? 'checked' : '' ?>>
-                <label for="is_researcher" class="rgpd-label">
-                    Je suis un chercheur (mon laboratoire est déduit de mon adresse e-mail).
-                </label>
-            </div>
-
-            <div class="form-row" id="affiliation-fields">
+            <div class="form-row">
                 <div class="form-group">
                     <label for="place_id">Lieu</label>
                     <select id="place_id" name="place_id" required>
@@ -89,7 +87,7 @@
                 <label for="rgpd_consent" class="rgpd-label">
                     J'accepte le traitement de mes données personnelles dans le cadre
                     de la recherche scientifique sur l'usage de l'IA.
-                    <a href="/rgpd_consent" target="_blank">En savoir plus</a>
+                    <a href="/RGPDConsent" target="_blank">En savoir plus</a>
                 </label>
             </div>
 
@@ -99,6 +97,7 @@
             </button>
 
         </form>
+
     </div>
 
     <div class="card-footer">

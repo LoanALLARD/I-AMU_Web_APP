@@ -1,21 +1,6 @@
 # SPEC: session-monitor — Suivi des étudiants d'une session
 
-> Date: 2026-06-02 | Branche: `dev` | Statut: **LIVRÉ**
-
-> ⚠️ **MàJ 2026-06-09.** Le suivi est implémenté
-> (`SessionController::monitor` → `SessionService::monitor` →
-> `SessionRepository::monitorStudents` / `interactionsOfConversation`).
-> Trois évolutions depuis ce plan :
-> - **Accès élargi** : le garde n'est plus `loadOwned` mais **`loadViewable`**
->   (owner **ou** prof responsable rattaché via `teacher_resources`), avec un
->   flag **`canManage`** côté vue — cf. [SPEC-session-supervisors](./SPEC-session-supervisors.md).
-> - **Sélection par conversation** : l'URL lit **`?conversation={id}`**
->   (et non `?student=`).
-> - **La persistance est câblée** : `LLMController::handleChat` enregistre
->   désormais chaque interaction → la page n'est plus vide (la « Cause racine »
->   du diagnostic est résolue).
-> - **(Dé)activation d'étudiant** ajoutée : `POST /sessions/{id}/student-status`
->   (visible si `canManage`).
+> Date: 2026-06-02 | Branche: `dev` | Statut: EN ATTENTE VALIDATION
 
 ## Contexte
 
