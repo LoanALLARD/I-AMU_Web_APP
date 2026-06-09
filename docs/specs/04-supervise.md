@@ -3,14 +3,28 @@
 ## 0. Statut
 - **Priorité** : nice-to-have (gros impact UX enseignant)
 - **Dépend de** : 02-sessions, 03-chat-llm
-- **État POC** : implémenté
+- **État (2026-06-09)** : **suivi (monitor) livré en lecture seule** ; le
+  **signalement de prompt** et l'**archivage massif** décrits ci-dessous ne
+  sont **pas** implémentés (voir recadrage).
 
-> **Accès élargi** — la vue de suivi (`/sessions/{id}/monitor`) n'est plus
-> réservée au propriétaire : un **prof responsable** (rattaché à la ressource via
-> `teacher_resources`, sans en être l'owner) y accède en **lecture seule**
-> (garde `SessionController::loadViewable`). Le signalement, l'archivage et la
-> (dé)activation d'étudiant restent réservés au propriétaire. Voir
-> [`SPEC-session-supervisors.md`](./SPEC-session-supervisors.md).
+> ⚠️ **Recadrage — ce qui existe vs ce que cette spec décrit.**
+> **Existe** (cf. [SPEC-session-monitor](./SPEC-session-monitor.md) +
+> [SPEC-session-supervisors](./SPEC-session-supervisors.md)) :
+> - `GET /sessions/{id}/monitor` → `SessionController::monitor` →
+>   `SessionService::monitor` : 2 panneaux (étudiants enrôlés + transcript
+>   d'une conversation), **lecture seule**, sessions `ACTIVE`/`ENDED`.
+> - **(Dé)activation d'un étudiant** : `POST /sessions/{id}/student-status`
+>   (`SessionService::setStudentActive`, owner only) — empêche l'étudiant
+>   d'utiliser le chat de session.
+> - **Accès élargi** : owner **et** prof responsable rattaché via
+>   `teacher_resources` (garde `loadViewable`, flag `canManage`).
+>
+> **N'existe PAS** : le **signalement** de prompt (`teacher_flag`,
+> `TeacherFlag`, raison/commentaire) — **aucune** colonne au schéma
+> (`interactions` n'a pas de `teacher_flag*`) ; l'**archivage massif** de
+> session (`submitted_at`) — `conversations` a `is_archived`, pas
+> `submitted_at` ; le **polling AJAX** live ; les **onglets** ouvertes/rendues/
+> signalées. Les §3→10 ci-dessous décrivent donc une **cible non réalisée**.
 
 ## 1. Objectifs
 
@@ -137,41 +151,43 @@ final class ConversationDetailView {
 
 ## 6. HTTP
 
-### Routes
+### Routes — **cible (non implémentée)** ; routes réelles ci-dessous
 
 ```
+# cible historique (n'existe pas) :
 GET   /exam/{id}/supervise               ExamController::supervise
 POST  /exam/flag                         ExamController::flagPrompt
-POST  /exam/unflag                       ExamController::unflagPrompt
-POST  /exam/{id}/archive                 ExamController::archiveSession
-GET   /exam/{id}/poll                    ExamController::poll          # AJAX live update
+...
+
+# réel (cf. SPEC-session-monitor / SPEC-session-supervisors) :
+GET   /sessions/{id}/monitor             SessionController::monitor       # ?conversation={id}
+POST  /sessions/{id}/student-status      SessionController::setStudentActive   # owner only
 ```
 
 ### Views
 
-- `exam/supervise.php` — split-view :
-  - **gauche** : recherche + onglets + tableau étudiants,
-  - **droite** : conversation détaillée + form signalement.
+- **Réel** : `pages/session/monitor.php` — split-view : à gauche la liste des
+  étudiants enrôlés (nb de prompts, dernière activité, modèle), à droite le
+  transcript de la conversation sélectionnée (`?conversation={id}`), lecture
+  seule. Le bouton (dé)activation n'apparaît que si `canManage` (owner).
 
 ## 7. Base de données
 
-Migration (déjà appliquée en POC) :
+> ⚠️ **Non appliqué.** Les colonnes ci-dessous **n'existent pas** dans
+> [`01_schema.sql`](../../database/schema/01_schema.sql) : `interactions` n'a
+> ni `teacher_flag*`, et `conversations` a **`is_archived BOOLEAN`** (pas
+> `submitted_at`). Il n'y a pas de dossier `database/migrations/`. Le suivi
+> réel se fait **en lecture** sur `enrollments` + `conversations` +
+> `interactions` sans nouvelle colonne (cf. `SessionRepository::monitorStudents`
+> / `interactionsOfConversation`).
 
 ```sql
-ALTER TABLE interaction
+-- Cible historique (NON créée) — signalement enseignant :
+ALTER TABLE interactions
     ADD COLUMN teacher_flag        SMALLINT DEFAULT 0,
     ADD COLUMN teacher_flag_reason VARCHAR(100),
     ADD COLUMN teacher_comment     TEXT;
-
-CREATE INDEX idx_interaction_teacher_flag
-    ON interaction (teacher_flag)
-    WHERE teacher_flag <> 0;
-
-ALTER TABLE conversation
-    ADD COLUMN submitted_at TIMESTAMP;
 ```
-
-Fichier : `database/migrations/AAAA-MM-DD-teacher-supervision.sql`.
 
 ## 8. Réutilisation POC
 
