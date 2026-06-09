@@ -56,27 +56,21 @@ $currentUserId = (int) ($user['id'] ?? 0);
         </div>
     </div>
 
-    <div class="admin-section">
+    <div class="admin-section" data-hide-when-empty="pending"<?= $pendingResearchers === [] ? ' hidden' : '' ?>>
         <div class="admin-pending" data-pending-list="pending">
             <h2><?= icon('alert-triangle', '', 16) ?> Demandes chercheurs en attente (<span data-count="pending"><?= count($pendingResearchers) ?></span>)</h2>
             <?php foreach ($pendingResearchers as $p): ?>
                 <?php $this->renderPartial('partials/department_admin/pending_researcher_request', ['pending' => $p]); ?>
             <?php endforeach; ?>
-            <p class="admin-empty" data-empty="pending"<?= $pendingResearchers === [] ? '' : ' hidden' ?>>
-                Aucune demande chercheur en attente.
-            </p>
         </div>
     </div>
 
-    <div class="admin-section">
+    <div class="admin-section" data-hide-when-empty="pending-spec"<?= $pendingSpecialisations === [] ? ' hidden' : '' ?>>
         <div class="admin-pending" data-pending-list="pending-spec">
             <h2><?= icon('alert-triangle', '', 16) ?> Demandes d'habilitation en attente (<span data-count="pending-spec"><?= count($pendingSpecialisations) ?></span>)</h2>
             <?php foreach ($pendingSpecialisations as $p): ?>
                 <?php $this->renderPartial('partials/department_admin/pending_specialisation_request', ['pending' => $p]); ?>
             <?php endforeach; ?>
-            <p class="admin-empty" data-empty="pending-spec"<?= $pendingSpecialisations === [] ? '' : ' hidden' ?>>
-                Aucune demande d'habilitation en attente.
-            </p>
         </div>
     </div>
 
@@ -130,26 +124,25 @@ $currentUserId = (int) ($user['id'] ?? 0);
             Aucun chercheur autorisé sur votre département.
         </p>
 
-        <h3 class="admin-subhead"><?= icon('x-circle', '', 14) ?> Accès révoqués (<span data-count="revoked"><?= count($revokedResearchers) ?></span>)</h3>
-        <table class="admin-table sortable" data-researcher-table="revoked">
-            <thead>
-                <tr>
-                    <th data-sort="text">Nom</th>
-                    <th>Email</th>
-                    <th>Laboratoire</th>
-                    <th>Accès</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($revokedResearchers as $r): ?>
-                    <?php $this->renderPartial('partials/department_admin/researcher_row', ['researcher' => $r, 'mode' => 'revoked']); ?>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-        <p class="admin-empty" data-empty="revoked"<?= $revokedResearchers === [] ? '' : ' hidden' ?>>
-            Aucun accès révoqué.
-        </p>
+        <div data-hide-when-empty="revoked"<?= $revokedResearchers === [] ? ' hidden' : '' ?>>
+            <h3 class="admin-subhead"><?= icon('x-circle', '', 14) ?> Accès révoqués (<span data-count="revoked"><?= count($revokedResearchers) ?></span>)</h3>
+            <table class="admin-table sortable" data-researcher-table="revoked">
+                <thead>
+                    <tr>
+                        <th data-sort="text">Nom</th>
+                        <th>Email</th>
+                        <th>Laboratoire</th>
+                        <th>Accès</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($revokedResearchers as $r): ?>
+                        <?php $this->renderPartial('partials/department_admin/researcher_row', ['researcher' => $r, 'mode' => 'revoked']); ?>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 
 </div>

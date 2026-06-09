@@ -84,6 +84,14 @@
         return list ? list.querySelectorAll('.admin-pending-row').length : 0;
     }
 
+    /** Hides a [data-hide-when-empty] block when its list has no rows. */
+    function toggleSectionVisibility(key) {
+        var section = document.querySelector('[data-hide-when-empty="' + key + '"]');
+        if (section) {
+            section.hidden = countRows(key) === 0;
+        }
+    }
+
     /** Refreshes the "(n)" count and the empty-state message for a list key. */
     function refreshListState(key) {
         if (!key) {
@@ -98,6 +106,7 @@
         if (empty) {
             empty.hidden = n !== 0;
         }
+        toggleSectionVisibility(key);
         var table = document.querySelector('[data-researcher-table="' + key + '"]');
         resortTable(table);
     }
