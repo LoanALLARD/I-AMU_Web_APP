@@ -55,12 +55,32 @@ $themeCur = match ($user['theme'] ?? null) {
                         <span class="kv-val">
                             <?php if ($isSpecialized): ?>
                                 <span class="badge badge-habilitated">habilité</span>
+                            <?php elseif ($hasPendingSpecRequest): ?>
+                                <span class="badge badge-not-habilitated">demande en attente</span>
                             <?php else: ?>
                                 <span class="badge badge-not-habilitated">non habilité</span>
                             <?php endif; ?>
                         </span>
                     <?php endif; ?>
                 </div>
+
+                <?php if ($isTeacher && !$isSpecialized && !$hasPendingSpecRequest): ?>
+                    <div class="spec-request">
+                        <p class="section-desc">
+                            L'habilitation vous permet d'importer vos propres modèles d'IA
+                            dans vos ressources. Faites-en la demande à l'administrateur de
+                            votre département.
+                        </p>
+                        <form method="POST" action="/profile/request-specialisation">
+                            <?= csrf_field() ?>
+                            <textarea name="request" rows="2" maxlength="500"
+                                      placeholder="Motif de votre demande (facultatif)"></textarea>
+                            <button type="submit" class="btn">
+                                <?= icon('send', '', 12) ?> Demander mon habilitation
+                            </button>
+                        </form>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <div class="profile-card">

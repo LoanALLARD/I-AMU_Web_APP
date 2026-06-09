@@ -220,6 +220,22 @@ INSERT INTO researcher_authorizations (researcher_id, department_id, authorized_
      NOW() - INTERVAL '1 day',
      NOW());
 
+-- A pending habilitation request with a message.
+INSERT INTO teacher_specialisation_requests (teacher_id, request) VALUES
+    ((SELECT id FROM users WHERE email = 'paul.bernard@univ-amu.fr'),
+     'Je souhaite importer mes propres modeles fine-tunes pour mes TP de Java.');
+
+-- A pending habilitation request without a message.
+INSERT INTO teacher_specialisation_requests (teacher_id) VALUES
+    ((SELECT id FROM users WHERE email = 'luc.moreau@univ-amu.fr'));
+
+-- A rejected habilitation request.
+INSERT INTO teacher_specialisation_requests (teacher_id, decided_by_id, request, rejected_at) VALUES
+    ((SELECT id FROM users WHERE email = 'claire.petit@univ-amu.fr'),
+     (SELECT id FROM users WHERE email = 'admin.info@univ-amu.fr'),
+     'Demande d''habilitation pour le module de cryptographie.',
+     NOW() - INTERVAL '2 days');
+
 INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
     ((SELECT id FROM users WHERE email = 'emma.blanc@etu.univ-amu.fr'),
      (SELECT id FROM sessions WHERE name = 'TD BDD - en cours'),

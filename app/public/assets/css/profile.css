@@ -346,6 +346,34 @@
     color: var(--gray-400);
 }
 
+/* Teacher habilitation request */
+.spec-request {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--gray-200);
+}
+.spec-request .section-desc {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: var(--gray-400);
+}
+.spec-request textarea {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 9px 12px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-1);
+    background: var(--white);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    resize: vertical;
+    box-sizing: border-box;
+}
+.spec-request textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+}
+
 /* Modal */
 
 .modal-overlay {

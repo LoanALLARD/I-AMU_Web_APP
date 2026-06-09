@@ -270,6 +270,21 @@ CREATE TABLE researcher_authorizations (
     CONSTRAINT fk_researcher_authorizations_authorized_by FOREIGN KEY (authorized_by_id) REFERENCES department_administrators (id) ON DELETE SET NULL
 );
 
+-- A teacher's request to be habilitated (teachers.is_specialised), scoped to
+-- the teacher's own department via users.department_id.
+CREATE TABLE teacher_specialisation_requests (
+    teacher_id BIGINT,
+    decided_by_id BIGINT,
+    request TEXT,
+    requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    approved_at TIMESTAMPTZ,
+    rejected_at TIMESTAMPTZ,
+    CONSTRAINT pk_teacher_specialisation_requests PRIMARY KEY (teacher_id),
+    CONSTRAINT ck_teacher_specialisation_requests_decision CHECK (approved_at IS NULL OR rejected_at IS NULL OR approved_at <> rejected_at),
+    CONSTRAINT fk_teacher_specialisation_requests_teacher FOREIGN KEY (teacher_id) REFERENCES teachers (id) ON DELETE CASCADE,
+    CONSTRAINT fk_teacher_specialisation_requests_decided_by FOREIGN KEY (decided_by_id) REFERENCES department_administrators (id) ON DELETE SET NULL
+);
+
 CREATE TABLE model_department_accesses (
     model_id BIGINT,
     department_id BIGINT,
