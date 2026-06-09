@@ -541,6 +541,7 @@ $canAddModel = $canAddModel ?? false;
             `;
             aiMsg.appendChild(actions);
         } catch (err) {
+            console.error('chat stream error:', err); //temp
             aiMsg.querySelector('.msg-content').innerHTML = err.name === 'AbortError'
                 ? '<p class="msg-error">Génération interrompue.</p>'
                 : '<p class="msg-error">Erreur de connexion au modèle.</p>';
