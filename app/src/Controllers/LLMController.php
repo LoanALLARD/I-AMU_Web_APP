@@ -4,13 +4,11 @@ namespace Controllers;
 
 use Data\Database;
 
-use Domain\Conversation;
 use Domain\Ai;
 use Domain\OllamaAdaptater;
 
 use Models\AiRepository;
 use Models\InteractionRepository;
-use Models\UserRepository;
 use Models\ConversationRepository;
 use Models\SessionRepository;
 use Models\EnrollmentRepository;

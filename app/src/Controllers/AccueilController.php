@@ -56,7 +56,7 @@ class AccueilController extends Controller
 
             if ($sessionId !== null) {
                 // Session-bound chat: only teacher-authorized models.
-                $models  = $aiRepository->findAllActiveBySession((int) $sessionId);
+                $models  = $aiRepository->findAllActiveBySession((int) $sessionId, null);
                 $allowed = (new \Models\SessionRepository($pdo))->authorizedModelIdsOf((int) $sessionId);
                 $models  = array_values(array_filter(
                     $models,
@@ -64,7 +64,7 @@ class AccueilController extends Controller
                 ));
             } else {
                 // Free chat: models of the user's department.
-                $models = $aiRepository->findActiveByDepartment((int) $user['department_id']);
+                $models = $aiRepository->findAllActiveBySession(null, (int) $user['department_id']);
             }
         } catch (\Throwable $e) {
             error_log('Impossible de charger les modèles : ' . $e->getMessage());
