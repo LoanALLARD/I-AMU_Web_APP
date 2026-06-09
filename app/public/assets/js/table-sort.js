@@ -34,6 +34,7 @@
         var result = type === 'number'
             ? parseFloat(va) - parseFloat(vb)
             : va.localeCompare(vb, 'fr', { sensitivity: 'base' });
+        console.log('COMPARE', { va, vb, result, index });
         return dir === 'desc' ? -result : result;
     }
 
@@ -42,9 +43,10 @@
      * an empty stack restores the original order captured at wiring time.
      */
     function render(state) {
+        console.log('RENDER', state.keys);
         var body = state.table.tBodies[0];
         var rows = state.original.slice();
-
+        console.log('FIRST ROW BEFORE:', rows[0]?.textContent.trim());
         if (state.keys.length > 0) {
             rows.sort(function (a, b) {
                 for (var i = 0; i < state.keys.length; i++) {
@@ -57,12 +59,14 @@
                 return 0;
             });
         }
-
+        console.log('FIRST ROW AFTER SORT:', rows[0]?.textContent.trim());  
+        console.log('ORDER IDS:', rows.map(r => r.children[0]?.textContent.trim()));
         rows.forEach(function (r) { body.appendChild(r); });
     }
 
     /** Cycles a header none -> asc -> desc -> none and updates the stack. */
     function cycle(state, th, index, type) {
+        console.log('CLICK HEADER', { index, type, dir: next });
         var current = th.getAttribute('aria-sort');
         var next = current === 'ascending' ? 'descending'
             : current === 'descending' ? null
@@ -129,6 +133,7 @@
     }
 
     function init() {
+        console.log('tables trouvées:', document.querySelectorAll('table.sortable'));
         document.querySelectorAll('table.sortable').forEach(wire);
     }
 

@@ -98,7 +98,7 @@ class SessionController extends Controller
             $this->redirect('/sessions/create');
         }
 
-        if (!$this->sessions->resourceBelongsTo((int) $form['data']['resourceId'], (int) ($user['id'] ?? 0))) {
+        if (!$this->sessions->resourceAccessibleByTeacher((int) $form['data']['resourceId'], (int) ($user['id'] ?? 0))) {
             $this->flash('error', 'Ressource introuvable ou inaccessible.');
             $this->keepOldInput($_POST);
             $this->redirect('/sessions/create');

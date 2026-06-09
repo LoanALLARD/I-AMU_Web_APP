@@ -45,11 +45,13 @@ class SessionService
         return $row === null ? null : Session::fromRow($row);
     }
 
-    public function resourceBelongsTo(int $resourceId, int $teacherId): bool
+    /**
+     * Returns true if the teacher owns the resource OR has shared access via
+     * teacher_resources. Used to gate session creation.
+     */
+    public function resourceAccessibleBy(int $resourceId, int $teacherId): bool
     {
-        $resource = $this->resources->findById($resourceId);
-
-        return $resource !== null && (int) $resource['owner_id'] === $teacherId;
+        return $this->resources->isAccessibleByTeacher($resourceId, $teacherId);
     }
 
     /**

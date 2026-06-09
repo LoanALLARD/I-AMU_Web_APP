@@ -176,6 +176,13 @@ textarea {
 .badge-teacher     { background: var(--blue-light); color: var(--blue-dark); border-color: var(--blue); }
 .badge-student     { background: #dcfce7; color: #166534; border-color: #4ade80; }
 
+/* ── Resource-access badges (Mes ressources) ─────────────────────── */
+ 
+.badge-owner  { background: var(--blue-light);  color: var(--blue-dark);  border-color: var(--blue); }
+.badge-shared { background: #f5f3ff;             color: #5b21b6;           border-color: #c4b5fd; }
+ 
+[data-theme="dark"] .badge-shared { background: #1e1535; color: #bd9af7; border-color: #7c3aed; }
+
 /* ── Sessions list ────────────────────────────────────────────────── */
 
 .session-toolbar {
@@ -1194,4 +1201,110 @@ textarea {
 }
 .profile-form .form-actions {
     margin-top: 4px;
+}
+
+/* ── Teachers dropdown ───────────────────────────────────────────── */
+
+.dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.dropdown-btn {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-1);
+    background: var(--white);
+    color: var(--gray-800);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    transition:
+        border-color .15s,
+        box-shadow .15s,
+        background .15s;
+}
+
+.dropdown-btn:hover {
+    border-color: var(--blue);
+}
+
+.dropdown-btn.open {
+    border-color: var(--blue);
+}
+
+.dropdown-btn::after {
+    content: "▼";
+    font-size: 10px;
+    color: var(--gray-400);
+}
+
+.dropdown-content {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-2);
+    box-shadow: var(--shadow-sm);
+
+    max-height: 220px;
+    overflow-y: auto;
+
+    z-index: 50;
+}
+
+.dropdown-content.hidden {
+    display: none;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 10px 14px;
+    cursor: pointer;
+
+    font-size: 14px;
+    color: var(--gray-800);
+
+    transition: background .15s;
+}
+
+.dropdown-item:hover {
+    background: var(--gray-100);
+}
+
+.dropdown-item input[type="checkbox"] {
+    margin: 0;
+    accent-color: var(--blue);
+    cursor: pointer;
+}
+
+.dropdown-item span {
+    flex: 1;
+}
+
+.dropdown-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dropdown-content::-webkit-scrollbar-thumb {
+    background: var(--gray-200);
+    border-radius: 999px;
+}
+
+.dropdown-content::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-400);
 }
