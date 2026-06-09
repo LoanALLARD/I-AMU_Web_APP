@@ -6,6 +6,8 @@
  * @var array{name:string, place_name:string}|null $department
  * @var list<array<string, mixed>> $pendingResearchers
  * @var list<array<string, mixed>> $pendingSpecialisations
+ * @var list<array<string, mixed>> $habilitatedTeachers
+ * @var list<array<string, mixed>> $revokedTeachers
  * @var list<array<string, mixed>> $departmentMembers
  * @var list<array<string, mixed>> $researchers
  * @var list<array<string, mixed>> $revokedResearchers
@@ -14,6 +16,8 @@ $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '
 $department = $department ?? null;
 $pendingResearchers = $pendingResearchers ?? [];
 $pendingSpecialisations = $pendingSpecialisations ?? [];
+$habilitatedTeachers = $habilitatedTeachers ?? [];
+$revokedTeachers = $revokedTeachers ?? [];
 $departmentMembers = $departmentMembers ?? [];
 $researchers = $researchers ?? [];
 $revokedResearchers = $revokedResearchers ?? [];
@@ -71,6 +75,47 @@ $currentUserId = (int) ($user['id'] ?? 0);
             <?php foreach ($pendingSpecialisations as $p): ?>
                 <?php $this->renderPartial('partials/department_admin/pending_specialisation_request', ['pending' => $p]); ?>
             <?php endforeach; ?>
+        </div>
+    </div>
+
+    <div class="admin-section">
+        <h2><?= icon('graduation-cap', '', 16) ?> Enseignants habilités (<span data-count="spec-habilitated"><?= count($habilitatedTeachers) ?></span>)</h2>
+        <table class="admin-table sortable" data-list-table="spec-habilitated">
+            <thead>
+                <tr>
+                    <th data-sort="text">Nom</th>
+                    <th>Email</th>
+                    <th>Habilitation</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($habilitatedTeachers as $t): ?>
+                    <?php $this->renderPartial('partials/department_admin/specialised_teacher_row', ['teacher' => $t, 'mode' => 'habilitated']); ?>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <p class="admin-empty" data-empty="spec-habilitated"<?= $habilitatedTeachers === [] ? '' : ' hidden' ?>>
+            Aucun enseignant habilité dans votre département.
+        </p>
+
+        <div data-hide-when-empty="spec-revoked"<?= $revokedTeachers === [] ? ' hidden' : '' ?>>
+            <h3 class="admin-subhead"><?= icon('x-circle', '', 14) ?> Habilitations révoquées (<span data-count="spec-revoked"><?= count($revokedTeachers) ?></span>)</h3>
+            <table class="admin-table sortable" data-list-table="spec-revoked">
+                <thead>
+                    <tr>
+                        <th data-sort="text">Nom</th>
+                        <th>Email</th>
+                        <th>Habilitation</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($revokedTeachers as $t): ?>
+                        <?php $this->renderPartial('partials/department_admin/specialised_teacher_row', ['teacher' => $t, 'mode' => 'revoked']); ?>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 

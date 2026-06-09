@@ -104,4 +104,68 @@ final class TeacherSpecialisationService
 
         return ['success' => true];
     }
+
+    /**
+     * Habilitated teachers of the department.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listHabilitated(int $departmentId): array
+    {
+        return $this->repo->findHabilitatedByDepartment($departmentId);
+    }
+
+    /**
+     * Teachers whose habilitation was granted then revoked.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listRevoked(int $departmentId): array
+    {
+        return $this->repo->findRevokedByDepartment($departmentId);
+    }
+
+    /**
+     * Identity row for a single teacher, to re-render its table row.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findRow(int $teacherId, int $departmentId): ?array
+    {
+        return $this->repo->findRow($teacherId, $departmentId);
+    }
+
+    /**
+     * Revokes a teacher's habilitation.
+     *
+     * @return array{success: true} | array{success: false, error: string}
+     */
+    public function revoke(int $teacherId, int $departmentId, int $adminId): array
+    {
+        if (!$this->users->isDepartmentMember($teacherId, $departmentId)) {
+            return ['success' => false, 'error' => 'Enseignant introuvable dans votre département.'];
+        }
+        if (!$this->repo->revoke($teacherId, $adminId)) {
+            return ['success' => false, 'error' => 'Cet enseignant n\'est pas habilité.'];
+        }
+
+        return ['success' => true];
+    }
+
+    /**
+     * Re-habilitates a previously revoked teacher.
+     *
+     * @return array{success: true} | array{success: false, error: string}
+     */
+    public function reauthorize(int $teacherId, int $departmentId, int $adminId): array
+    {
+        if (!$this->users->isDepartmentMember($teacherId, $departmentId)) {
+            return ['success' => false, 'error' => 'Enseignant introuvable dans votre département.'];
+        }
+        if (!$this->repo->reauthorize($teacherId, $adminId)) {
+            return ['success' => false, 'error' => 'Cet enseignant n\'a pas d\'habilitation révoquée à rétablir.'];
+        }
+
+        return ['success' => true];
+    }
 }

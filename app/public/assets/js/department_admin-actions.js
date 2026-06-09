@@ -62,13 +62,19 @@
         }
     }
 
+    /** The sortable table holding a key's rows (researcher or generic list), if any. */
+    function listTable(key) {
+        return document.querySelector('[data-researcher-table="' + key + '"]')
+            || document.querySelector('[data-list-table="' + key + '"]');
+    }
+
     /**
-     * Each movable list is one "key". A table key (authorized/revoked) holds
-     * <tr> rows in a sortable table; the "pending" key holds <details> blocks
-     * in a plain container. Returns the container element rows live in.
+     * Each movable list is one "key". A table key holds <tr> rows in a sortable
+     * table; a "pending" key holds <details> blocks in a plain container.
+     * Returns the container element rows live in.
      */
     function listBody(key) {
-        var table = document.querySelector('[data-researcher-table="' + key + '"]');
+        var table = listTable(key);
         if (table) {
             return table.tBodies[0];
         }
@@ -76,7 +82,7 @@
     }
 
     function countRows(key) {
-        var table = document.querySelector('[data-researcher-table="' + key + '"]');
+        var table = listTable(key);
         if (table) {
             return table.tBodies[0].rows.length;
         }
@@ -107,8 +113,7 @@
             empty.hidden = n !== 0;
         }
         toggleSectionVisibility(key);
-        var table = document.querySelector('[data-researcher-table="' + key + '"]');
-        resortTable(table);
+        resortTable(listTable(key));
     }
 
     /**
@@ -147,8 +152,11 @@
             return { el: details, key: list ? list.getAttribute('data-pending-list') : 'pending' };
         }
         var tr = form.closest('tr');
-        var table = tr ? tr.closest('[data-researcher-table]') : null;
-        return { el: tr, key: table ? table.getAttribute('data-researcher-table') : null };
+        var table = tr ? tr.closest('[data-researcher-table], [data-list-table]') : null;
+        var key = table
+            ? (table.getAttribute('data-researcher-table') || table.getAttribute('data-list-table'))
+            : null;
+        return { el: tr, key: key };
     }
 
     function handle(form, e) {

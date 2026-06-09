@@ -280,7 +280,6 @@ CREATE TABLE teacher_specialisation_requests (
     approved_at TIMESTAMPTZ,
     rejected_at TIMESTAMPTZ,
     CONSTRAINT pk_teacher_specialisation_requests PRIMARY KEY (teacher_id),
-    CONSTRAINT ck_teacher_specialisation_requests_decision CHECK (approved_at IS NULL OR rejected_at IS NULL OR approved_at <> rejected_at),
     CONSTRAINT fk_teacher_specialisation_requests_teacher FOREIGN KEY (teacher_id) REFERENCES teachers (id) ON DELETE CASCADE,
     CONSTRAINT fk_teacher_specialisation_requests_decided_by FOREIGN KEY (decided_by_id) REFERENCES department_administrators (id) ON DELETE SET NULL
 );

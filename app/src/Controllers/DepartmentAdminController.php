@@ -38,11 +38,13 @@ class DepartmentAdminController extends Controller
             'titrePage'             => 'Administration',
             'user'                  => $this->currentUser(),
             'department'            => (new PlaceRepository($pdo))->departmentWithPlace($departmentId),
-            'pendingResearchers'    => $authorizations->listPending($departmentId),
+            'pendingResearchers'     => $authorizations->listPending($departmentId),
             'pendingSpecialisations' => $specialisations->listPending($departmentId),
-            'departmentMembers'     => $userRepository->listDepartmentMembers($departmentId),
-            'researchers'           => $userRepository->listAuthorizedResearchers($departmentId),
-            'revokedResearchers'    => $authorizations->listRevoked($departmentId),
+            'habilitatedTeachers'    => $specialisations->listHabilitated($departmentId),
+            'revokedTeachers'        => $specialisations->listRevoked($departmentId),
+            'departmentMembers'      => $userRepository->listDepartmentMembers($departmentId),
+            'researchers'            => $userRepository->listAuthorizedResearchers($departmentId),
+            'revokedResearchers'     => $authorizations->listRevoked($departmentId),
         ]);
     }
 
@@ -84,12 +86,16 @@ class DepartmentAdminController extends Controller
         $this->verifyCsrf();
 
         $teacherId = (int) $this->input('teacher_id');
-        $result = (new TeacherSpecialisationService(Database::getConnection()))
-            ->approve($teacherId, $this->currentDepartmentId(), (int) $this->currentUser()['id']);
+        $departmentId = $this->currentDepartmentId();
+        $service = new TeacherSpecialisationService(Database::getConnection());
+        $result = $service->approve($teacherId, $departmentId, (int) $this->currentUser()['id']);
 
-        // Approving just drops the request from the pending list (no target list).
+        // Approving moves the request into the "habilitated teachers" table.
         $this->respond($result['success'],
-            $result['success'] ? 'Enseignant habilité.' : $result['error']);
+            $result['success'] ? 'Enseignant habilité.' : $result['error'],
+            $result['success']
+                ? $this->specialisedTeacherRowPayload($service, $teacherId, $departmentId, 'spec-habilitated', 'habilitated')
+                : []);
     }
 
     public function rejectSpecialisation(): void
@@ -101,8 +107,67 @@ class DepartmentAdminController extends Controller
         $result = (new TeacherSpecialisationService(Database::getConnection()))
             ->reject($teacherId, $this->currentDepartmentId(), (int) $this->currentUser()['id']);
 
+        // Rejecting just drops the request: no target list.
         $this->respond($result['success'],
             $result['success'] ? 'Demande d\'habilitation refusée.' : $result['error']);
+    }
+
+    public function revokeSpecialisation(): void
+    {
+        $this->requireRole('department_admin');
+        $this->verifyCsrf();
+
+        $teacherId = (int) $this->input('teacher_id');
+        $departmentId = $this->currentDepartmentId();
+        $service = new TeacherSpecialisationService(Database::getConnection());
+        $result = $service->revoke($teacherId, $departmentId, (int) $this->currentUser()['id']);
+
+        $this->respond($result['success'],
+            $result['success'] ? 'Habilitation révoquée.' : $result['error'],
+            $result['success']
+                ? $this->specialisedTeacherRowPayload($service, $teacherId, $departmentId, 'spec-revoked', 'revoked')
+                : []);
+    }
+
+    public function reauthorizeSpecialisation(): void
+    {
+        $this->requireRole('department_admin');
+        $this->verifyCsrf();
+
+        $teacherId = (int) $this->input('teacher_id');
+        $departmentId = $this->currentDepartmentId();
+        $service = new TeacherSpecialisationService(Database::getConnection());
+        $result = $service->reauthorize($teacherId, $departmentId, (int) $this->currentUser()['id']);
+
+        $this->respond($result['success'],
+            $result['success'] ? 'Habilitation rétablie.' : $result['error'],
+            $result['success']
+                ? $this->specialisedTeacherRowPayload($service, $teacherId, $departmentId, 'spec-habilitated', 'habilitated')
+                : []);
+    }
+
+    /**
+     * Builds the AJAX payload for a specialisation action: the target list key
+     * and the server-rendered <tr> for that mode.
+     *
+     * @return array{teacher_id:int, target:string, row:string}
+     */
+    private function specialisedTeacherRowPayload(
+        TeacherSpecialisationService $service,
+        int $teacherId,
+        int $departmentId,
+        string $target,
+        string $mode
+    ): array {
+        $row = $service->findRow($teacherId, $departmentId);
+
+        return [
+            'teacher_id' => $teacherId,
+            'target'     => $target,
+            'row'        => $row === null
+                ? ''
+                : $this->capturePartial('partials/department_admin/specialised_teacher_row', ['teacher' => $row, 'mode' => $mode]),
+        ];
     }
 
     /**
