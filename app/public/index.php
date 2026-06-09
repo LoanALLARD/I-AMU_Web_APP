@@ -73,7 +73,10 @@
     $router->add('GET',  '/super-admin/login',  function() { (new SuperAdminAuthController())->showLogin(); });
     $router->add('POST', '/super-admin/login',  function() { (new SuperAdminAuthController())->login(); });
     $router->add('POST', '/super-admin/logout', function() { (new SuperAdminAuthController())->logout(); });
-    $router->add('GET',  '/super-admin',         function() { (new SuperAdminController())->index(); });
+    $router->add('GET',  '/super-admin',                   function() { (new SuperAdminController())->index(); });
+    $router->add('GET',  '/super-admin/department-admins', function() { (new SuperAdminController())->departmentAdmins(); });
+    $router->add('GET',  '/super-admin/places',            function() { (new SuperAdminController())->places(); });
+    $router->add('GET',  '/super-admin/email-domains',     function() { (new SuperAdminController())->emailDomains(); });
 
     // --- Researcher space (researcher role) ---------------------------
     $router->add('GET',  '/researcher',                 function() { (new ResearcherController())->index(); });

@@ -44,7 +44,7 @@ class AiRepository
      *
      * @return list<array<string, mixed>>
      */
-    public function findAllActiveBySession(?int $sessionID,?int $dep_id): array
+    public function findAllActiveBySession(?int $sessionID, ?int $dep_id = null): array
     {
         if ($sessionID == null){
             $query = $this->pdo->prepare(
@@ -85,7 +85,13 @@ class AiRepository
         return $rows;
     }
 
-    public function findAllActiveByResource(int $resource_id){
+    /**
+     * Active models linked to a given resource, for the session model picker.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAllActiveByResource(int $resource_id): array
+    {
         $query = $this->pdo->prepare(
             'SELECT m.name,m.id from models m
             INNER JOIN model_resource_accesses mra

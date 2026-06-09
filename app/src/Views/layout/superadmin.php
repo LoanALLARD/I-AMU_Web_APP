@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="/assets/css/superadmin.css?v=<?= $cssVer('superadmin.css') ?>">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
-<body class="auth-body superadmin-body">
+<body class="auth-body superadmin-body<?= !empty($bodyClass) ? ' ' . htmlspecialchars($bodyClass) : '' ?>">
     <main>
         <?= $content ?>
     </main>
