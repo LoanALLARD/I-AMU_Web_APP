@@ -9,7 +9,7 @@
 A **standalone web application** giving students **supervised** access to
 a local LLM (Ollama), with pedagogical traceability for teachers and
 export for research (no platform-side anonymisation — see spec 06).
-PHP 8.1+ / PostgreSQL 14 / Ollama / Docker. Self-hosted authentication
+PHP 8.1+ / PostgreSQL 17 / Ollama / Docker. Self-hosted authentication
 via university email (domains configurable in config).
 
 ## 2. Read first
@@ -35,9 +35,9 @@ git show poc:app/Controllers/SessionController.php
 ## 4. Stack
 
 - Language: PHP 8.1+ (typed properties, enums, `readonly`).
-- DB: PostgreSQL 14 (Docker).
+- DB: PostgreSQL 17 (Docker).
 - LLM: native Ollama (host), reached via `host.docker.internal`.
-- Dev email: maildev (intercepts everything, port 1080).
+- Dev email: maildev (intercepts everything, port 1025).
 - DB admin: Adminer (port 8081).
 - Web: Apache 2.4 + mod_rewrite (Docker).
 - Front: vanilla JS + marked.js (markdown) + highlight.js (code).
@@ -48,7 +48,7 @@ git show poc:app/Controllers/SessionController.php
 
 These rules apply to the whole project, every language and file type:
 
-- Code, comments, identifiers, commit messages, and documentation are written in **English**. The only French text allowed is **end-user UI strings** (button labels, flash messages, view titles), since the interface targets AMU.
+- Code, comments, identifiers, commit messages, and documentation are written in **English**. The only French text allowed is **end-user UI strings** except for read me(button labels, flash messages, view titles), since the interface targets AMU.
 - No emojis anywhere in code or UI — render icons through the `icon($name)` helper instead.
 - No accented or non-ASCII characters in code or identifiers (English only); accents are fine only inside French UI strings and inside `docs/` prose.
 - No Hungarian notation; no `_` prefix to mark privates — the language's visibility keyword is enough.
@@ -90,8 +90,8 @@ Lint:
 docker compose exec app php -l app/Core/Application.php
 ```
 
-Local URLs: app `http://localhost:8080/`, Adminer `http://localhost:8081/`
-(PostgreSQL → server `db`), maildev `http://localhost:1080/`, Ollama
+Local URLs: app `http://localhost:8085/`, Adminer `http://localhost:8081/`
+(PostgreSQL → server `db`), maildev `http://localhost:1025/`, Ollama
 `http://localhost:11434/api/tags`.
 
 ## 8. Accounts & access
