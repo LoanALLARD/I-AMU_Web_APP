@@ -49,7 +49,7 @@ class SessionService
      * Returns true if the teacher owns the resource OR has shared access via
      * teacher_resources. Used to gate session creation.
      */
-    public function resourceAccessibleBy(int $resourceId, int $teacherId): bool
+    public function resourceAccessibleByTeacher(int $resourceId, int $teacherId): bool
     {
         return $this->resources->isAccessibleByTeacher($resourceId, $teacherId);
     }
