@@ -22,12 +22,12 @@ $stateLabels = [
     <div class="page-header-row">
         <?php if ($activeTab === 'ressources'): ?>
             <h1 class="page-title"><?= icon('book', '', 18) ?> Mes ressources</h1>
-            <a href="/ressources/create" class="btn primary">
+            <a href="/ressources/create" class="btn primary page-header-cta">
                 <?= icon('plus', '', 14) ?> Nouvelle ressource
             </a>
         <?php else: ?>
             <h1 class="page-title"><?= icon('graduation-cap', '', 18) ?> Mes sessions</h1>
-            <a href="/sessions/create" class="btn primary">
+            <a href="/sessions/create" class="btn primary page-header-cta">
                 <?= icon('plus', '', 14) ?> Nouvelle session
             </a>
         <?php endif; ?>
@@ -88,18 +88,18 @@ $stateLabels = [
                         $isOwner   = filter_var($r['is_owner'] ?? false, FILTER_VALIDATE_BOOLEAN);
                     ?>
                     <tr>
-                        <td><span style="font-family:var(--font-mono);font-weight:700;font-size:13px"><?= htmlspecialchars((string) $r['code']) ?></span></td>
+                        <td><span class="res-code"><?= htmlspecialchars((string) $r['code']) ?></span></td>
                         <td>
-                            <div style="font-weight:600;color:var(--gray-800)"><?= htmlspecialchars((string) $r['name']) ?></div>
+                            <div class="res-name"><?= htmlspecialchars((string) $r['name']) ?></div>
                             <?php if (!empty($r['description'])): ?>
-                                <div style="font-size:12px;color:var(--gray-400);margin-top:2px"><?= htmlspecialchars(mb_strimwidth((string) $r['description'], 0, 72, '…')) ?></div>
+                                <div class="res-desc"><?= htmlspecialchars(mb_strimwidth((string) $r['description'], 0, 72, '…')) ?></div>
                             <?php endif; ?>
                         </td>
                         <td>
                             <?php if (!empty($r['semester'])): ?>
-                                <span style="font-family:var(--font-mono);font-size:13px"><?= htmlspecialchars((string) $r['semester']) ?></span>
+                                <span class="cell-mono"><?= htmlspecialchars((string) $r['semester']) ?></span>
                             <?php else: ?>
-                                <span style="color:var(--gray-400)">—</span>
+                                <span class="cell-muted">—</span>
                             <?php endif; ?>
                         </td>
                         <td><span class="badge <?= htmlspecialchars($stateMeta['class']) ?>"><?= htmlspecialchars($stateMeta['label']) ?></span></td>
@@ -136,7 +136,7 @@ $stateLabels = [
             <div class="session-card">
                 <div class="session-card-head">
                     <span class="session-card-title"><?= htmlspecialchars((string) $r['name']) ?></span>
-                    <span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-400)"><?= htmlspecialchars((string) $r['code']) ?></span>
+                    <span class="cell-mono cell-muted" style="font-size:12px"><?= htmlspecialchars((string) $r['code']) ?></span>
                 </div>
                 <div class="session-card-meta">
                     <span class="badge <?= htmlspecialchars($stateMeta['class']) ?>"><?= htmlspecialchars($stateMeta['label']) ?></span>
@@ -185,15 +185,15 @@ $stateLabels = [
                 <tbody>
                     <?php foreach ($sessions as $s): ?>
                     <tr>
-                        <td style="font-weight:600;color:var(--gray-800)"><?= htmlspecialchars((string) $s['name']) ?></td>
-                        <td><span style="font-family:var(--font-mono);font-size:13px"><?= htmlspecialchars((string) ($s['resourceName'] ?? '—')) ?></span></td>
-                        <td><span style="font-size:13px;color:var(--gray-500)"><?= htmlspecialchars((string) ($s['typeLabel'] ?? '—')) ?></span></td>
+                        <td class="cell-strong"><?= htmlspecialchars((string) $s['name']) ?></td>
+                        <td><span class="cell-mono"><?= htmlspecialchars((string) ($s['resourceName'] ?? '—')) ?></span></td>
+                        <td><span class="cell-muted" style="font-size:13px"><?= htmlspecialchars((string) ($s['typeLabel'] ?? '—')) ?></span></td>
                         <td><span class="badge <?= htmlspecialchars($s['statusClass'] ?? 'badge-draft') ?>"><?= htmlspecialchars($s['statusLabel'] ?? 'Inconnu') ?></span></td>
                         <td>
                             <?php if (!empty($s['accessCode'])): ?>
-                                <span style="font-family:var(--font-mono);font-size:13px;letter-spacing:.05em"><?= htmlspecialchars((string) $s['accessCode']) ?></span>
+                                <span class="cell-mono"><?= htmlspecialchars((string) $s['accessCode']) ?></span>
                             <?php else: ?>
-                                <span style="color:var(--gray-400)">—</span>
+                                <span class="cell-muted">—</span>
                             <?php endif; ?>
                         </td>
                         <td class="cell-actions">

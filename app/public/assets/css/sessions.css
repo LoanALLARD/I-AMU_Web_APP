@@ -29,7 +29,12 @@
     font-size: 14px;
     max-width: 640px;
 }
+/* Heading with an inline icon (Mes ressources / Mes sessions) */
+.page-title { display: inline-flex; align-items: center; gap: 10px; }
+.page-title svg { color: var(--blue); flex: none; }
 .page-header-row { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+/* Push a header action button (Nouvelle ressource / session) to the right edge */
+.page-header-cta { margin-left: auto; }
 
 .tab-bar {
     max-width: 1450px;
@@ -188,6 +193,17 @@ textarea {
 .badge-shared { background: #f5f3ff;             color: #5b21b6;           border-color: #c4b5fd; }
  
 [data-theme="dark"] .badge-shared { background: #1e1535; color: #bd9af7; border-color: #7c3aed; }
+
+/* Resource state badge (ARCHIVED) — neutral/muted, completes draft + active */
+.badge-archived { background: var(--gray-100); color: var(--gray-500); border-color: var(--gray-400); }
+
+/* Resource list — cell helpers (replace the inline styles in ressources/index.php) */
+.res-name { font-weight: 600; color: var(--gray-800); }
+.res-code { font-family: var(--font-mono); font-weight: 700; font-size: 13px; color: var(--gray-800); }
+.res-desc { font-size: 12px; color: var(--gray-500); margin-top: 3px; max-width: 460px; }
+.cell-strong { font-weight: 600; color: var(--gray-800); }
+.cell-mono   { font-family: var(--font-mono); font-size: 13px; }
+.cell-muted  { color: var(--gray-400); }
 
 /* ── Sessions list ────────────────────────────────────────────────── */
 
@@ -1516,7 +1532,7 @@ body.exam-locked .app-topbar {
     display: flex;
     gap: 4px;
     padding: 0 0 0 2px;
-    border-bottom: 1.5px solid var(--border);
+    border-bottom: 1.5px solid var(--gray-200);
     margin-bottom: 24px;
 }
 
@@ -1539,8 +1555,8 @@ body.exam-locked .app-topbar {
 }
 
 .tab-item.is-active {
-    color: var(--accent, #2563eb);
-    border-bottom-color: var(--accent, #2563eb);
+    color: var(--blue);
+    border-bottom-color: var(--blue);
 }
 
 .tab-count {
@@ -1558,6 +1574,6 @@ body.exam-locked .app-topbar {
 }
 
 .tab-item.is-active .tab-count {
-    background: color-mix(in srgb, var(--accent, #2563eb) 12%, transparent);
-    color: var(--accent, #2563eb);
+    background: color-mix(in srgb, var(--blue) 12%, transparent);
+    color: var(--blue);
 }
