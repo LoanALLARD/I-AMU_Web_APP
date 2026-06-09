@@ -58,11 +58,11 @@ class AiRepository
                 FROM models 
                 where resource_id is NULL
                 and is_shareable = true'
-                );
+            );
             $query->execute([
                 "a"    => true,
                 "dep_id"  => $dep_id
-                ]);
+            ]);
         }
         else{
             $query = $this->pdo->prepare(
@@ -75,7 +75,7 @@ class AiRepository
             $query->execute([
                 "a"    => true,
                 "session_id"  => $sessionID
-                ]);
+            ]);
         }
         /** @var list<array<string, mixed>> $rows */
         $rows = $query->fetchAll();
@@ -163,11 +163,11 @@ class AiRepository
     /**
      * @return array<string, mixed>|null
      */
-    public function addModel(?int $department_id,?string $resource_id,string $name, string $size, string $provider, string $adapter, string $apiUrl, int $maxTokens, int $contextWindow, string $isShareable)
+    public function addModel(?int $department_id,?string $resource_id,string $name, string $size, string $provider, string $adapter, string $apiUrl, int $contextWindow, string $isShareable)
     {
         $query = $this->pdo->prepare(
-            'INSERT INTO models (department_id,resource_id,name,size,provider,max_tokens,context_window,api_url,adapter,is_shareable)
-            VALUES (:department_id,:resource_id,:name,:size,:provider,:max_tokens,:context_window,:api_url,:adapter,:is_shareable)'
+            'INSERT INTO models (department_id,resource_id,name,size,provider,context_window,api_url,adapter,is_shareable)
+            VALUES (:department_id,:resource_id,:name,:size,:provider,:context_window,:api_url,:adapter,:is_shareable)'
         );
 
         $query->execute([

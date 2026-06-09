@@ -38,7 +38,7 @@ class LLMController{
         // never from the client payload. No email lookup needed.
         $userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
         // $userId = 1;
-        
+
         if ($userId <= 0) {
             header('Content-Type: application/json');
             http_response_code(401);
@@ -83,7 +83,7 @@ class LLMController{
             echo json_encode(['error' => "the model is not supported."]);
             // throw new \Exception ("Error, model : ".$modelName." is unknow");
             return;
-        }        
+        }
 
         // A conversation id is only sent on a session-bound chat. We resolve
         // it (with an ownership check) so the interaction can be persisted.
@@ -104,7 +104,7 @@ class LLMController{
             $conversationData = $conversationRepository->getConversationByUserIdAndConversationId(
                 $userId,
                 $conversation_id,
-            );       
+            );
             if ($conversationData !== null && preg_match('/^Conversation #\d+$/', $conversationData['name'])) {
                 $conversationRepository->rename(
                     $userId,
@@ -112,16 +112,16 @@ class LLMController{
                     $nameConversation
                 );
                 $conversationData['name'] = $nameConversation;
-            }        
-        }                                                           
-                
+            }
+        }
+
         if ($conversationData == null){
             header('Content-Type: application/json');
             http_response_code(404);
             echo json_encode(['error' => "this user has no conversation corresponding with id :". $conversation_id ]);
             // throw new \Exception ("Error, this user has no conversation corresponding");
             return;
-        }    
+        }
 
         // A student deactivated by the teacher cannot send in the session
         // (server-side enforcement of the "disconnect").
@@ -204,18 +204,17 @@ class LLMController{
         }
 
         // Recover Param from Session
-        
+
         $ai = new Ai (
-            $id = $aiData["id"],
-            $department_id = $aiData["department_id"],
-            $resource_id = $aiData["resource_id"],
+            $aiData["id"],
+            $aiData["department_id"],
+            $aiData["resource_id"],
             $aiData["name"],
             $aiData["size"],
             $aiData["provider"],
-            null,
             $aiData["context_window"],
             $aiData["is_active"],
-            $aiData["created_at"],
+            $aiData["is_shareable"],
             $aiData["api_url"],
             $adapter,
         );
@@ -257,7 +256,6 @@ class LLMController{
             'conversation_id'   => $conversationData['id'] ?? null,
             'conversation_name' => $conversationData['name'] ?? null,
         ]);
-        
+
     }
 }
-
