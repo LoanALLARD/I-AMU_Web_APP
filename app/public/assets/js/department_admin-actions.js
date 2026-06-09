@@ -159,6 +159,30 @@
         return { el: tr, key: key };
     }
 
+    /** Opens the shared modal filled with a member row's info template. */
+    function openMemberModal(trigger) {
+        var modal = document.getElementById('member-modal');
+        var body = document.getElementById('member-modal-body');
+        var title = document.getElementById('member-modal-title');
+        var tpl = trigger.parentNode.querySelector('[data-member-info-panel]');
+        if (!modal || !body || !tpl) {
+            return;
+        }
+        body.innerHTML = '';
+        body.appendChild(tpl.content.cloneNode(true));
+        if (title) {
+            title.textContent = trigger.getAttribute('data-member-name') || 'Informations';
+        }
+        modal.style.display = 'flex';
+    }
+
+    function closeMemberModal() {
+        var modal = document.getElementById('member-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
     function handle(form, e) {
         e.preventDefault();
 
@@ -168,7 +192,13 @@
         }
 
         var action = form.getAttribute('data-ajax-action');
+        // The set-active form may live in the shared modal (cloned out of the
+        // row), so fall back to locating the original <tr> by user id.
         var row = form.closest('tr');
+        if (!row && action === 'set-active') {
+            var uid = form.querySelector('[name="user_id"]');
+            row = uid ? document.querySelector('tr[data-user-id="' + uid.value + '"]') : null;
+        }
         var source = sourceOf(form);
         var button = form.querySelector('button');
         if (button) {
@@ -188,6 +218,7 @@
                     return;
                 }
                 if (action === 'set-active') {
+                    closeMemberModal();
                     replaceMemberRow(row, r.data.row);
                 } else if (action === 'move-row') {
                     applyMoveRow(source.el, source.key, r.data.target, r.data.row);
@@ -204,6 +235,24 @@
             var form = e.target.closest('form[data-ajax-action]');
             if (form) {
                 handle(form, e);
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            var trigger = e.target.closest('[data-member-info]');
+            if (trigger) {
+                openMemberModal(trigger);
+                return;
+            }
+            // Close on the close button or a click on the backdrop itself.
+            if (e.target.closest('#member-modal-close') || e.target.id === 'member-modal') {
+                closeMemberModal();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeMemberModal();
             }
         });
     }

@@ -90,6 +90,42 @@
 }
 .admin-empty[hidden] { display: none; }
 
+/* Per-member info trigger (replaces the old action column) + shared modal. */
+.badge-info {
+    display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
+    border: none; font: inherit; font-size: 12px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px;
+    background: var(--blue-light, #eff6ff); color: var(--blue, #2563eb);
+}
+.member-info-panel { font-size: 13px; }
+.member-info-panel dl {
+    display: grid; grid-template-columns: 150px 1fr; gap: 6px 12px; margin: 0;
+}
+.member-info-panel dt { color: var(--gray-400, #9ca3af); font-weight: 600; }
+.member-info-panel dd { margin: 0; color: var(--gray-800, #1f2937); }
+.member-info-panel form { margin: 16px 0 0; }
+
+.modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+}
+.modal-box {
+    background: var(--white, #fff); border-radius: 14px;
+    padding: 22px 26px; max-width: 440px; width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+.modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 14px;
+}
+.modal-head h2 { margin: 0; font-size: 16px; }
+.modal-close {
+    border: none; background: none; cursor: pointer; padding: 4px;
+    color: var(--gray-400, #9ca3af); display: inline-flex;
+}
+.modal-close:hover { color: var(--gray-800, #1f2937); }
+
 .admin-table th.is-sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 .admin-table th.is-sortable:hover { color: var(--blue, #2563eb); }
 .admin-table th.is-sortable::after {

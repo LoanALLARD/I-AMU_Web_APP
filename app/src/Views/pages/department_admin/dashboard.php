@@ -136,7 +136,7 @@ $currentUserId = (int) ($user['id'] ?? 0);
                         <th data-sort="text">Rôle</th>
                         <th data-sort="text">Statut</th>
                         <th data-sort="text">Dernière connexion</th>
-                        <th></th>
+                        <th>Infos</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -191,6 +191,19 @@ $currentUserId = (int) ($user['id'] ?? 0);
         </div>
     </div>
 
+</div>
+
+<!-- Shared member-info modal; filled from the clicked row's <template>. -->
+<div class="modal-overlay" id="member-modal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h2 id="member-modal-title">Informations</h2>
+            <button type="button" class="modal-close" id="member-modal-close" aria-label="Fermer">
+                <?= icon('x', '', 16) ?>
+            </button>
+        </div>
+        <div id="member-modal-body"></div>
+    </div>
 </div>
 
 <?php
