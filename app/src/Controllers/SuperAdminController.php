@@ -65,7 +65,7 @@ class SuperAdminController extends Controller
         );
 
         if ($result['success']) {
-            $this->flash('success', 'Domaine ajoute avec succes.');
+            $this->flash('success', 'Domaine ajouté avec succès.');
         } else {
             $this->flash('error', $result['error']);
         }
@@ -86,7 +86,7 @@ class SuperAdminController extends Controller
         $result = $service->setActive($id, $isActive);
 
         if ($result['success']) {
-            $this->flash('success', $isActive ? 'Domaine reactive.' : 'Domaine desactive.');
+            $this->flash('success', $isActive ? 'Domaine réactivé.' : 'Domaine désactivé.');
         } else {
             $this->flash('error', $result['error']);
         }

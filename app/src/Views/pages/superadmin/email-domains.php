@@ -5,7 +5,7 @@
  */
 // French labels for known roles; unmapped enum values fall back to their raw name.
 $roleLabels = [
-    'STUDENT'    => 'Etudiant',
+    'STUDENT'    => 'Étudiant',
     'TEACHER'    => 'Enseignant',
     'RESEARCHER' => 'Chercheur',
 ];
@@ -27,8 +27,8 @@ $roleLabel = static fn (string $role): string => $roleLabels[$role] ?? $role;
         <section class="panel-section">
             <h2>Ajouter un domaine</h2>
             <p class="section-lead">
-                Les utilisateurs dont l'adresse email se termine par un domaine actif
-                peuvent s'inscrire avec le role associe.
+                Les utilisateurs dont l'adresse e-mail se termine par un domaine actif
+                peuvent s'inscrire avec le rôle associé.
             </p>
 
             <form method="POST" action="/super-admin/email-domains" class="domain-form">
@@ -40,7 +40,7 @@ $roleLabel = static fn (string $role): string => $roleLabels[$role] ?? $role;
                                placeholder="univ-amu.fr" required>
                     </div>
                     <div class="form-group">
-                        <label for="role">Role</label>
+                        <label for="role">Rôle</label>
                         <select id="role" name="role" required>
                             <?php foreach ($roles as $value): ?>
                                 <option value="<?= htmlspecialchars($value) ?>"><?= htmlspecialchars($roleLabel($value)) ?></option>
@@ -56,17 +56,17 @@ $roleLabel = static fn (string $role): string => $roleLabels[$role] ?? $role;
         </section>
 
         <section class="panel-section">
-            <h2>Domaines configures</h2>
+            <h2>Domaines configurés</h2>
 
             <?php if (empty($domains)): ?>
-                <p class="section-empty">Aucun domaine configure pour le moment.</p>
+                <p class="section-empty">Aucun domaine configuré pour le moment.</p>
             <?php else: ?>
                 <table class="domain-table">
                     <thead>
                         <tr>
                             <th>Domaine</th>
-                            <th>Role</th>
-                            <th>Etat</th>
+                            <th class="col-role">Rôle</th>
+                            <th class="col-state">État</th>
                             <th class="col-action">Action</th>
                         </tr>
                     </thead>
@@ -89,11 +89,11 @@ $roleLabel = static fn (string $role): string => $roleLabels[$role] ?? $role;
                                         <input type="hidden" name="is_active" value="<?= $d['is_active'] ? '0' : '1' ?>">
                                         <?php if ($d['is_active']): ?>
                                             <button type="submit" class="btn-row btn-row-danger">
-                                                <?= icon('x', '', 15) ?> Desactiver
+                                                <?= icon('x', '', 15) ?> Désactiver
                                             </button>
                                         <?php else: ?>
                                             <button type="submit" class="btn-row">
-                                                <?= icon('check', '', 15) ?> Reactiver
+                                                <?= icon('check', '', 15) ?> Réactiver
                                             </button>
                                         <?php endif; ?>
                                     </form>

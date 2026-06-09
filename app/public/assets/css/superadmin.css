@@ -260,8 +260,12 @@ body.superadmin-body--full {
 .domain-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
     font-size: .9rem;
 }
+.domain-table .col-role  { width: 22%; }
+.domain-table .col-state { width: 14%; }
+.domain-table .col-action { width: 9.5rem; }
 .domain-table th {
     text-align: left;
     font-size: .72rem;
@@ -279,12 +283,13 @@ body.superadmin-body--full {
 }
 .domain-table .col-action {
     text-align: right;
-    width: 1%;
     white-space: nowrap;
 }
 .domain-table .cell-domain {
     font-weight: 600;
     color: #0f172a;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .domain-table tr.is-inactive .cell-domain {
     color: var(--gray-400, #9ca3af);
@@ -306,7 +311,9 @@ body.superadmin-body--full {
 .btn-row {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: .3rem;
+    min-width: 7.5rem;
     padding: .4rem .8rem;
     border: 1px solid var(--gray-200, #e5e7eb);
     border-radius: 7px;

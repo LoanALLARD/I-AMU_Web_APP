@@ -53,13 +53,13 @@ final class EmailDomainService
             return ['success' => false, 'error' => 'Le domaine est requis.'];
         }
         if (!in_array($role, $this->domains->findRoleValues(), true)) {
-            return ['success' => false, 'error' => 'Le role selectionne est invalide.'];
+            return ['success' => false, 'error' => 'Le rôle sélectionné est invalide.'];
         }
         if (!$this->isValidDomain($domain)) {
             return ['success' => false, 'error' => 'Le domaine est invalide (ex. : univ-amu.fr).'];
         }
         if ($this->domains->existsByDomain($domain)) {
-            return ['success' => false, 'error' => 'Ce domaine est deja configure.'];
+            return ['success' => false, 'error' => 'Ce domaine est déjà configuré.'];
         }
 
         $this->domains->add($domain, $role, $addedById);
