@@ -138,10 +138,10 @@ $currentUserId = (int) ($user['id'] ?? 0);
 </div>
 
 <?php
-$sortJs    = __DIR__ . '/../../../../public/assets/js/department_admin-table-sort.js';
+$sortJs    = __DIR__ . '/../../../../public/assets/js/table-sort.js';
 $actionsJs = __DIR__ . '/../../../../public/assets/js/department_admin-actions.js';
 $sortVer    = is_file($sortJs) ? filemtime($sortJs) : 0;
 $actionsVer = is_file($actionsJs) ? filemtime($actionsJs) : 0;
 ?>
-<script src="/assets/js/department_admin-table-sort.js?v=<?= $sortVer ?>" defer></script>
+<script src="/assets/js/table-sort.js?v=<?= $sortVer ?>" defer></script>
 <script src="/assets/js/department_admin-actions.js?v=<?= $actionsVer ?>" defer></script>

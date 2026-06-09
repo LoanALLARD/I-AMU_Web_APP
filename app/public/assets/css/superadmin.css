@@ -293,7 +293,38 @@ body.superadmin-body--full {
 }
 .domain-table tr.is-inactive .cell-domain {
     color: var(--gray-400, #9ca3af);
-    text-decoration: line-through;
+}
+
+/* Column sorting (shared table-sort.js contract) */
+.domain-table th.is-sortable {
+    cursor: pointer;
+    user-select: none;
+}
+.domain-table th.is-sortable::after {
+    content: "\2195";
+    margin-left: 6px;
+    font-size: 12px;
+    color: var(--gray-400, #9ca3af);
+}
+.domain-table th.is-sortable:hover,
+.domain-table th[aria-sort] {
+    color: #dc2626;
+}
+.domain-table th[aria-sort="ascending"]::after  { content: "\2191"; color: #dc2626; }
+.domain-table th[aria-sort="descending"]::after { content: "\2193"; color: #dc2626; }
+/* Priority rank, shown only when several columns are stacked. */
+.domain-table th[data-sort-order]::before {
+    content: attr(data-sort-order);
+    display: inline-block;
+    margin-right: 4px;
+    min-width: 14px;
+    height: 14px;
+    line-height: 14px;
+    font-size: 10px;
+    text-align: center;
+    border-radius: 50%;
+    background: #dc2626;
+    color: #fff;
 }
 
 /* State badges */

@@ -48,7 +48,7 @@ $roleLabel = static fn (string $role): string => $roleLabels[$role] ?? $role;
                         </select>
                     </div>
                     <button type="submit" class="btn-submit">
-                        <?= icon('check', '', 16) ?>
+                        <?= icon('plus', '', 16) ?>
                         Ajouter
                     </button>
                 </div>
@@ -61,12 +61,12 @@ $roleLabel = static fn (string $role): string => $roleLabels[$role] ?? $role;
             <?php if (empty($domains)): ?>
                 <p class="section-empty">Aucun domaine configuré pour le moment.</p>
             <?php else: ?>
-                <table class="domain-table">
+                <table class="domain-table sortable">
                     <thead>
                         <tr>
-                            <th>Domaine</th>
-                            <th class="col-role">Rôle</th>
-                            <th class="col-state">État</th>
+                            <th data-sort="text">Domaine</th>
+                            <th class="col-role" data-sort="text">Rôle</th>
+                            <th class="col-state" data-sort="text">État</th>
                             <th class="col-action">Action</th>
                         </tr>
                     </thead>
@@ -75,7 +75,7 @@ $roleLabel = static fn (string $role): string => $roleLabels[$role] ?? $role;
                             <tr class="<?= $d['is_active'] ? '' : 'is-inactive' ?>">
                                 <td class="cell-domain"><?= htmlspecialchars($d['domain']) ?></td>
                                 <td><?= htmlspecialchars($roleLabel($d['role'])) ?></td>
-                                <td>
+                                <td data-sort-value="<?= $d['is_active'] ? '1' : '0' ?>">
                                     <?php if ($d['is_active']): ?>
                                         <span class="badge-state badge-active">Actif</span>
                                     <?php else: ?>
@@ -106,3 +106,9 @@ $roleLabel = static fn (string $role): string => $roleLabels[$role] ?? $role;
         </section>
     </main>
 </div>
+
+<?php
+$sortJs  = __DIR__ . '/../../../../public/assets/js/table-sort.js';
+$sortVer = is_file($sortJs) ? filemtime($sortJs) : 0;
+?>
+<script src="/assets/js/table-sort.js?v=<?= $sortVer ?>" defer></script>
