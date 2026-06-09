@@ -336,6 +336,16 @@
     color: var(--accept);
 }
 
+.badge-habilitated {
+    background: var(--accept-bg);
+    color: var(--accept);
+}
+
+.badge-not-habilitated {
+    background: var(--gray-100);
+    color: var(--gray-400);
+}
+
 /* Modal */
 
 .modal-overlay {

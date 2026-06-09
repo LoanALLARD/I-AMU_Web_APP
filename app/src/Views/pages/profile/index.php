@@ -10,6 +10,8 @@ $initials = strtoupper(
     . substr($user['last_name']  ?? '·', 0, 1)
 );
 $roles = $user['roles'] ?? [];
+$isTeacher = in_array('teacher', $roles, true);
+$isSpecialized = !empty($user['isSpecialized']);
 
 // French UI labels for roles
 $roleLabels = [
@@ -48,6 +50,16 @@ $themeCur = match ($user['theme'] ?? null) {
                     <span class="kv-val"><?= htmlspecialchars($user['last_name'] ?? '—') ?></span>
                     <span class="kv-key">email</span>
                     <span class="kv-val mono"><?= htmlspecialchars($user['email'] ?? '—') ?></span>
+                    <?php if ($isTeacher): ?>
+                        <span class="kv-key">habilitation</span>
+                        <span class="kv-val">
+                            <?php if ($isSpecialized): ?>
+                                <span class="badge badge-habilitated">habilité</span>
+                            <?php else: ?>
+                                <span class="badge badge-not-habilitated">non habilité</span>
+                            <?php endif; ?>
+                        </span>
+                    <?php endif; ?>
                 </div>
             </div>
 
