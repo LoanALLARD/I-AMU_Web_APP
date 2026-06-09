@@ -33,9 +33,12 @@ return [
     // instants are entered and displayed in local (AMU = France) time.
     'timezone' => $_ENV['APP_TIMEZONE'] ?? 'Europe/Paris',
     'mail' => [
-        'host' => $_ENV['SMTP_HOST'] ?? 'mailpit',
-        'port' => (int) ($_ENV['SMTP_PORT'] ?? 1025),
-        'from' => $_ENV['SMTP_FROM'] ?? 'noreply@iamu.univ-amu.fr',
+        'host'       => $_ENV['SMTP_HOST'] ?? 'mailpit',
+        'port'       => (int) ($_ENV['SMTP_PORT'] ?? 1025),
+        'from'       => $_ENV['SMTP_FROM'] ?? 'noreply@iamu.univ-amu.fr',
+        'username'   => $_ENV['SMTP_USERNAME'] ?? null,
+        'password'   => $_ENV['SMTP_PASSWORD'] ?? null,
+        'encryption' => $_ENV['SMTP_ENCRYPTION'] ?? 'none',
     ],
 
     'app' => [

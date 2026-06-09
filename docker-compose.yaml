@@ -66,9 +66,12 @@ services :
       DB_PASSWORD: ${DB_PASSWORD}
       OLLAMA_URL: http://ollama2:11434
       APP_DEBUG: "true"
-      SMTP_HOST: mailpit
-      SMTP_PORT: 1025
-      SMTP_FROM: noreply@iamu.univ-amu.fr
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_FROM: ${SMTP_FROM:-i-amu@alwaysdata.net}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_ENCRYPTION: ${SMTP_ENCRYPTION:-none}
     depends_on:
       - db
     volumes:
