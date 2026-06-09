@@ -263,7 +263,7 @@ body.superadmin-body--full {
     table-layout: fixed;
     font-size: .9rem;
 }
-.domain-table .col-role  { width: 22%; }
+.domain-table .col-role  { width: 14rem; }
 .domain-table .col-state { width: 14%; }
 .domain-table .col-action { width: 9.5rem; }
 .domain-table th {
@@ -293,6 +293,75 @@ body.superadmin-body--full {
 }
 .domain-table tr.is-inactive .cell-domain {
     color: var(--gray-400, #9ca3af);
+}
+
+/* Role cell: reads as text, edits on demand */
+.cell-role .role-view {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+}
+/* Pencil stays subtle until the row is hovered, so the table reads cleanly */
+.role-edit-toggle {
+    opacity: 0;
+    transition: opacity .15s;
+}
+.domain-table tr:hover .role-edit-toggle,
+.role-edit-toggle:focus-visible {
+    opacity: 1;
+}
+.role-form {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin: 0;
+}
+/* `hidden` must win over `display:flex`, or the editor never collapses. */
+.role-form[hidden],
+.role-view[hidden] {
+    display: none;
+}
+.role-select {
+    padding: .35rem .5rem;
+    border: 1.5px solid var(--gray-200, #e5e7eb);
+    border-radius: 7px;
+    font-size: .85rem;
+    font-family: inherit;
+    color: var(--gray-800, #1f2937);
+    background: #fff;
+}
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 auto;
+    border: 1px solid var(--gray-200, #e5e7eb);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--gray-600, #4b5563);
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+}
+.btn-icon:hover {
+    background: var(--gray-100, #f3f4f6);
+    color: #0f172a;
+}
+.role-save:not(:disabled):hover {
+    background: #f0fdf4;
+    border-color: #22c55e;
+    color: #15803d;
+}
+.role-cancel:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #b91c1c;
+}
+.btn-icon:disabled {
+    opacity: .45;
+    cursor: not-allowed;
 }
 
 /* Column sorting (shared table-sort.js contract) */

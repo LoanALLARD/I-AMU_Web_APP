@@ -160,6 +160,15 @@ class EmailDomainRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /** Updates a domain's role; the caller validates `role` against the SQL enum. */
+    public function updateRole(int $id, string $role): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE email_domain_configs SET role = :role WHERE id = :id'
+        );
+        $stmt->execute(['role' => $role, 'id' => $id]);
+    }
+
     /** Enables or disables a domain (the panel's soft "delete"). */
     public function setActive(int $id, bool $isActive): void
     {

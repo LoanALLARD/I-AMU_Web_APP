@@ -17,12 +17,7 @@ $roleLabel = static fn (string $role): string => $roleLabels[$role] ?? $role;
 
     <main class="dashboard-content">
 
-        <?php if (!empty($_SESSION['_flash'])): ?>
-            <?php foreach ($_SESSION['_flash'] as $flash): ?>
-                <div class="alert alert-<?= htmlspecialchars($flash['type']) ?>"><?= htmlspecialchars($flash['message']) ?></div>
-            <?php endforeach; ?>
-            <?php unset($_SESSION['_flash']); ?>
-        <?php endif; ?>
+        <?php require __DIR__ . '/_flash.php'; ?>
 
         <section class="panel-section">
             <h2>Ajouter un domaine</h2>
@@ -74,7 +69,31 @@ $roleLabel = static fn (string $role): string => $roleLabels[$role] ?? $role;
                         <?php foreach ($domains as $d): ?>
                             <tr class="<?= $d['is_active'] ? '' : 'is-inactive' ?>">
                                 <td class="cell-domain"><?= htmlspecialchars($d['domain']) ?></td>
-                                <td><?= htmlspecialchars($roleLabel($d['role'])) ?></td>
+                                <td class="cell-role" data-sort-value="<?= htmlspecialchars($roleLabel($d['role'])) ?>">
+                                    <span class="role-view">
+                                        <span class="role-label"><?= htmlspecialchars($roleLabel($d['role'])) ?></span>
+                                        <button type="button" class="btn-icon role-edit-toggle" title="Modifier le rôle" aria-label="Modifier le rôle">
+                                            <?= icon('edit', '', 15) ?>
+                                        </button>
+                                    </span>
+                                    <form method="POST" action="/super-admin/email-domains/role" class="role-form" hidden>
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= (int) $d['id'] ?>">
+                                        <select name="role" class="role-select" data-initial="<?= htmlspecialchars($d['role']) ?>" aria-label="Rôle du domaine">
+                                            <?php foreach ($roles as $value): ?>
+                                                <option value="<?= htmlspecialchars($value) ?>" <?= $value === $d['role'] ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($roleLabel($value)) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <button type="submit" class="btn-icon role-save" title="Enregistrer le rôle" aria-label="Enregistrer le rôle" disabled>
+                                            <?= icon('check', '', 15) ?>
+                                        </button>
+                                        <button type="button" class="btn-icon role-cancel" title="Annuler" aria-label="Annuler">
+                                            <?= icon('x', '', 15) ?>
+                                        </button>
+                                    </form>
+                                </td>
                                 <td data-sort-value="<?= $d['is_active'] ? '1' : '0' ?>">
                                     <?php if ($d['is_active']): ?>
                                         <span class="badge-state badge-active">Actif</span>
@@ -108,7 +127,10 @@ $roleLabel = static fn (string $role): string => $roleLabels[$role] ?? $role;
 </div>
 
 <?php
-$sortJs  = __DIR__ . '/../../../../public/assets/js/table-sort.js';
-$sortVer = is_file($sortJs) ? filemtime($sortJs) : 0;
+$sortJs    = __DIR__ . '/../../../../public/assets/js/table-sort.js';
+$domainsJs = __DIR__ . '/../../../../public/assets/js/email-domains.js';
+$sortVer    = is_file($sortJs) ? filemtime($sortJs) : 0;
+$domainsVer = is_file($domainsJs) ? filemtime($domainsJs) : 0;
 ?>
 <script src="/assets/js/table-sort.js?v=<?= $sortVer ?>" defer></script>
+<script src="/assets/js/email-domains.js?v=<?= $domainsVer ?>" defer></script>

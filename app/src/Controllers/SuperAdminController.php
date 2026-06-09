@@ -73,6 +73,27 @@ class SuperAdminController extends Controller
         $this->redirect('/super-admin/email-domains');
     }
 
+    /** Changes a domain's role (POST). */
+    public function changeEmailDomainRole(): void
+    {
+        $this->requireSuperAdmin();
+        $this->verifyCsrf();
+
+        $service = new EmailDomainService(Database::getConnection());
+        $result  = $service->changeRole(
+            (int) $this->input('id', 0),
+            (string) $this->input('role', '')
+        );
+
+        if ($result['success']) {
+            $this->flash('success', 'Rôle mis à jour.');
+        } else {
+            $this->flash('error', $result['error']);
+        }
+
+        $this->redirect('/super-admin/email-domains');
+    }
+
     /** Enables or disables a domain (POST). */
     public function toggleEmailDomain(): void
     {

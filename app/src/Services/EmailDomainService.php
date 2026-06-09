@@ -68,6 +68,27 @@ final class EmailDomainService
     }
 
     /**
+     * Changes an existing domain's role.
+     *
+     * @return array{success: true} | array{success: false, error: string}
+     */
+    public function changeRole(int $id, string $role): array
+    {
+        $role = strtoupper(trim($role));
+
+        if ($this->domains->findById($id) === null) {
+            return ['success' => false, 'error' => 'Domaine introuvable.'];
+        }
+        if (!in_array($role, $this->domains->findRoleValues(), true)) {
+            return ['success' => false, 'error' => 'Le rôle sélectionné est invalide.'];
+        }
+
+        $this->domains->updateRole($id, $role);
+
+        return ['success' => true];
+    }
+
+    /**
      * Enables or disables an existing domain.
      *
      * @return array{success: true} | array{success: false, error: string}
