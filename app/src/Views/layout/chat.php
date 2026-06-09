@@ -15,8 +15,10 @@
  *   $content    — view output, injected by Core\Controller::render()
  */
 $user = $user ?? null;
-$page = $page ?? 'other';
-$pageTitle = $pageTitle ?? '';
+// Accept the session/legacy pages' `navSection` and `title` keys as fallbacks
+// so they can reuse this layout without renaming their render() payload.
+$page = $page ?? $navSection ?? 'other';
+$pageTitle = $pageTitle ?? $title ?? '';
 $conversation = $conversation ?? null;
 $conversations = $conversations ?? [];
 $env = $env ?? null;
@@ -98,6 +100,12 @@ $themePref = match ($user['theme'] ?? null) {
     <?php endif; ?>
     <?php if ($page === 'admin'): ?>
         <link rel="stylesheet" href="/assets/css/formAddModel.css<?= $v('formAddModel.css') ?>">
+    <?php endif; ?>
+    <?php if ($page === 'error'): ?>
+        <link rel="stylesheet" href="/assets/css/error.css<?= $v('error.css') ?>">
+    <?php endif; ?>
+    <?php if ($page === 'rgpd'): ?>
+        <link rel="stylesheet" href="/assets/css/rgpd.css<?= $v('rgpd.css') ?>">
     <?php endif; ?>
 
 

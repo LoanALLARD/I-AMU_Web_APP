@@ -175,6 +175,9 @@ CREATE TABLE sessions (
     max_tokens INTEGER,
     instructions TEXT,
     type session_type,
+    documents_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    documents_max_bytes INTEGER,
+    documents_allowed_types VARCHAR(50),
     CONSTRAINT pk_sessions PRIMARY KEY (id),
     CONSTRAINT fk_sessions_resource FOREIGN KEY (resource_id) REFERENCES resources (id) ON DELETE RESTRICT,
     CONSTRAINT uq_sessions_access_code UNIQUE (access_code),
@@ -182,7 +185,8 @@ CREATE TABLE sessions (
     CONSTRAINT ck_sessions_dates CHECK (ends_at IS NULL OR starts_at IS NULL OR ends_at > starts_at),
     CONSTRAINT ck_sessions_closed_at CHECK (closed_at IS NULL OR starts_at IS NULL OR closed_at >= starts_at),
     CONSTRAINT ck_sessions_max_input_size CHECK (max_input_size IS NULL OR max_input_size > 0),
-    CONSTRAINT ck_sessions_max_tokens CHECK (max_tokens IS NULL OR max_tokens > 0)
+    CONSTRAINT ck_sessions_max_tokens CHECK (max_tokens IS NULL OR max_tokens > 0),
+    CONSTRAINT ck_sessions_documents_max_bytes CHECK (documents_max_bytes IS NULL OR (documents_max_bytes > 0 AND documents_max_bytes <= 10485760))
 );
 
 CREATE TABLE conversations (

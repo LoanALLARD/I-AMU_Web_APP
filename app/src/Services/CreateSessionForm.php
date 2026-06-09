@@ -106,6 +106,33 @@ class CreateSessionForm
             }
         }
 
+        // Document settings governing the session's chats.
+        $documentsEnabled = isset($post['documents_enabled']);
+
+        $documentsMaxBytes = null;
+        $rawDocMb = trim((string) ($post['documents_max_mb'] ?? ''));
+        if ($rawDocMb !== '') {
+            $mb = (int) $rawDocMb;
+            if ($mb < 1 || $mb > 10) {
+                $errors[] = 'Taille max des documents invalide (1 à 10 Mo).';
+            } else {
+                $documentsMaxBytes = $mb * 1024 * 1024;
+            }
+        }
+
+        $documentsTypes = [];
+        foreach ((array) ($post['documents_types'] ?? []) as $t) {
+            $t = strtolower(trim((string) $t));
+            if (in_array($t, ['pdf', 'md', 'txt'], true)) {
+                $documentsTypes[] = $t;
+            }
+        }
+        $documentsTypes = array_values(array_unique($documentsTypes));
+        if ($documentsEnabled && $documentsTypes === []) {
+            $errors[] = 'Sélectionnez au moins un type de document autorisé (ou désactivez les documents).';
+        }
+        $documentsAllowedTypes = $documentsTypes === [] ? null : implode(',', $documentsTypes);
+
         $optional = static function (mixed $value): ?string {
             $value = trim((string) $value);
             return $value === '' ? null : $value;
@@ -124,6 +151,9 @@ class CreateSessionForm
                 'instructions'    => $optional($post['instructions'] ?? ''),
                 'maxInputSize'    => $maxInputSize,
                 'maxTokens'       => $maxTokens,
+                'documentsEnabled'      => $documentsEnabled,
+                'documentsMaxBytes'     => $documentsMaxBytes,
+                'documentsAllowedTypes' => $documentsAllowedTypes,
                 'accessCode'      => $isCreate ? $optional($post['access_code'] ?? '') : null,
             ],
             'errors' => $errors,

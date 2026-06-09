@@ -194,16 +194,23 @@ $canAddModel = $canAddModel ?? false;
             <?php endif; ?>
             <div class="chat-attachments" id="chatAttachments" hidden></div>
             <div class="input-wrapper">
-                <?php if (!$sessionClosed): ?>
+                <?php
+                $docCfg     = $documentsConfig ?? ['enabled' => true, 'acceptExts' => ['pdf', 'md', 'txt']];
+                $acceptMap  = ['pdf' => '.pdf,application/pdf', 'md' => '.md,.markdown,text/markdown', 'txt' => '.txt,text/plain'];
+                $acceptExts = !empty($docCfg['acceptExts']) ? $docCfg['acceptExts'] : ['pdf', 'md', 'txt'];
+                $acceptAttr = implode(',', array_map(static fn ($e) => $acceptMap[$e] ?? '', $acceptExts));
+                $typesLabel = implode(', ', array_map('strtoupper', $acceptExts));
+                ?>
+                <?php if (!$sessionClosed && !empty($docCfg['enabled'])): ?>
                 <button type="button" class="btn-attach" id="btnAttach"
-                    title="Joindre un document (PDF, Markdown, TXT)">
+                    title="Joindre un document (<?= htmlspecialchars($typesLabel) ?>)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                     </svg>
                 </button>
                 <input type="file" id="docFileInput" hidden multiple
-                    accept=".pdf,.md,.markdown,.txt,application/pdf,text/markdown,text/plain">
+                    accept="<?= htmlspecialchars($acceptAttr) ?>">
                 <?php endif; ?>
                 <textarea id="promptInput"
                       placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"

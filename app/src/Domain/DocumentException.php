@@ -47,6 +47,16 @@ final class DocumentException extends RuntimeException
         return new self("L'import de documents est désactivé pendant un examen.");
     }
 
+    public static function documentsDisabled(): self
+    {
+        return new self("L'import de documents est désactivé pour cette session.");
+    }
+
+    public static function typeNotAllowed(): self
+    {
+        return new self("Ce type de fichier n'est pas autorisé pour cette session.");
+    }
+
     public static function notFound(): self
     {
         return new self('Document introuvable.');

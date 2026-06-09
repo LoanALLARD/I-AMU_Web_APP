@@ -62,7 +62,7 @@ class SessionController extends Controller
             'sessions'   => $this->sessions->listForTeacher((int) ($user['id'] ?? 0)),
             'supervised' => $this->sessions->listSupervisedForTeacher((int) ($user['id'] ?? 0)),
             'user'       => $user,
-        ]);
+        ], 'chat');
     }
 
     /** GET /sessions/create — create form. */
@@ -89,7 +89,7 @@ class SessionController extends Controller
             'previewCodeFormatted' => $data['previewCodeFormatted'],
             'user'                 => $user,
             'oldInput'             => $this->popOldInput(),
-        ]);
+        ], 'chat');
     }
 
     /** POST /sessions/store — create handler. */
@@ -150,7 +150,7 @@ class SessionController extends Controller
             'previewCodeFormatted' => $data['previewCodeFormatted'],
             'user'                 => $user,
             'oldInput'             => $this->popOldInput(),
-        ]);
+        ], 'chat');
     }
 
     /** POST /sessions/{id}/update — edit handler. */
@@ -248,7 +248,7 @@ class SessionController extends Controller
             'students'   => $this->sessions->enrolledStudents((int) $id),
             'documents'  => $this->documents->listForSession((int) $id),
             'user'       => $this->currentUser(),
-        ]);
+        ], 'chat');
     }
 
     /** GET /sessions/{id}/monitor — read-only supervision of enrolled students. */
@@ -271,7 +271,7 @@ class SessionController extends Controller
             'view'       => $view,
             'canManage'  => $this->canManage($session),
             'user'       => $this->currentUser(),
-        ]);
+        ], 'chat');
     }
 
     /**
@@ -359,7 +359,8 @@ class SessionController extends Controller
         }
         $this->render('pages/session/join', [
             'title' => 'Rejoindre une session',
-        ]);
+            'user'  => $this->currentUser(),
+        ], 'chat');
     }
 
     /** POST /sessions/join — student joins and lands in the conversation. */
@@ -467,10 +468,13 @@ class SessionController extends Controller
     {
         http_response_code(403);
         $this->render('pages/error', [
-            'title'   => 'Accès refusé',
-            'code'    => 403,
-            'message' => 'Cette session ne vous appartient pas.',
-        ]);
+            'title'     => 'Accès refusé',
+            'code'      => 403,
+            'message'   => 'Cette session ne vous appartient pas.',
+            'user'      => $this->currentUser(),
+            'page'      => 'error',
+            'pageTitle' => 'Accès refusé',
+        ], 'chat');
         exit;
     }
 

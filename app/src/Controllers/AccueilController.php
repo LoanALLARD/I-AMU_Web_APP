@@ -113,6 +113,14 @@ class AccueilController extends Controller
             $messageDocuments = (new DocumentService($pdo))->documentsByInteractionForConversation((int) $conversationId);
         }
 
+        // Whether/how the composer's document import is offered, per the session
+        // settings (a free chat keeps the global defaults).
+        $documentsConfig = (new DocumentService($pdo))->sessionDocumentsUiConfig(
+            is_array($envBlock) && isset($envBlock['sessionId']) && $envBlock['sessionId'] !== null
+                ? (int) $envBlock['sessionId']
+                : null
+        );
+
         $canAddModel = $_SESSION['isSpecialized'] ?? false;
         $this->render('pages/home', [
             'user' => $user,
@@ -123,6 +131,7 @@ class AccueilController extends Controller
             'conversations' => $env['conversations'],
             'messages' => $env['messages'],
             'messageDocuments' => $messageDocuments,
+            'documentsConfig' => $documentsConfig,
             'sessionClosed' => $env['sessionClosed'],
             'closedReason' => $env['closedReason'],
             'env' => $env['env'],

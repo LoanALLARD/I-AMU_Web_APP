@@ -31,6 +31,7 @@ $val = static function (string $key, mixed $default = '') use ($session, $oldInp
         'instructions'   => $session->instructions() ?? '',
         'max_input_size' => $session->maxInputSize() ?? '',
         'max_tokens'     => $session->maxTokens() ?? '',
+        'documents_max_mb' => $session->documentsMaxBytes() !== null ? (int) ($session->documentsMaxBytes() / 1024 / 1024) : '',
         'resource_id'    => $session->resourceId(),
         'starts_at'      => $session->startsAt()?->format('Y-m-d\TH:i') ?? '',
         'duration_min'   => $session->startsAt() && $session->endsAt()
@@ -39,6 +40,17 @@ $val = static function (string $key, mixed $default = '') use ($session, $oldInp
         default          => $default,
     };
 };
+
+// Document settings (checkbox + multi-select) — resolved outside $val (not scalars).
+$hasOldInput = $oldInput !== [];
+$docsEnabled = $hasOldInput
+    ? array_key_exists('documents_enabled', $oldInput)
+    : (!$isEdit || $session === null ? true : $session->documentsEnabled());
+$selectedDocTypes = $hasOldInput
+    ? array_map('strval', (array) ($oldInput['documents_types'] ?? []))
+    : (!$isEdit || $session === null
+        ? ['pdf', 'md', 'txt']
+        : ($session->documentsAllowedTypesList() ?: ['pdf', 'md', 'txt']));
 
 $currentType = $session?->type() ?? SessionType::Tutorial;
 if (isset($oldInput['type'])) {
@@ -229,6 +241,48 @@ $typeCards = [
                        placeholder="ex. 20">
                 <span class="suffix">tok</span>
             </div>
+        </section>
+
+        <!-- Document import settings (apply to this session's chats) -->
+        <section class="fsection">
+            <div class="fsection-head">
+                <span class="fsection-label">Documents</span>
+                <span class="fsection-rule"></span>
+            </div>
+            <p class="fsection-hint">Import de documents par les étudiants dans les chats de cette session.</p>
+
+            <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
+                <input type="checkbox" name="documents_enabled" value="1" id="f-docs-enabled" <?= $docsEnabled ? 'checked' : '' ?>>
+                <span>Autoriser l'import de documents</span>
+            </label>
+
+            <div id="docs-options" style="margin-top:.7rem;<?= $docsEnabled ? '' : 'opacity:.5;pointer-events:none;' ?>">
+                <div class="field-suffix field-suffix--narrow">
+                    <input type="number" name="documents_max_mb" min="1" max="10"
+                           value="<?= htmlspecialchars((string) $val('documents_max_mb')) ?>"
+                           placeholder="10">
+                    <span class="suffix">Mo max / fichier</span>
+                </div>
+                <p class="fsection-hint" style="margin:.7rem 0 .3rem;">Types autorisés :</p>
+                <div style="display:flex;gap:1.2rem;flex-wrap:wrap;">
+                    <?php foreach (['pdf' => 'PDF', 'md' => 'Markdown', 'txt' => 'TXT'] as $ext => $label): ?>
+                        <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;">
+                            <input type="checkbox" name="documents_types[]" value="<?= $ext ?>" <?= in_array($ext, $selectedDocTypes, true) ? 'checked' : '' ?>>
+                            <span><?= $label ?></span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <script>
+                (function () {
+                    var cb = document.getElementById('f-docs-enabled');
+                    var opt = document.getElementById('docs-options');
+                    if (cb && opt) cb.addEventListener('change', function () {
+                        opt.style.opacity = cb.checked ? '' : '.5';
+                        opt.style.pointerEvents = cb.checked ? '' : 'none';
+                    });
+                })();
+            </script>
         </section>
 
         <div class="form-actions">

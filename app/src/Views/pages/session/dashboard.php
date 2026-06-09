@@ -89,20 +89,23 @@ $canManage = $canManage ?? false;
 
         <div class="dashboard-card">
             <h2>Limites</h2>
-            <div class="kv-grid">
-                <span class="kv-key">prompt max</span>
-                <span class="kv-val mono">
-                    <?= $view['maxInputSize'] !== null
-                        ? number_format((float) $view['maxInputSize'], 0, ',', ' ') . ' caractères'
-                        : 'sans limite' ?>
-                </span>
-                </span>
-                <span class="kv-key">tokens session</span>
-                <span class="kv-val mono">
-                    <?= $view['maxTokens'] !== null
-                    ? number_format((float) $view['maxTokens'], 0, ',', ' ') . ' tok'
-                    : 'sans limite' ?>
-                </span>
+            <div style="display:flex;gap:2.5rem;flex-wrap:wrap;">
+                <div>
+                    <div class="kv-key">prompt max</div>
+                    <div class="kv-val mono">
+                        <?= $view['maxInputSize'] !== null
+                            ? number_format((float) $view['maxInputSize'], 0, ',', ' ') . ' caractères'
+                            : 'sans limite' ?>
+                    </div>
+                </div>
+                <div>
+                    <div class="kv-key">tokens session</div>
+                    <div class="kv-val mono">
+                        <?= $view['maxTokens'] !== null
+                            ? number_format((float) $view['maxTokens'], 0, ',', ' ') . ' tok'
+                            : 'sans limite' ?>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -126,10 +129,13 @@ $canManage = $canManage ?? false;
 
         <div class="dashboard-card">
             <h2>Documents</h2>
-            <p class="kv-key" style="margin:2px 0 12px;line-height:1.5;">
-                Joints à la session et consultables par les étudiants inscrits.
-                PDF, Markdown ou TXT — 10 Mo max.
+            <p class="kv-key" style="margin:2px 0 10px;line-height:1.5;">
+                Joints à la session, consultables par les étudiants inscrits (PDF, Markdown ou TXT — 10 Mo max).
             </p>
+            <div class="kv-grid" style="margin:0 0 14px;">
+                <span class="kv-key">import étudiant</span>
+                <span class="kv-val"><?= htmlspecialchars($view['documentsImportLabel']) ?></span>
+            </div>
 
             <?php if ($canManage): ?>
                 <button type="button" class="btn primary" id="btn-open-doc-modal">

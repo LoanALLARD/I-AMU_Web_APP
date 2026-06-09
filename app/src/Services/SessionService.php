@@ -281,6 +281,24 @@ class SessionService
         $computed = $session->computedStatus($now);
         $actions  = $session->availableActions($now);
 
+        $docTypeMap = ['pdf' => 'PDF', 'md' => 'Markdown', 'txt' => 'TXT'];
+        $docTypes   = $session->documentsAllowedTypesList() ?: ['pdf', 'md', 'txt'];
+        $documentsTypesLabel = implode(', ', array_map(
+            static fn (string $t): string => $docTypeMap[$t] ?? strtoupper($t),
+            $docTypes
+        ));
+        $documentsMaxMb = $session->documentsMaxBytes() !== null
+            ? (int) ($session->documentsMaxBytes() / 1024 / 1024)
+            : 10;
+        // What students can import in this session's chats (an exam forces it off).
+        if ($session->type()->value === 'EXAM') {
+            $documentsImportLabel = 'Désactivé (examen)';
+        } elseif ($session->documentsEnabled()) {
+            $documentsImportLabel = 'Autorisé — ' . $documentsTypesLabel . ' · ' . $documentsMaxMb . ' Mo max';
+        } else {
+            $documentsImportLabel = 'Désactivé';
+        }
+
         return [
             'id'                 => (int) $session->id(),
             'name'               => $session->name(),
@@ -297,6 +315,7 @@ class SessionService
             'instructions'       => $session->instructions(),
             'maxInputSize'       => $session->maxInputSize(),
             'maxTokens'          => $session->maxTokens(),
+            'documentsImportLabel' => $documentsImportLabel,
             'authorizedModels'   => $models,
             'canEdit'            => $actions['can_edit'],
             'canStart'           => $actions['can_start'],
@@ -430,6 +449,9 @@ class SessionService
             $data['instructions'],
             $data['maxInputSize'] ?? null,
             $data['maxTokens'] ?? null,
+            $data['documentsEnabled'] ?? true,
+            $data['documentsMaxBytes'] ?? null,
+            $data['documentsAllowedTypes'] ?? null,
         );
 
         $result = $this->sessions->insert($session->toRow());
@@ -458,7 +480,17 @@ class SessionService
 
         $session->rename((string) $data['name'], $now);
         $session->reschedule($startsAt, $endsAt, $now);
-        $session->reconfigure($data['prePrompt'], $data['postPrompt'], $data['instructions'], $data['maxTokens'] ?? null, $data['maxInputSize'] ?? null, $now);
+        $session->reconfigure(
+            $data['prePrompt'],
+            $data['postPrompt'],
+            $data['instructions'],
+            $data['maxTokens'] ?? null,
+            $data['maxInputSize'] ?? null,
+            $now,
+            $data['documentsEnabled'] ?? true,
+            $data['documentsMaxBytes'] ?? null,
+            $data['documentsAllowedTypes'] ?? null
+        );
 
         $this->sessions->update($id, $session->toRow());
         $this->sessions->setAuthorizedModels($id, $data['modelIds']);
