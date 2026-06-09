@@ -225,9 +225,12 @@ class LLMController{
         $response = json_decode($responseRaw);
 
         if ($response === null || (is_object($response) && isset($response->error))) {
+            $detail = is_object($response) && isset($response->error)
+                ? (string) $response->error
+                : 'Le modele est indisponible.';
             header('Content-Type: application/json');
             http_response_code(500);
-            echo json_encode(['message' => "The model is not available", "error"=>$response ]);
+            echo json_encode(['error' => $detail]);
             return;
         }
 

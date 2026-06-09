@@ -56,7 +56,7 @@ class AccueilController extends Controller
 
             if ($sessionId !== null) {
                 // Session-bound chat: only teacher-authorized models.
-                $models  = $aiRepository->findActiveBySession((int) $sessionId);
+                $models  = $aiRepository->findAllActiveBySession((int) $sessionId);
                 $allowed = (new \Models\SessionRepository($pdo))->authorizedModelIdsOf((int) $sessionId);
                 $models  = array_values(array_filter(
                     $models,
