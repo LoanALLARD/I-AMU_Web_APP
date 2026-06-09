@@ -12,6 +12,7 @@ use Models\AiRepository;
 use Models\DepartmentRepository;
 use Models\ResourceRepository;
 use Services\ResearcherAuthorizationService;
+use Services\TeacherSpecialisationService;
 
 /**
  * Department-administrator console.
@@ -31,15 +32,21 @@ class DepartmentAdminController extends Controller
         $userRepository = new UserRepository($pdo);
         $authorizations = new ResearcherAuthorizationService($pdo);
 
+        $specialisations = new TeacherSpecialisationService($pdo);
+
         $this->render('pages/department_admin/dashboard', [
-            'titrePage'          => 'Administration',
-            'user'               => $this->currentUser(),
-            'department'         => (new PlaceRepository($pdo))->departmentWithPlace($departmentId),
-            'pendingResearchers' => $authorizations->listPending($departmentId),
-            'departmentMembers'  => $userRepository->listDepartmentMembers($departmentId),
-            'researchers'        => $userRepository->listAuthorizedResearchers($departmentId),
-            'revokedResearchers' => $authorizations->listRevoked($departmentId),
-        ]);
+            'titrePage'              => 'Administration',
+            'page'                   => 'admin',
+            'user'                   => $this->currentUser(),
+            'department'             => (new PlaceRepository($pdo))->departmentWithPlace($departmentId),
+            'pendingResearchers'     => $authorizations->listPending($departmentId),
+            'pendingSpecialisations' => $specialisations->listPending($departmentId),
+            'habilitatedTeachers'    => $specialisations->listHabilitated($departmentId),
+            'revokedTeachers'        => $specialisations->listRevoked($departmentId),
+            'departmentMembers'      => $userRepository->listDepartmentMembers($departmentId),
+            'researchers'            => $userRepository->listAuthorizedResearchers($departmentId),
+            'revokedResearchers'     => $authorizations->listRevoked($departmentId),
+        ], 'chat');
     }
 
     public function approveResearcher(): void
@@ -72,6 +79,96 @@ class DepartmentAdminController extends Controller
         // Rejecting just drops the request: no target list (target stays null).
         $this->respond($result['success'],
             $result['success'] ? 'Demande chercheur refusée.' : $result['error']);
+    }
+
+    public function approveSpecialisation(): void
+    {
+        $this->requireRole('department_admin');
+        $this->verifyCsrf();
+
+        $teacherId = (int) $this->input('teacher_id');
+        $departmentId = $this->currentDepartmentId();
+        $service = new TeacherSpecialisationService(Database::getConnection());
+        $result = $service->approve($teacherId, $departmentId, (int) $this->currentUser()['id']);
+
+        // Approving moves the request into the "habilitated teachers" table.
+        $this->respond($result['success'],
+            $result['success'] ? 'Enseignant habilité.' : $result['error'],
+            $result['success']
+                ? $this->specialisedTeacherRowPayload($service, $teacherId, $departmentId, 'spec-habilitated', 'habilitated')
+                : []);
+    }
+
+    public function rejectSpecialisation(): void
+    {
+        $this->requireRole('department_admin');
+        $this->verifyCsrf();
+
+        $teacherId = (int) $this->input('teacher_id');
+        $result = (new TeacherSpecialisationService(Database::getConnection()))
+            ->reject($teacherId, $this->currentDepartmentId(), (int) $this->currentUser()['id']);
+
+        // Rejecting just drops the request: no target list.
+        $this->respond($result['success'],
+            $result['success'] ? 'Demande d\'habilitation refusée.' : $result['error']);
+    }
+
+    public function revokeSpecialisation(): void
+    {
+        $this->requireRole('department_admin');
+        $this->verifyCsrf();
+
+        $teacherId = (int) $this->input('teacher_id');
+        $departmentId = $this->currentDepartmentId();
+        $service = new TeacherSpecialisationService(Database::getConnection());
+        $result = $service->revoke($teacherId, $departmentId, (int) $this->currentUser()['id']);
+
+        $this->respond($result['success'],
+            $result['success'] ? 'Habilitation révoquée.' : $result['error'],
+            $result['success']
+                ? $this->specialisedTeacherRowPayload($service, $teacherId, $departmentId, 'spec-revoked', 'revoked')
+                : []);
+    }
+
+    public function reauthorizeSpecialisation(): void
+    {
+        $this->requireRole('department_admin');
+        $this->verifyCsrf();
+
+        $teacherId = (int) $this->input('teacher_id');
+        $departmentId = $this->currentDepartmentId();
+        $service = new TeacherSpecialisationService(Database::getConnection());
+        $result = $service->reauthorize($teacherId, $departmentId, (int) $this->currentUser()['id']);
+
+        $this->respond($result['success'],
+            $result['success'] ? 'Habilitation rétablie.' : $result['error'],
+            $result['success']
+                ? $this->specialisedTeacherRowPayload($service, $teacherId, $departmentId, 'spec-habilitated', 'habilitated')
+                : []);
+    }
+
+    /**
+     * Builds the AJAX payload for a specialisation action: the target list key
+     * and the server-rendered <tr> for that mode.
+     *
+     * @return array{teacher_id:int, target:string, row:string}
+     */
+    private function specialisedTeacherRowPayload(
+        TeacherSpecialisationService $service,
+        int $teacherId,
+        int $departmentId,
+        string $target,
+        string $mode
+    ): array {
+        $row = $service->findRow($teacherId, $departmentId);
+
+        return [
+            'teacher_id' => $teacherId,
+            'target'     => $target,
+            'row'        => $row === null
+                ? ''
+                : $this->capturePartial('partials/department_admin/specialised_teacher_row', ['teacher' => $row, 'mode' => $mode]),
+        ];
     }
 
     /**
@@ -235,14 +332,16 @@ class DepartmentAdminController extends Controller
 
         $this->render('pages/admin/formAddModel', [
             'user'         => $user,
+            'page'         => 'admin',
             'adapters'     => $adapters,
             'departments'  => $departments,
             'resources'    => $resources
-        ]);
+        ], 'chat');
     }
 
     public function addModel(): void {
-        // Extraction et nettoyage des données reçues du formulaire
+        $this->requireAuth(); // Sécurité recommandée
+
         $name          = $this->input('name', null);
         $size          = $this->input('size', null);
         $provider      = $this->input('provider', null);
@@ -250,21 +349,19 @@ class DepartmentAdminController extends Controller
         $apiUrl        = $this->input('api_url', null);
         $contextWindow = $this->input('context_window', null);
         
-        // Récupère "1" (Oui) ou "0" (Non) depuis le groupe radio 'is_shareable'
         $isShareable   = $this->input('is_shareable', '0');
         $user = $this->currentUser();
-        if ($isShareable === '1'){
+        $resource_id = $this->input('resource_id', null); 
+        if ($resource_id == null){
             $department_id = $user["department_id"];
-            $resource_id = null;
         }else {
             $department_id = null;
-            $resource_id = $this->input('resource_id', null);
         }
-        // Exemple de var_dump pour valider la bonne réception
+
         try {
             $pdo = Database::getConnection();   
             $Ai = new AiRepository($pdo);
-            $result=$Ai->addModel(
+            $result = $Ai->addModel(
                 $department_id,
                 $resource_id,
                 $name,
@@ -275,15 +372,21 @@ class DepartmentAdminController extends Controller
                 (int) $contextWindow,
                 $isShareable
             );
-            if ($result !=null) {
+
+            if ($result != null) {
                 $this->flash('success', "Le modèle a été ajouté avec succès.");
+                $user = $this->CurrentUser();
+                if($user['roles'][0] == "department_admin"){
+                    $this->redirect('/department-admin/addModel');    
+                };
                 $this->redirect('/chat');  
-            }else{
+            } else {
                 throw new \Exception("Erreur lors de l'insertion en base de données.");            
             }
-        }catch (\Throwable $e){
+        } catch (\Throwable $e) {
             $this->flash('error', "Impossible d'ajouter le modèle : " . $e->getMessage());
-            $this->redirect('/chat');
+            
+            $this->redirect('/department-admin/addModel');
         }
     }
 }

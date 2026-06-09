@@ -55,6 +55,37 @@ class SessionService
     }
 
     /**
+     * Whether the teacher may VIEW the session read-only: either they own the
+     * resource (full rights) or they are attached to it via teacher_resources
+     * (responsible). Mutating actions stay owner-only at the controller.
+     */
+    public function canView(Session $session, int $teacherId): bool
+    {
+        if ($session->teacherId() === $teacherId) {
+            return true;
+        }
+
+        return $this->resources->isResourceTeacher($session->resourceId(), $teacherId);
+    }
+
+    /**
+     * Sessions the teacher supervises read-only (attached via teacher_resources,
+     * not owner). Same presentation rows as listForTeacher() so the view renders
+     * them identically.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listSupervisedForTeacher(int $teacherId): array
+    {
+        $now = $this->now();
+
+        return array_map(
+            fn (array $row): array => $this->listRow(Session::fromRow($row), $now),
+            $this->sessions->findSupervisedByTeacher($teacherId)
+        );
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function enrolledStudents(int $sessionId): array
@@ -200,6 +231,9 @@ class SessionService
         // No code to preview: the database trigger assigns one only when
         // the session becomes scheduled/active.
         $resourceData = $this->resources->findAllByOwner($teacherId);
+        if ($resourceData == null){
+            throw new InvalidArgumentException("L'enseignent doit être associé à au minimum une ressource, \n veuillez contacter un administrateur");
+        }
         $depId = $resourceData[0]['department_id'];
         return [
             'models'               => $this->modelOptions($depId),
@@ -215,6 +249,9 @@ class SessionService
     public function editFormData(Session $session, int $teacherId): array
     {
         $resourceData = $this->resources->findAllByOwner($teacherId);
+        if ($resourceData == null){
+            throw new InvalidArgumentException("L'enseignent doit être associé à au minimum une ressource, \n veuillez contacter un administrateur");
+        }
         $depId = $resourceData[0]['department_id'];
         return [
             'session'              => $session,
@@ -259,6 +296,7 @@ class SessionService
             'postPromptOverride' => $session->postPromptOverride(),
             'instructions'       => $session->instructions(),
             'maxInputSize'       => $session->maxInputSize(),
+            'maxTokens'          => $session->maxTokens(),
             'authorizedModels'   => $models,
             'canEdit'            => $actions['can_edit'],
             'canStart'           => $actions['can_start'],
@@ -390,7 +428,8 @@ class SessionService
             $data['prePrompt'],
             $data['postPrompt'],
             $data['instructions'],
-            $data['maxInputSize'],
+            $data['maxInputSize'] ?? null,
+            $data['maxTokens'] ?? null,
         );
 
         $result = $this->sessions->insert($session->toRow());
@@ -419,7 +458,7 @@ class SessionService
 
         $session->rename((string) $data['name'], $now);
         $session->reschedule($startsAt, $endsAt, $now);
-        $session->reconfigure($data['prePrompt'], $data['postPrompt'], $data['instructions'], $data['maxInputSize'], $now);
+        $session->reconfigure($data['prePrompt'], $data['postPrompt'], $data['instructions'], $data['maxTokens'] ?? null, $data['maxInputSize'] ?? null, $now);
 
         $this->sessions->update($id, $session->toRow());
         $this->sessions->setAuthorizedModels($id, $data['modelIds']);

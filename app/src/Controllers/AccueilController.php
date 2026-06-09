@@ -10,22 +10,25 @@ use Services\DocumentService;
 use Models\ConversationRepository;
 use Models\InteractionRepository;
 use Data\Database;
+use Services\ExamLockService;
 
 /**
  * Authenticated chat shell, routed from `/`, `/accueil`, `/chat` and
  * `/chat/{id}`.
  *
  * Resolves the current chat environment (session-bound or free) so the
- * sidebar lists the right conversations, then renders the chat home. New
- * conversations are created via POST /chat/new.
+ * sidebar lists the right conversations, then renders the chat home. A new
+ * conversation is persisted on its first message (POST /chat), not up front.
  */
 class AccueilController extends Controller
 {
     private ChatService $chat;
+    private ExamLockService $examLocks;
 
     public function __construct()
     {
         $this->chat = new ChatService(Database::getConnection());
+        $this->examLocks = new ExamLockService(Database::getConnection());
     }
 
     public function index(?string $id = null): void
@@ -35,17 +38,33 @@ class AccueilController extends Controller
         $user = $this->currentUser();
 
         $conversationId = $id !== null && $id !== '' ? (int) $id : null;
-        $archived = $this->query('archived') === '1';
-        $env = $this->chat->environment((int) $user['id'], $conversationId, $archived);
+        $archived  = $this->query('archived') === '1';
+
+        // Exam lockdown: a student inside a running exam may only see their exam conversation.
+        $examLock = $this->examLock();
+        if ($examLock !== null && $examLock['conversationId'] !== null
+            && $conversationId !== $examLock['conversationId']) {
+            $this->redirect('/chat/' . $examLock['conversationId']);
+        }
+
+        $env            = $this->chat->environment((int) $user['id'], $conversationId, $archived);
         $models = [];
         try {
             $pdo = Database::getConnection();
             $aiRepository = new \Models\AiRepository($pdo);
-            if ($env["env"]["sessionId"] == null){
-                $depId = $user['department_id'];
-                $models = $aiRepository->findAllActiveBySession(null,$depId);
-            }else{
-                $models = $aiRepository->findAllActiveBySession($env["env"]["sessionId"],null);
+            $sessionId = $env['env']['sessionId'] ?? null;
+
+            if ($sessionId !== null) {
+                // Session-bound chat: only teacher-authorized models.
+                $models  = $aiRepository->findAllActiveBySession((int) $sessionId, null);
+                $allowed = (new \Models\SessionRepository($pdo))->authorizedModelIdsOf((int) $sessionId);
+                $models  = array_values(array_filter(
+                    $models,
+                    static fn ($m) => in_array((int) $m['id'], $allowed, true)
+                ));
+            } else {
+                // Free chat: models of the user's department.
+                $models = $aiRepository->findAllActiveBySession(null, (int) $user['department_id']);
             }
         } catch (\Throwable $e) {
             error_log('Impossible de charger les modèles : ' . $e->getMessage());
@@ -87,6 +106,13 @@ class AccueilController extends Controller
         if (is_array($envBlock) && isset($envBlock['sessionId']) && $envBlock['sessionId'] !== null) {
             $sessionDocuments = (new DocumentService($pdo))->listForSession((int) $envBlock['sessionId']);
         }
+        // Conversation documents (phase 2), grouped by the message they were
+        // sent with, so each appears under its message in the history.
+        $messageDocuments = [];
+        if ($conversationId !== null) {
+            $messageDocuments = (new DocumentService($pdo))->documentsByInteractionForConversation((int) $conversationId);
+        }
+
         $canAddModel = $_SESSION['isSpecialized'] ?? false;
         $this->render('pages/home', [
             'user' => $user,
@@ -96,11 +122,13 @@ class AccueilController extends Controller
             'conversation' => $env['conversation'],
             'conversations' => $env['conversations'],
             'messages' => $env['messages'],
+            'messageDocuments' => $messageDocuments,
             'sessionClosed' => $env['sessionClosed'],
             'closedReason' => $env['closedReason'],
             'env' => $env['env'],
             'sessionDocuments' => $sessionDocuments,
             'archivedView' => $archived,
+            'examLock'      => $examLock,
         ], 'chat');
     }
 
@@ -122,39 +150,6 @@ class AccueilController extends Controller
     }
 
     /**
-     * POST /chat/new — create a conversation in the current environment.
-     * A `session_id` field means a session conversation; absent means free.
-     */
-    public function newChat(): void
-    {
-        $this->requireAuth();
-        $this->redirectNonChatRoles();
-        $this->verifyCsrf();
-        $user = $this->currentUser();
-        $models = [];
-        try {
-            $pdo = Database::getConnection();
-            $aiRepository = new \Models\AiRepository($pdo);
-            $models = $aiRepository->findAllActiveBySession(null);
-        } catch (\Throwable $e) {
-            error_log('Impossible de charger les modèles : ' . $e->getMessage());
-        }
-        $sessionId = (int) $this->input('session_id', 0);
-
-        try {
-            $defaultModelId = (int) ($models[0]['id'] ?? 1);
-            $conversationId = $sessionId > 0
-                ? $this->chat->newSessionConversation((int) $user['id'], $sessionId, $defaultModelId)
-                : $this->chat->newFreeConversation((int) $user['id'], $defaultModelId);
-        } catch (\Throwable $e) {
-            $this->flash('error', $e->getMessage());
-            $this->redirect('/chat');
-        }
-
-        $this->redirect('/chat/' . $conversationId);
-    }
-
-    /**
      * POST /chat/rename — rename a free-mode conversation. `current_id` is
      * the conversation currently open, used to return there afterwards.
      */
@@ -163,6 +158,7 @@ class AccueilController extends Controller
         $this->requireAuth();
         $this->redirectNonChatRoles();
         $this->verifyCsrf();
+        $this->blockIfExamLocked();
         $user = $this->currentUser();
 
         $id = (int) $this->input('id', 0);
@@ -189,6 +185,7 @@ class AccueilController extends Controller
         $this->requireAuth();
         $this->redirectNonChatRoles();
         $this->verifyCsrf();
+        $this->blockIfExamLocked();
         $user = $this->currentUser();
 
         $id = (int) $this->input('id', 0);
@@ -218,6 +215,7 @@ class AccueilController extends Controller
         $this->requireAuth();
         $this->redirectNonChatRoles();
         $this->verifyCsrf();
+        $this->blockIfExamLocked();
         $user = $this->currentUser();
 
         $id = (int) $this->input('id', 0);
@@ -242,5 +240,37 @@ class AccueilController extends Controller
         if ($this->hasRole('researcher')) {
             $this->redirect('/researcher');
         }
+    }
+
+    /**
+     * Returns the active exam lock for the current student, or null. Only
+     * students can be locked — teachers and admins monitor freely.
+     *
+     * @return array{sessionId:int, conversationId:?int, sessionName:string, endsAt:?string}|null
+     */
+    private function examLock(): ?array
+    {
+        if (!$this->hasRole('student')) {
+            return null;
+        }
+        $user = $this->currentUser();
+
+        return $this->examLocks->activeLockFor((int) ($user['id'] ?? 0));
+    }
+
+    /**
+     * Rejects a chat mutation (new / rename / archive) while the student is
+     * locked in a running exam, sending them back to the exam conversation.
+     */
+    private function blockIfExamLocked(): void
+    {
+        $lock = $this->examLock();
+        if ($lock === null) {
+            return;
+        }
+        $this->flash('error', 'Action indisponible pendant un examen.');
+        $this->redirect($lock['conversationId'] !== null
+            ? '/chat/' . $lock['conversationId']
+            : '/chat');
     }
 }

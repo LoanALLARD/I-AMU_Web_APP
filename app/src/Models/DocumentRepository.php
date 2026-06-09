@@ -83,6 +83,101 @@ class DocumentRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function listByConversation(int $conversationId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM documents WHERE conversation_id = :cid ORDER BY created_at DESC, id DESC'
+        );
+        $stmt->execute(['cid' => $conversationId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
+
+    public function countByConversation(int $conversationId): int
+    {
+        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM documents WHERE conversation_id = :cid');
+        $stmt->execute(['cid' => $conversationId]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Documents of a conversation not yet tied to a message (still in the
+     * composer). These are the ones shown as pending chips.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listPendingByConversation(int $conversationId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM documents
+              WHERE conversation_id = :cid AND interaction_id IS NULL
+              ORDER BY created_at ASC, id ASC'
+        );
+        $stmt->execute(['cid' => $conversationId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
+
+    /**
+     * Documents of a conversation already tied to a message, oldest first — used
+     * to render them under their message in the history.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listBoundByConversation(int $conversationId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM documents
+              WHERE conversation_id = :cid AND interaction_id IS NOT NULL
+              ORDER BY created_at ASC, id ASC'
+        );
+        $stmt->execute(['cid' => $conversationId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function listByInteraction(int $interactionId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM documents WHERE interaction_id = :iid ORDER BY created_at ASC, id ASC'
+        );
+        $stmt->execute(['iid' => $interactionId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
+
+    /**
+     * Ties every still-pending document of a conversation to the given message,
+     * so it is recorded as sent with that message (provenance).
+     */
+    public function bindPendingToInteraction(int $conversationId, int $interactionId): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE documents SET interaction_id = :iid
+              WHERE conversation_id = :cid AND interaction_id IS NULL'
+        );
+        $stmt->execute(['iid' => $interactionId, 'cid' => $conversationId]);
+    }
+
     public function updateExtraction(int $id, ?string $text, string $status): void
     {
         $stmt = $this->pdo->prepare(

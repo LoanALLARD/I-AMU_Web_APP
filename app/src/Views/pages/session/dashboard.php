@@ -4,6 +4,9 @@
  * @var list<\Domain\Document>    $documents  Documents attached to the session
  */
 $documents = $documents ?? [];
+// Owner = full control; a read-only responsible (teacher_resources) sees the
+// dashboard without any mutating control.
+$canManage = $canManage ?? false;
 ?>
 <div class="dashboard-header">
     <div>
@@ -31,6 +34,7 @@ $documents = $documents ?? [];
                 <?= icon('archive', '', 12) ?> Exporter (JSON)
             </button>
         <?php endif; ?>
+        <?php if ($canManage): ?>
         <?php if ($view['canEdit']): ?>
             <a href="/sessions/<?= (int) $view['id'] ?>/edit" class="btn">
                 <?= icon('edit', '', 12) ?> Modifier
@@ -62,6 +66,7 @@ $documents = $documents ?? [];
                 </button>
             </form>
         <?php endif; ?>
+        <?php endif; /* canManage */ ?>
     </div>
 </div>
 
@@ -87,8 +92,15 @@ $documents = $documents ?? [];
                 <span class="kv-key">prompt max</span>
                 <span class="kv-val mono">
                     <?= $view['maxInputSize'] !== null
-                        ? number_format((float) $view['maxInputSize'], 0, ',', ' ') . ' tok'
+                        ? number_format((float) $view['maxInputSize'], 0, ',', ' ') . ' caractères'
                         : 'sans limite' ?>
+                </span>
+                </span>
+                <span class="kv-key">tokens session</span>
+                <span class="kv-val mono">
+                    <?= $view['maxTokens'] !== null
+                    ? number_format((float) $view['maxTokens'], 0, ',', ' ') . ' tok'
+                    : 'sans limite' ?>
                 </span>
             </div>
         </div>
@@ -118,15 +130,11 @@ $documents = $documents ?? [];
                 PDF, Markdown ou TXT — 10 Mo max.
             </p>
 
-            <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/documents"
-                  enctype="multipart/form-data"
-                  style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                <?= csrf_field() ?>
-                <input type="file" name="document" required
-                       accept=".pdf,.md,.markdown,.txt,application/pdf,text/plain,text/markdown"
-                       style="flex:1;min-width:180px;font-size:12px;">
-                <button type="submit" class="btn primary"><?= icon('upload', '', 12) ?> Ajouter</button>
-            </form>
+            <?php if ($canManage): ?>
+                <button type="button" class="btn primary" id="btn-open-doc-modal">
+                    <?= icon('upload', '', 12) ?> Ajouter
+                </button>
+            <?php endif; ?>
 
             <?php if ($documents === []): ?>
                 <p style="color:var(--gray-400);font-size:12px;margin-top:12px;">Aucun document pour l'instant.</p>
@@ -143,13 +151,15 @@ $documents = $documents ?? [];
                                     <?= htmlspecialchars($doc->kindLabel()) ?> · <?= htmlspecialchars($doc->humanSize()) ?> · <?= htmlspecialchars($doc->status()->label()) ?>
                                 </span>
                             </div>
-                            <form method="POST" action="/documents/<?= (int) $doc->id() ?>/delete"
-                                  style="margin:0;flex-shrink:0;"
-                                  onsubmit="return confirm('Supprimer ce document ?')">
-                                <?= csrf_field() ?>
-                                <button type="submit" class="btn bordered" title="Supprimer"
-                                        style="padding:4px 8px;"><?= icon('x-circle', '', 13) ?></button>
-                            </form>
+                            <?php if ($canManage): ?>
+                                <form method="POST" action="/documents/<?= (int) $doc->id() ?>/delete"
+                                      style="margin:0;flex-shrink:0;"
+                                      onsubmit="return confirm('Supprimer ce document ?')">
+                                    <?= csrf_field() ?>
+                                    <button type="submit" class="btn bordered" title="Supprimer"
+                                            style="padding:4px 8px;"><?= icon('x-circle', '', 13) ?></button>
+                                </form>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -270,6 +280,133 @@ $documents = $documents ?? [];
         // The download response keeps the current page; close the modal shortly
         // after submit for a clean return.
         modal.querySelector('form')?.addEventListener('submit', () => setTimeout(hide, 400));
+    })();
+</script>
+
+<!-- Add-documents modal: multi-select + drag & drop (owner only) -->
+<?php if ($canManage): ?>
+<div id="modal-documents" class="doc-modal-overlay" style="display:none;">
+    <div class="doc-modal-box">
+        <h2>Ajouter des documents</h2>
+        <p class="doc-modal-sub">PDF, Markdown ou TXT — 10 Mo max. Plusieurs fichiers à la fois.</p>
+        <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/documents"
+              enctype="multipart/form-data" id="doc-upload-form">
+            <?= csrf_field() ?>
+            <label class="doc-dropzone" id="doc-dropzone">
+                <input type="file" name="document[]" id="doc-input" multiple
+                       accept=".pdf,.md,.markdown,.txt,application/pdf,text/plain,text/markdown">
+                <span class="doc-dropzone-icon"><?= icon('upload', '', 26) ?></span>
+                <span class="doc-dropzone-title">Glissez-déposez vos fichiers ici</span>
+                <span class="doc-dropzone-hint">ou cliquez pour parcourir</span>
+            </label>
+            <ul class="doc-selected" id="doc-selected"></ul>
+            <div class="doc-modal-actions">
+                <button type="button" class="btn" id="btn-cancel-doc">Annuler</button>
+                <button type="submit" class="btn primary" id="btn-submit-doc" disabled>
+                    <?= icon('upload', '', 12) ?> Importer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endif; /* canManage — add-documents modal */ ?>
+
+<script>
+    (function () {
+        const openBtn  = document.getElementById('btn-open-doc-modal');
+        const modal    = document.getElementById('modal-documents');
+        const cancel   = document.getElementById('btn-cancel-doc');
+        const dropzone = document.getElementById('doc-dropzone');
+        const input    = document.getElementById('doc-input');
+        const list     = document.getElementById('doc-selected');
+        const submit   = document.getElementById('btn-submit-doc');
+        if (!openBtn || !modal) return;
+
+        // Source of truth: survives the browser replacing input.files on each
+        // drop / picker selection, so successive imports accumulate.
+        let selected = [];
+
+        const show = () => { selected = []; syncInput(); render(); modal.style.display = 'flex'; };
+        const hide = () => { modal.style.display = 'none'; };
+
+        function human(b) {
+            if (b < 1024) return b + ' o';
+            if (b < 1048576) return Math.round(b / 1024) + ' Ko';
+            return (b / 1048576).toFixed(1) + ' Mo';
+        }
+
+        // Push the accumulated list back onto the input so the form submits them all.
+        function syncInput() {
+            const dt = new DataTransfer();
+            selected.forEach((f) => dt.items.add(f));
+            input.files = dt.files;
+        }
+
+        // Merge files in (from a drop or the picker), skipping duplicates (name + size).
+        function addFiles(incoming) {
+            const seen = new Set(selected.map((f) => f.name + ':' + f.size));
+            Array.from(incoming).forEach((f) => {
+                const key = f.name + ':' + f.size;
+                if (!seen.has(key)) { selected.push(f); seen.add(key); }
+            });
+            syncInput();
+            render();
+        }
+
+        function removeAt(i) {
+            selected.splice(i, 1);
+            syncInput();
+            render();
+        }
+
+        function render() {
+            list.innerHTML = '';
+            selected.forEach((f, i) => {
+                const li = document.createElement('li');
+                li.className = 'doc-selected-item';
+
+                const name = document.createElement('span');
+                name.className = 'doc-selected-name';
+                name.textContent = f.name + '  ·  ' + human(f.size);
+
+                const del = document.createElement('button');
+                del.type = 'button';
+                del.className = 'doc-selected-remove';
+                del.setAttribute('aria-label', 'Retirer ' + f.name);
+                del.textContent = '×';
+                del.addEventListener('click', () => removeAt(i));
+
+                li.appendChild(name);
+                li.appendChild(del);
+                list.appendChild(li);
+            });
+            submit.disabled = selected.length === 0;
+        }
+
+        openBtn.addEventListener('click', show);
+        cancel?.addEventListener('click', hide);
+        modal.addEventListener('click', (e) => { if (e.target === modal) hide(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.style.display === 'flex') hide();
+        });
+
+        // Picker selection: the browser just replaced input.files with the new
+        // picks — merge them into the accumulated list instead of overwriting.
+        input.addEventListener('change', () => addFiles(input.files));
+
+        ['dragenter', 'dragover'].forEach((ev) => dropzone.addEventListener(ev, (e) => {
+            e.preventDefault();
+            dropzone.classList.add('is-dragover');
+        }));
+        ['dragleave', 'dragend'].forEach((ev) => dropzone.addEventListener(ev, (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('is-dragover');
+        }));
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('is-dragover');
+            if (e.dataTransfer && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+        });
     })();
 </script>
 

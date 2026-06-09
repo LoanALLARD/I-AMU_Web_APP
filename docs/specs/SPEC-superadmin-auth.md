@@ -1,9 +1,25 @@
 # SPEC — Super Admin : connexion isolee + coquille du panel
 
-> Date : 2026-06-08 | Statut : TERMINE (code + review APPROVE ; migration a appliquer)
+> Date : 2026-06-08 | Statut : TERMINE (connexion + panel)
 > Etend [`05-admin-research.md` §A.0](./05-admin-research.md) (pouvoirs du super
 > admin deja decrits) en specifiant le **mecanisme de connexion**, absent
-> jusqu'ici. A referencer depuis la spec 05 une fois implementee.
+> jusqu'ici.
+
+> ⚠️ **MàJ 2026-06-09 — ecarts vs ce plan :**
+> - **Le script run-once `app/bin/superadmin_create.php` (B7) n'existe pas** :
+>   le dossier `app/bin/` est absent. Seuls `SuperAdministratorRepository::count()`
+>   / `::create()` le preparent ; en dev, la fixture
+>   [`02_dev_fixtures.sql`](../../database/seeds/02_dev_fixtures.sql) insere
+>   `admin@univ-amu.fr`. **TODO** : creer ce script.
+> - **Migration repliee dans le schema** : `created_at` / `last_login_at` sont
+>   directement dans [`01_schema.sql`](../../database/schema/01_schema.sql)
+>   (pas de dossier `database/migrations/`).
+> - **Le panel a depasse la coquille (D5)** : `SuperAdminController::index`
+>   redirige vers `/super-admin/department-admins` ; la gestion des **domaines
+>   email** (`/super-admin/email-domains`, CRUD via `EmailDomainService`) est
+>   **fonctionnelle** ; `places` et `department-admins` restent des coquilles.
+>   Il n'y a pas de vue `dashboard.php` (vues : `login.php`, `email-domains.php`,
+>   `places.php`, `department-admins.php` + partials).
 
 ## 0. Statut
 

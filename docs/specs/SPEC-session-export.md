@@ -91,9 +91,10 @@ branchée comme **bouton sur le dashboard de session**.
 
 ### Dette RGPD — bloquante pour la prod (cf. [spec 06](./06-rgpd.md))
 - **Filtre d'opposition à la recherche** : la colonne `users.research_opposed`
-  **n'existe pas** et il n'y a pas de case côté compte. → l'export inclut
-  **tout le monde**, y compris un étudiant qui voudrait s'opposer.
-  *À faire* : migration colonne + toggle sur la page compte +
+  **existe désormais** au schéma (MàJ 2026-06-09), mais il n'y a **ni case côté
+  compte ni filtre dans l'export** → l'export inclut encore **tout le monde**,
+  y compris un étudiant qui voudrait s'opposer.
+  *Reste à faire* : toggle sur la page compte + endpoint d'opposition +
   `AND u.research_opposed = FALSE` dans `exportRows`.
   > ⚠️ À ne pas confondre avec l'exclusion **manuelle** d'étudiants dans la
   > modale (choix de l'enseignant) — l'opposition RGPD est un choix de

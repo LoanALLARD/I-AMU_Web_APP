@@ -21,6 +21,9 @@ $conversation = $conversation ?? null;
 $conversations = $conversations ?? [];
 $env = $env ?? null;
 $archivedView = $archivedView ?? false;
+// Exam lockdown view-model (set by AccueilController for a locked student),
+// or null when free. Drives the stripped-down, navigation-free shell.
+$examLock = $examLock ?? null;
 // "Chat" nav target: stay inside the open session conversation instead of
 // dropping back to free chat.
 $chatHref = (($env['mode'] ?? '') === 'session' && !empty($conversation['id']))
@@ -30,12 +33,19 @@ $roles = $user['roles'] ?? [];
 $isTeacher = in_array('teacher', $roles, true);
 $isStudent = in_array('student', $roles, true);
 $isDeptAdmin = in_array('department_admin', $roles, true);
+$isResearcher = in_array('researcher', $roles, true);
 $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
 $initials = strtoupper(
     mb_substr($user['first_name'] ?? '·', 0, 1)
     . mb_substr($user['last_name'] ?? '·', 0, 1)
 );
-$roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
+$roleLabel = match (true) {
+    $isTeacher    => 'enseignant',
+    $isStudent    => 'étudiant',
+    $isDeptAdmin  => 'administration',
+    $isResearcher => 'chercheur',
+    default       => 'compte',
+};
 
 // Theme preference, stored on the user as LIGHT / DARK (NULL = follow the
 // OS). The inline script in <head> resolves it to a concrete data-theme
@@ -81,6 +91,14 @@ $themePref = match ($user['theme'] ?? null) {
     <link rel="stylesheet" href="/assets/css/shell.css<?= $v('shell.css') ?>">
     <link rel="stylesheet" href="/assets/css/sessions.css<?= $v('sessions.css') ?>">
     <link rel="stylesheet" href="/assets/css/profile.css<?= $v('profile.css') ?>">
+    <?php /* Admin and researcher pages reuse the .admin-section / .admin-table
+       styles, both defined in department_admin.css. */ ?>
+    <?php if ($page === 'admin' || $page === 'researcher'): ?>
+        <link rel="stylesheet" href="/assets/css/department_admin.css<?= $v('department_admin.css') ?>">
+    <?php endif; ?>
+    <?php if ($page === 'admin'): ?>
+        <link rel="stylesheet" href="/assets/css/formAddModel.css<?= $v('formAddModel.css') ?>">
+    <?php endif; ?>
 
 
     <?php $jsDir = dirname(__DIR__, 3) . '/public/assets/js'; ?>
@@ -102,7 +120,7 @@ $themePref = match ($user['theme'] ?? null) {
 <body class="app-body page-<?= htmlspecialchars($page) ?>">
 
     <header class="app-topbar">
-        <a href="<?= $isDeptAdmin ? '/department-admin' : '/chat' ?>" class="topbar-brand" aria-label="Accueil I-AMU">
+        <a href="<?= $isDeptAdmin ? '/department-admin' : ($isResearcher ? '/researcher' : '/chat') ?>" class="topbar-brand" aria-label="Accueil I-AMU">
             <img src="/assets/img/logo.png" alt="">
             <div class="topbar-brand-text">
                 <span><?= htmlspecialchars($roleLabel) ?></span>
@@ -121,15 +139,24 @@ $themePref = match ($user['theme'] ?? null) {
         <?php if ($page === 'chat'): ?>
             <?php $isSessionChat = !empty($conversation['sessionId']); ?>
             <div class="topbar-breadcrumb">
-                <span class="topbar-mode<?= $isSessionChat ? ' topbar-mode-session' : '' ?>">
-                    <?= $isSessionChat ? 'session' : 'libre' ?>
-                </span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="9 18 15 12 9 6" />
-                </svg>
-                <span class="topbar-conv-name"
-                    id="convName"><?= htmlspecialchars($conversation['name'] ?? 'Nouvelle conversation') ?></span>
+                <?php if ($examLock): ?>
+                    <span class="topbar-mode topbar-mode-exam">examen</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                    <span class="topbar-conv-name"><?= htmlspecialchars($examLock['sessionName']) ?></span>
+                <?php else: ?>
+                    <span class="topbar-mode<?= $isSessionChat ? ' topbar-mode-session' : '' ?>">
+                        <?= $isSessionChat ? 'session' : 'libre' ?>
+                    </span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                    <span class="topbar-conv-name"
+                          id="convName"><?= htmlspecialchars($conversation['name'] ?? 'Nouvelle conversation') ?></span>
+                <?php endif; ?>
             </div>
         <?php else: ?>
             <?php /* Other pages already display their own H1 in .page-header,
@@ -140,7 +167,7 @@ $themePref = match ($user['theme'] ?? null) {
         <?php endif; ?>
 
         <div class="topbar-tabs">
-            <?php if (!$isDeptAdmin): ?>
+            <?php if (!$isDeptAdmin && !$isResearcher): ?>
             <a href="<?= htmlspecialchars($chatHref) ?>" class="topbar-tab<?= $page === 'chat' ? ' active' : '' ?>">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -167,15 +194,43 @@ $themePref = match ($user['theme'] ?? null) {
                     Mes Ressources
                 </a>
             <?php endif; ?>
+            <?php if ($isDeptAdmin): ?>
+                <a href="/department-admin" class="topbar-tab<?= $page === 'admin' ? ' active' : '' ?>">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    Administration
+                </a>
+            <?php endif; ?>
+            <?php if ($isResearcher): ?>
+                <a href="/researcher" class="topbar-tab<?= $page === 'researcher' ? ' active' : '' ?>">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                    </svg>
+                    Espace chercheur
+                </a>
+            <?php endif; ?>
         </div>
 
         <div class="topbar-right">
-            <a href="/profile" class="topbar-user"
-                title="<?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?>">
+            <?php if ($examLock): ?>
+                <span class="topbar-user" title="<?= htmlspecialchars($displayName !== '' ? $displayName : 'Compte') ?>">
                 <span
-                    class="topbar-user-name"><?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?></span>
+                        class="topbar-user-name"><?= htmlspecialchars($displayName !== '' ? $displayName : 'Compte') ?></span>
                 <span class="topbar-user-avatar"><?= htmlspecialchars($initials) ?></span>
-            </a>
+            </span>
+            <?php else: ?>
+                <a href="/profile" class="topbar-user"
+                   title="<?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?>">
+                <span
+                        class="topbar-user-name"><?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?></span>
+                    <span class="topbar-user-avatar"><?= htmlspecialchars($initials) ?></span>
+                </a>
+            <?php endif; ?>
         </div>
     </header>
 
@@ -207,7 +262,7 @@ its own identity above the navigation. */ ?>
 On desktop these live as pills in the topbar (.topbar-tabs), so
 .sidebar-nav stays display:none there to avoid duplication. */ ?>
             <nav class="sidebar-nav" aria-label="Navigation principale">
-                <?php if (!$isDeptAdmin): ?>
+                <?php if (!$isDeptAdmin && !$isResearcher): ?>
                 <a href="<?= htmlspecialchars($chatHref) ?>"
                     class="sidebar-nav-link<?= $page === 'chat' ? ' is-active' : '' ?>">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -227,9 +282,29 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                         Mes sessions
                     </a>
                 <?php endif; ?>
+                <?php if ($isDeptAdmin): ?>
+                    <a href="/department-admin" class="sidebar-nav-link<?= $page === 'admin' ? ' is-active' : '' ?>">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                        Administration
+                    </a>
+                <?php endif; ?>
+                <?php if ($isResearcher): ?>
+                    <a href="/researcher" class="sidebar-nav-link<?= $page === 'researcher' ? ' is-active' : '' ?>">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <ellipse cx="12" cy="5" rx="9" ry="3" />
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                        </svg>
+                        Espace chercheur
+                    </a>
+                <?php endif; ?>
             </nav>
 
-            <?php if ($page === 'chat'): ?>
+            <?php if ($page === 'chat' && !$examLock): ?>
                 <?php /* Current environment: session (filtered to one session's
                conversations) or free. */ ?>
                 <div class="sidebar-env">
@@ -238,12 +313,12 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                     </span>
                 </div>
 
-                <form method="POST" action="/chat/new" class="new-chat-form">
-                    <?= csrf_field() ?>
-                    <?php if (!empty($env['sessionId'])): ?>
-                        <input type="hidden" name="session_id" value="<?= (int) $env['sessionId'] ?>">
-                    <?php endif; ?>
-                    <button type="submit" class="btn-new-chat" id="btnNewChat"
+                <?php /* "Nouvelle conversation" opens a blank chat client-side
+                   (startBlankChat in pages/home.php) instead of creating a
+                   conversation up front. The row is persisted only when the
+                   first message is sent (POST /chat). */ ?>
+                <div class="new-chat-form">
+                    <button type="button" class="btn-new-chat" id="btnNewChat"
                         <?= !empty($sessionClosed)
                             ? 'disabled style="opacity:.45;cursor:not-allowed;" title="Vous ne pouvez plus créer de conversation dans cette session."'
                             : '' ?>>
@@ -254,7 +329,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                         </svg>
                         Nouvelle conversation
                     </button>
-                </form>
+                </div>
 
                 <?php if (($env['mode'] ?? '') === 'session'): ?>
                     <a href="/chat" class="btn-leave-session"
@@ -426,9 +501,30 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                     <?= csrf_field() ?>
                     <input type="hidden" name="id" value="">
                 </form>
+            <?php elseif ($page === 'chat' && $examLock): ?>
+                <?php /* Exam lockdown sidebar: no navigation, no history, no
+               new conversation. Only the exam identity and a notice. The
+               student is confined to the single exam conversation until the
+               teacher ends the exam or the time elapses. */ ?>
+                <div class="exam-lock-panel">
+                    <div class="exam-lock-badge">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        Mode examen
+                    </div>
+                    <p class="exam-lock-name"><?= htmlspecialchars($examLock['sessionName']) ?></p>
+                    <p class="exam-lock-note">
+                        L'interface est verrouillée pour la durée de l'examen. Les autres modes
+                        et l'historique sont indisponibles jusqu'à la fin de la session.
+                    </p>
+                </div>
             <?php endif; ?>
 
             <div class="sidebar-footer">
+                <?php if (!$examLock): ?>
                 <a href="/profile" class="sidebar-footer-link<?= $page === 'profile' ? ' is-active' : '' ?>">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -437,6 +533,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                     </svg>
                     Mon profil
                 </a>
+                <?php endif; ?>
                 <a href="/logout" class="sidebar-footer-link sidebar-logout">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -452,16 +549,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
 
         <div class="app-main">
             <div class="app-content">
-                <?php if (!empty($_SESSION['_flash'])): ?>
-                    <div class="flash-stack">
-                        <?php foreach ($_SESSION['_flash'] as $flash): ?>
-                            <div class="alert alert-<?= htmlspecialchars($flash['type']) ?>">
-                                <?= htmlspecialchars($flash['message']) ?>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php unset($_SESSION['_flash']); ?>
-                <?php endif; ?>
+                <?php require __DIR__ . '/../partials/_flash.php'; ?>
                 <?= $content ?>
             </div>
         </div>

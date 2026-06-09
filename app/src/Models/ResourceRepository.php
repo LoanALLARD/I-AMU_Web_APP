@@ -80,6 +80,21 @@ class ResourceRepository
     }
 
     /**
+     * Whether the teacher is attached to the resource via `teacher_resources`,
+     * i.e. a co-teacher / read-only supervisor. This is distinct from being the
+     * owner (`resources.owner_id`): ownership is checked separately.
+     */
+    public function isResourceTeacher(int $resourceId, int $teacherId): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM teacher_resources WHERE resource_id = :rid AND teacher_id = :tid'
+        );
+        $stmt->execute(['rid' => $resourceId, 'tid' => $teacherId]);
+
+        return $stmt->fetch() !== false;
+    }
+
+    /**
      * @return list<array<string, mixed>>|null
      */
     public function getResourcesFromUserId(int $userId): ?array {

@@ -7,7 +7,8 @@
  *   - "set-active" : replace the member row with the server-rendered one (new
  *                    status badge + toggled button), then re-apply the sort.
  *   - "move-row"   : move a request/researcher between lists (pending ->
- *                    authorized, authorized <-> revoked); the source element is
+ *                    authorized, authorized <-> revoked, or a habilitation
+ *                    request out of its pending list); the source element is
  *                    dropped and the server-rendered target element inserted.
  *
  * The server always renders the row markup (icons, CSRF, escaping), so the
@@ -61,26 +62,40 @@
         }
     }
 
+    /** The sortable table holding a key's rows (researcher or generic list), if any. */
+    function listTable(key) {
+        return document.querySelector('[data-researcher-table="' + key + '"]')
+            || document.querySelector('[data-list-table="' + key + '"]');
+    }
+
     /**
-     * Each movable list is one "key". A table key (authorized/revoked) holds
-     * <tr> rows in a sortable table; the "pending" key holds <details> blocks
-     * in a plain container. Returns the container element rows live in.
+     * Each movable list is one "key". A table key holds <tr> rows in a sortable
+     * table; a "pending" key holds <details> blocks in a plain container.
+     * Returns the container element rows live in.
      */
     function listBody(key) {
-        var table = document.querySelector('[data-researcher-table="' + key + '"]');
+        var table = listTable(key);
         if (table) {
             return table.tBodies[0];
         }
-        return document.querySelector('[data-pending-list]'); // the pending key
+        return document.querySelector('[data-pending-list="' + key + '"]'); // a pending key
     }
 
     function countRows(key) {
-        var table = document.querySelector('[data-researcher-table="' + key + '"]');
+        var table = listTable(key);
         if (table) {
             return table.tBodies[0].rows.length;
         }
-        var list = document.querySelector('[data-pending-list]');
+        var list = document.querySelector('[data-pending-list="' + key + '"]');
         return list ? list.querySelectorAll('.admin-pending-row').length : 0;
+    }
+
+    /** Hides a [data-hide-when-empty] block when its list has no rows. */
+    function toggleSectionVisibility(key) {
+        var section = document.querySelector('[data-hide-when-empty="' + key + '"]');
+        if (section) {
+            section.hidden = countRows(key) === 0;
+        }
     }
 
     /** Refreshes the "(n)" count and the empty-state message for a list key. */
@@ -97,8 +112,8 @@
         if (empty) {
             empty.hidden = n !== 0;
         }
-        var table = document.querySelector('[data-researcher-table="' + key + '"]');
-        resortTable(table);
+        toggleSectionVisibility(key);
+        resortTable(listTable(key));
     }
 
     /**
@@ -133,11 +148,39 @@
     function sourceOf(form) {
         var details = form.closest('.admin-pending-row');
         if (details) {
-            return { el: details, key: 'pending' };
+            var list = details.closest('[data-pending-list]');
+            return { el: details, key: list ? list.getAttribute('data-pending-list') : 'pending' };
         }
         var tr = form.closest('tr');
-        var table = tr ? tr.closest('[data-researcher-table]') : null;
-        return { el: tr, key: table ? table.getAttribute('data-researcher-table') : null };
+        var table = tr ? tr.closest('[data-researcher-table], [data-list-table]') : null;
+        var key = table
+            ? (table.getAttribute('data-researcher-table') || table.getAttribute('data-list-table'))
+            : null;
+        return { el: tr, key: key };
+    }
+
+    /** Opens the shared modal filled with a member row's info template. */
+    function openMemberModal(trigger) {
+        var modal = document.getElementById('member-modal');
+        var body = document.getElementById('member-modal-body');
+        var title = document.getElementById('member-modal-title');
+        var tpl = trigger.parentNode.querySelector('[data-member-info-panel]');
+        if (!modal || !body || !tpl) {
+            return;
+        }
+        body.innerHTML = '';
+        body.appendChild(tpl.content.cloneNode(true));
+        if (title) {
+            title.textContent = trigger.getAttribute('data-member-name') || 'Informations';
+        }
+        modal.style.display = 'flex';
+    }
+
+    function closeMemberModal() {
+        var modal = document.getElementById('member-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
 
     function handle(form, e) {
@@ -149,7 +192,13 @@
         }
 
         var action = form.getAttribute('data-ajax-action');
+        // The set-active form may live in the shared modal (cloned out of the
+        // row), so fall back to locating the original <tr> by user id.
         var row = form.closest('tr');
+        if (!row && action === 'set-active') {
+            var uid = form.querySelector('[name="user_id"]');
+            row = uid ? document.querySelector('tr[data-user-id="' + uid.value + '"]') : null;
+        }
         var source = sourceOf(form);
         var button = form.querySelector('button');
         if (button) {
@@ -169,6 +218,7 @@
                     return;
                 }
                 if (action === 'set-active') {
+                    closeMemberModal();
                     replaceMemberRow(row, r.data.row);
                 } else if (action === 'move-row') {
                     applyMoveRow(source.el, source.key, r.data.target, r.data.row);
@@ -185,6 +235,24 @@
             var form = e.target.closest('form[data-ajax-action]');
             if (form) {
                 handle(form, e);
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            var trigger = e.target.closest('[data-member-info]');
+            if (trigger) {
+                openMemberModal(trigger);
+                return;
+            }
+            // Close on the close button or a click on the backdrop itself.
+            if (e.target.closest('#member-modal-close') || e.target.id === 'member-modal') {
+                closeMemberModal();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeMemberModal();
             }
         });
     }

@@ -28,7 +28,8 @@
     $router->add('GET',  '/accueil',     function() { (new AccueilController())->index(); });
 
     $router->add('POST', '/chat',         function() { (new LLMController())->handleChat(); });
-    $router->add('POST', '/chat/new',     function() { (new AccueilController())->newChat(); });
+    $router->add('POST', '/chat/documents',             function()    { (new DocumentController())->uploadToConversation(); });
+    $router->add('POST', '/chat/documents/{id}/delete', function($id) { (new DocumentController())->deleteFromConversation($id); });
     $router->add('POST', '/chat/rename',    function() { (new AccueilController())->renameChat(); });
     $router->add('POST', '/chat/archive',   function() { (new AccueilController())->archiveChat(); });
     $router->add('POST', '/chat/unarchive', function() { (new AccueilController())->unarchiveChat(); });
@@ -51,12 +52,14 @@
     // --- Chat home + profile (authenticated) --------------------------
     $router->add('GET',  '/chat',                function()     { (new AccueilController())->index(); });
     $router->add('GET',  '/chat/session-status', function()     { (new AccueilController())->sessionStatus(); });
+    $router->add('GET',  '/chat/documents/{convId}', function($convId) { (new DocumentController())->conversationDocuments($convId); });
     $router->add('GET',  '/chat/{id}',           function($id)  { (new AccueilController())->index($id); });
     $router->add('GET',  '/profile',             function()     { (new ProfileController())->index(); });
     $router->add('POST', '/profile/theme',       function()     { (new ProfileController())->updateTheme(); });
     $router->add('POST', '/profile/deactivate',  function()     { (new ProfileController())->deactivate(); });
     $router->add('POST', '/profile/update',      function()     { (new ProfileController())->updateProfile(); });
     $router->add('POST', '/profile/password',    function()     { (new ProfileController())->changePassword(); });
+    $router->add('POST', '/profile/request-specialisation', function() { (new ProfileController())->requestSpecialisation(); });
 
     // --- Department-admin console (department_admin role) --------------
     $router->add('GET',  '/department-admin',                         function() { (new DepartmentAdminController())->index(); });
@@ -66,6 +69,10 @@
     $router->add('POST', '/department-admin/researchers/reject',      function() { (new DepartmentAdminController())->rejectResearcher(); });
     $router->add('POST', '/department-admin/researchers/revoke',      function() { (new DepartmentAdminController())->revokeResearcher(); });
     $router->add('POST', '/department-admin/researchers/reauthorize', function() { (new DepartmentAdminController())->reauthorizeResearcher(); });
+    $router->add('POST', '/department-admin/specialisations/approve',     function() { (new DepartmentAdminController())->approveSpecialisation(); });
+    $router->add('POST', '/department-admin/specialisations/reject',      function() { (new DepartmentAdminController())->rejectSpecialisation(); });
+    $router->add('POST', '/department-admin/specialisations/revoke',      function() { (new DepartmentAdminController())->revokeSpecialisation(); });
+    $router->add('POST', '/department-admin/specialisations/reauthorize', function() { (new DepartmentAdminController())->reauthorizeSpecialisation(); });
     $router->add('POST', '/department-admin/users/set-active',        function() { (new DepartmentAdminController())->setUserActive(); });
 
     // --- Super admin (isolated session, URL-only — no internal link) --
@@ -74,7 +81,13 @@
     $router->add('GET',  '/super-admin/login',  function() { (new SuperAdminAuthController())->showLogin(); });
     $router->add('POST', '/super-admin/login',  function() { (new SuperAdminAuthController())->login(); });
     $router->add('POST', '/super-admin/logout', function() { (new SuperAdminAuthController())->logout(); });
-    $router->add('GET',  '/super-admin',         function() { (new SuperAdminController())->index(); });
+    $router->add('GET',  '/super-admin',                   function() { (new SuperAdminController())->index(); });
+    $router->add('GET',  '/super-admin/department-admins', function() { (new SuperAdminController())->departmentAdmins(); });
+    $router->add('GET',  '/super-admin/places',            function() { (new SuperAdminController())->places(); });
+    $router->add('GET',  '/super-admin/email-domains',     function() { (new SuperAdminController())->emailDomains(); });
+    $router->add('POST', '/super-admin/email-domains',     function() { (new SuperAdminController())->addEmailDomain(); });
+    $router->add('POST', '/super-admin/email-domains/role',   function() { (new SuperAdminController())->changeEmailDomainRole(); });
+    $router->add('POST', '/super-admin/email-domains/toggle', function() { (new SuperAdminController())->toggleEmailDomain(); });
 
     // --- Researcher space (researcher role) ---------------------------
     $router->add('GET',  '/researcher',                 function() { (new ResearcherController())->index(); });
@@ -111,6 +124,7 @@
 
     $router->add('POST', '/documents/{id}/delete', function($id) { (new DocumentController())->delete($id); });
     $router->add('GET',  '/documents/session_{sessionId}/{docId}', function($sessionId, $docId) { (new DocumentController())->download($sessionId, $docId); });
+    $router->add('GET',  '/documents/conversation_{conversationId}/{docId}', function($conversationId, $docId) { (new DocumentController())->downloadFromConversation($conversationId, $docId); });
 
     try {
         $router->compare($uri, $method);

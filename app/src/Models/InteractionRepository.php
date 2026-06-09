@@ -65,7 +65,7 @@ class InteractionRepository {
     public function listByConversation(int $conversationId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT i.prompt, i.response, i.sent_at, m.name AS model_name
+            'SELECT i.id, i.prompt, i.response, i.sent_at, m.name AS model_name
                FROM interactions i
                JOIN conversations c ON c.id = i.conversation_id
                JOIN models m ON m.id = c.model_id

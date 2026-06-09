@@ -356,8 +356,7 @@ final class AuthService
      * Registration for a researcher: lab derived from the email domain, no
      * department. Refused when no active domain links to a lab.
      *
-     * @return array{role: string, department_id: null, laboratory_id: int}
-     *       | array{error: string}
+     * @return array{role: string, department_id: null, laboratory_id: int}|array{error: string}
      */
     private function prepareResearcherRegistration(string $email): array
     {
@@ -382,8 +381,7 @@ final class AuthService
      * Registration for a student/teacher: department (validated against the
      * place) and role derived from the email domain.
      *
-     * @return array{role: string, department_id: int, laboratory_id: null}
-     *       | array{error: string}
+     * @return array{role: string, department_id: int, laboratory_id: null}|array{error: string}
      */
     private function prepareMemberRegistration(string $email, int $placeId, int $departmentId): array
     {

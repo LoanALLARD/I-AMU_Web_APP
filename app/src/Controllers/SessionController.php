@@ -46,7 +46,7 @@ class SessionController extends Controller
         parent::render($template, $data, $layout);
     }
 
-    /** GET /sessions — teacher's list. */
+    /** GET /sessions — teacher's list (owned + supervised read-only). */
     public function index(): void
     {
         $this->requireRole('teacher');
@@ -56,6 +56,7 @@ class SessionController extends Controller
             'title'      => 'Mes sessions',
             'navSection' => 'sessions',
             'sessions'   => $this->sessions->listForTeacher((int) ($user['id'] ?? 0)),
+            'supervised' => $this->sessions->listSupervisedForTeacher((int) ($user['id'] ?? 0)),
             'user'       => $user,
         ]);
     }
@@ -65,7 +66,12 @@ class SessionController extends Controller
     {
         $this->requireRole('teacher');
         $user = $this->currentUser();
-        $data = $this->sessions->createFormData((int) ($user['id'] ?? 0));
+        try {
+            $data = $this->sessions->createFormData((int) ($user['id'] ?? 0));
+        } catch (Throwable $e) {
+            $this->flash('error', $e->getMessage());
+            $this->redirect('/sessions');
+        }
 
         $this->render('pages/session/create', [
             'title'                => 'Nouvelle session',
@@ -222,11 +228,11 @@ class SessionController extends Controller
         $this->redirect('/sessions/' . $sessionId);
     }
 
-    /** GET /sessions/{id} — dashboard. */
+    /** GET /sessions/{id} — dashboard (owner: full; responsible: read-only). */
     public function dashboard(string $id): void
     {
         $this->requireRole('teacher');
-        $session = $this->loadOwned((int) $id);
+        $session = $this->loadViewable((int) $id);
 
         $view = $this->sessions->dashboard($session);
 
@@ -234,6 +240,7 @@ class SessionController extends Controller
             'title'      => $view['name'],
             'navSection' => 'sessions',
             'view'       => $view,
+            'canManage'  => $this->canManage($session),
             'students'   => $this->sessions->enrolledStudents((int) $id),
             'documents'  => $this->documents->listForSession((int) $id),
             'user'       => $this->currentUser(),
@@ -244,7 +251,7 @@ class SessionController extends Controller
     public function monitor(string $id): void
     {
         $this->requireRole('teacher');
-        $session = $this->loadOwned((int) $id);
+        $session = $this->loadViewable((int) $id);
 
         $conversationId = (int) $this->query('conversation', 0);
         $view           = $this->sessions->monitor($session, $conversationId);
@@ -258,6 +265,7 @@ class SessionController extends Controller
             'title'      => 'Suivi · ' . $session->name(),
             'navSection' => 'sessions',
             'view'       => $view,
+            'canManage'  => $this->canManage($session),
             'user'       => $this->currentUser(),
         ]);
     }
@@ -308,9 +316,11 @@ class SessionController extends Controller
             $this->redirect('/sessions');
         }
 
-        $isOwner     = $session->teacherId() !== null && (int) ($user['id'] ?? 0) === $session->teacherId();
+        // Owner or read-only responsible (teacher_resources), or researcher /
+        // department admin. canView() covers owner + responsible.
+        $canView     = $this->sessions->canView($session, (int) ($user['id'] ?? 0));
         $canResearch = in_array('researcher', $roles, true) || in_array('department_admin', $roles, true);
-        if (!$isOwner && !$canResearch) {
+        if (!$canView && !$canResearch) {
             $this->forbidden();
         }
 
@@ -340,6 +350,9 @@ class SessionController extends Controller
     public function showJoin(): void
     {
         $this->requireRole('student');
+        if ($this->redirectIfExamLocked()) {
+            return;
+        }
         $this->render('pages/session/join', [
             'title' => 'Rejoindre une session',
         ]);
@@ -350,6 +363,9 @@ class SessionController extends Controller
     {
         $this->requireRole('student');
         $this->verifyCsrf();
+        if ($this->redirectIfExamLocked()) {
+            return;
+        }
 
         $rawCode = (string) $this->input('access_code', '');
         $user    = $this->currentUser();
@@ -372,6 +388,28 @@ class SessionController extends Controller
     // ----------------------------------------------------------------
 
     /**
+     * Redirects an exam-locked student back to their exam conversation and
+     * returns true; returns false when free to proceed. Keeps a student from
+     * joining a second session while an exam is running.
+     */
+    private function redirectIfExamLocked(): bool
+    {
+        if (!$this->hasRole('student')) {
+            return false;
+        }
+        $user = $this->currentUser();
+        $lock = (new \Services\ExamLockService(Database::getConnection()))
+            ->activeLockFor((int) ($user['id'] ?? 0));
+        if ($lock === null) {
+            return false;
+        }
+        $this->flash('error', 'Action indisponible pendant un examen.');
+        $this->redirect($lock['conversationId'] !== null
+            ? '/chat/' . $lock['conversationId']
+            : '/chat');
+    }
+
+    /**
      * Loads a session, redirecting on miss and 403-ing if it is not owned by
      * the current teacher. Returns the (owned) session on success.
      */
@@ -389,6 +427,36 @@ class SessionController extends Controller
         }
 
         return $session;
+    }
+
+    /**
+     * Loads a session for READ-ONLY access: the owner, or a teacher attached to
+     * the resource via teacher_resources (responsible). 403s otherwise. Used by
+     * the consultation routes (monitor/dashboard); mutating actions keep
+     * loadOwned. Pair with canManage() to gate owner-only controls in the view.
+     */
+    private function loadViewable(int $sessionId): \Domain\Session
+    {
+        $session = $this->sessions->find($sessionId);
+        if ($session === null) {
+            $this->flash('error', 'Session introuvable.');
+            $this->redirect('/sessions');
+        }
+
+        $user = $this->currentUser();
+        if ($user === null || !$this->sessions->canView($session, (int) $user['id'])) {
+            $this->forbidden();
+        }
+
+        return $session;
+    }
+
+    /** Whether the current user owns the session (vs. a read-only responsible). */
+    private function canManage(\Domain\Session $session): bool
+    {
+        $user = $this->currentUser();
+
+        return $user !== null && $session->teacherId() === (int) $user['id'];
     }
 
     private function forbidden(): never
@@ -421,7 +489,7 @@ class SessionController extends Controller
 
         return is_array($old) ? $old : [];
     }
-    
+
     public function getModelsByResource(): void
     {
         $resourceId = (int) $this->query('resource_id', 0);
@@ -429,14 +497,14 @@ class SessionController extends Controller
 
         $pdo = Database::getConnection();
         $aiRepo = new AiRepository($pdo);
-        
+
         $modelsByResource = $aiRepo->findAllActiveByResource($resourceId);
         $modelsByDeptAndShared = $aiRepo->findAllActiveBySession(null, $depId);
 
         $allModels = array_merge($modelsByResource, $modelsByDeptAndShared);
 
         $allModels = array_intersect_key(
-            $allModels, 
+            $allModels,
             array_unique(array_column($allModels, 'id'))
         );
         $allModels = array_values($allModels);
