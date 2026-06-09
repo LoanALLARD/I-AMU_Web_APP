@@ -1,64 +1,30 @@
 <?php
 /**
- * Department-admin console.
+ * Department-admin console — "Requests" tab: pending requests plus the
+ * habilitated-teacher and authorized-researcher lists (with their revoked ones).
  *
- * @var array{id:int, email:string, first_name:string, last_name:string, roles:list<string>, department_id:int|null}|null $user
+ * @var array<string, mixed>|null $user
  * @var array{name:string, place_name:string}|null $department
  * @var list<array<string, mixed>> $pendingResearchers
  * @var list<array<string, mixed>> $pendingSpecialisations
  * @var list<array<string, mixed>> $habilitatedTeachers
  * @var list<array<string, mixed>> $revokedTeachers
- * @var list<array<string, mixed>> $departmentMembers
  * @var list<array<string, mixed>> $researchers
  * @var list<array<string, mixed>> $revokedResearchers
  */
-$displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
-$department = $department ?? null;
 $pendingResearchers = $pendingResearchers ?? [];
 $pendingSpecialisations = $pendingSpecialisations ?? [];
 $habilitatedTeachers = $habilitatedTeachers ?? [];
 $revokedTeachers = $revokedTeachers ?? [];
-$departmentMembers = $departmentMembers ?? [];
 $researchers = $researchers ?? [];
 $revokedResearchers = $revokedResearchers ?? [];
-$currentUserId = (int) ($user['id'] ?? 0);
+$activeNav = 'requests';
 ?>
-<div class="page-header">
-    <div class="page-header-row">
-        <h1>Administration</h1>
-        <?php if ($department !== null): ?>
-            <span class="badge badge-teacher"><?= icon('building', '', 13) ?> <?= htmlspecialchars($department['name']) ?></span>
-        <?php endif; ?>
-    </div>
-    <p class="page-sub">Espace d'administration de votre département.</p>
-</div>
-
 <div class="page-body">
 
-    <div class="admin-section">
-        <div class="admin-identity">
-            <span class="admin-identity-icon"><?= icon('user', '', 18) ?></span>
-            <div>
-                <div class="admin-identity-name">
-                    Connecté en tant que <strong><?= htmlspecialchars($displayName !== '' ? $displayName : 'administrateur') ?></strong>
-                    <span class="badge badge-draft" style="margin-left:6px;">admin de département</span>
-                </div>
-                <div class="admin-identity-meta">
-                    <?= icon('message-circle', '', 12) ?> <?= htmlspecialchars($user['email'] ?? '') ?>
-                    <?php if ($department !== null): ?>
-                        &middot; <?= icon('building', '', 12) ?> département <?= htmlspecialchars($department['name']) ?>
-                        &middot; <?= icon('graduation-cap', '', 12) ?> <?= htmlspecialchars($department['place_name']) ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <a href="/department-admin/addModel" class="btn sm" style="margin-left:auto;">
-                <?= icon('plus', '', 13) ?> ajouter un model
-            </a>
-            <a href="/logout" class="btn danger sm" style="margin-left:auto;">
-                <?= icon('lock', '', 13) ?> Se déconnecter
-            </a>
-        </div>
-    </div>
+    <?php $this->renderPartial('partials/department_admin/_header', [
+        'user' => $user, 'department' => $department ?? null, 'activeNav' => $activeNav,
+    ]); ?>
 
     <div class="admin-section" data-hide-when-empty="pending"<?= $pendingResearchers === [] ? ' hidden' : '' ?>>
         <div class="admin-pending" data-pending-list="pending">
@@ -77,6 +43,10 @@ $currentUserId = (int) ($user['id'] ?? 0);
             <?php endforeach; ?>
         </div>
     </div>
+
+    <p class="admin-empty" data-empty-any="pending pending-spec"<?= ($pendingResearchers === [] && $pendingSpecialisations === []) ? '' : ' hidden' ?>>
+        Aucune demande en attente.
+    </p>
 
     <div class="admin-section">
         <h2><?= icon('graduation-cap', '', 16) ?> Enseignants habilités (<span data-count="spec-habilitated"><?= count($habilitatedTeachers) ?></span>)</h2>
@@ -117,35 +87,6 @@ $currentUserId = (int) ($user['id'] ?? 0);
                 </tbody>
             </table>
         </div>
-    </div>
-
-    <div class="admin-section">
-        <h2><?= icon('users', '', 16) ?> Utilisateurs du département (<?= count($departmentMembers) ?>)</h2>
-        <?php if ($departmentMembers === []): ?>
-            <div class="dashboard-card">
-                <p style="color:var(--gray-400);font-size:13px;margin:0;">
-                    Aucun enseignant ni étudiant rattaché à votre département.
-                </p>
-            </div>
-        <?php else: ?>
-            <table class="admin-table sortable">
-                <thead>
-                    <tr>
-                        <th data-sort="text">Nom</th>
-                        <th>Email</th>
-                        <th data-sort="text">Rôle</th>
-                        <th data-sort="text">Statut</th>
-                        <th data-sort="text">Dernière connexion</th>
-                        <th>Infos</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($departmentMembers as $m): ?>
-                        <?php $this->renderPartial('partials/department_admin/member_row', ['member' => $m, 'currentUserId' => $currentUserId]); ?>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php endif; ?>
     </div>
 
     <div class="admin-section">
@@ -191,19 +132,6 @@ $currentUserId = (int) ($user['id'] ?? 0);
         </div>
     </div>
 
-</div>
-
-<!-- Shared member-info modal; filled from the clicked row's <template>. -->
-<div class="modal-overlay" id="member-modal">
-    <div class="modal-box">
-        <div class="modal-head">
-            <h2 id="member-modal-title">Informations</h2>
-            <button type="button" class="modal-close" id="member-modal-close" aria-label="Fermer">
-                <?= icon('x', '', 16) ?>
-            </button>
-        </div>
-        <div id="member-modal-body"></div>
-    </div>
 </div>
 
 <?php
