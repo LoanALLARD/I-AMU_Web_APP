@@ -7,6 +7,7 @@ namespace Controllers;
 use Core\Controller;
 use Data\Database;
 use Services\RessourceService;
+use Services\SessionService;
 
 /**
  * Teacher-facing HTTP entry point for the Resource (course) feature.
@@ -14,11 +15,13 @@ use Services\RessourceService;
 class RessourceController extends Controller
 {
     private RessourceService $ressources;
+    private \Services\SessionService $sessions;
 
     public function __construct()
     {
         $pdo = Database::getConnection();
         $this->ressources = new RessourceService($pdo);
+        $this->sessions   = new \Services\SessionService($pdo);
     }
 
     /**
@@ -42,6 +45,7 @@ class RessourceController extends Controller
             'title'      => 'Mes ressources',
             'navSection' => 'ressources',
             'ressources' => $this->ressources->listForTeacher((int) ($user['id'] ?? 0)),
+            'sessions'   => $this->sessions->listForTeacher((int) ($user['id'] ?? 0)),
             'user'       => $user,
         ]);
     }

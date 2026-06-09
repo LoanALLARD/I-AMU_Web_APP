@@ -34,6 +34,7 @@ $canManage = $canManage ?? false;
                 <?= icon('archive', '', 12) ?> Exporter (JSON)
             </button>
         <?php endif; ?>
+        <a href='/sessions' class="btn">Retour à la liste</a>
         <?php if ($canManage): ?>
         <?php if ($view['canEdit']): ?>
             <a href="/sessions/<?= (int) $view['id'] ?>/edit" class="btn">

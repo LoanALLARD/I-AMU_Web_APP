@@ -601,6 +601,7 @@ class SessionService
     {
         $computed = $session->computedStatus($now);
         $actions  = $session->availableActions($now);
+        $resource = $this->resources->findById($session->resourceId());
 
         return [
             'id'                => (int) $session->id(),
@@ -616,6 +617,7 @@ class SessionService
             'canStart'          => $actions['can_start'],
             'canEnd'            => $actions['can_end'],
             'canCancel'         => $actions['can_cancel'],
+            'resourceName'     => $resource !== null ? (string) $resource['name'] : '—',
         ];
     }
 }
