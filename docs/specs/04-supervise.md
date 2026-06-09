@@ -5,6 +5,13 @@
 - **Dépend de** : 02-sessions, 03-chat-llm
 - **État POC** : implémenté
 
+> **Accès élargi** — la vue de suivi (`/sessions/{id}/monitor`) n'est plus
+> réservée au propriétaire : un **prof responsable** (rattaché à la ressource via
+> `teacher_resources`, sans en être l'owner) y accède en **lecture seule**
+> (garde `SessionController::loadViewable`). Le signalement, l'archivage et la
+> (dé)activation d'étudiant restent réservés au propriétaire. Voir
+> [`SPEC-session-supervisors.md`](./SPEC-session-supervisors.md).
+
 ## 1. Objectifs
 
 Donner à l'enseignant une **vue temps quasi-réel** de ce qu'écrivent ses

@@ -4,6 +4,9 @@
  * @var list<\Domain\Document>    $documents  Documents attached to the session
  */
 $documents = $documents ?? [];
+// Owner = full control; a read-only responsible (teacher_resources) sees the
+// dashboard without any mutating control.
+$canManage = $canManage ?? false;
 ?>
 <div class="dashboard-header">
     <div>
@@ -31,6 +34,7 @@ $documents = $documents ?? [];
                 <?= icon('archive', '', 12) ?> Exporter (JSON)
             </button>
         <?php endif; ?>
+        <?php if ($canManage): ?>
         <?php if ($view['canEdit']): ?>
             <a href="/sessions/<?= (int) $view['id'] ?>/edit" class="btn">
                 <?= icon('edit', '', 12) ?> Modifier
@@ -62,6 +66,7 @@ $documents = $documents ?? [];
                 </button>
             </form>
         <?php endif; ?>
+        <?php endif; /* canManage */ ?>
     </div>
 </div>
 
@@ -118,9 +123,11 @@ $documents = $documents ?? [];
                 PDF, Markdown ou TXT — 10 Mo max.
             </p>
 
-            <button type="button" class="btn primary" id="btn-open-doc-modal">
-                <?= icon('upload', '', 12) ?> Ajouter
-            </button>
+            <?php if ($canManage): ?>
+                <button type="button" class="btn primary" id="btn-open-doc-modal">
+                    <?= icon('upload', '', 12) ?> Ajouter
+                </button>
+            <?php endif; ?>
 
             <?php if ($documents === []): ?>
                 <p style="color:var(--gray-400);font-size:12px;margin-top:12px;">Aucun document pour l'instant.</p>
@@ -137,13 +144,15 @@ $documents = $documents ?? [];
                                     <?= htmlspecialchars($doc->kindLabel()) ?> · <?= htmlspecialchars($doc->humanSize()) ?> · <?= htmlspecialchars($doc->status()->label()) ?>
                                 </span>
                             </div>
-                            <form method="POST" action="/documents/<?= (int) $doc->id() ?>/delete"
-                                  style="margin:0;flex-shrink:0;"
-                                  onsubmit="return confirm('Supprimer ce document ?')">
-                                <?= csrf_field() ?>
-                                <button type="submit" class="btn bordered" title="Supprimer"
-                                        style="padding:4px 8px;"><?= icon('x-circle', '', 13) ?></button>
-                            </form>
+                            <?php if ($canManage): ?>
+                                <form method="POST" action="/documents/<?= (int) $doc->id() ?>/delete"
+                                      style="margin:0;flex-shrink:0;"
+                                      onsubmit="return confirm('Supprimer ce document ?')">
+                                    <?= csrf_field() ?>
+                                    <button type="submit" class="btn bordered" title="Supprimer"
+                                            style="padding:4px 8px;"><?= icon('x-circle', '', 13) ?></button>
+                                </form>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -267,7 +276,8 @@ $documents = $documents ?? [];
     })();
 </script>
 
-<!-- Add-documents modal: multi-select + drag & drop -->
+<!-- Add-documents modal: multi-select + drag & drop (owner only) -->
+<?php if ($canManage): ?>
 <div id="modal-documents" class="doc-modal-overlay" style="display:none;">
     <div class="doc-modal-box">
         <h2>Ajouter des documents</h2>
@@ -292,6 +302,7 @@ $documents = $documents ?? [];
         </form>
     </div>
 </div>
+<?php endif; /* canManage — add-documents modal */ ?>
 
 <script>
     (function () {

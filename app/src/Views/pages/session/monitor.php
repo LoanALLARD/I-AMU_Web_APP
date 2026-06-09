@@ -8,6 +8,9 @@
  *   selected|null (conversationId, conversationName, studentName, transcript[] (prompt, response, model, sentAt))
  */
 $activeConvId = $view['selected']['conversationId'] ?? null;
+// Owner = full control; a read-only responsible (teacher_resources) supervises
+// without any moderation control (cannot (de)activate a student).
+$canManage = $canManage ?? false;
 ?>
 <div class="page-header">
     <div class="page-header-row" style="align-items:center;">
@@ -153,20 +156,22 @@ $activeConvId = $view['selected']['conversationId'] ?? null;
                         <span class="badge"
                             style="font-size:10px;background:var(--gray-100);color:var(--gray-500);">désactivé</span>
                     <?php endif; ?>
-                    <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/student-status" style="margin:0;flex-shrink:0;"
-                        onsubmit="return confirm('<?= $active
-                            ? 'Désactiver cet étudiant et le déconnecter de la session ?'
-                            : 'Réactiver cet étudiant dans la session ?' ?>');">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="student_id" value="<?= (int) $stu['id'] ?>">
-                        <input type="hidden" name="active" value="<?= $active ? '0' : '1' ?>">
-                        <button type="submit" class="btn <?= $active ? 'danger' : 'success' ?>"
-                            style="padding:4px 12px;font-size:12px;">
-                            <?= $active
-                                ? icon('x-circle', '', 12) . ' Désactiver'
-                                : icon('play', '', 12) . ' Réactiver' ?>
-                        </button>
-                    </form>
+                    <?php if ($canManage): ?>
+                        <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/student-status" style="margin:0;flex-shrink:0;"
+                            onsubmit="return confirm('<?= $active
+                                ? 'Désactiver cet étudiant et le déconnecter de la session ?'
+                                : 'Réactiver cet étudiant dans la session ?' ?>');">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="student_id" value="<?= (int) $stu['id'] ?>">
+                            <input type="hidden" name="active" value="<?= $active ? '0' : '1' ?>">
+                            <button type="submit" class="btn <?= $active ? 'danger' : 'success' ?>"
+                                style="padding:4px 12px;font-size:12px;">
+                                <?= $active
+                                    ? icon('x-circle', '', 12) . ' Désactiver'
+                                    : icon('play', '', 12) . ' Réactiver' ?>
+                            </button>
+                        </form>
+                    <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         </div>

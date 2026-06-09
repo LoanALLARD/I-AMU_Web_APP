@@ -64,6 +64,29 @@ class SessionRepository
     }
 
     /**
+     * Sessions the teacher SUPERVISES read-only: those of resources they are
+     * attached to via `teacher_resources` but do NOT own. The owner is excluded
+     * (they already see the session through findAllByTeacher with full rights).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findSupervisedByTeacher(int $teacherId): array
+    {
+        $stmt = $this->pdo->prepare(
+            self::SELECT
+            . ' JOIN teacher_resources tr ON tr.resource_id = r.id'
+            . ' WHERE tr.teacher_id = :tid AND r.owner_id <> :owner'
+            . ' ORDER BY s.starts_at DESC NULLS FIRST, s.id DESC'
+        );
+        $stmt->execute(['tid' => $teacherId, 'owner' => $teacherId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
+
+    /**
      * Inserts a session. `access_code` is left to the database trigger
      * `trg_generate_session_access_code`, which fills it when the status is
      * SCHEDULED or ACTIVE. The generated value (or null for a draft) is
