@@ -3,7 +3,39 @@
 ## 0. Statut
 - **Priorité** : must-have
 - **Dépend de** : 00-foundations
-- **État POC** : implémenté
+- **État** : **implémenté** (MVC) — sauf reset de mot de passe (cf. § Pas fait).
+
+## 0bis. État d'implémentation (dev — MVC)
+
+> Mise à jour **2026-06-09**. Le code est en **MVC**
+> (`Controllers\` / `Services\` / `Models\` / `Domain\`), pas dans la Clean
+> Architecture (`App\…`, `RepositoryInterface`, DTOs) décrite aux §3→6 — ces
+> blocs valent comme **intention de design historique** ; ce bloc-ci décrit
+> l'**état réel** et fait foi.
+
+### ✅ Fait
+- **Connexion / déconnexion** — `AuthController` + `AuthService::login/logout` (session PHP, `session_regenerate_id(true)`). Le login **purge** l'identité super admin résiduelle (exclusivité, cf. [SPEC-superadmin-auth](./SPEC-superadmin-auth.md)).
+- **Inscription** — `AuthService::register` : validation, **rôle auto par domaine** (table `email_domain_configs`, pas de hardcode ; domaine inconnu/inactif → refus), unicité email, création atomique user + rôle (`UserRepository::createUserWithRole`). Deux chemins : **membre** (`prepareMemberRegistration` : place + département → `student`/`teacher`) ou **chercheur** si la case `is_researcher` est cochée (`prepareResearcherRegistration` : rôle `researcher`, `laboratory_id` dérivé du domaine email, `department_id` reste NULL).
+- **Vérification d'email** (token + lien par mail) — *ajout hors spec d'origine* : `GET /verify-email`, `MailService` (SMTP brut → Mailpit en dev), colonnes `users.email_verified_at` / `email_verify_token`. `register` renvoie `pending_verification` et **ne connecte pas** : le login reste bloqué tant que l'email n'est pas vérifié.
+- **Désactivation / réactivation** de compte — `POST /profile/deactivate`, `POST /reactivate`.
+- **Édition du profil** (prénom / nom) — `POST /profile/update` → `AuthService::updateProfile` (synchronise la session).
+- **Changement de mot de passe** — `POST /profile/password` → `AuthService::changePassword` (vérifie l'actuel, ≥ 8 car., ≠ ancien, re-hash bcrypt).
+- **Préférence thème** (auto / clair / sombre) persistée (`users.theme`) — `POST /profile/theme`.
+- **Rôle unique** résolu par `AuthService::resolveRoles` depuis `students` / `teachers` / `researchers` / `department_administrators`. ⚠️ Un utilisateur tient **au plus un** rôle : le trigger `enforce_role_exclusivity()` ([`02_triggers.sql`](../../database/schema/02_triggers.sql)) rend les rôles **mutuellement exclusifs** (un enseignant n'est donc **pas** aussi étudiant).
+
+### 🟡 Partiel / divergent
+- **Page compte** : sous `/profile` (et non `/account`), MVP — pas d'agrégat stats (`GetAccountOverviewService` non implémenté).
+- **Rattachement département** : via selects **lieu + département** dépendants (et non « code département » du §2bis, jamais implémenté). Le `department_id` est écrit et validé serveur ; un AJAX `GET /places/{id}/departments` peuple le second select.
+- **Mention RGPD** : checkbox bloquante à l'inscription + page `/rgpd_consent` ; pas de page publique `/privacy` (cf. [spec 06](./06-rgpd.md)).
+
+### ❌ Pas fait
+- **Réinitialisation du mot de passe oublié** (`/password/forgot`, `/password/reset`, table `password_reset`, mail de reset) — *must-have non couvert*. (La table `password_reset` n'existe pas au schéma.)
+- **Réglage de la durée d'archivage** : la colonne `users.archive_duration_days` existe, mais aucune UI ni service.
+- **Suppression de compte automatisée** (soft-delete + anonymisation) — remplacée par désactivation + demande à `dpo@univ-amu.fr`.
+- **Préférences densité / langue**.
+
+### Routes réelles (vs §6 planifié)
+Présentes : `GET /login`, `POST /login`, `GET /register`, `POST /register`, `GET /logout`, `POST /reactivate`, `GET /rgpd_consent`, `GET /verify-email`, `GET /places/{id}/departments`, `GET /profile`, `POST /profile/update`, `POST /profile/password`, `POST /profile/theme`, `POST /profile/deactivate`. Les routes `/account/*` et `/password/*` du §6 ne sont **pas** en place (le compte vit sous `/profile`).
 
 ## 1. Objectifs
 
@@ -46,6 +78,12 @@ Gérer l'identité de l'utilisateur :
 
 ## 2bis. Rattachement au département
 
+> ⚠️ **Non implémenté tel quel.** Le « code département » ci-dessous était la
+> piste initiale ; en pratique le formulaire d'inscription utilise **deux
+> selects dépendants lieu + département** (`place_id` puis `department_id`,
+> peuplé par l'AJAX `GET /places/{id}/departments`). Le principe
+> « un utilisateur = un département (sauf chercheur / super admin) » reste vrai.
+
 - **Code département à l'inscription** — l'utilisateur rejoint son
   département en saisissant un **code département** dans le formulaire
   d'inscription. Ce code résout vers un `departments.id`, écrit dans
@@ -61,6 +99,18 @@ Gérer l'identité de l'utilisateur :
   inactif → erreur de validation, on ne crée pas le compte.
 
 ## 3. Domaine
+
+> ⚠️ **Design hexagonal historique — non représentatif du code.** Les §3→6
+> décrivent l'intention initiale (entités riches `User`, value objects
+> `Email`/`GdprConsent`, `UserRepositoryInterface`, `RegisterUserService`,
+> DTOs…). Le code réel est plus direct :
+> - **pas d'entité `User`** : `Models\UserRepository` renvoie des tableaux
+>   associatifs ; l'identité de session vit dans `$_SESSION` (`currentUser()`).
+> - **un seul service** `Services\AuthService` (login, register, profil, mot
+>   de passe, (ré)activation) au lieu d'un service par cas d'usage.
+> - **pas de value object** `Email`/`UserRole`/`GdprConsent` : validation
+>   inline dans `AuthService`, rôles en `string` dans `$_SESSION['roles']`.
+> Le bloc reste à titre de référence de conception.
 
 ### Entities — `App\Domain\Entities`
 
@@ -136,7 +186,7 @@ interface PasswordResetRepositoryInterface
 
 | Service | Méthode | Effet |
 |---|---|---|
-| `RegisterUserService` | `execute(RegisterRequest)` | Crée le User. **Résout le code département** (cf. §2bis) et écrit `department_id` ; code inconnu / département inactif → erreur. **Attribue les rôles auto** en lisant `config.domains` (paramétrable, cf. §2) : si l'email matche un domaine de la liste `student`/`teacher`, le rôle est ajouté. Les rôles `researcher` et `teacher_specialised` ne sont jamais auto-attribués (admin uniquement). |
+| `RegisterUserService` *(réel : `AuthService::register`)* | `register(array $data)` | Crée le User. **Résout lieu + département** (cf. §2bis) et écrit `department_id` ; domaine email inconnu / département inactif → erreur. **Attribue le rôle** en lisant `email_domain_configs` (paramétrable, cf. §2) : `student`/`teacher` selon le domaine. ⚠️ **Le rôle `researcher` EST auto-attribué** quand la case `is_researcher` est cochée (lab dérivé du domaine, département NULL) — corrige la note initiale. Seul `teacher_specialised` (`is_specialised`) reste réservé à l'admin de département. |
 | `LoginService` | `execute(string $email, string $password)` | Vérifie, met à jour `lastLogin`, retourne le User ou lance `InvalidCredentialsException`. |
 | `RequestPasswordResetService` | `execute(Email $email)` | Génère un token, envoie un mail via `MailerInterface`. |
 | `ResetPasswordService` | `execute(string $token, string $newPassword)` | Vérifie le token (TTL 1h), change le mdp, invalide tous les tokens du user. |
@@ -229,8 +279,17 @@ Tables existantes (source de vérité :
 
 ### Nouvelles colonnes / tables
 
+> **État dev (2026-06-09)** — la **vérification d'email** est intégrée
+> **directement dans [`01_schema.sql`](../../database/schema/01_schema.sql)**
+> (il n'y a **pas** de dossier `database/migrations/`) : `users` porte
+> `email_verified_at TIMESTAMPTZ`, `email_verify_token VARCHAR(255)`
+> (unique `uq_users_email_verify_token`), `theme`, `archive_duration_days`,
+> et **`research_opposed BOOLEAN NOT NULL DEFAULT FALSE`** (déjà au schéma —
+> cf. [spec 06](./06-rgpd.md) ; aucun endpoint ne l'écrit encore). La table
+> `password_reset` ci-dessous **n'est pas** créée (reset non implémenté).
+
 ```sql
--- database/migrations/AAAA-MM-DD-password-reset.sql
+-- Proposé (non créé) — à intégrer dans database/schema/01_schema.sql
 CREATE TABLE password_reset (
     token       VARCHAR(64) PRIMARY KEY,
     user_id     BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
@@ -239,8 +298,7 @@ CREATE TABLE password_reset (
 );
 ```
 
-> Les autres colonnes RGPD (`research_opposed`, table
-> `data_access_log`) sont introduites par la migration de la
+> La table `data_access_log` (journalisation RGPD) reste à introduire — cf.
 > [spec 06-rgpd.md](./06-rgpd.md).
 
 ## 8. Réutilisation POC

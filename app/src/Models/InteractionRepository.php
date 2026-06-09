@@ -16,6 +16,8 @@ class InteractionRepository {
      * Persists a prompt/response turn. `model_id` is NOT NULL in the schema,
      * so it must always be provided. Token counts honour the table CHECKs
      * (input_tokens > 0 or NULL ; output_tokens >= 0 or NULL).
+     *
+     * @return array<string, mixed>|null
      */
     public function newInteration(
         int $conversation_id,
@@ -23,7 +25,7 @@ class InteractionRepository {
         string $response,
         int $input_tokens,
         int $output_tokens
-    ) {
+    ): ?array {
         $query = $this->pdo->prepare(
             'INSERT INTO interactions
                 (conversation_id, prompt, response, input_tokens, output_tokens)
@@ -63,9 +65,10 @@ class InteractionRepository {
     public function listByConversation(int $conversationId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT i.prompt, i.response, i.sent_at, m.name AS model_name
+            'SELECT i.id, i.prompt, i.response, i.sent_at, m.name AS model_name
                FROM interactions i
-               JOIN models m ON m.id = i.model_id
+               JOIN conversations c ON c.id = i.conversation_id
+               JOIN models m ON m.id = c.model_id
               WHERE i.conversation_id = :cid
               ORDER BY i.sent_at ASC, i.id ASC'
         );
@@ -77,7 +80,7 @@ class InteractionRepository {
         return $rows;
     }
 
-    public function setContext(string $metadata, int $interaction_id){
+    public function setContext(string $metadata, int $interaction_id): ?bool {
         $query = $this->pdo->prepare('
             UPDATE interactions set api_metadata = :metadata where id = :id
         ');
@@ -95,4 +98,20 @@ class InteractionRepository {
             
         return TRUE;
     }   
+
+    /**
+     * @return array<array<string, mixed>>
+     */
+    public function getInteractionsByConversationId(int $conversation_id): array
+    {
+        $query = $this->pdo->prepare('
+        SELECT * FROM interactions where conversation_id = :conversation_id
+        ');
+
+        $query->execute([
+            'conversation_id'=>$conversation_id
+        ]);
+
+        return $query->fetchAll();
+    }
 }

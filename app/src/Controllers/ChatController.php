@@ -17,12 +17,12 @@ class ChatController extends Controller
         try {
             $pdo = Database::getConnection();
             $aiRepository = new AiRepository($pdo);
-            $models = $aiRepository->findAllActive();
+            $models = $aiRepository->findAllActiveBySession(null);
         } catch (\Throwable $e) {
             error_log('Impossible de charger les modèles : ' . $e->getMessage());
         }
 
-        $this->render('Page/homeView', [
+        $this->render('pages/home', [
             'titrePage' => 'Chat',
             'user'      => $user,
             'models'    => $models,

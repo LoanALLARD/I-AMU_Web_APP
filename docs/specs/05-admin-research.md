@@ -3,11 +3,36 @@
 ## 0. Statut
 - **Priorité** : nice-to-have
 - **Dépend de** : 00 à 03 (et 04 si on veut le bouton d'export depuis la supervision)
-- **État POC** : implémenté
+- **État (2026-06-09)** : **partiellement implémenté**, mais **pas** sous la
+  forme décrite ci-dessous (voir recadrage).
 
 Cette spec regroupe deux univers proches : l'**administration** de la
-plateforme (deux niveaux d'admins, voir A.0) et le **dashboard chercheur**
-(réservé aux chercheurs).
+plateforme (deux niveaux d'admins, voir A.0) et l'espace **chercheur**.
+
+> ⚠️ **Recadrage — modèle d'administration réel (MVC).** Le **§A.0**
+> (deux niveaux d'admins, isolation, `is_specialised`, scope des modèles)
+> est exact et fait foi. En revanche les **§A.1→A.4** et le **§B** décrivent
+> des pages `/admin/*` et un dashboard chercheur à graphiques qui
+> **n'existent pas**. Réalité :
+> - **Super admin** — espace isolé `/super-admin/*` (cf.
+>   [SPEC-superadmin-auth](./SPEC-superadmin-auth.md)) : `SuperAdminController`
+>   (panel email-domains **fonctionnel** ; pages places / department-admins en
+>   **coquille**). Pas de `/admin/*`.
+> - **Admin de département** — `/department-admin/*` (`DepartmentAdminController`) :
+>   liste des membres + (dé)activation, gestion des chercheurs
+>   (approuver/rejeter/révoquer/réautoriser via `ResearcherAuthorizationService`),
+>   **ajout manuel de modèle** (formulaire `addModel`).
+> - ⚠️ **Modèles : ajout MANUEL, pas de sync Ollama.** Contrairement au §A.1,
+>   il n'y a **pas** de bouton « Synchroniser avec Ollama » ni de
+>   `SyncOllamaModelsService` ; l'admin saisit le tag/adapter/URL à la main.
+> - **Chercheur** — `/researcher` (demande d'accès à un département via
+>   `researcher_authorizations`) + `/researcher/data` (coquille). **Pas** de
+>   dashboard à 4 graphiques SVG ni de `BuildResearchCorpusService`.
+> - **Export recherche** — réel = **par session** : `GET /sessions/{id}/export`
+>   (`SessionService::exportSessionData`, JSON) gardé pour owner / responsable /
+>   `researcher` / `department_admin` (cf. [SPEC-session-export](./SPEC-session-export.md)).
+>   L'autorisation **par département** (`researcher_authorizations`) n'est pas
+>   encore appliquée à l'export.
 
 ---
 
@@ -32,10 +57,20 @@ L'administration est **hiérarchisée sur deux niveaux**, stockés dans
 
 #### A.0.1 Super administrateur
 
-- **Bootstrap** : le **premier** super admin est inséré par un **script
-  qui ne s'exécute qu'une seule fois** (idempotent / verrou — refuse de
-  recréer si la table est non vide). Pas de seed rejouable, pas de mot de
-  passe par défaut commité.
+> **Connexion & panel** — le *mécanisme d'authentification* du super admin
+> (route dédiée `/super-admin/login` non liée dans l'UI, session isolée et
+> exclusive de celle des `users`, guards `requireSuperAdmin`, script de
+> bootstrap run-once, coquille du panel) est spécifié et implémenté dans
+> [`SPEC-superadmin-auth.md`](./SPEC-superadmin-auth.md). La présente section
+> décrit les *pouvoirs* du super admin, qui s'appuieront dessus.
+
+- **Bootstrap** : le **premier** super admin devrait être inséré par un
+  **script run-once** (idempotent / verrou — refuse si la table est non vide),
+  sans mot de passe commité. ⚠️ **Ce script n'existe pas encore** (`app/bin/`
+  est absent) : aujourd'hui seul `SuperAdministratorRepository::count()` /
+  `::create()` le préparent, et la fixture dev
+  [`02_dev_fixtures.sql`](../../database/seeds/02_dev_fixtures.sql) insère
+  `admin@univ-amu.fr`. Cf. [SPEC-superadmin-auth §5](./SPEC-superadmin-auth.md).
 - **Création des autres comptes** : un super admin ne crée jamais un
   compte directement — il **envoie une invitation par mail**. Le
   destinataire active son compte via le lien. Cela couvre la création des
@@ -90,9 +125,11 @@ admin = tout ; admin département = son périmètre) :
 - **Utilisateurs** : liste paginée, recherche, attribution / retrait de
   rôles via boutons toggle (badges déjà bien stylés en POC). L'admin de
   département ne voit que les comptes de **son** département.
-- **Modèles LLM** : liste + bouton **Synchroniser avec Ollama** (réutilise
-  `SyncOllamaModelsService` de la spec 03). **Pas d'ajout manuel** —
-  le tag DOIT venir d'Ollama, sinon le chat plante.
+- **Modèles LLM** : ⚠️ **réel = ajout MANUEL** par l'admin de département
+  (formulaire `addModel` → `AiRepository::addModel` : `name`/tag, `adapter`,
+  `api_url`, `context_window`, scope département ou ressource, `is_shareable`).
+  Il n'y a **pas** de `SyncOllamaModelsService` ni de bouton « Synchroniser
+  avec Ollama » — c'est l'admin qui doit saisir un tag valide.
 - **Configuration** : lecture seule des sections clés de `config.php`
   (domaines email, durées RGPD, etc.). La gestion **écriture** des
   domaines email est réservée au super admin.
