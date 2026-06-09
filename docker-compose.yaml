@@ -13,7 +13,6 @@ services :
     entrypoint: ["/bin/sh", "-c"]
 
     command: ["/bin/ollama serve & sleep 5 && /bin/ollama pull llama3.2:1b && wait"]
-
   db:
     build: ./docker/db
     restart: always

@@ -17,7 +17,7 @@ class SessionRepository
     private const SELECT =
         'SELECT s.id, s.resource_id, r.owner_id AS teacher_id, s.name, s.type, s.status,
                 s.access_code, s.starts_at, s.ends_at, s.closed_at, s.pre_prompt_override,
-                s.post_prompt_override, s.instructions, s.max_input_size
+                s.post_prompt_override, s.instructions, s.max_input_size, s.max_tokens 
            FROM sessions s
            JOIN resources r ON r.id = s.resource_id';
 
@@ -100,10 +100,10 @@ class SessionRepository
         $stmt = $this->pdo->prepare(
             'INSERT INTO sessions
                 (resource_id, name, type, status, starts_at, ends_at, closed_at,
-                 pre_prompt_override, post_prompt_override, instructions, max_input_size)
+                 pre_prompt_override, post_prompt_override, instructions, max_input_size, max_tokens)
              VALUES
                 (:resource_id, :name, :type, :status, :starts_at, :ends_at, :closed_at,
-                 :pre_prompt_override, :post_prompt_override, :instructions, :max_input_size)
+                 :pre_prompt_override, :post_prompt_override, :instructions, :max_input_size,:max_tokens)
              RETURNING id, access_code'
         );
         $stmt->execute([
@@ -118,6 +118,7 @@ class SessionRepository
             'post_prompt_override' => $data['post_prompt_override'],
             'instructions'         => $data['instructions'],
             'max_input_size'       => $data['max_input_size'],
+            'max_tokens'          => $data['max_tokens'],
         ]);
 
         /** @var array{id: int|string, access_code: ?string} $row */
@@ -141,7 +142,7 @@ class SessionRepository
                 name = :name, status = :status, starts_at = :starts_at, ends_at = :ends_at,
                 closed_at = :closed_at, pre_prompt_override = :pre_prompt_override,
                 post_prompt_override = :post_prompt_override, instructions = :instructions,
-                max_input_size = :max_input_size
+                max_input_size = :max_input_size, max_tokens = :max_tokens
              WHERE id = :id'
         );
         $stmt->execute([
@@ -155,6 +156,7 @@ class SessionRepository
             'post_prompt_override' => $data['post_prompt_override'],
             'instructions'         => $data['instructions'],
             'max_input_size'       => $data['max_input_size'],
+            'max_tokens'           => $data['max_tokens'],
         ]);
     }
 
@@ -344,6 +346,30 @@ class SessionRepository
         return $rows;
     }
 
+    /**
+     * Exam sessions a student is enrolled in that may currently be running.
+     *
+     * Only EXAM-type sessions with a non-terminal status are returned; the
+     * caller hydrates Domain\Session and uses isActive() to confirm the
+     * lock (time-based expiry is resolved there, not in SQL).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function examCandidatesForStudent(int $studentId): array
+    {
+        $stmt = $this->pdo->prepare(
+            self::SELECT
+            . ' JOIN enrollments e ON e.session_id = s.id'
+            . " WHERE e.student_id = :sid AND s.type = 'EXAM'"
+            . " AND s.status IN ('SCHEDULED', 'ACTIVE')"
+        );
+        $stmt->execute(['sid' => $studentId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
 
     /**
      * Retrun the value of preprompt in the table Session in the DB.
@@ -363,5 +389,16 @@ class SessionRepository
 
         return $rows;
 
+    }
+    public function tokenUsageForStudent(int $studentId, int $sessionId): int
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT COALESCE(SUM(COALESCE(i.input_tokens, 0) + COALESCE(i.output_tokens, 0)), 0)
+               FROM interactions i
+               JOIN conversations c ON c.id = i.conversation_id
+              WHERE c.user_id = :uid AND c.session_id = :sid'
+        );
+        $stmt->execute(['uid' => $studentId, 'sid' => $sessionId]);
+        return (int) $stmt->fetchColumn();
     }
 }

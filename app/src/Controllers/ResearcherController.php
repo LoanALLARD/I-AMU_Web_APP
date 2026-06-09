@@ -24,10 +24,11 @@ class ResearcherController extends Controller
 
         $this->render('pages/researcher/dashboard', [
             'titrePage' => 'Espace chercheur',
+            'page'      => 'researcher',
             'user'      => $this->currentUser(),
             'places'    => (new PlaceRepository($pdo))->all(),
             'requests'  => (new ResearcherAuthorizationService($pdo))->listForResearcher($researcherId),
-        ]);
+        ], 'chat');
     }
 
     /** GET /researcher/data — browse and export accessible department data. */
@@ -37,8 +38,9 @@ class ResearcherController extends Controller
 
         $this->render('pages/researcher/data', [
             'titrePage' => 'Espace chercheur',
+            'page'      => 'researcher',
             'user'      => $this->currentUser(),
-        ]);
+        ], 'chat');
     }
 
     /** POST /researcher/requests — files (or re-files) an access request. */

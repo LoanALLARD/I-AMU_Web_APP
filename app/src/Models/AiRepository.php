@@ -66,10 +66,10 @@ class AiRepository
         }
         else{
             $query = $this->pdo->prepare(
-                'SELECT name FROM models m
+                'SELECT m.name, m.id FROM models m
                 INNER JOIN session_models sm
                 on sm.model_id = m.id
-                where sm.session_id = :session_id 
+                where sm.session_id = :session_id
                 and m.is_active = :a '
             );
             $query->execute([
@@ -77,8 +77,6 @@ class AiRepository
                 "session_id"  => $sessionID
                 ]);
         }
-        $query->execute();
-
         /** @var list<array<string, mixed>> $rows */
         $rows = $query->fetchAll();
 
@@ -162,11 +160,10 @@ class AiRepository
 
         return $result;
     }
-
     /**
      * @return array<string, mixed>|null
      */
-    public function addModel(?int $department_id, ?string $resource_id, string $name, string $size, string $provider, string $adapter, string $apiUrl, int $contextWindow, string $isShareable): ?array
+    public function addModel(?int $department_id,?string $resource_id,string $name, string $size, string $provider, string $adapter, string $apiUrl, int $contextWindow, string $isShareable)
     {
         $query = $this->pdo->prepare(
             'INSERT INTO models (department_id,resource_id,name,size,provider,context_window,api_url,adapter,is_shareable)

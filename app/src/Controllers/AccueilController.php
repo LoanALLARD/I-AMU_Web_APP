@@ -10,6 +10,7 @@ use Services\DocumentService;
 use Models\ConversationRepository;
 use Models\InteractionRepository;
 use Data\Database;
+use Services\ExamLockService;
 
 /**
  * Authenticated chat shell, routed from `/`, `/accueil`, `/chat` and
@@ -22,10 +23,12 @@ use Data\Database;
 class AccueilController extends Controller
 {
     private ChatService $chat;
+    private ExamLockService $examLocks;
 
     public function __construct()
     {
         $this->chat = new ChatService(Database::getConnection());
+        $this->examLocks = new ExamLockService(Database::getConnection());
     }
 
     public function index(?string $id = null): void
@@ -35,17 +38,33 @@ class AccueilController extends Controller
         $user = $this->currentUser();
 
         $conversationId = $id !== null && $id !== '' ? (int) $id : null;
-        $archived = $this->query('archived') === '1';
-        $env = $this->chat->environment((int) $user['id'], $conversationId, $archived);
+        $archived  = $this->query('archived') === '1';
+
+        // Exam lockdown: a student inside a running exam may only see their exam conversation.
+        $examLock = $this->examLock();
+        if ($examLock !== null && $examLock['conversationId'] !== null
+            && $conversationId !== $examLock['conversationId']) {
+            $this->redirect('/chat/' . $examLock['conversationId']);
+        }
+
+        $env            = $this->chat->environment((int) $user['id'], $conversationId, $archived);
         $models = [];
         try {
             $pdo = Database::getConnection();
             $aiRepository = new \Models\AiRepository($pdo);
-            if ($env["env"]["sessionId"] == null){
-                $depId = $user['department_id'];
-                $models = $aiRepository->findAllActiveBySession(null,$depId);
-            }else{
-                $models = $aiRepository->findAllActiveBySession($env["env"]["sessionId"],null);
+            $sessionId = $env['env']['sessionId'] ?? null;
+
+            if ($sessionId !== null) {
+                // Session-bound chat: only teacher-authorized models.
+                $models  = $aiRepository->findAllActiveBySession((int) $sessionId, null);
+                $allowed = (new \Models\SessionRepository($pdo))->authorizedModelIdsOf((int) $sessionId);
+                $models  = array_values(array_filter(
+                    $models,
+                    static fn ($m) => in_array((int) $m['id'], $allowed, true)
+                ));
+            } else {
+                // Free chat: models of the user's department.
+                $models = $aiRepository->findAllActiveBySession(null, (int) $user['department_id']);
             }
         } catch (\Throwable $e) {
             error_log('Impossible de charger les modèles : ' . $e->getMessage());
@@ -101,6 +120,7 @@ class AccueilController extends Controller
             'env' => $env['env'],
             'sessionDocuments' => $sessionDocuments,
             'archivedView' => $archived,
+            'examLock'      => $examLock,
         ], 'chat');
     }
 
@@ -130,6 +150,7 @@ class AccueilController extends Controller
         $this->requireAuth();
         $this->redirectNonChatRoles();
         $this->verifyCsrf();
+        $this->blockIfExamLocked();
         $user = $this->currentUser();
         $models = [];
         try {
@@ -163,6 +184,7 @@ class AccueilController extends Controller
         $this->requireAuth();
         $this->redirectNonChatRoles();
         $this->verifyCsrf();
+        $this->blockIfExamLocked();
         $user = $this->currentUser();
 
         $id = (int) $this->input('id', 0);
@@ -189,6 +211,7 @@ class AccueilController extends Controller
         $this->requireAuth();
         $this->redirectNonChatRoles();
         $this->verifyCsrf();
+        $this->blockIfExamLocked();
         $user = $this->currentUser();
 
         $id = (int) $this->input('id', 0);
@@ -218,6 +241,7 @@ class AccueilController extends Controller
         $this->requireAuth();
         $this->redirectNonChatRoles();
         $this->verifyCsrf();
+        $this->blockIfExamLocked();
         $user = $this->currentUser();
 
         $id = (int) $this->input('id', 0);
@@ -242,5 +266,37 @@ class AccueilController extends Controller
         if ($this->hasRole('researcher')) {
             $this->redirect('/researcher');
         }
+    }
+
+    /**
+     * Returns the active exam lock for the current student, or null. Only
+     * students can be locked — teachers and admins monitor freely.
+     *
+     * @return array{sessionId:int, conversationId:?int, sessionName:string, endsAt:?string}|null
+     */
+    private function examLock(): ?array
+    {
+        if (!$this->hasRole('student')) {
+            return null;
+        }
+        $user = $this->currentUser();
+
+        return $this->examLocks->activeLockFor((int) ($user['id'] ?? 0));
+    }
+
+    /**
+     * Rejects a chat mutation (new / rename / archive) while the student is
+     * locked in a running exam, sending them back to the exam conversation.
+     */
+    private function blockIfExamLocked(): void
+    {
+        $lock = $this->examLock();
+        if ($lock === null) {
+            return;
+        }
+        $this->flash('error', 'Action indisponible pendant un examen.');
+        $this->redirect($lock['conversationId'] !== null
+            ? '/chat/' . $lock['conversationId']
+            : '/chat');
     }
 }

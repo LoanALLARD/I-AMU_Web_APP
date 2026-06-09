@@ -8,7 +8,7 @@ Ce plugin permettra :
 - Proposera une environnement d'apprentissage encadré par des **règles sur le models** ainsi que sur les **nombres de tokens disponibles**.
 - Permettra aux professeurs d'avoir accès aux échanges entre le model et ses étudiants de sorte à pouvoir analyser la facon dont les élèves utilisent l'IA.
 
----
+--- 
 
 ## Tests et qualité du code
 

@@ -27,58 +27,58 @@ $canAddModel = $canAddModel ?? false;
                 <div class="model-selector-wrapper">
                     <button class="model-selector-btn" id="modelSelectorBtn" type="button">
                         <span class="model-tag-letter"
-                            id="modelLetter"><?= strtoupper(substr($defaultModelName, 0, 1)) ?></span>
+                              id="modelLetter"><?= strtoupper(substr($defaultModelName, 0, 1)) ?></span>
                         <span class="model-tag-name"
-                            id="modelNameDisplay"><?= htmlspecialchars($defaultModelName) ?></span>
+                              id="modelNameDisplay"><?= htmlspecialchars($defaultModelName) ?></span>
                         <svg class="model-selector-chevron" id="modelChevron" width="14" height="14" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                            stroke-linejoin="round">
+                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                             stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9" />
                         </svg>
                     </button>
-
-                    <div class="model-dropdown" id="modelDropdown">
-                        <div class="model-dropdown-header">Modèles disponibles</div>
-                        <?php if (empty($models)): ?>
-                            <div class="model-dropdown-empty">Aucun modèle disponible</div>
-                        <?php else: ?>
-                            <?php foreach ($models as $i => $model): ?>
-                                <button class="model-dropdown-item<?= $i === 0 ? ' active' : '' ?>"
-                                    data-model="<?= htmlspecialchars($model['name']) ?>" type="button">
-                                    <span class="model-dropdown-letter"><?= strtoupper(substr($model['name'], 0, 1)) ?></span>
-                                    <div class="model-dropdown-info">
-                                        <span class="model-dropdown-name"><?= htmlspecialchars($model['name']) ?></span>
-                                        <span class="model-dropdown-meta">
-                                            <?php
-                                            $meta = [];
-                                            if ($model['size'] ?? null) {
-                                                $meta[] = $model['size'];
-                                            }
-                                            if ($model['context_window'] ?? null) {
-                                                $meta[] = number_format($model['context_window']) . ' ctx';
-                                            }
-                                            echo htmlspecialchars(implode(' · ', $meta) ?: 'local · ollama');
-                                            ?>
-                                        </span>
-                                    </div>
-                                    <svg class="model-dropdown-check" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="20 6 9 17 4 12" />
-                                    </svg>
-                                </button>
-                            <?php endforeach; ?>
-                            <?php if ($canAddModel): ?>
-                                <a class="model-dropdown-item admin-action-item" href="/department-admin/addModel">
-                                    <span class="model-dropdown-letter">
-                                        <img src="/assets/img/add.svg" style="height: 20px;">
+                <div class="model-dropdown" id="modelDropdown">
+                    <div class="model-dropdown-header">Modèles disponibles</div>
+                    <?php if (empty($models)): ?>
+                        <div class="model-dropdown-empty">Aucun modèle disponible</div>
+                    <?php else: ?>
+                        <?php foreach ($models as $i => $model):?>
+                            <button class="model-dropdown-item<?= $i === 0 ? ' active' : '' ?>"
+                                    data-model="<?= htmlspecialchars($model['name']) ?>"
+                                    type="button">
+                                <span class="model-dropdown-letter"><?= strtoupper(substr($model['name'], 0, 1)) ?></span>
+                                <div class="model-dropdown-info">
+                                    <span class="model-dropdown-name"><?= htmlspecialchars($model['name']) ?></span>
+                                    <span class="model-dropdown-meta">
+                                        <?php
+                                        $meta = [];
+                                        if ($model['size'] ?? null) {
+                                            $meta[] = $model['size'];
+                                        }
+                                        if ($model['context_window'] ?? null) {
+                                            $meta[] = number_format($model['context_window']) . ' ctx';
+                                        }
+                                        echo htmlspecialchars(implode(' · ', $meta) ?: 'local · ollama');
+                                        ?>
                                     </span>
-                                    <div class="model-dropdown-info">
-                                        <span class="model-dropdown-name">Ajouter un Modèle d'IA</span>
-                                    </div>
-                                </a>
-                            <?php endif; ?>
+                                </div>
+                                <svg class="model-dropdown-check" width="16" height="16" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </button>
+                        <?php endforeach; ?>
+                        <?php if ($canAddModel): ?>
+                            <a class="model-dropdown-item admin-action-item" href="/department-admin/addModel">
+                                <span class="model-dropdown-letter">
+                                    <img src="/assets/img/add.svg" style="height: 20px;">
+                                </span>
+                                <div class="model-dropdown-info">
+                                    <span class="model-dropdown-name">Ajouter un Modèle d'IA</span>
+                                </div>
+                            </a>
                         <?php endif; ?>
-                    </div>
+                    <?php endif; ?>
+                </div>
                 </div>
 
                 <?php if ($inSession && ($sessionDocuments ?? []) !== []): ?>
@@ -148,8 +148,7 @@ $canAddModel = $canAddModel ?? false;
                         <p>Posez une question à l'IA ou sélectionnez un modèle pour commencer.</p>
                         <div class="empty-suggestions">
                             <button class="suggestion-chip" onclick="fillPrompt(this)">Explique-moi les pointeurs en C</button>
-                            <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en
-                                Python</button>
+                            <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en Python</button>
                             <button class="suggestion-chip" onclick="fillPrompt(this)">Qu'est-ce que le pattern MVC ?</button>
                         </div>
                         <?php if (!$inSession && in_array('student', $user['roles'] ?? [], true)): ?>
@@ -180,8 +179,9 @@ $canAddModel = $canAddModel ?? false;
             <?php endif; ?>
             <div class="input-wrapper">
                 <textarea id="promptInput"
-                    placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
-                    rows="1" <?= $sessionClosed ? 'disabled' : 'autofocus' ?>></textarea>
+                      placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
+                      <?php if (!empty($env['maxInputSize'])): ?>maxlength="<?= (int) $env['maxInputSize'] ?>"<?php endif; ?>
+                      rows="1" <?= $sessionClosed ? 'disabled' : 'autofocus' ?>></textarea>
                 <button class="btn-send" id="btnSend" disabled title="Envoyer">
                     <svg class="icon-send" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -205,16 +205,18 @@ $canAddModel = $canAddModel ?? false;
 <script>
     const conversationId = <?= json_encode($conversation['id'] ?? null) ?>;
     const conversationContext = <?= json_encode($messages ?? []) ?>;
+    const sessionMaxInputSize = <?= json_encode($env['maxInputSize'] ?? null) ?>;
+    const sessionMaxTokens = <?= json_encode($env['maxTokens'] ?? null) ?>;
 
     const input = document.getElementById('promptInput');
     const sendBtn = document.getElementById('btnSend');
     const counter = document.getElementById('charCounter');
-    const selectorBtn = document.getElementById('modelSelectorBtn');
-    const dropdown = document.getElementById('modelDropdown');
-    const chevron = document.getElementById('modelChevron');
-    const modelLetter = document.getElementById('modelLetter');
-    const modelDisplay = document.getElementById('modelNameDisplay');
-    let selectedModel = modelDisplay?.textContent?.trim() || 'mistral:latest';
+    const selectorBtn   = document.getElementById('modelSelectorBtn');
+    const dropdown      = document.getElementById('modelDropdown');
+    const chevron       = document.getElementById('modelChevron');
+    const modelLetter   = document.getElementById('modelLetter');
+    const modelDisplay  = document.getElementById('modelNameDisplay');
+    let   selectedModel = modelDisplay?.textContent?.trim() || 'mistral:latest';
 
     // Documents dropdown (session env) — reuses the model picker widget.
     const docBtn = document.getElementById('docSelectorBtn');
@@ -329,9 +331,15 @@ $canAddModel = $canAddModel ?? false;
     input?.addEventListener('input', () => {
         input.style.height = 'auto';
         input.style.height = Math.min(input.scrollHeight, 200) + 'px';
-        sendBtn.disabled = !input.value.trim();
-        counter.textContent = input.value.length + ' car.';
+        const len = input.value.length;
+        const over = sessionMaxInputSize !== null && len >= sessionMaxInputSize;
+        sendBtn.disabled = !input.value.trim() || over;
+        counter.textContent = sessionMaxInputSize !== null
+            ? len + ' / ' + sessionMaxInputSize + ' car.'
+            : len + ' car.';
+        counter.classList.toggle('is-limit', over);
     });
+    input?.dispatchEvent(new Event('input'));
 
     input?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -368,6 +376,17 @@ $canAddModel = $canAddModel ?? false;
         if (input.disabled || currentAbort) return;
         const message = input.value.trim();
         if (!message) return;
+
+        // Validate max_input_size limit if set
+        if (sessionMaxInputSize !== null && message.length > sessionMaxInputSize) {
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'msg msg-error';
+            errorMsg.innerHTML = `<div class="msg-content"><p class="msg-error">Votre message dépasse la limite de ${sessionMaxInputSize} caractères.</p></div>`;
+            const messagesEl = document.getElementById('messages');
+            messagesEl.appendChild(errorMsg);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return;
+        }
 
         const messagesEl = document.getElementById('messages');
         const emptyState = document.getElementById('emptyState');
@@ -417,6 +436,15 @@ $canAddModel = $canAddModel ?? false;
                 console.error("Response n'est pas du JSON valide", text);
                 aiMsg.querySelector('.msg-content').innerHTML =
                     '<p class="msg-error">Réponse invalide du serveur.</p>';
+                return;
+            }
+
+            // Server-side limits / auth: the endpoint returns an error JSON
+            // with a non-2xx status (429 token cap, 422 char cap, 403, etc.).
+            if (!res.ok || data.error) {
+                const msg = data.error ?? 'Une erreur est survenue.';
+                aiMsg.querySelector('.msg-content').innerHTML =
+                    `<p class="msg-error">${escapeHtml(msg)}</p>`;
                 return;
             }
 
@@ -526,3 +554,5 @@ $canAddModel = $canAddModel ?? false;
     })();
 <?php endif; ?>
 </script>
+
+

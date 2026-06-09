@@ -29,18 +29,7 @@ $isAdmin = ($role === 'department_admin');
 
 <div class="admin-container">
 
-    <?php if (!empty($_SESSION['_flash'])): ?>
-        <div class="flash-stack" style="margin-bottom: 1.5rem;">
-            <?php foreach ($_SESSION['_flash'] as $flash): ?>
-                <div class="alert alert-<?= htmlspecialchars($flash['type']) ?>" 
-                     style="padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; font-weight: 600; cursor: pointer; 
-                     <?= $flash['type'] === 'error' ? 'background: #fee2e2; color: #991b1b; border: 1px solid #f87171;' : 'background: #dcfce7; color: #166534; border: 1px solid #4ade80;' ?>">
-                    <?= htmlspecialchars($flash['message']) ?>
-                </div>
-            <?php endforeach; ?>
-        </div>
-        <?php unset($_SESSION['_flash']); ?>
-    <?php endif; ?>
+    <?php /* Flash messages are rendered once by the chat layout (partials/_flash.php). */ ?>
 
     <div class="admin-card">
         <div class="admin-card-header">
