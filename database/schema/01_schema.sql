@@ -175,9 +175,7 @@ CREATE TABLE sessions (
     max_tokens INTEGER,
     instructions TEXT,
     type session_type,
-    documents_enabled BOOLEAN NOT NULL DEFAULT TRUE,
     documents_max_bytes INTEGER,
-    documents_allowed_types VARCHAR(50),
     CONSTRAINT pk_sessions PRIMARY KEY (id),
     CONSTRAINT fk_sessions_resource FOREIGN KEY (resource_id) REFERENCES resources (id) ON DELETE RESTRICT,
     CONSTRAINT uq_sessions_access_code UNIQUE (access_code),
@@ -187,6 +185,26 @@ CREATE TABLE sessions (
     CONSTRAINT ck_sessions_max_input_size CHECK (max_input_size IS NULL OR max_input_size > 0),
     CONSTRAINT ck_sessions_max_tokens CHECK (max_tokens IS NULL OR max_tokens > 0),
     CONSTRAINT ck_sessions_documents_max_bytes CHECK (documents_max_bytes IS NULL OR (documents_max_bytes > 0 AND documents_max_bytes <= 10485760))
+);
+
+-- Reference list of file formats a session may authorise for student imports.
+CREATE TABLE file_formats (
+    id BIGSERIAL,
+    name VARCHAR(50) NOT NULL,
+    CONSTRAINT pk_file_formats PRIMARY KEY (id),
+    CONSTRAINT uq_file_formats_name UNIQUE (name)
+);
+
+INSERT INTO file_formats (name) VALUES ('pdf'), ('md'), ('txt');
+
+-- Which file formats a session authorises for student document imports
+-- (M:N). No row for a session means imports are disabled for it.
+CREATE TABLE session_file_formats (
+    session_id BIGINT NOT NULL,
+    file_format_id BIGINT NOT NULL,
+    CONSTRAINT pk_session_file_formats PRIMARY KEY (session_id, file_format_id),
+    CONSTRAINT fk_session_file_formats_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE,
+    CONSTRAINT fk_session_file_formats_format FOREIGN KEY (file_format_id) REFERENCES file_formats (id) ON DELETE CASCADE
 );
 
 CREATE TABLE conversations (

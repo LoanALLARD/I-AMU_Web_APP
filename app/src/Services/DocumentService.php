@@ -87,19 +87,19 @@ class DocumentService
         $session = $this->assertCanImportToConversation($conversationId, $userId);
 
         // Per-session limits override the global ones for a session-bound chat.
+        // The authorised file formats live in a M:N table; an empty set means
+        // imports are disabled for the session.
         $maxBytes    = self::MAX_BYTES;
         $allowedExts = null; // null = every globally-supported type
         if ($session !== null) {
-            if (!$session->documentsEnabled()) {
+            $formats = $this->sessions->authorizedFormatsOf((int) $session->id());
+            if ($formats === []) {
                 throw DocumentException::documentsDisabled();
             }
             if ($session->documentsMaxBytes() !== null) {
                 $maxBytes = min($session->documentsMaxBytes(), self::MAX_BYTES);
             }
-            $types = $session->documentsAllowedTypesList();
-            if ($types !== []) {
-                $allowedExts = $types;
-            }
+            $allowedExts = $formats;
         }
 
         $size = $this->assertUploadOk($file, $maxBytes);
@@ -334,11 +334,11 @@ class DocumentService
             return $default;
         }
         $session = Session::fromRow($row);
-        $types   = $session->documentsAllowedTypesList();
+        $formats = $this->sessions->authorizedFormatsOf($sessionId);
 
         return [
-            'enabled'    => $session->documentsEnabled() && $session->type()->value !== 'EXAM',
-            'acceptExts' => $types === [] ? ['pdf', 'md', 'txt'] : $types,
+            'enabled'    => $formats !== [] && $session->type()->value !== 'EXAM',
+            'acceptExts' => $formats !== [] ? $formats : ['pdf', 'md', 'txt'],
         ];
     }
 

@@ -41,16 +41,17 @@ $val = static function (string $key, mixed $default = '') use ($session, $oldInp
     };
 };
 
-// Document settings (checkbox + multi-select) — resolved outside $val (not scalars).
+// Document settings — the authorised file formats are a multi-select; an empty
+// set means student imports are disabled. Resolved outside $val (not a scalar).
+$availableFormats = $availableFormats ?? ['pdf', 'md', 'txt'];
 $hasOldInput = $oldInput !== [];
+// Master toggle state: from the resubmitted form, else "has authorised formats".
 $docsEnabled = $hasOldInput
     ? array_key_exists('documents_enabled', $oldInput)
-    : (!$isEdit || $session === null ? true : $session->documentsEnabled());
+    : ($authorizedFormats ?? []) !== [];
 $selectedDocTypes = $hasOldInput
     ? array_map('strval', (array) ($oldInput['documents_types'] ?? []))
-    : (!$isEdit || $session === null
-        ? ['pdf', 'md', 'txt']
-        : ($session->documentsAllowedTypesList() ?: ['pdf', 'md', 'txt']));
+    : ($authorizedFormats ?? []);
 
 $currentType = $session?->type() ?? SessionType::Tutorial;
 if (isset($oldInput['type'])) {
@@ -263,12 +264,14 @@ $typeCards = [
                            placeholder="10">
                     <span class="suffix">Mo max / fichier</span>
                 </div>
-                <p class="fsection-hint" style="margin:.7rem 0 .3rem;">Types autorisés :</p>
+                <p class="fsection-hint" style="margin:.7rem 0 .3rem;">Formats autorisés :</p>
                 <div style="display:flex;gap:1.2rem;flex-wrap:wrap;">
-                    <?php foreach (['pdf' => 'PDF', 'md' => 'Markdown', 'txt' => 'TXT'] as $ext => $label): ?>
+                    <?php $fmtLabels = ['pdf' => 'PDF', 'md' => 'Markdown', 'txt' => 'TXT']; ?>
+                    <?php foreach ($availableFormats as $fmt): ?>
                         <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;">
-                            <input type="checkbox" name="documents_types[]" value="<?= $ext ?>" <?= in_array($ext, $selectedDocTypes, true) ? 'checked' : '' ?>>
-                            <span><?= $label ?></span>
+                            <input type="checkbox" name="documents_types[]" value="<?= htmlspecialchars($fmt) ?>"
+                                   <?= in_array($fmt, $selectedDocTypes, true) ? 'checked' : '' ?>>
+                            <span><?= htmlspecialchars($fmtLabels[$fmt] ?? strtoupper($fmt)) ?></span>
                         </label>
                     <?php endforeach; ?>
                 </div>

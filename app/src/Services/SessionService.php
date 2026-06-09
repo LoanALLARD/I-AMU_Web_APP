@@ -224,7 +224,7 @@ class SessionService
     }
 
     /**
-     * @return array{models: list<array<string, mixed>>, resources: list<array<string, mixed>>, previewCode: string, previewCodeFormatted: string}
+     * @return array{models: list<array<string, mixed>>, resources: list<array<string, mixed>>, previewCode: string, previewCodeFormatted: string, availableFormats: list<string>, authorizedFormats: list<string>}
      */
     public function createFormData(int $teacherId): array
     {
@@ -240,11 +240,14 @@ class SessionService
             'resources'            => $resourceData,
             'previewCode'          => '',
             'previewCodeFormatted' => '',
+            'availableFormats'     => $this->sessions->listAllFileFormats(),
+            // New sessions default to every format authorised (imports enabled).
+            'authorizedFormats'    => $this->sessions->listAllFileFormats(),
         ];
     }
 
     /**
-     * @return array{session: Session, models: list<array<string, mixed>>, resources: list<array<string, mixed>>, authorizedModelIds: list<int>, previewCode: string, previewCodeFormatted: string}
+     * @return array{session: Session, models: list<array<string, mixed>>, resources: list<array<string, mixed>>, authorizedModelIds: list<int>, previewCode: string, previewCodeFormatted: string, availableFormats: list<string>, authorizedFormats: list<string>}
      */
     public function editFormData(Session $session, int $teacherId): array
     {
@@ -260,6 +263,8 @@ class SessionService
             'authorizedModelIds'   => $this->sessions->authorizedModelIdsOf((int) $session->id()),
             'previewCode'          => $session->accessCode() ?? '',
             'previewCodeFormatted' => $session->accessCodeFormatted() ?? '',
+            'availableFormats'     => $this->sessions->listAllFileFormats(),
+            'authorizedFormats'    => $this->sessions->authorizedFormatsOf((int) $session->id()),
         ];
     }
 
@@ -282,18 +287,19 @@ class SessionService
         $actions  = $session->availableActions($now);
 
         $docTypeMap = ['pdf' => 'PDF', 'md' => 'Markdown', 'txt' => 'TXT'];
-        $docTypes   = $session->documentsAllowedTypesList() ?: ['pdf', 'md', 'txt'];
+        $authorizedFormats = $this->sessions->authorizedFormatsOf((int) $session->id());
         $documentsTypesLabel = implode(', ', array_map(
             static fn (string $t): string => $docTypeMap[$t] ?? strtoupper($t),
-            $docTypes
+            $authorizedFormats
         ));
         $documentsMaxMb = $session->documentsMaxBytes() !== null
             ? (int) ($session->documentsMaxBytes() / 1024 / 1024)
             : 10;
-        // What students can import in this session's chats (an exam forces it off).
+        // What students can import: an exam forces it off; otherwise imports are
+        // enabled iff at least one file format is authorised for the session.
         if ($session->type()->value === 'EXAM') {
             $documentsImportLabel = 'Désactivé (examen)';
-        } elseif ($session->documentsEnabled()) {
+        } elseif ($authorizedFormats !== []) {
             $documentsImportLabel = 'Autorisé — ' . $documentsTypesLabel . ' · ' . $documentsMaxMb . ' Mo max';
         } else {
             $documentsImportLabel = 'Désactivé';
@@ -449,15 +455,14 @@ class SessionService
             $data['instructions'],
             $data['maxInputSize'] ?? null,
             $data['maxTokens'] ?? null,
-            $data['documentsEnabled'] ?? true,
             $data['documentsMaxBytes'] ?? null,
-            $data['documentsAllowedTypes'] ?? null,
         );
 
         $result = $this->sessions->insert($session->toRow());
         $session->assignId($result['id']);
         $session->assignAccessCode($result['access_code']);
         $this->sessions->setAuthorizedModels($result['id'], $data['modelIds']);
+        $this->sessions->setAuthorizedFormats($result['id'], $data['documentsFormats'] ?? []);
 
         return $session;
     }
@@ -487,13 +492,12 @@ class SessionService
             $data['maxTokens'] ?? null,
             $data['maxInputSize'] ?? null,
             $now,
-            $data['documentsEnabled'] ?? true,
-            $data['documentsMaxBytes'] ?? null,
-            $data['documentsAllowedTypes'] ?? null
+            $data['documentsMaxBytes'] ?? null
         );
 
         $this->sessions->update($id, $session->toRow());
         $this->sessions->setAuthorizedModels($id, $data['modelIds']);
+        $this->sessions->setAuthorizedFormats($id, $data['documentsFormats'] ?? []);
     }
 
     public function start(int $id): void

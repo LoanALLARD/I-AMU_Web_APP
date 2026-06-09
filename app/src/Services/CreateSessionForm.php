@@ -106,9 +106,8 @@ class CreateSessionForm
             }
         }
 
-        // Document settings governing the session's chats.
-        $documentsEnabled = isset($post['documents_enabled']);
-
+        // Document settings: the authorised file formats (an empty set means
+        // student imports are disabled for the session) and the max file size.
         $documentsMaxBytes = null;
         $rawDocMb = trim((string) ($post['documents_max_mb'] ?? ''));
         if ($rawDocMb !== '') {
@@ -120,18 +119,24 @@ class CreateSessionForm
             }
         }
 
-        $documentsTypes = [];
+        $documentsEnabled = isset($post['documents_enabled']);
+
+        $documentsFormats = [];
         foreach ((array) ($post['documents_types'] ?? []) as $t) {
             $t = strtolower(trim((string) $t));
             if (in_array($t, ['pdf', 'md', 'txt'], true)) {
-                $documentsTypes[] = $t;
+                $documentsFormats[] = $t;
             }
         }
-        $documentsTypes = array_values(array_unique($documentsTypes));
-        if ($documentsEnabled && $documentsTypes === []) {
-            $errors[] = 'Sélectionnez au moins un type de document autorisé (ou désactivez les documents).';
+        $documentsFormats = array_values(array_unique($documentsFormats));
+
+        // The toggle drives whether any format is recorded: unchecked means no
+        // row in session_file_formats (imports disabled).
+        if (!$documentsEnabled) {
+            $documentsFormats = [];
+        } elseif ($documentsFormats === []) {
+            $errors[] = "Sélectionnez au moins un format autorisé (ou décochez l'import de documents).";
         }
-        $documentsAllowedTypes = $documentsTypes === [] ? null : implode(',', $documentsTypes);
 
         $optional = static function (mixed $value): ?string {
             $value = trim((string) $value);
@@ -151,9 +156,8 @@ class CreateSessionForm
                 'instructions'    => $optional($post['instructions'] ?? ''),
                 'maxInputSize'    => $maxInputSize,
                 'maxTokens'       => $maxTokens,
-                'documentsEnabled'      => $documentsEnabled,
                 'documentsMaxBytes'     => $documentsMaxBytes,
-                'documentsAllowedTypes' => $documentsAllowedTypes,
+                'documentsFormats'      => $documentsFormats,
                 'accessCode'      => $isCreate ? $optional($post['access_code'] ?? '') : null,
             ],
             'errors' => $errors,
