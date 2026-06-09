@@ -439,3 +439,142 @@ body.superadmin-body--full > main {
     border-color: #ef4444;
     color: #b91c1c;
 }
+
+/* Textareas mirror the auth.css input styling (which only targets input/select). */
+.superadmin-body textarea {
+    width: 100%;
+    border: 1.5px solid var(--gray-200, #e5e7eb);
+    border-radius: 8px;
+    padding: .6rem .85rem;
+    font-size: .92rem;
+    font-family: inherit;
+    color: var(--gray-800, #1f2937);
+    background: #fff;
+    resize: vertical;
+    transition: border-color .18s;
+    outline: none;
+}
+.superadmin-body textarea:focus { border-color: var(--blue); }
+.superadmin-body textarea::placeholder { color: var(--gray-400, #9ca3af); font-size: .87rem; }
+
+.form-group--narrow { flex: 0 0 9rem; min-width: 0; }
+
+/* Secondary line under a primary table cell (e.g. department description). */
+.cell-subtitle {
+    display: block;
+    margin-top: .15rem;
+    font-size: .78rem;
+    font-weight: 400;
+    color: var(--gray-600, #4b5563);
+}
+
+/* Places master-detail: list on the left, selected place's detail on the right. */
+.places-layout {
+    display: grid;
+    grid-template-columns: 22rem 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+.places-master { margin-bottom: 0; }
+.places-master h3,
+.places-detail h3 {
+    font-size: .9rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 1.5rem 0 .85rem;
+}
+
+/* The place list */
+.place-list {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+}
+.place-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    width: 100%;
+    padding: .7rem .85rem;
+    border: 1px solid var(--gray-200, #e5e7eb);
+    border-radius: 9px;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.place-item:hover {
+    border-color: #cbd5e1;
+    background: var(--gray-100, #f3f4f6);
+}
+.place-item.is-active {
+    border-color: #0f172a;
+    background: #0f172a;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .18);
+}
+.place-item-main { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.place-item-name {
+    font-size: .92rem;
+    font-weight: 600;
+    color: #0f172a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.place-item-sub {
+    font-size: .76rem;
+    color: var(--gray-600, #4b5563);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.place-item.is-active .place-item-name,
+.place-item.is-active .place-item-sub { color: #fff; }
+.place-item.is-active .place-item-sub { color: rgba(255, 255, 255, .7); }
+
+/* Department count + chevron on the right of each list item */
+.place-item-count {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    flex: 0 0 auto;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--gray-600, #4b5563);
+}
+.place-item.is-active .place-item-count { color: rgba(255, 255, 255, .85); }
+.place-item-chevron { transition: transform .15s; }
+.place-item.is-active .place-item-chevron { transform: translateX(2px); }
+
+.place-add-form { border-top: 1px solid var(--gray-100, #f3f4f6); padding-top: .25rem; }
+.place-add-form .form-group { margin-bottom: 1rem; }
+.place-add-row { display: flex; gap: 1rem; }
+.place-add-row .form-group { flex: 1; }
+.place-add-form .btn-submit { width: 100%; }
+
+/* The detail column */
+.places-detail { margin-bottom: 0; min-height: 18rem; }
+.places-detail-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: .85rem;
+    min-height: 16rem;
+    color: var(--gray-600, #4b5563);
+}
+.places-detail-empty[hidden] { display: none; }
+.places-detail-empty p { max-width: 22rem; font-size: .9rem; margin: 0; }
+.place-detail-panel[hidden] { display: none; }
+.place-detail-panel .domain-table { margin-bottom: .5rem; }
+.place-detail-panel .department-form { margin-top: 1.5rem; }
+.place-delete-form { margin-top: 1rem; }
+
+@media (max-width: 860px) {
+    .places-layout { grid-template-columns: 1fr; }
+}

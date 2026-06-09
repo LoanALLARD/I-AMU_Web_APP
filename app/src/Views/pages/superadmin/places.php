@@ -1,12 +1,20 @@
 <?php
 /**
  * Sites (places) and departments management.
+ * Master-detail: a list of places on the left; clicking one reveals its
+ * departments on the right (client-side, all data is already in the page).
  *
  * @var list<array{id:int, name:string, address:?string, city:?string, zip_code:?string}> $places
  * @var list<array{id:int, place_id:int, place_name:string, name:string, description:?string, is_active:bool}> $departments
  */
 $places      = $places      ?? [];
 $departments = $departments ?? [];
+
+// Group departments by their place so each detail panel renders its own.
+$departmentsByPlace = [];
+foreach ($departments as $d) {
+    $departmentsByPlace[$d['place_id']][] = $d;
+}
 ?>
 <div class="superadmin-dashboard">
 
@@ -16,16 +24,45 @@ $departments = $departments ?? [];
 
         <?php require __DIR__ . '/_flash.php'; ?>
 
-        <section class="panel-section">
-            <h2>Ajouter un site</h2>
-            <p class="section-lead">
-                Un site est un lieu physique (campus, batiment) auquel sont rattaches
-                un ou plusieurs departements.
-            </p>
+        <div class="places-layout">
 
-            <form method="POST" action="/super-admin/places" class="place-form">
-                <?= csrf_field() ?>
-                <div class="domain-form-row">
+            <!-- Left column: the list of places + the add-place form -->
+            <section class="panel-section places-master">
+                <h2>Sites</h2>
+                <p class="section-lead">Selectionnez un site pour voir ses departements.</p>
+
+                <?php if (empty($places)): ?>
+                    <p class="section-empty">Aucun site configure pour le moment.</p>
+                <?php else: ?>
+                    <ul class="place-list">
+                        <?php foreach ($places as $p): ?>
+                            <li>
+                                <button type="button" class="place-item" data-place-id="<?= (int) $p['id'] ?>">
+                                    <span class="place-item-main">
+                                        <span class="place-item-name"><?= htmlspecialchars($p['name']) ?></span>
+                                        <?php
+                                        $location = trim(implode(', ', array_filter([
+                                            $p['city'] ?? '',
+                                            $p['zip_code'] ?? '',
+                                        ])));
+                                        ?>
+                                        <?php if ($location !== ''): ?>
+                                            <span class="place-item-sub"><?= htmlspecialchars($location) ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                    <span class="place-item-count">
+                                        <?= count($departmentsByPlace[$p['id']] ?? []) ?>
+                                        <?= icon('chevron-right', 'place-item-chevron', 16) ?>
+                                    </span>
+                                </button>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+
+                <form method="POST" action="/super-admin/places" class="place-form place-add-form">
+                    <?= csrf_field() ?>
+                    <h3>Ajouter un site</h3>
                     <div class="form-group">
                         <label for="place-name">Nom</label>
                         <input type="text" id="place-name" name="name"
@@ -36,165 +73,136 @@ $departments = $departments ?? [];
                         <input type="text" id="place-address" name="address"
                                placeholder="3 place Victor Hugo" maxlength="100">
                     </div>
-                    <div class="form-group">
-                        <label for="place-city">Ville</label>
-                        <input type="text" id="place-city" name="city"
-                               placeholder="Marseille" maxlength="50">
-                    </div>
-                    <div class="form-group form-group--narrow">
-                        <label for="place-zip">Code postal</label>
-                        <input type="text" id="place-zip" name="zip_code"
-                               placeholder="13003" maxlength="10">
+                    <div class="place-add-row">
+                        <div class="form-group">
+                            <label for="place-city">Ville</label>
+                            <input type="text" id="place-city" name="city"
+                                   placeholder="Marseille" maxlength="50">
+                        </div>
+                        <div class="form-group form-group--narrow">
+                            <label for="place-zip">Code postal</label>
+                            <input type="text" id="place-zip" name="zip_code"
+                                   placeholder="13003" maxlength="10">
+                        </div>
                     </div>
                     <button type="submit" class="btn-submit">
                         <?= icon('plus', '', 16) ?>
-                        Ajouter
-                    </button>
-                </div>
-            </form>
-        </section>
-
-        <section class="panel-section">
-            <h2>Sites configures</h2>
-
-            <?php if (empty($places)): ?>
-                <p class="section-empty">Aucun site configure pour le moment.</p>
-            <?php else: ?>
-                <table class="domain-table sortable">
-                    <thead>
-                        <tr>
-                            <th data-sort="text">Nom</th>
-                            <th data-sort="text">Adresse</th>
-                            <th class="col-city" data-sort="text">Ville</th>
-                            <th class="col-zip" data-sort="text">Code postal</th>
-                            <th class="col-action">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($places as $p): ?>
-                            <tr>
-                                <td class="cell-domain"><?= htmlspecialchars($p['name']) ?></td>
-                                <td><?= htmlspecialchars($p['address'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($p['city'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($p['zip_code'] ?? '') ?></td>
-                                <td class="col-action">
-                                    <form method="POST" action="/super-admin/places/delete"
-                                          onsubmit="return confirm('Supprimer ce site ?');">
-                                        <?= csrf_field() ?>
-                                        <input type="hidden" name="id" value="<?= (int) $p['id'] ?>">
-                                        <button type="submit" class="btn-row btn-row-danger">
-                                            <?= icon('x', '', 15) ?> Supprimer
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </section>
-
-        <section class="panel-section">
-            <h2>Ajouter un departement</h2>
-            <p class="section-lead">
-                Un departement appartient a un site. Les utilisateurs le rejoignent
-                a l'inscription via un code de departement.
-            </p>
-
-            <?php if (empty($places)): ?>
-                <p class="section-empty">
-                    Creez d'abord un site pour pouvoir y rattacher un departement.
-                </p>
-            <?php else: ?>
-                <form method="POST" action="/super-admin/departments" class="department-form">
-                    <?= csrf_field() ?>
-                    <div class="domain-form-row">
-                        <div class="form-group">
-                            <label for="dept-place">Site</label>
-                            <select id="dept-place" name="place_id" required>
-                                <?php foreach ($places as $p): ?>
-                                    <option value="<?= (int) $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="dept-name">Nom</label>
-                            <input type="text" id="dept-name" name="name"
-                                   placeholder="Informatique" maxlength="50" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="dept-description">Description</label>
-                        <textarea id="dept-description" name="description" rows="2"
-                                  placeholder="Description du departement (optionnel)"></textarea>
-                    </div>
-                    <button type="submit" class="btn-submit">
-                        <?= icon('plus', '', 16) ?>
-                        Ajouter
+                        Ajouter le site
                     </button>
                 </form>
-            <?php endif; ?>
-        </section>
+            </section>
 
-        <section class="panel-section">
-            <h2>Departements configures</h2>
+            <!-- Right column: one detail panel per place, shown on selection -->
+            <section class="panel-section places-detail">
 
-            <?php if (empty($departments)): ?>
-                <p class="section-empty">Aucun departement configure pour le moment.</p>
-            <?php else: ?>
-                <table class="domain-table sortable">
-                    <thead>
-                        <tr>
-                            <th data-sort="text">Nom</th>
-                            <th data-sort="text">Site</th>
-                            <th class="col-state" data-sort="text">Etat</th>
-                            <th class="col-action">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($departments as $d): ?>
-                            <tr class="<?= $d['is_active'] ? '' : 'is-inactive' ?>">
-                                <td class="cell-domain">
-                                    <?= htmlspecialchars($d['name']) ?>
-                                    <?php if (!empty($d['description'])): ?>
-                                        <span class="cell-subtitle"><?= htmlspecialchars($d['description']) ?></span>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?= htmlspecialchars($d['place_name']) ?></td>
-                                <td data-sort-value="<?= $d['is_active'] ? '1' : '0' ?>">
-                                    <?php if ($d['is_active']): ?>
-                                        <span class="badge-state badge-active">Actif</span>
-                                    <?php else: ?>
-                                        <span class="badge-state badge-inactive">Inactif</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="col-action">
-                                    <form method="POST" action="/super-admin/departments/toggle">
-                                        <?= csrf_field() ?>
-                                        <input type="hidden" name="id" value="<?= (int) $d['id'] ?>">
-                                        <input type="hidden" name="is_active" value="<?= $d['is_active'] ? '0' : '1' ?>">
-                                        <?php if ($d['is_active']): ?>
-                                            <button type="submit" class="btn-row btn-row-danger">
-                                                <?= icon('x', '', 15) ?> Desactiver
-                                            </button>
-                                        <?php else: ?>
-                                            <button type="submit" class="btn-row">
-                                                <?= icon('check', '', 15) ?> Reactiver
-                                            </button>
-                                        <?php endif; ?>
-                                    </form>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </section>
+                <div class="places-detail-empty" data-place-empty>
+                    <span class="page-placeholder-icon"><?= icon('building', '', 28) ?></span>
+                    <p>Selectionnez un site dans la liste pour gerer ses departements.</p>
+                </div>
+
+                <?php foreach ($places as $p): ?>
+                    <div class="place-detail-panel" data-place-panel="<?= (int) $p['id'] ?>" hidden>
+                        <h2><?= htmlspecialchars($p['name']) ?></h2>
+                        <?php
+                        $address = trim(implode(', ', array_filter([
+                            $p['address'] ?? '',
+                            $p['zip_code'] ?? '',
+                            $p['city'] ?? '',
+                        ])));
+                        ?>
+                        <p class="section-lead">
+                            <?= $address !== '' ? htmlspecialchars($address) : 'Adresse non renseignee.' ?>
+                        </p>
+
+                        <?php $deps = $departmentsByPlace[$p['id']] ?? []; ?>
+                        <?php if (empty($deps)): ?>
+                            <p class="section-empty">Aucun departement sur ce site.</p>
+                        <?php else: ?>
+                            <table class="domain-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th class="col-state">Etat</th>
+                                        <th class="col-action">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($deps as $d): ?>
+                                        <tr class="<?= $d['is_active'] ? '' : 'is-inactive' ?>">
+                                            <td class="cell-domain">
+                                                <?= htmlspecialchars($d['name']) ?>
+                                                <?php if (!empty($d['description'])): ?>
+                                                    <span class="cell-subtitle"><?= htmlspecialchars($d['description']) ?></span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($d['is_active']): ?>
+                                                    <span class="badge-state badge-active">Actif</span>
+                                                <?php else: ?>
+                                                    <span class="badge-state badge-inactive">Inactif</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="col-action">
+                                                <form method="POST" action="/super-admin/departments/toggle">
+                                                    <?= csrf_field() ?>
+                                                    <input type="hidden" name="id" value="<?= (int) $d['id'] ?>">
+                                                    <input type="hidden" name="is_active" value="<?= $d['is_active'] ? '0' : '1' ?>">
+                                                    <?php if ($d['is_active']): ?>
+                                                        <button type="submit" class="btn-row btn-row-danger">
+                                                            <?= icon('x', '', 15) ?> Desactiver
+                                                        </button>
+                                                    <?php else: ?>
+                                                        <button type="submit" class="btn-row">
+                                                            <?= icon('check', '', 15) ?> Reactiver
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php endif; ?>
+
+                        <form method="POST" action="/super-admin/departments" class="department-form">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="place_id" value="<?= (int) $p['id'] ?>">
+                            <h3>Ajouter un departement</h3>
+                            <div class="form-group">
+                                <label for="dept-name-<?= (int) $p['id'] ?>">Nom</label>
+                                <input type="text" id="dept-name-<?= (int) $p['id'] ?>" name="name"
+                                       placeholder="Informatique" maxlength="50" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="dept-description-<?= (int) $p['id'] ?>">Description</label>
+                                <textarea id="dept-description-<?= (int) $p['id'] ?>" name="description" rows="2"
+                                          placeholder="Description du departement (optionnel)"></textarea>
+                            </div>
+                            <button type="submit" class="btn-submit">
+                                <?= icon('plus', '', 16) ?>
+                                Ajouter le departement
+                            </button>
+                        </form>
+
+                        <?php if (empty($deps)): ?>
+                            <form method="POST" action="/super-admin/places/delete" class="place-delete-form"
+                                  onsubmit="return confirm('Supprimer ce site ?');">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="id" value="<?= (int) $p['id'] ?>">
+                                <button type="submit" class="btn-row btn-row-danger">
+                                    <?= icon('x', '', 15) ?> Supprimer le site
+                                </button>
+                            </form>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </section>
+        </div>
     </main>
 </div>
 
 <?php
-$sortJs  = __DIR__ . '/../../../../public/assets/js/table-sort.js';
-$sortVer = is_file($sortJs) ? filemtime($sortJs) : 0;
+$placesJs  = __DIR__ . '/../../../../public/assets/js/places.js';
+$placesVer = is_file($placesJs) ? filemtime($placesJs) : 0;
 ?>
-<script src="/assets/js/table-sort.js?v=<?= $sortVer ?>" defer></script>
+<script src="/assets/js/places.js?v=<?= $placesVer ?>" defer></script>
