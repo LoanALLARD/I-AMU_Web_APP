@@ -18,14 +18,13 @@ class Ai {
     private string $name;                   // name of the model
     private string $size;
     private string $provider;           // compagny who delivery the model
-    private ?int $max_tokens;
     private string $context_window;   // size of the context window of the model
     private bool $is_active;
     private bool $is_shareable;
     private string $url;                    // address of the api
     private LlmAdaptaterInterface $adaptater;   // type of adaptator
 
-    public function __construct(int $id, ?int $department_id, ?int $resource_id, string $name, string $size, string $provider, string $context_window, bool $is_active, bool $is_shareable, string $url, LlmAdaptaterInterface $adaptater) {
+    public function __construct(int $id, ?int $department_id, ?int $resource_id,string $name, string $size, string $provider, string $context_window, bool $is_active, bool $is_shareable, string $url, LlmAdaptaterInterface $adaptater) {
         $this->id = $id;
         $this->department_id = $department_id;
         $this->resource_id = $resource_id;
@@ -121,5 +120,13 @@ class Ai {
 
     public function setFormatRequest(string $formatRequest): void
     {
+    }
+    /**
+     * @param array<int, int> $context
+     * @param callable(string): void $onChunk
+     * @return array{response: string, context: list<int>, prompt_eval_count: ?int, eval_count: ?int}
+     */
+    public function askStream(string $message, array $context, ?string $postprompt, ?string $preprompt, callable $onChunk): array {
+        return $this->adaptater->generateStream($message, $context, $postprompt, $preprompt, $onChunk);
     }
 }
