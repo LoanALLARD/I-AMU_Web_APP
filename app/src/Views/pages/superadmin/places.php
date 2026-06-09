@@ -4,11 +4,15 @@
  * Master-detail: a list of places on the left; clicking one reveals its
  * departments on the right (client-side, all data is already in the page).
  *
- * @var list<array{id:int, name:string, address:?string, city:?string, zip_code:?string}> $places
+ * @var list<array{id:int, name:string, address:?string, city:?string, zip_code:?string, display_name:?string, logo_path:?string, primary_color:?string}> $places
  * @var list<array{id:int, place_id:int, place_name:string, name:string, description:?string, is_active:bool}> $departments
  */
 $places      = $places      ?? [];
 $departments = $departments ?? [];
+
+// Branding defaults: a place leaves these NULL to inherit the I-AMU identity.
+$defaultDisplayName = 'I-AMU';
+$defaultColor       = '#1a73c8';
 
 // Group departments by their place so each detail panel renders its own.
 $departmentsByPlace = [];
@@ -113,6 +117,55 @@ foreach ($departments as $d) {
                         <p class="section-lead">
                             <?= $address !== '' ? htmlspecialchars($address) : 'Adresse non renseignee.' ?>
                         </p>
+
+                        <?php
+                        $brandColor = $p['primary_color'] ?? $defaultColor;
+                        $brandName  = $p['display_name'] ?? '';
+                        ?>
+                        <form method="POST" action="/super-admin/places/branding" class="place-branding"
+                              enctype="multipart/form-data">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="id" value="<?= (int) $p['id'] ?>">
+                            <h3>Personnalisation du lieu</h3>
+                            <p class="branding-hint">
+                                Laissez vide pour utiliser l'identite I-AMU par defaut.
+                            </p>
+
+                            <div class="branding-row">
+                                <div class="form-group branding-logo">
+                                    <label for="branding-logo-<?= (int) $p['id'] ?>">Logo</label>
+                                    <div class="branding-logo-field">
+                                        <span class="branding-logo-preview">
+                                            <?php if (!empty($p['logo_path'])): ?>
+                                                <img src="<?= htmlspecialchars($p['logo_path']) ?>" alt="Logo du lieu">
+                                            <?php else: ?>
+                                                <?= icon('building', '', 26) ?>
+                                            <?php endif; ?>
+                                        </span>
+                                        <input type="file" id="branding-logo-<?= (int) $p['id'] ?>"
+                                               name="logo" accept="image/*">
+                                    </div>
+                                </div>
+
+                                <div class="form-group branding-name">
+                                    <label for="branding-name-<?= (int) $p['id'] ?>">Nom affiche</label>
+                                    <input type="text" id="branding-name-<?= (int) $p['id'] ?>"
+                                           name="display_name" maxlength="255"
+                                           value="<?= htmlspecialchars($brandName) ?>"
+                                           placeholder="<?= htmlspecialchars($defaultDisplayName) ?>">
+                                </div>
+
+                                <div class="form-group branding-color">
+                                    <label for="branding-color-<?= (int) $p['id'] ?>">Couleur</label>
+                                    <input type="color" id="branding-color-<?= (int) $p['id'] ?>"
+                                           name="primary_color" value="<?= htmlspecialchars($brandColor) ?>">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-row btn-branding-save">
+                                <?= icon('check', '', 15) ?> Enregistrer la personnalisation
+                            </button>
+                        </form>
 
                         <?php $deps = $departmentsByPlace[$p['id']] ?? []; ?>
                         <?php if (empty($deps)): ?>

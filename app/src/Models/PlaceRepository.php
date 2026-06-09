@@ -97,23 +97,28 @@ class PlaceRepository
     // ----------------------------------------------------------------
 
     /**
-     * Every place with its full address, newest first, for the admin table.
+     * Every place with its full address and branding, newest first, for the
+     * admin table. Branding columns are nullable (NULL = I-AMU default).
      *
-     * @return list<array{id:int, name:string, address:?string, city:?string, zip_code:?string}>
+     * @return list<array{id:int, name:string, address:?string, city:?string, zip_code:?string, display_name:?string, logo_path:?string, primary_color:?string}>
      */
     public function findAllPlaces(): array
     {
         $stmt = $this->pdo->query(
-            'SELECT id, name, address, city, zip_code FROM places ORDER BY id DESC'
+            'SELECT id, name, address, city, zip_code, display_name, logo_path, primary_color
+             FROM places ORDER BY id DESC'
         );
 
         return array_map(
             static fn (array $row): array => [
-                'id'       => (int) $row['id'],
-                'name'     => (string) $row['name'],
-                'address'  => $row['address'] !== null ? (string) $row['address'] : null,
-                'city'     => $row['city'] !== null ? (string) $row['city'] : null,
-                'zip_code' => $row['zip_code'] !== null ? (string) $row['zip_code'] : null,
+                'id'            => (int) $row['id'],
+                'name'          => (string) $row['name'],
+                'address'       => $row['address'] !== null ? (string) $row['address'] : null,
+                'city'          => $row['city'] !== null ? (string) $row['city'] : null,
+                'zip_code'      => $row['zip_code'] !== null ? (string) $row['zip_code'] : null,
+                'display_name'  => $row['display_name'] !== null ? (string) $row['display_name'] : null,
+                'logo_path'     => $row['logo_path'] !== null ? (string) $row['logo_path'] : null,
+                'primary_color' => $row['primary_color'] !== null ? (string) $row['primary_color'] : null,
             ],
             $stmt->fetchAll()
         );
@@ -143,6 +148,55 @@ class PlaceRepository
         $stmt->execute(['id' => $id]);
 
         return $stmt->fetchColumn() !== false;
+    }
+
+    /**
+     * A single place's branding row, or null if it does not exist. Used to read
+     * the current logo path before replacing it.
+     *
+     * @return array{id:int, display_name:?string, logo_path:?string, primary_color:?string}|null
+     */
+    public function findBrandingById(int $id): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT id, display_name, logo_path, primary_color FROM places WHERE id = :id'
+        );
+        $stmt->execute(['id' => $id]);
+
+        $row = $stmt->fetch();
+        if ($row === false) {
+            return null;
+        }
+
+        return [
+            'id'            => (int) $row['id'],
+            'display_name'  => $row['display_name'] !== null ? (string) $row['display_name'] : null,
+            'logo_path'     => $row['logo_path'] !== null ? (string) $row['logo_path'] : null,
+            'primary_color' => $row['primary_color'] !== null ? (string) $row['primary_color'] : null,
+        ];
+    }
+
+    /**
+     * Updates a place's branding. Each field is nullable: null clears the
+     * override (the app falls back to the I-AMU default). `$logoPath` is only
+     * passed when a new logo was uploaded; otherwise the caller reuses the
+     * current value so this never blanks an existing logo by accident.
+     */
+    public function updateBranding(int $id, ?string $displayName, ?string $logoPath, ?string $primaryColor): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE places
+             SET display_name = :display_name,
+                 logo_path = :logo_path,
+                 primary_color = :primary_color
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'display_name'  => $displayName,
+            'logo_path'     => $logoPath,
+            'primary_color' => $primaryColor,
+            'id'            => $id,
+        ]);
     }
 
     /** Number of departments attached to a place (a place with any cannot be deleted). */

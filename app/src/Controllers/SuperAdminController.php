@@ -95,6 +95,24 @@ class SuperAdminController extends Controller
         $this->redirect('/super-admin/places');
     }
 
+    /** Updates a site's branding: display name, logo, primary color (POST). */
+    public function updateBranding(): void
+    {
+        $this->requireSuperAdmin();
+        $this->verifyCsrf();
+
+        $service = new PlaceService(Database::getConnection());
+        $result  = $service->updateBranding(
+            (int) $this->input('id', 0),
+            (string) $this->input('display_name', ''),
+            (string) $this->input('primary_color', ''),
+            $_FILES['logo'] ?? null
+        );
+
+        $this->flashResult($result, 'Personnalisation enregistrée.');
+        $this->redirect('/super-admin/places');
+    }
+
     /** Enables or disables a department (POST). */
     public function toggleDepartment(): void
     {

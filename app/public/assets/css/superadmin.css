@@ -575,6 +575,65 @@ body.superadmin-body--full > main {
 .place-detail-panel .department-form { margin-top: 1.5rem; }
 .place-delete-form { margin-top: 1rem; }
 
+/* Per-place branding block (between the address and the departments table) */
+.place-branding {
+    margin: 1.25rem 0 1.5rem;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--gray-200, #e5e7eb);
+    border-radius: 10px;
+    background: var(--gray-100, #f8fafc);
+}
+.place-branding h3 { margin-top: 0; }
+.branding-hint {
+    font-size: .8rem;
+    color: var(--gray-600, #4b5563);
+    margin: -.5rem 0 1rem;
+}
+/* Three columns aligned at the top: logo (auto) | name (fills) | color (auto).
+   Each is a .form-group so labels sit on one baseline and controls line up. */
+.branding-row {
+    display: grid;
+    grid-template-columns: auto minmax(12rem, 1fr) auto;
+    align-items: start;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+.branding-row .form-group { margin-bottom: 0; }
+
+/* Logo: preview swatch + file button on one row, under the shared label. */
+.branding-logo-field { display: flex; align-items: center; gap: .65rem; }
+.branding-logo-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border: 1px solid var(--gray-200, #e5e7eb);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--gray-400, #9ca3af);
+    overflow: hidden;
+}
+.branding-logo-preview img { width: 100%; height: 100%; object-fit: contain; }
+.branding-logo input[type="file"] { font-size: .82rem; color: var(--gray-600, #4b5563); }
+
+/* Color: native input trimmed to read as a 44px swatch, matching input height. */
+.branding-color input[type="color"] {
+    width: 4rem;
+    height: 44px;
+    padding: .2rem;
+    border: 1.5px solid var(--gray-200, #e5e7eb);
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.btn-branding-save { margin-top: 0; }
+
+@media (max-width: 980px) {
+    .branding-row { grid-template-columns: 1fr; gap: 1rem; }
+}
 @media (max-width: 860px) {
     .places-layout { grid-template-columns: 1fr; }
 }
