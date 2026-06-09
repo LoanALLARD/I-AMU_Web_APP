@@ -169,9 +169,11 @@ class ChatService
             'sessionClosed' => $sessionClosed,
             'closedReason'  => $closedReason,
             'env'           => [
-                'mode'      => $envMode,
-                'sessionId' => $sessionId,
-                'label'     => $envLabel,
+                'mode'           => $envMode,
+                'sessionId'      => $sessionId,
+                'label'          => $envLabel,
+                'maxInputSize'   => $sessionId !== null && $row !== null ? ($row['max_input_size'] ?? null) : null,
+                'maxTokens'      => $sessionId !== null && $row !== null ? ($row['max_tokens'] ?? null) : null,
             ],
         ];
     }

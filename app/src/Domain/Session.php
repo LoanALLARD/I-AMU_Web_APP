@@ -33,6 +33,7 @@ class Session
         private ?string $postPromptOverride,
         private ?string $instructions,
         private ?int $maxInputSize,
+        private ?int $maxTokens = null,
     ) {
     }
 
@@ -64,6 +65,7 @@ class Session
             postPromptOverride: isset($row['post_prompt_override']) && $row['post_prompt_override'] !== null ? (string) $row['post_prompt_override'] : null,
             instructions:       isset($row['instructions']) && $row['instructions'] !== null ? (string) $row['instructions'] : null,
             maxInputSize:       isset($row['max_input_size']) && $row['max_input_size'] !== null ? (int) $row['max_input_size'] : null,
+            maxTokens:          isset($row['max_tokens']) && $row['max_tokens'] !== null ? (int) $row['max_tokens'] : null,
         );
     }
 
@@ -87,6 +89,7 @@ class Session
             'post_prompt_override' => $this->postPromptOverride,
             'instructions'         => $this->instructions,
             'max_input_size'       => $this->maxInputSize,
+            'max_tokens'           => $this->maxTokens,
         ];
     }
 
@@ -109,6 +112,7 @@ class Session
     public function postPromptOverride(): ?string { return $this->postPromptOverride; }
     public function instructions(): ?string { return $this->instructions; }
     public function maxInputSize(): ?int { return $this->maxInputSize; }
+    public function maxTokens(): ?int { return $this->maxTokens; }
 
     public function assignId(int $id): void
     {
@@ -149,16 +153,20 @@ class Session
         $this->status   = $startsAt === null ? SessionStatus::Draft : SessionStatus::Scheduled;
     }
 
-    public function reconfigure(?string $prePrompt, ?string $postPrompt, ?string $instructions, ?int $maxInputSize, DateTimeImmutable $now): void
+    public function reconfigure(?string $prePrompt, ?string $postPrompt, ?string $instructions, ?int $maxTokens, ?int $maxInputSize, DateTimeImmutable $now): void
     {
         $this->guardEditable($now);
         if ($maxInputSize !== null && $maxInputSize <= 0) {
             throw new InvalidArgumentException('La limite par prompt doit être positive.');
         }
+        if ($maxTokens !== null && $maxTokens <= 0) {
+            throw new InvalidArgumentException('La limite de requêtes doit être positive.');
+        }
         $this->prePromptOverride  = $prePrompt;
         $this->postPromptOverride = $postPrompt;
         $this->instructions       = $instructions;
         $this->maxInputSize       = $maxInputSize;
+        $this->maxTokens          = $maxTokens;
     }
 
     // ----------------------------------------------------------------

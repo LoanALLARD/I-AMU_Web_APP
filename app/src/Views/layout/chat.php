@@ -21,6 +21,9 @@ $conversation = $conversation ?? null;
 $conversations = $conversations ?? [];
 $env = $env ?? null;
 $archivedView = $archivedView ?? false;
+// Exam lockdown view-model (set by AccueilController for a locked student),
+// or null when free. Drives the stripped-down, navigation-free shell.
+$examLock = $examLock ?? null;
 // "Chat" nav target: stay inside the open session conversation instead of
 // dropping back to free chat.
 $chatHref = (($env['mode'] ?? '') === 'session' && !empty($conversation['id']))
@@ -136,15 +139,24 @@ $themePref = match ($user['theme'] ?? null) {
         <?php if ($page === 'chat'): ?>
             <?php $isSessionChat = !empty($conversation['sessionId']); ?>
             <div class="topbar-breadcrumb">
-                <span class="topbar-mode<?= $isSessionChat ? ' topbar-mode-session' : '' ?>">
-                    <?= $isSessionChat ? 'session' : 'libre' ?>
-                </span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="9 18 15 12 9 6" />
-                </svg>
-                <span class="topbar-conv-name"
-                    id="convName"><?= htmlspecialchars($conversation['name'] ?? 'Nouvelle conversation') ?></span>
+                <?php if ($examLock): ?>
+                    <span class="topbar-mode topbar-mode-exam">examen</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                    <span class="topbar-conv-name"><?= htmlspecialchars($examLock['sessionName']) ?></span>
+                <?php else: ?>
+                    <span class="topbar-mode<?= $isSessionChat ? ' topbar-mode-session' : '' ?>">
+                        <?= $isSessionChat ? 'session' : 'libre' ?>
+                    </span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                    <span class="topbar-conv-name"
+                          id="convName"><?= htmlspecialchars($conversation['name'] ?? 'Nouvelle conversation') ?></span>
+                <?php endif; ?>
             </div>
         <?php else: ?>
             <?php /* Other pages already display their own H1 in .page-header,
@@ -197,12 +209,20 @@ $themePref = match ($user['theme'] ?? null) {
         </div>
 
         <div class="topbar-right">
-            <a href="/profile" class="topbar-user"
-                title="<?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?>">
+            <?php if ($examLock): ?>
+                <span class="topbar-user" title="<?= htmlspecialchars($displayName !== '' ? $displayName : 'Compte') ?>">
                 <span
-                    class="topbar-user-name"><?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?></span>
+                        class="topbar-user-name"><?= htmlspecialchars($displayName !== '' ? $displayName : 'Compte') ?></span>
                 <span class="topbar-user-avatar"><?= htmlspecialchars($initials) ?></span>
-            </a>
+            </span>
+            <?php else: ?>
+                <a href="/profile" class="topbar-user"
+                   title="<?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?>">
+                <span
+                        class="topbar-user-name"><?= htmlspecialchars($displayName !== '' ? $displayName : 'Mon profil') ?></span>
+                    <span class="topbar-user-avatar"><?= htmlspecialchars($initials) ?></span>
+                </a>
+            <?php endif; ?>
         </div>
     </header>
 
@@ -276,7 +296,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                 <?php endif; ?>
             </nav>
 
-            <?php if ($page === 'chat'): ?>
+            <?php if ($page === 'chat' && !$examLock): ?>
                 <?php /* Current environment: session (filtered to one session's
                conversations) or free. */ ?>
                 <div class="sidebar-env">
@@ -473,9 +493,30 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                     <?= csrf_field() ?>
                     <input type="hidden" name="id" value="">
                 </form>
+            <?php elseif ($page === 'chat' && $examLock): ?>
+                <?php /* Exam lockdown sidebar: no navigation, no history, no
+               new conversation. Only the exam identity and a notice. The
+               student is confined to the single exam conversation until the
+               teacher ends the exam or the time elapses. */ ?>
+                <div class="exam-lock-panel">
+                    <div class="exam-lock-badge">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        Mode examen
+                    </div>
+                    <p class="exam-lock-name"><?= htmlspecialchars($examLock['sessionName']) ?></p>
+                    <p class="exam-lock-note">
+                        L'interface est verrouillée pour la durée de l'examen. Les autres modes
+                        et l'historique sont indisponibles jusqu'à la fin de la session.
+                    </p>
+                </div>
             <?php endif; ?>
 
             <div class="sidebar-footer">
+                <?php if (!$examLock): ?>
                 <a href="/profile" class="sidebar-footer-link<?= $page === 'profile' ? ' is-active' : '' ?>">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -484,6 +525,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                     </svg>
                     Mon profil
                 </a>
+                <?php endif; ?>
                 <a href="/logout" class="sidebar-footer-link sidebar-logout">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">

@@ -168,6 +168,7 @@ CREATE TABLE sessions (
     pre_prompt_override TEXT,
     post_prompt_override TEXT,
     max_input_size INTEGER,
+    max_tokens INTEGER,
     instructions TEXT,
     type session_type,
     CONSTRAINT pk_sessions PRIMARY KEY (id),
@@ -176,7 +177,8 @@ CREATE TABLE sessions (
     CONSTRAINT ck_sessions_access_code CHECK (access_code IS NULL OR access_code ~ '^[A-Z0-9]{6}$'),
     CONSTRAINT ck_sessions_dates CHECK (ends_at IS NULL OR starts_at IS NULL OR ends_at > starts_at),
     CONSTRAINT ck_sessions_closed_at CHECK (closed_at IS NULL OR starts_at IS NULL OR closed_at >= starts_at),
-    CONSTRAINT ck_sessions_max_input_size CHECK (max_input_size IS NULL OR max_input_size > 0)
+    CONSTRAINT ck_sessions_max_input_size CHECK (max_input_size IS NULL OR max_input_size > 0),
+    CONSTRAINT ck_sessions_max_tokens CHECK (max_tokens IS NULL OR max_tokens > 0)
 );
 
 CREATE TABLE conversations (
