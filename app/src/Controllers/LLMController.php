@@ -204,18 +204,17 @@ class LLMController{
         }
 
         // Recover Param from Session
-        
+
         $ai = new Ai (
-            $id = $aiData["id"],
-            $department_id = $aiData["department_id"],
-            $resource_id = $aiData["resource_id"],
+            $aiData["id"],
+            $aiData["department_id"],
+            $aiData["resource_id"],
             $aiData["name"],
             $aiData["size"],
             $aiData["provider"],
-            null,
             $aiData["context_window"],
             $aiData["is_active"],
-            $aiData["created_at"],
+            $aiData["is_shareable"],
             $aiData["api_url"],
             $adapter,
         );

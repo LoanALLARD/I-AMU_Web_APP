@@ -18,21 +18,19 @@ class Ai {
     private string $name;                   // name of the model
     private string $size;
     private string $provider;           // compagny who delivery the model
-    private ?int $max_tokens;
     private string $context_window;   // size of the context window of the model
     private bool $is_active;
     private bool $is_shareable;
     private string $url;                    // address of the api
     private LlmAdaptaterInterface $adaptater;   // type of adaptator
 
-    public function __construct(int $id, ?int $department_id, ?int $resource_id,string $name, string $size, string $provider, ?int $max_tokens, string $context_window, bool $is_active, bool $is_shareable, string $url, LlmAdaptaterInterface $adaptater) {
+    public function __construct(int $id, ?int $department_id, ?int $resource_id,string $name, string $size, string $provider, string $context_window, bool $is_active, bool $is_shareable, string $url, LlmAdaptaterInterface $adaptater) {
         $this->id = $id;
         $this->department_id = $department_id;
         $this->resource_id = $resource_id;
         $this->name = $name;
         $this->size = $size;
         $this->provider = $provider;
-        $this->max_tokens = $max_tokens;
         $this->context_window = $context_window;
         $this->is_active = $is_active;
         $this->is_shareable = $is_shareable;
