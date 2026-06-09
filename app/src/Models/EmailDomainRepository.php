@@ -60,4 +60,124 @@ class EmailDomainRepository
 
         return $id === false ? null : (int) $id;
     }
+
+    /**
+     * Allowed role values from the SQL enum `domain_role_type`, in declared order.
+     *
+     * @return list<string>
+     */
+    public function findRoleValues(): array
+    {
+        $stmt = $this->pdo->query(
+            "SELECT e.enumlabel
+             FROM pg_enum e
+             JOIN pg_type t ON t.oid = e.enumtypid
+             WHERE t.typname = 'domain_role_type'
+             ORDER BY e.enumsortorder"
+        );
+
+        return array_map(
+            static fn ($label): string => (string) $label,
+            $stmt->fetchAll(PDO::FETCH_COLUMN)
+        );
+    }
+
+    /**
+     * Every configured domain (active and inactive), newest first.
+     *
+     * @return list<array{id:int, domain:string, role:string, is_active:bool}>
+     */
+    public function findAll(): array
+    {
+        $stmt = $this->pdo->query(
+            'SELECT id, domain, role, is_active
+             FROM email_domain_configs
+             ORDER BY id DESC'
+        );
+
+        $rows = $stmt->fetchAll();
+
+        return array_map(
+            static fn (array $row): array => [
+                'id'        => (int) $row['id'],
+                'domain'    => (string) $row['domain'],
+                'role'      => (string) $row['role'],
+                'is_active' => (bool) $row['is_active'],
+            ],
+            $rows
+        );
+    }
+
+    /**
+     * @return array{id:int, domain:string, role:string, is_active:bool}|null
+     */
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT id, domain, role, is_active
+             FROM email_domain_configs WHERE id = :id'
+        );
+        $stmt->execute(['id' => $id]);
+
+        $row = $stmt->fetch();
+        if ($row === false) {
+            return null;
+        }
+
+        return [
+            'id'        => (int) $row['id'],
+            'domain'    => (string) $row['domain'],
+            'role'      => (string) $row['role'],
+            'is_active' => (bool) $row['is_active'],
+        ];
+    }
+
+    /** True when the domain already exists, whatever its state. */
+    public function existsByDomain(string $domain): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM email_domain_configs WHERE domain = :domain'
+        );
+        $stmt->execute(['domain' => $domain]);
+
+        return $stmt->fetchColumn() !== false;
+    }
+
+    /** Inserts a domain and returns its id; `addedById` is stored for traceability. */
+    public function add(string $domain, string $role, int $addedById): int
+    {
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO email_domain_configs (added_by_id, domain, role, is_active)
+             VALUES (:added_by, :domain, :role, TRUE)
+             RETURNING id'
+        );
+        $stmt->execute([
+            'added_by' => $addedById,
+            'domain'   => $domain,
+            'role'     => $role,
+        ]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    /** Updates a domain's role; the caller validates `role` against the SQL enum. */
+    public function updateRole(int $id, string $role): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE email_domain_configs SET role = :role WHERE id = :id'
+        );
+        $stmt->execute(['role' => $role, 'id' => $id]);
+    }
+
+    /** Enables or disables a domain (the panel's soft "delete"). */
+    public function setActive(int $id, bool $isActive): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE email_domain_configs SET is_active = :active WHERE id = :id'
+        );
+        // Bind as bool: in execute() PDO sends false as '', which PG rejects for BOOLEAN.
+        $stmt->bindValue('active', $isActive, PDO::PARAM_BOOL);
+        $stmt->bindValue('id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+    }
 }

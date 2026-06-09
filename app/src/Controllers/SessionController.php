@@ -46,7 +46,7 @@ class SessionController extends Controller
         parent::render($template, $data, $layout);
     }
 
-    /** GET /sessions — teacher's list. */
+    /** GET /sessions — teacher's list (owned + supervised read-only). */
     public function index(): void
     {
         $this->requireRole('teacher');
@@ -56,6 +56,7 @@ class SessionController extends Controller
             'title'      => 'Mes sessions',
             'navSection' => 'sessions',
             'sessions'   => $this->sessions->listForTeacher((int) ($user['id'] ?? 0)),
+            'supervised' => $this->sessions->listSupervisedForTeacher((int) ($user['id'] ?? 0)),
             'user'       => $user,
         ]);
     }
@@ -222,11 +223,11 @@ class SessionController extends Controller
         $this->redirect('/sessions/' . $sessionId);
     }
 
-    /** GET /sessions/{id} — dashboard. */
+    /** GET /sessions/{id} — dashboard (owner: full; responsible: read-only). */
     public function dashboard(string $id): void
     {
         $this->requireRole('teacher');
-        $session = $this->loadOwned((int) $id);
+        $session = $this->loadViewable((int) $id);
 
         $view = $this->sessions->dashboard($session);
 
@@ -234,6 +235,7 @@ class SessionController extends Controller
             'title'      => $view['name'],
             'navSection' => 'sessions',
             'view'       => $view,
+            'canManage'  => $this->canManage($session),
             'students'   => $this->sessions->enrolledStudents((int) $id),
             'documents'  => $this->documents->listForSession((int) $id),
             'user'       => $this->currentUser(),
@@ -244,7 +246,7 @@ class SessionController extends Controller
     public function monitor(string $id): void
     {
         $this->requireRole('teacher');
-        $session = $this->loadOwned((int) $id);
+        $session = $this->loadViewable((int) $id);
 
         $conversationId = (int) $this->query('conversation', 0);
         $view           = $this->sessions->monitor($session, $conversationId);
@@ -258,6 +260,7 @@ class SessionController extends Controller
             'title'      => 'Suivi · ' . $session->name(),
             'navSection' => 'sessions',
             'view'       => $view,
+            'canManage'  => $this->canManage($session),
             'user'       => $this->currentUser(),
         ]);
     }
@@ -308,9 +311,11 @@ class SessionController extends Controller
             $this->redirect('/sessions');
         }
 
-        $isOwner     = $session->teacherId() !== null && (int) ($user['id'] ?? 0) === $session->teacherId();
+        // Owner or read-only responsible (teacher_resources), or researcher /
+        // department admin. canView() covers owner + responsible.
+        $canView     = $this->sessions->canView($session, (int) ($user['id'] ?? 0));
         $canResearch = in_array('researcher', $roles, true) || in_array('department_admin', $roles, true);
-        if (!$isOwner && !$canResearch) {
+        if (!$canView && !$canResearch) {
             $this->forbidden();
         }
 
@@ -419,6 +424,36 @@ class SessionController extends Controller
         }
 
         return $session;
+    }
+
+    /**
+     * Loads a session for READ-ONLY access: the owner, or a teacher attached to
+     * the resource via teacher_resources (responsible). 403s otherwise. Used by
+     * the consultation routes (monitor/dashboard); mutating actions keep
+     * loadOwned. Pair with canManage() to gate owner-only controls in the view.
+     */
+    private function loadViewable(int $sessionId): \Domain\Session
+    {
+        $session = $this->sessions->find($sessionId);
+        if ($session === null) {
+            $this->flash('error', 'Session introuvable.');
+            $this->redirect('/sessions');
+        }
+
+        $user = $this->currentUser();
+        if ($user === null || !$this->sessions->canView($session, (int) $user['id'])) {
+            $this->forbidden();
+        }
+
+        return $session;
+    }
+
+    /** Whether the current user owns the session (vs. a read-only responsible). */
+    private function canManage(\Domain\Session $session): bool
+    {
+        $user = $this->currentUser();
+
+        return $user !== null && $session->teacherId() === (int) $user['id'];
     }
 
     private function forbidden(): never

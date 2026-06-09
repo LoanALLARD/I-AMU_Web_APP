@@ -55,6 +55,8 @@ CREATE TABLE super_administrators (
     password_hash VARCHAR(255) NOT NULL,
     first_name VARCHAR(50),
     last_name VARCHAR(100),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_login_at TIMESTAMPTZ,
     CONSTRAINT pk_super_administrators PRIMARY KEY (id),
     CONSTRAINT uq_super_administrators_email UNIQUE (email)
 );

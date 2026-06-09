@@ -15,6 +15,8 @@
     use Controllers\PlaceController;
     use Controllers\DepartmentAdminController;
     use Controllers\ResearcherController;
+    use Controllers\SuperAdminAuthController;
+    use Controllers\SuperAdminController;
     use Controllers\ErrorController;
     use Core\HttpException;
 
@@ -64,6 +66,20 @@
     $router->add('POST', '/department-admin/researchers/revoke',      function() { (new DepartmentAdminController())->revokeResearcher(); });
     $router->add('POST', '/department-admin/researchers/reauthorize', function() { (new DepartmentAdminController())->reauthorizeResearcher(); });
     $router->add('POST', '/department-admin/users/set-active',        function() { (new DepartmentAdminController())->setUserActive(); });
+
+    // --- Super admin (isolated session, URL-only — no internal link) --
+    // Dedicated login + panel, reachable only by direct URL (decision D1,
+    // SPEC-superadmin-auth.md). Never linked from the user-facing app.
+    $router->add('GET',  '/super-admin/login',  function() { (new SuperAdminAuthController())->showLogin(); });
+    $router->add('POST', '/super-admin/login',  function() { (new SuperAdminAuthController())->login(); });
+    $router->add('POST', '/super-admin/logout', function() { (new SuperAdminAuthController())->logout(); });
+    $router->add('GET',  '/super-admin',                   function() { (new SuperAdminController())->index(); });
+    $router->add('GET',  '/super-admin/department-admins', function() { (new SuperAdminController())->departmentAdmins(); });
+    $router->add('GET',  '/super-admin/places',            function() { (new SuperAdminController())->places(); });
+    $router->add('GET',  '/super-admin/email-domains',     function() { (new SuperAdminController())->emailDomains(); });
+    $router->add('POST', '/super-admin/email-domains',     function() { (new SuperAdminController())->addEmailDomain(); });
+    $router->add('POST', '/super-admin/email-domains/role',   function() { (new SuperAdminController())->changeEmailDomainRole(); });
+    $router->add('POST', '/super-admin/email-domains/toggle', function() { (new SuperAdminController())->toggleEmailDomain(); });
 
     // --- Researcher space (researcher role) ---------------------------
     $router->add('GET',  '/researcher',                 function() { (new ResearcherController())->index(); });

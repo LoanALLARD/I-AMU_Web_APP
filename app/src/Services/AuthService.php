@@ -69,6 +69,16 @@ final class AuthService
 
         $userId = (int) $row['id'];
 
+        // Exclusivity with the super admin session (see SPEC-superadmin-auth.md,
+        // D3): a normal user login must never leave a super admin identity
+        // behind. Drop the dedicated keys before keying as a user.
+        unset(
+            $_SESSION['super_admin_id'],
+            $_SESSION['super_admin_email'],
+            $_SESSION['super_admin_first_name'],
+            $_SESSION['super_admin_last_name']
+        );
+
         $this->users->touchLastLogin($userId);
 
         $_SESSION['user_id']         = $userId;
@@ -346,8 +356,7 @@ final class AuthService
      * Registration for a researcher: lab derived from the email domain, no
      * department. Refused when no active domain links to a lab.
      *
-     * @return array{role: string, department_id: null, laboratory_id: int}
-     *       | array{error: string}
+     * @return array{role: string, department_id: null, laboratory_id: int}|array{error: string}
      */
     private function prepareResearcherRegistration(string $email): array
     {
@@ -372,8 +381,7 @@ final class AuthService
      * Registration for a student/teacher: department (validated against the
      * place) and role derived from the email domain.
      *
-     * @return array{role: string, department_id: int, laboratory_id: null}
-     *       | array{error: string}
+     * @return array{role: string, department_id: int, laboratory_id: null}|array{error: string}
      */
     private function prepareMemberRegistration(string $email, int $placeId, int $departmentId): array
     {

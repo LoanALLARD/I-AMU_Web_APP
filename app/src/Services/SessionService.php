@@ -53,6 +53,37 @@ class SessionService
     }
 
     /**
+     * Whether the teacher may VIEW the session read-only: either they own the
+     * resource (full rights) or they are attached to it via teacher_resources
+     * (responsible). Mutating actions stay owner-only at the controller.
+     */
+    public function canView(Session $session, int $teacherId): bool
+    {
+        if ($session->teacherId() === $teacherId) {
+            return true;
+        }
+
+        return $this->resources->isResourceTeacher($session->resourceId(), $teacherId);
+    }
+
+    /**
+     * Sessions the teacher supervises read-only (attached via teacher_resources,
+     * not owner). Same presentation rows as listForTeacher() so the view renders
+     * them identically.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listSupervisedForTeacher(int $teacherId): array
+    {
+        $now = $this->now();
+
+        return array_map(
+            fn (array $row): array => $this->listRow(Session::fromRow($row), $now),
+            $this->sessions->findSupervisedByTeacher($teacherId)
+        );
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function enrolledStudents(int $sessionId): array
