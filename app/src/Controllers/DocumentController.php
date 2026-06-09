@@ -27,7 +27,7 @@ class DocumentController extends Controller
         $this->sessions  = new SessionService($pdo);
     }
 
-    /** POST /sessions/{id}/documents — the owner attaches a document. */
+    /** POST /sessions/{id}/documents — the owner attaches one or more documents. */
     public function uploadToSession(string $id): void
     {
         $this->requireRole('teacher');
@@ -35,17 +35,67 @@ class DocumentController extends Controller
         $sessionId = (int) $id;
         $this->requireOwnedSession($sessionId);
 
-        $user = $this->currentUser();
-        try {
-            /** @var array<string, mixed> $file */
-            $file = $_FILES['document'] ?? [];
-            $this->documents->attachToSession($sessionId, (int) ($user['id'] ?? 0), $file);
-            $this->flash('success', 'Document ajouté à la session.');
-        } catch (DocumentException $e) {
-            $this->flash('error', $e->getMessage());
+        $user  = $this->currentUser();
+        $files = $this->normalizeUploads($_FILES['document'] ?? []);
+
+        if ($files === []) {
+            $this->flash('error', 'Aucun fichier sélectionné.');
+            $this->redirect('/sessions/' . $sessionId);
+        }
+
+        $added = 0;
+        foreach ($files as $file) {
+            try {
+                $this->documents->attachToSession($sessionId, (int) ($user['id'] ?? 0), $file);
+                $added++;
+            } catch (DocumentException $e) {
+                $this->flash('error', ((string) ($file['name'] ?? 'fichier')) . ' : ' . $e->getMessage());
+            }
+        }
+
+        if ($added > 0) {
+            $this->flash('success', $added . ' document(s) ajouté(s) à la session.');
         }
 
         $this->redirect('/sessions/' . $sessionId);
+    }
+
+    /**
+     * Flattens PHP's `$_FILES['document']` into a list of single-file arrays,
+     * supporting both the single (`name="document"`) and multiple
+     * (`name="document[]"`) form shapes, and skipping empty slots.
+     *
+     * @param array<string, mixed> $field
+     * @return list<array<string, mixed>>
+     */
+    private function normalizeUploads(array $field): array
+    {
+        if (!isset($field['name'])) {
+            return [];
+        }
+
+        // Single-file form: name/tmp_name/... are scalars, not arrays.
+        if (!is_array($field['name'])) {
+            return ((int) ($field['error'] ?? UPLOAD_ERR_NO_FILE)) === UPLOAD_ERR_NO_FILE
+                ? []
+                : [$field];
+        }
+
+        $files = [];
+        foreach (array_keys($field['name']) as $i) {
+            if (((int) ($field['error'][$i] ?? UPLOAD_ERR_NO_FILE)) === UPLOAD_ERR_NO_FILE) {
+                continue;
+            }
+            $files[] = [
+                'name'     => $field['name'][$i],
+                'type'     => $field['type'][$i] ?? '',
+                'tmp_name' => $field['tmp_name'][$i] ?? '',
+                'error'    => $field['error'][$i] ?? UPLOAD_ERR_NO_FILE,
+                'size'     => $field['size'][$i] ?? 0,
+            ];
+        }
+
+        return $files;
     }
 
     /**
