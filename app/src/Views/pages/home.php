@@ -350,57 +350,9 @@ $canAddModel = $canAddModel ?? false;
         });
     });
 
-    // Render an AI reply's markdown to sanitized HTML, then syntax-highlight
-    // its code blocks. Falls back to escaped plain text if the libs are absent.
-    function renderMarkdown(text, el) {
-        if (!el) return;
-        el.innerHTML = (window.marked && window.DOMPurify)
-            ? DOMPurify.sanitize(marked.parse(text ?? '', { breaks: true, gfm: true }))
-            : `<p>${escapeHtml(text ?? '')}</p>`;
-        if (window.hljs) {
-            el.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
-        }
-        addCodeCopyButtons(el);
-    }
-
-    // Adds a "Copier" button to each code block so the snippet alone can be
-    // copied (separate from the message-level copy action).
-    function addCodeCopyButtons(container) {
-        container.querySelectorAll('pre').forEach((pre) => {
-            // Wrap the <pre> so the button is pinned to a non-scrolling parent
-            // (the <pre> itself scrolls horizontally for long lines).
-            if (pre.parentElement.classList.contains('code-block')) return;
-            const wrap = document.createElement('div');
-            wrap.className = 'code-block';
-            pre.parentNode.insertBefore(wrap, pre);
-            wrap.appendChild(pre);
-
-            // Mirror the code language onto the <pre> so the CSS badge
-            // (pre[data-lang]::before) shows it (e.g. "PHP").
-            if (!pre.hasAttribute('data-lang')) {
-                const code = pre.querySelector('code');
-                const lang = code && code.className.match(/language-([\w-]+)/);
-                if (lang) pre.setAttribute('data-lang', lang[1]);
-            }
-
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'code-copy';
-            btn.textContent = 'Copier';
-            btn.addEventListener('click', () => {
-                const code = pre.querySelector('code') || pre;
-                window.copyToClipboard(code.textContent).then(() => {
-                    btn.textContent = 'Copié';
-                    btn.classList.add('is-copied');
-                    setTimeout(() => {
-                        btn.textContent = 'Copier';
-                        btn.classList.remove('is-copied');
-                    }, 1500);
-                });
-            });
-            wrap.appendChild(btn);
-        });
-    }
+    // Markdown rendering (window.renderMarkdown) is provided by the shared
+    // assets/js/markdown.js module, loaded synchronously in <head> by the
+    // layout — available here at parse time and for live streaming below.
 
     // On load: render persisted AI bubbles (raw markdown -> HTML), then jump to
     // the latest message so a reopened thread starts at the bottom.

@@ -266,11 +266,13 @@ class SessionController extends Controller
         }
 
         $this->render('pages/session/monitor', [
-            'title'      => 'Suivi · ' . $session->name(),
-            'navSection' => 'sessions',
-            'view'       => $view,
-            'canManage'  => $this->canManage($session),
-            'user'       => $this->currentUser(),
+            'title'         => 'Suivi · ' . $session->name(),
+            'navSection'    => 'sessions',
+            'view'          => $view,
+            'canManage'     => $this->canManage($session),
+            'user'          => $this->currentUser(),
+            // AI replies in the transcript are markdown — load the renderer.
+            'needsMarkdown' => true,
         ], 'chat');
     }
 
