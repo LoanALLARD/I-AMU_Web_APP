@@ -346,6 +346,11 @@
     color: var(--gray-400);
 }
 
+.badge-rejected {
+    background: var(--refuse-bg);
+    color: var(--refuse);
+}
+
 /* Teacher habilitation request */
 .spec-request {
     margin-top: 16px;

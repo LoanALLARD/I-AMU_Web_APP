@@ -55,8 +55,10 @@ $themeCur = match ($user['theme'] ?? null) {
                         <span class="kv-val">
                             <?php if ($isSpecialized): ?>
                                 <span class="badge badge-habilitated">habilité</span>
-                            <?php elseif ($hasPendingSpecRequest): ?>
+                            <?php elseif ($specRequestStatus === 'pending'): ?>
                                 <span class="badge badge-not-habilitated">demande en attente</span>
+                            <?php elseif ($specRequestStatus === 'rejected'): ?>
+                                <span class="badge badge-rejected">demande refusée</span>
                             <?php else: ?>
                                 <span class="badge badge-not-habilitated">non habilité</span>
                             <?php endif; ?>
@@ -64,12 +66,16 @@ $themeCur = match ($user['theme'] ?? null) {
                     <?php endif; ?>
                 </div>
 
-                <?php if ($isTeacher && !$isSpecialized && !$hasPendingSpecRequest): ?>
+                <?php if ($isTeacher && !$isSpecialized && in_array($specRequestStatus, ['none', 'rejected'], true)): ?>
                     <div class="spec-request">
                         <p class="section-desc">
-                            L'habilitation vous permet d'importer vos propres modèles d'IA
-                            dans vos ressources. Faites-en la demande à l'administrateur de
-                            votre département.
+                            <?php if ($specRequestStatus === 'rejected'): ?>
+                                Votre demande précédente a été refusée. Vous pouvez en soumettre une nouvelle.
+                            <?php else: ?>
+                                L'habilitation vous permet d'importer vos propres modèles d'IA
+                                dans vos ressources. Faites-en la demande à l'administrateur de
+                                votre département.
+                            <?php endif; ?>
                         </p>
                         <form method="POST" action="/profile/request-specialisation">
                             <?= csrf_field() ?>

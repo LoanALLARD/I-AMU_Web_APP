@@ -22,6 +22,7 @@ final class TeacherSpecialisationService
 
     /**
      * Files a habilitation request, refused if already habilitated or pending.
+     * A rejected request may be re-filed (the row is reset to pending).
      *
      * @return array{success: true} | array{success: false, error: string}
      */
@@ -30,7 +31,7 @@ final class TeacherSpecialisationService
         if ($this->users->isTeacherSpecialized($teacherId)) {
             return ['success' => false, 'error' => 'Vous êtes déjà habilité.'];
         }
-        if ($this->repo->hasPending($teacherId)) {
+        if ($this->requestStatus($teacherId) === 'pending') {
             return ['success' => false, 'error' => 'Une demande est déjà en attente.'];
         }
 
@@ -40,9 +41,19 @@ final class TeacherSpecialisationService
         return ['success' => true];
     }
 
-    /** Whether the teacher has an undecided habilitation request. */
-    public function hasPendingRequest(int $teacherId): bool
+    /**
+     * The teacher's request status: 'none', 'pending', 'rejected' or 'approved'.
+     */
+    public function requestStatus(int $teacherId): string
     {
-        return $this->repo->hasPending($teacherId);
+        $decision = $this->repo->findDecision($teacherId);
+        if ($decision === null) {
+            return 'none';
+        }
+        if ($decision['approved_at'] === null && $decision['rejected_at'] === null) {
+            return 'pending';
+        }
+
+        return $decision['rejected_at'] !== null ? 'rejected' : 'approved';
     }
 }

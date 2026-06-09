@@ -13,17 +13,21 @@ class TeacherSpecialisationRequestRepository
     {
     }
 
-    /** Whether the teacher currently has an undecided request. */
-    public function hasPending(int $teacherId): bool
+    /**
+     * The teacher's request decision timestamps, or null if no request exists.
+     *
+     * @return array{approved_at: ?string, rejected_at: ?string}|null
+     */
+    public function findDecision(int $teacherId): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT 1 FROM teacher_specialisation_requests
-             WHERE teacher_id = :tid
-               AND approved_at IS NULL AND rejected_at IS NULL'
+            'SELECT approved_at, rejected_at FROM teacher_specialisation_requests
+             WHERE teacher_id = :tid'
         );
         $stmt->execute(['tid' => $teacherId]);
+        $row = $stmt->fetch();
 
-        return $stmt->fetch() !== false;
+        return $row === false ? null : $row;
     }
 
     /** Files a request; a repeat reuses the row (PK) and resets it to pending. */

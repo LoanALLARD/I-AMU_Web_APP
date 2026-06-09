@@ -37,9 +37,10 @@ class ProfileController extends Controller
             'page'              => 'profile',
             'pageTitle'         => 'Mon profil',
             'title'             => 'Mon profil',
-            'hasPendingSpecRequest' => $isTeacher
-                && (new TeacherSpecialisationService(Database::getConnection()))
-                    ->hasPendingRequest((int) $user['id']),
+            'specRequestStatus' => $isTeacher
+                ? (new TeacherSpecialisationService(Database::getConnection()))
+                    ->requestStatus((int) $user['id'])
+                : 'none',
         ], 'chat');
     }
 
