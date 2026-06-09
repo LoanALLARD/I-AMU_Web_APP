@@ -77,6 +77,8 @@
     $router->add('GET',  '/super-admin/department-admins', function() { (new SuperAdminController())->departmentAdmins(); });
     $router->add('GET',  '/super-admin/places',            function() { (new SuperAdminController())->places(); });
     $router->add('GET',  '/super-admin/email-domains',     function() { (new SuperAdminController())->emailDomains(); });
+    $router->add('POST', '/super-admin/email-domains',     function() { (new SuperAdminController())->addEmailDomain(); });
+    $router->add('POST', '/super-admin/email-domains/toggle', function() { (new SuperAdminController())->toggleEmailDomain(); });
 
     // --- Researcher space (researcher role) ---------------------------
     $router->add('GET',  '/researcher',                 function() { (new ResearcherController())->index(); });

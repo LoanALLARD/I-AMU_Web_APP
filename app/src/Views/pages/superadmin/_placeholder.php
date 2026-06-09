@@ -1,8 +1,5 @@
 <?php
-/**
- * Placeholder body for a panel sub-page (navigation shell — no business logic
- * yet). Expects `$pageIcon`, `$pageTitle`, `$pageLead` (strings) in scope.
- */
+/** Placeholder body. Expects `$pageIcon`, `$pageTitle`, `$pageLead` in scope. */
 ?>
 <div class="page-placeholder">
     <span class="page-placeholder-icon"><?= icon($pageIcon ?? 'clock', '', 30) ?></span>

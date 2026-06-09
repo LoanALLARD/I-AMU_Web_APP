@@ -212,3 +212,121 @@ body.superadmin-body--full {
     text-transform: uppercase;
     letter-spacing: .06em;
 }
+
+/* Panel content sections (cards) */
+.panel-section {
+    background: #fff;
+    border: 1px solid var(--gray-200, #e5e7eb);
+    border-radius: 12px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+}
+.panel-section > h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 .35rem;
+}
+.section-lead {
+    color: var(--gray-600);
+    font-size: .85rem;
+    line-height: 1.5;
+    margin: 0 0 1.25rem;
+}
+.section-empty {
+    color: var(--gray-600);
+    font-size: .9rem;
+    margin: 0;
+}
+
+/* Add-domain form: inline row that wraps on narrow screens */
+.domain-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+}
+.domain-form-row .form-group {
+    margin-bottom: 0;
+    flex: 1;
+    min-width: 180px;
+}
+.domain-form-row .btn-submit {
+    width: auto;
+    flex: 0 0 auto;
+}
+
+/* Domains table */
+.domain-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+}
+.domain-table th {
+    text-align: left;
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--gray-600);
+    padding: .5rem .75rem;
+    border-bottom: 2px solid var(--gray-200, #e5e7eb);
+}
+.domain-table td {
+    padding: .7rem .75rem;
+    border-bottom: 1px solid var(--gray-100, #f3f4f6);
+    color: var(--gray-800, #1f2937);
+}
+.domain-table .col-action {
+    text-align: right;
+    width: 1%;
+    white-space: nowrap;
+}
+.domain-table .cell-domain {
+    font-weight: 600;
+    color: #0f172a;
+}
+.domain-table tr.is-inactive .cell-domain {
+    color: var(--gray-400, #9ca3af);
+    text-decoration: line-through;
+}
+
+/* State badges */
+.badge-state {
+    display: inline-block;
+    padding: .2rem .6rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 700;
+}
+.badge-active   { background: #f0fdf4; color: #15803d; }
+.badge-inactive { background: var(--gray-100, #f3f4f6); color: var(--gray-600, #4b5563); }
+
+/* Row action buttons (toggle) */
+.btn-row {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .4rem .8rem;
+    border: 1px solid var(--gray-200, #e5e7eb);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--gray-700, #374151);
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+}
+.btn-row:hover {
+    background: var(--gray-100, #f3f4f6);
+    color: #0f172a;
+}
+.btn-row-danger {
+    color: #b91c1c;
+    border-color: rgba(220, 38, 38, .3);
+}
+.btn-row-danger:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #b91c1c;
+}

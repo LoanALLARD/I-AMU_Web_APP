@@ -1,9 +1,5 @@
 <?php
-/**
- * Shared super admin panel header: title bar + navigation.
- * Expects `$superAdmin` (?array) and `$activeNav` (string) in scope, set by
- * SuperAdminController::renderPanel(). Included via require by each panel page.
- */
+/** Panel header (title bar + nav). Expects `$superAdmin` and `$activeNav` in scope. */
 $nav = [
     'department-admins' => ['/super-admin/department-admins', 'Administrateurs', 'users'],
     'places'            => ['/super-admin/places',            'Sites & departements', 'building'],
