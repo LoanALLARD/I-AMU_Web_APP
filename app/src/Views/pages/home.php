@@ -473,8 +473,7 @@ $canAddModel = $canAddModel ?? false;
 
                     if (eventName === 'token') {
                         fullText += payload.text ?? '';
-                        // Plain text while streaming (cheap); markdown is
-                        // rendered once at the end.
+                        // Plain text while streaming, markdown is rendered once at the end.
                         contentEl.textContent = fullText;
                         messagesEl.scrollTop = messagesEl.scrollHeight;
                     } else if (eventName === 'done') {
@@ -489,13 +488,11 @@ $canAddModel = $canAddModel ?? false;
             // Final markdown render once the full answer is in.
             renderMarkdown(fullText || 'Pas de réponse.', contentEl);
 
-            const endTime = performance.now();
-            const durationStr = ((endTime - startTime) / 1000).toFixed(2) + 's';
-
-            const newConvId = data.conversation_id ?? null;
-            const newConvName = data.conversation_name ?? 'Nouvelle conversation';
-            const inputTokens = data.prompt_eval_count || 0;
-            const outputTokens = data.eval_count || 0;
+            const durationStr = ((performance.now() - startTime) / 1000).toFixed(2) + 's';
+            const newConvId = meta.conversation_id ?? null;
+            const newConvName = meta.conversation_name ?? 'Nouvelle conversation';
+            const inputTokens = meta.prompt_eval_count || 0;
+            const outputTokens = meta.eval_count || 0;
             const totalTokens = inputTokens + outputTokens;
 
 
@@ -541,7 +538,6 @@ $canAddModel = $canAddModel ?? false;
             `;
             aiMsg.appendChild(actions);
         } catch (err) {
-            console.error('chat stream error:', err); //temp
             aiMsg.querySelector('.msg-content').innerHTML = err.name === 'AbortError'
                 ? '<p class="msg-error">Génération interrompue.</p>'
                 : '<p class="msg-error">Erreur de connexion au modèle.</p>';
