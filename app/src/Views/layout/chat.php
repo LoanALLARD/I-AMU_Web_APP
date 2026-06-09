@@ -499,16 +499,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
 
         <div class="app-main">
             <div class="app-content">
-                <?php if (!empty($_SESSION['_flash'])): ?>
-                    <div class="flash-stack">
-                        <?php foreach ($_SESSION['_flash'] as $flash): ?>
-                            <div class="alert alert-<?= htmlspecialchars($flash['type']) ?>">
-                                <?= htmlspecialchars($flash['message']) ?>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php unset($_SESSION['_flash']); ?>
-                <?php endif; ?>
+                <?php require __DIR__ . '/../partials/_flash.php'; ?>
                 <?= $content ?>
             </div>
         </div>

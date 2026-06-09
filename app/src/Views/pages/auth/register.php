@@ -1,9 +1,4 @@
-<?php if (!empty($_SESSION['_flash'])): ?>
-    <?php foreach ($_SESSION['_flash'] as $flash): ?>
-        <div class="alert alert-<?= $flash['type'] ?>"><?= htmlspecialchars($flash['message']) ?></div>
-    <?php endforeach; ?>
-    <?php unset($_SESSION['_flash']); ?>
-<?php endif; ?>
+<?php require __DIR__ . '/../../partials/_flash.php'; ?>
 
 <?php if (!empty($error)): ?>
     <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>

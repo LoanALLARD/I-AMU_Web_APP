@@ -27,12 +27,7 @@ require __DIR__ . '/_header.php';
 ?>
 <div class="page-body">
 
-    <?php if (!empty($_SESSION['_flash'])): ?>
-        <?php foreach ($_SESSION['_flash'] as $flash): ?>
-            <div class="alert alert-<?= htmlspecialchars($flash['type']) ?>"><?= htmlspecialchars($flash['message']) ?></div>
-        <?php endforeach; ?>
-        <?php unset($_SESSION['_flash']); ?>
-    <?php endif; ?>
+    <?php /* Flash messages are rendered once by the chat layout (partials/_flash.php). */ ?>
 
     <div class="admin-section">
         <h2><?= icon('building', '', 16) ?> Mes accès</h2>
