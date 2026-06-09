@@ -30,12 +30,19 @@ $roles = $user['roles'] ?? [];
 $isTeacher = in_array('teacher', $roles, true);
 $isStudent = in_array('student', $roles, true);
 $isDeptAdmin = in_array('department_admin', $roles, true);
+$isResearcher = in_array('researcher', $roles, true);
 $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
 $initials = strtoupper(
     mb_substr($user['first_name'] ?? '·', 0, 1)
     . mb_substr($user['last_name'] ?? '·', 0, 1)
 );
-$roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
+$roleLabel = match (true) {
+    $isTeacher    => 'enseignant',
+    $isStudent    => 'étudiant',
+    $isDeptAdmin  => 'administration',
+    $isResearcher => 'chercheur',
+    default       => 'compte',
+};
 
 // Theme preference, stored on the user as LIGHT / DARK (NULL = follow the
 // OS). The inline script in <head> resolves it to a concrete data-theme
@@ -81,6 +88,14 @@ $themePref = match ($user['theme'] ?? null) {
     <link rel="stylesheet" href="/assets/css/shell.css<?= $v('shell.css') ?>">
     <link rel="stylesheet" href="/assets/css/sessions.css<?= $v('sessions.css') ?>">
     <link rel="stylesheet" href="/assets/css/profile.css<?= $v('profile.css') ?>">
+    <?php /* Admin and researcher pages reuse the .admin-section / .admin-table
+       styles, both defined in department_admin.css. */ ?>
+    <?php if ($page === 'admin' || $page === 'researcher'): ?>
+        <link rel="stylesheet" href="/assets/css/department_admin.css<?= $v('department_admin.css') ?>">
+    <?php endif; ?>
+    <?php if ($page === 'admin'): ?>
+        <link rel="stylesheet" href="/assets/css/formAddModel.css<?= $v('formAddModel.css') ?>">
+    <?php endif; ?>
 
 
     <?php $jsDir = dirname(__DIR__, 3) . '/public/assets/js'; ?>
@@ -102,7 +117,7 @@ $themePref = match ($user['theme'] ?? null) {
 <body class="app-body page-<?= htmlspecialchars($page) ?>">
 
     <header class="app-topbar">
-        <a href="<?= $isDeptAdmin ? '/department-admin' : '/chat' ?>" class="topbar-brand" aria-label="Accueil I-AMU">
+        <a href="<?= $isDeptAdmin ? '/department-admin' : ($isResearcher ? '/researcher' : '/chat') ?>" class="topbar-brand" aria-label="Accueil I-AMU">
             <img src="/assets/img/logo.png" alt="">
             <div class="topbar-brand-text">
                 <span><?= htmlspecialchars($roleLabel) ?></span>
@@ -140,7 +155,7 @@ $themePref = match ($user['theme'] ?? null) {
         <?php endif; ?>
 
         <div class="topbar-tabs">
-            <?php if (!$isDeptAdmin): ?>
+            <?php if (!$isDeptAdmin && !$isResearcher): ?>
             <a href="<?= htmlspecialchars($chatHref) ?>" class="topbar-tab<?= $page === 'chat' ? ' active' : '' ?>">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -157,6 +172,26 @@ $themePref = match ($user['theme'] ?? null) {
                         <path d="M6 12v5c3 3 9 3 12 0v-5" />
                     </svg>
                     Mes sessions
+                </a>
+            <?php endif; ?>
+            <?php if ($isDeptAdmin): ?>
+                <a href="/department-admin" class="topbar-tab<?= $page === 'admin' ? ' active' : '' ?>">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    Administration
+                </a>
+            <?php endif; ?>
+            <?php if ($isResearcher): ?>
+                <a href="/researcher" class="topbar-tab<?= $page === 'researcher' ? ' active' : '' ?>">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                    </svg>
+                    Espace chercheur
                 </a>
             <?php endif; ?>
         </div>
@@ -199,7 +234,7 @@ its own identity above the navigation. */ ?>
 On desktop these live as pills in the topbar (.topbar-tabs), so
 .sidebar-nav stays display:none there to avoid duplication. */ ?>
             <nav class="sidebar-nav" aria-label="Navigation principale">
-                <?php if (!$isDeptAdmin): ?>
+                <?php if (!$isDeptAdmin && !$isResearcher): ?>
                 <a href="<?= htmlspecialchars($chatHref) ?>"
                     class="sidebar-nav-link<?= $page === 'chat' ? ' is-active' : '' ?>">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -217,6 +252,26 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                             <path d="M6 12v5c3 3 9 3 12 0v-5" />
                         </svg>
                         Mes sessions
+                    </a>
+                <?php endif; ?>
+                <?php if ($isDeptAdmin): ?>
+                    <a href="/department-admin" class="sidebar-nav-link<?= $page === 'admin' ? ' is-active' : '' ?>">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                        Administration
+                    </a>
+                <?php endif; ?>
+                <?php if ($isResearcher): ?>
+                    <a href="/researcher" class="sidebar-nav-link<?= $page === 'researcher' ? ' is-active' : '' ?>">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <ellipse cx="12" cy="5" rx="9" ry="3" />
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                        </svg>
+                        Espace chercheur
                     </a>
                 <?php endif; ?>
             </nav>
