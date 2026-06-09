@@ -17,9 +17,21 @@ $activeNav = 'users';
     ]); ?>
 
     <div class="admin-section">
-        <h2><?= icon('users', '', 16) ?> Utilisateurs du département (<?= $numberOfMembers["count"] ?>)</h2>
+        <h2><?= icon('users', '', 16) ?> Utilisateurs du département (<?= $numberOfMembers["count"] ?? 0 ?>)</h2>
+        
+        <div class="search-bar-container" style="margin-bottom: 20px;">
+            <div class="input-group">
+                <input type="text" 
+                    id="user-search-input" 
+                    class="form-control" 
+                    placeholder="Rechercher par nom ou prénom..." 
+                    autocomplete="off"
+                    style="width: 100%; max-width: 400px; padding: 10px; border-radius: 4px; border: 1px solid var(--gray-300, #ccc);">
+            </div>
+        </div>
+
         <?php if ($departmentMembers === []): ?>
-            <div class="dashboard-card">
+            <div class="dashboard-card" id="no-members-notice">
                 <p style="color:var(--gray-400);font-size:13px;margin:0;">
                     Aucun enseignant ni étudiant rattaché à votre département.
                 </p>
@@ -56,10 +68,8 @@ $activeNav = 'users';
             </div>
         <?php endif; ?>
     </div>
-
 </div>
 
-<!-- Shared member-info modal; filled from the clicked row's <template>. -->
 <div class="modal-overlay" id="member-modal">
     <div class="modal-box">
         <div class="modal-head">

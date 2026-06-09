@@ -236,6 +236,29 @@ class UserRepository
 
     }
 
+    public function findUsers(string $firstSecondName, int $depId): array
+    {
+        $query = $this->pdo->prepare(
+            "SELECT u.id, u.email, u.first_name, u.last_name, u.is_active, u.last_login_at,
+                    u.created_at, u.email_verified_at, u.consent_at, u.consent_version, u.research_opposed,
+                    t.is_specialised, t.title, s.student_number, s.year,
+                    CASE WHEN t.id IS NOT NULL THEN 'teacher' ELSE 'student' END AS role
+             FROM users u
+             LEFT JOIN teachers t ON t.id = u.id
+             LEFT JOIN students s ON s.id = u.id
+             WHERE u.department_id = :dep_id
+               AND (t.id IS NOT NULL OR s.id IS NOT NULL)
+               AND (u.first_name LIKE :name OR u.last_name LIKE :name)
+             ORDER BY u.last_name ASC, u.first_name ASC"
+        );
+
+        $query->execute([
+            'name'   => '%' . $firstSecondName . '%',
+            'dep_id' => $depId
+        ]);
+
+        return $query->fetchAll();
+    }
     /**
      * A single member row (same projection as listDepartmentMembers), to
      * re-render its table row after a state change. Scoped to the department so

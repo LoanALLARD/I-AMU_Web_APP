@@ -314,6 +314,64 @@
                 });
             });
         }
+        var searchInput = document.getElementById('user-search-input');
+        var searchTimer = null;
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                var val = this.value;
+                if (val.length > 0) {
+                    this.value = val.charAt(0).toUpperCase() + val.slice(1);
+                }
+
+                var query = this.value.trim();
+                
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(function () {
+                    var tbody = document.getElementById('users-table-body');
+                    if (!tbody) return;
+
+                    var url = query === '' 
+                        ? '/department-admin/users' 
+                        : '/department-admin/search?q=' + encodeURIComponent(query);
+
+                    fetch(url, {
+                        method: 'GET',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(function (res) {
+                        if (!res.ok) throw new Error();
+                        return res.json();
+                    })
+                    .then(function (res) {
+                        console.log(res);
+                        if (res.success) {
+                            tbody.innerHTML = res.html;
+
+                            if (loadMoreBtn) {
+                                if (res.nextCursor) {
+                                    loadMoreBtn.setAttribute('data-next-id', res.nextCursor.id);
+                                    loadMoreBtn.setAttribute('data-next-lastname', res.nextCursor.last_name);
+                                    loadMoreBtn.setAttribute('data-next-firstname', res.nextCursor.first_name);
+                                    loadMoreBtn.style.display = 'inline-block';
+                                    loadMoreBtn.disabled = false;
+                                } else {
+                                    loadMoreBtn.style.display = 'none';
+                                }
+                            }
+
+                            var table = tbody.closest('table.sortable');
+                            if (table && typeof table._reapplySort === 'function') {
+                                table._reapplySort();
+                            }
+                        }
+                    })
+                    .catch(function () {
+                        toast('Erreur lors de la recherche.', false);
+                    });
+                }, 300);
+            });
+        }
     }
 
     if (document.readyState === 'loading') {

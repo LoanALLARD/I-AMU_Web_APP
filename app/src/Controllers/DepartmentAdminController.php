@@ -112,6 +112,42 @@ class DepartmentAdminController extends Controller
             'nextCursor'        => $nextCursor, 
         ], 'chat');
     }
+    
+    public function GetUsersByName(): void
+    {
+        $this->requireRole('department_admin');
+
+        $pdo = Database::getConnection();
+        $departmentId = $this->currentDepartmentId();
+        $userRepo = new UserRepository($pdo);
+
+        $searchTerm = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
+
+        if ($searchTerm === '') {
+            $result = $userRepo->listDepartmentMembers($departmentId, null, 2);
+        } else {
+            $result = $userRepo->findUsers($searchTerm, $departmentId);
+        }
+        
+        $rowsHtml = '';
+        $currentUserId = (int) ($this->currentUser()['id'] ?? 0);
+        foreach ($result as $m) {
+            ob_start();
+            $this->renderPartial('partials/department_admin/member_row', [
+                'member' => $m, 
+                'currentUserId' => $currentUserId
+            ]);
+            $rowsHtml .= ob_get_clean();
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'html'    => $rowsHtml,
+            'nextCursor' => null 
+        ]);
+        exit;
+    }
 
     public function approveResearcher(): void
     {
@@ -123,7 +159,6 @@ class DepartmentAdminController extends Controller
         $service = new ResearcherAuthorizationService(Database::getConnection());
         $result = $service->approve($researcherId, $departmentId, (int) $this->currentUser()['id']);
 
-        // Approving moves the request into the "authorized researchers" table.
         $this->respond($result['success'],
             $result['success'] ? 'Demande chercheur validée.' : $result['error'],
             $result['success']
@@ -140,7 +175,6 @@ class DepartmentAdminController extends Controller
         $result = (new ResearcherAuthorizationService(Database::getConnection()))
             ->reject($researcherId, $this->currentDepartmentId(), (int) $this->currentUser()['id']);
 
-        // Rejecting just drops the request: no target list (target stays null).
         $this->respond($result['success'],
             $result['success'] ? 'Demande chercheur refusée.' : $result['error']);
     }
