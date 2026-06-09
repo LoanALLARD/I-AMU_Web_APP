@@ -260,11 +260,10 @@ body.superadmin-body--full {
 .domain-table {
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed;
     font-size: .9rem;
 }
-.domain-table .col-role  { width: 14rem; }
-.domain-table .col-state { width: 14%; }
+.domain-table .col-role  { width: auto; }
+.domain-table .col-state { width: 6rem; }
 .domain-table .col-action { width: 9.5rem; }
 .domain-table th {
     text-align: left;
@@ -284,6 +283,10 @@ body.superadmin-body--full {
 .domain-table .col-action {
     text-align: right;
     white-space: nowrap;
+}
+.domain-table .cell-domain,
+.domain-table th:first-child {
+    min-width: 10rem;
 }
 .domain-table .cell-domain {
     font-weight: 600;
@@ -436,4 +439,11 @@ body.superadmin-body--full {
     background: #fef2f2;
     border-color: #ef4444;
     color: #b91c1c;
+}
+body.superadmin-body--full,
+body.superadmin-body--full > main {
+    display: block;
+    max-width: none;
+    width: 100%;
+    padding: 0;
 }
