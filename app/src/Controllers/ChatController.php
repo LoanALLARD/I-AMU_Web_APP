@@ -22,7 +22,7 @@ class ChatController extends Controller
             error_log('Impossible de charger les modèles : ' . $e->getMessage());
         }
 
-        $this->render('Page/homeView', [
+        $this->render('pages/home', [
             'titrePage' => 'Chat',
             'user'      => $user,
             'models'    => $models,
