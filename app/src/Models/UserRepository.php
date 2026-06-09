@@ -172,31 +172,68 @@ class UserRepository
         }
     }
     /**
-     * Students and teachers attached to a department, role derived from the
-     * inheritance tables. Department admins are excluded on purpose.
-     *
-     * @return list<array{id:int, email:string, first_name:string, last_name:string, is_active:bool, last_login_at:?string, created_at:string, email_verified_at:?string, consent_at:?string, consent_version:?string, research_opposed:bool, is_specialised:?bool, title:?string, student_number:?string, year:?int, role:string}>
+     * List members of a department by cursor.
+     * * @param int $departmentId
+     * @param array{last_name: string, first_name: string, id: int}|null $cursor
+     * @param int $limit
+     * @return list<array<string, mixed>>
      */
-    public function listDepartmentMembers(int $departmentId): array
+    public function listDepartmentMembers(int $departmentId, ?array $cursor = null, int $limit = 30): array
     {
-        $stmt = $this->pdo->prepare(
-            "SELECT u.id, u.email, u.first_name, u.last_name, u.is_active, u.last_login_at,
+        $params = ['dept' => $departmentId, 'limit' => $limit];
+        
+        $whereCursor = "";
+        if ($cursor !== null) {
+            $whereCursor = " AND (
+                u.last_name > :c_last_name 
+                OR (u.last_name = :c_last_name AND u.first_name > :c_first_name)
+                OR (u.last_name = :c_last_name AND u.first_name = :c_first_name AND u.id > :c_id)
+            )";
+            $params['c_last_name'] = $cursor['last_name'];
+            $params['c_first_name'] = $cursor['first_name'];
+            $params['c_id'] = $cursor['id'];
+        }
+
+        $sql = "SELECT u.id, u.email, u.first_name, u.last_name, u.is_active, u.last_login_at,
                     u.created_at, u.email_verified_at, u.consent_at, u.consent_version, u.research_opposed,
                     t.is_specialised, t.title, s.student_number, s.year,
                     CASE WHEN t.id IS NOT NULL THEN 'teacher' ELSE 'student' END AS role
-             FROM users u
-             LEFT JOIN teachers t ON t.id = u.id
-             LEFT JOIN students s ON s.id = u.id
-             WHERE u.department_id = :dept
-               AND (t.id IS NOT NULL OR s.id IS NOT NULL)
-             ORDER BY u.last_name, u.first_name"
-        );
-        $stmt->execute(['dept' => $departmentId]);
+                FROM users u
+                LEFT JOIN teachers t ON t.id = u.id
+                LEFT JOIN students s ON s.id = u.id
+                WHERE u.department_id = :dept
+                AND (t.id IS NOT NULL OR s.id IS NOT NULL)
+                {$whereCursor}
+                ORDER BY u.last_name ASC, u.first_name ASC, u.id ASC
+                LIMIT :limit";
+
+        $stmt = $this->pdo->prepare($sql);
+        
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val, is_int($val) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+        }
+        
+        $stmt->execute();
 
         /** @var list<array<string, mixed>> $rows */
         $rows = $stmt->fetchAll();
-
         return $rows;
+    }
+
+    public function CountDepartmentMembers(int $departmentId){
+        $query =$this->pdo->prepare(
+            'SELECT count(*) From users u
+            LEFT JOIN teachers t ON t.id = u.id
+            LEFT JOIN students s ON s.id = u.id
+            WHERE u.department_id = :dep_id
+            AND (t.id IS NOT NULL OR s.id IS NOT NULL)'
+        );
+
+        $query->execute(['dep_id'=>$departmentId]);
+
+        $rows = $query->fetch();
+        return $rows;
+
     }
 
     /**

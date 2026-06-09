@@ -1,20 +1,3 @@
-/**
- * AJAX submission for admin dashboard actions, so changing a user/researcher
- * state does not reload the page and the current sort is preserved.
- *
- * Any <form data-ajax-action="..."> is intercepted and posted with fetch. The
- * server replies in JSON (success/message + payload). Actions:
- *   - "set-active" : replace the member row with the server-rendered one (new
- *                    status badge + toggled button), then re-apply the sort.
- *   - "move-row"   : move a request/researcher between lists (pending ->
- *                    authorized, authorized <-> revoked, or a habilitation
- *                    request out of its pending list); the source element is
- *                    dropped and the server-rendered target element inserted.
- *
- * The server always renders the row markup (icons, CSRF, escaping), so the
- * front never rebuilds it by hand. Without JS the same forms still work: they
- * post normally and the server falls back to a flash + redirect.
- */
 (function () {
     'use strict';
 
@@ -269,6 +252,68 @@
                 closeMemberModal();
             }
         });
+
+        var loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', function () {
+                var btn = this;
+                var id = btn.getAttribute('data-next-id');
+                var lastName = btn.getAttribute('data-next-lastname');
+                var firstName = btn.getAttribute('data-next-firstname');
+
+                if (!id) return;
+
+                btn.disabled = true;
+                btn.textContent = 'Chargement...';
+
+                var url = '/department-admin/users?' + new URLSearchParams({
+                    'c_id': id,
+                    'c_last_name': lastName,
+                    'c_first_name': firstName
+                });
+
+                fetch(url, {
+                    method: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(function (res) { 
+                    if (!res.ok) throw new Error();
+                    return res.json(); 
+                })
+                .then(function (res) {
+                    if (res.success) {
+                        if (res.html && res.html.trim() !== '') {
+                            var tbody = document.getElementById('users-table-body');
+                            var tmp = document.createElement('tbody');
+                            tmp.innerHTML = res.html;
+                            while (tmp.firstChild) {
+                                tbody.appendChild(tmp.firstChild);
+                            }
+
+                            var table = tbody.closest('table.sortable');
+                            if (table && typeof table._reapplySort === 'function') {
+                                table._reapplySort();
+                            }
+                        }
+
+                        if (res.nextCursor) {
+                            btn.setAttribute('data-next-id', res.nextCursor.id);
+                            btn.setAttribute('data-next-lastname', res.nextCursor.last_name);
+                            btn.setAttribute('data-next-firstname', res.nextCursor.first_name);
+                            btn.disabled = false;
+                            btn.textContent = "Charger plus d'utilisateurs";
+                        } else {
+                            btn.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(function () {
+                    toast('Impossible de charger les utilisateurs suivants.', false);
+                    btn.disabled = false;
+                    btn.textContent = "Charger plus d'utilisateurs";
+                });
+            });
+        }
     }
 
     if (document.readyState === 'loading') {

@@ -55,13 +55,61 @@ class DepartmentAdminController extends Controller
 
         $pdo = Database::getConnection();
         $departmentId = $this->currentDepartmentId();
+        $userRepo = new UserRepository($pdo);
+
+        $cursor = null;
+        if (isset($_GET['c_id'], $_GET['c_last_name'], $_GET['c_first_name'])) {
+            $cursor = [
+                'id'         => (int)$_GET['c_id'],
+                'last_name'  => (string)$_GET['c_last_name'],
+                'first_name' => (string)$_GET['c_first_name'],
+            ];
+        }
+
+        $limit = 2;
+        $members = $userRepo->listDepartmentMembers($departmentId, $cursor, $limit);
+        $numberOfMembers = $userRepo->CountDepartmentMembers($departmentId);
+
+        $nextCursor = null;
+        if (count($members) === $limit) {
+            $lastMember = end($members);
+            $nextCursor = [
+                'id'         => $lastMember['id'],
+                'last_name'  => $lastMember['last_name'],
+                'first_name' => $lastMember['first_name'],
+            ];
+        }
+
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            header('Content-Type: application/json');
+            
+            $rowsHtml = '';
+            $currentUserId = (int) ($this->currentUser()['id'] ?? 0);
+            foreach ($members as $m) {
+                ob_start();
+                $this->renderPartial('partials/department_admin/member_row', [
+                    'member' => $m, 
+                    'currentUserId' => $currentUserId
+                ]);
+                $rowsHtml .= ob_get_clean();
+            }
+
+            echo json_encode([
+                'success' => true,
+                'html' => $rowsHtml,
+                'nextCursor' => $nextCursor
+            ]);
+            exit;
+        }
 
         $this->render('pages/department_admin/users', [
             'titrePage'         => 'Administration',
             'page'              => 'admin',
             'user'              => $this->currentUser(),
             'department'        => (new PlaceRepository($pdo))->departmentWithPlace($departmentId),
-            'departmentMembers' => (new UserRepository($pdo))->listDepartmentMembers($departmentId),
+            'departmentMembers' => $members,
+            'numberOfMembers'   => $numberOfMembers,
+            'nextCursor'        => $nextCursor, 
         ], 'chat');
     }
 

@@ -17,7 +17,7 @@ $activeNav = 'users';
     ]); ?>
 
     <div class="admin-section">
-        <h2><?= icon('users', '', 16) ?> Utilisateurs du département (<?= count($departmentMembers) ?>)</h2>
+        <h2><?= icon('users', '', 16) ?> Utilisateurs du département (<?= $numberOfMembers["count"] ?>)</h2>
         <?php if ($departmentMembers === []): ?>
             <div class="dashboard-card">
                 <p style="color:var(--gray-400);font-size:13px;margin:0;">
@@ -36,12 +36,24 @@ $activeNav = 'users';
                         <th>Infos</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="users-table-body">
                     <?php foreach ($departmentMembers as $m): ?>
                         <?php $this->renderPartial('partials/department_admin/member_row', ['member' => $m, 'currentUserId' => $currentUserId]); ?>
                     <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <div class="load-more-container" style="text-align: center; margin-top: 20px;">
+                <button type="button" 
+                        id="load-more-btn" 
+                        class="btn btn-secondary"
+                        <?= $nextCursor === null ? 'style="display:none;"' : '' ?>
+                        data-next-id="<?= $nextCursor['id'] ?? '' ?>"
+                        data-next-lastname="<?= htmlspecialchars($nextCursor['last_name'] ?? '') ?>"
+                        data-next-firstname="<?= htmlspecialchars($nextCursor['first_name'] ?? '') ?>">
+                    Charger plus d'utilisateurs
+                </button>
+            </div>
         <?php endif; ?>
     </div>
 
