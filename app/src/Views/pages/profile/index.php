@@ -10,6 +10,8 @@ $initials = strtoupper(
     . substr($user['last_name']  ?? '·', 0, 1)
 );
 $roles = $user['roles'] ?? [];
+$isTeacher = in_array('teacher', $roles, true);
+$isSpecialized = !empty($user['isSpecialized']);
 
 // French UI labels for roles
 $roleLabels = [
@@ -48,7 +50,43 @@ $themeCur = match ($user['theme'] ?? null) {
                     <span class="kv-val"><?= htmlspecialchars($user['last_name'] ?? '—') ?></span>
                     <span class="kv-key">email</span>
                     <span class="kv-val mono"><?= htmlspecialchars($user['email'] ?? '—') ?></span>
+                    <?php if ($isTeacher): ?>
+                        <span class="kv-key">habilitation</span>
+                        <span class="kv-val">
+                            <?php if ($isSpecialized): ?>
+                                <span class="badge badge-habilitated">habilité</span>
+                            <?php elseif ($specRequestStatus === 'pending'): ?>
+                                <span class="badge badge-not-habilitated">demande en attente</span>
+                            <?php elseif ($specRequestStatus === 'rejected'): ?>
+                                <span class="badge badge-rejected">demande refusée</span>
+                            <?php else: ?>
+                                <span class="badge badge-not-habilitated">non habilité</span>
+                            <?php endif; ?>
+                        </span>
+                    <?php endif; ?>
                 </div>
+
+                <?php if ($isTeacher && !$isSpecialized && in_array($specRequestStatus, ['none', 'rejected'], true)): ?>
+                    <div class="spec-request">
+                        <p class="section-desc">
+                            <?php if ($specRequestStatus === 'rejected'): ?>
+                                Votre demande précédente a été refusée. Vous pouvez en soumettre une nouvelle.
+                            <?php else: ?>
+                                L'habilitation vous permet d'importer vos propres modèles d'IA
+                                dans vos ressources. Faites-en la demande à l'administrateur de
+                                votre département.
+                            <?php endif; ?>
+                        </p>
+                        <form method="POST" action="/profile/request-specialisation">
+                            <?= csrf_field() ?>
+                            <textarea name="request" rows="2" maxlength="500"
+                                      placeholder="Motif de votre demande (facultatif)"></textarea>
+                            <button type="submit" class="btn">
+                                <?= icon('send', '', 12) ?> Demander mon habilitation
+                            </button>
+                        </form>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <div class="profile-card">

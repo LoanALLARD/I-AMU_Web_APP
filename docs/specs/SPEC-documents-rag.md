@@ -1,8 +1,27 @@
 # SPEC: documents-rag — Gestion de fichiers & début de RAG (sessions + chat)
 
-> Date: 2026-06-07 | Branche: `dev` | Statut: **proposée (non implémentée)**
+> Date: 2026-06-07 | Branche: `dev` | Statut: **Phases 1 & 2 LIVRÉES — Phase 3 (RAG) non implémentée**
 > Origine: décline [`02-sessions.md §11.1`](./02-sessions.md) (« Upload de
 > documents par l'enseignant », niveaux *léger* vs *RAG*) en un plan concret.
+
+> ⚠️ **MàJ 2026-06-09.** Les **phases 1 (documents de session) et 2 (import
+> chat + injection contexte) sont implémentées** et **font foi** ; la **phase 3
+> (chunking + embeddings + pgvector) reste non faite**. Écarts utiles vs le plan
+> ci-dessous :
+> - Table `documents` créée **dans [`01_schema.sql`](../../database/schema/01_schema.sql)**
+>   (pas de dossier `database/migrations/`), avec une colonne **`interaction_id`
+>   en plus** (les docs de chat sont liés à l'interaction au moment de l'envoi
+>   via `DocumentService::bindPendingToInteraction`) + `idx_documents_interaction`.
+> - Téléchargement réel : **`GET /documents/session_{sessionId}/{docId}`** et
+>   **`GET /documents/conversation_{conversationId}/{docId}`** (le `GET /documents/{docId}`
+>   du §Phase 1 a été remplacé par ce schéma scoped, comme la section « Stockage »).
+> - Quotas réels (`DocumentService`) : **20 / session**, **10 / conversation** ;
+>   injection plafonnée à **`MAX_INJECTED_CHARS = 12000`** caractères
+>   (`buildSystemContext`), pas une limite en tokens.
+> - Extraction : `PdfTextExtractor` (binaire `pdftotext`) + `PlainTextExtractor`
+>   (txt/md) derrière `TextExtractorInterface` — conforme au plan.
+> - Import **désactivé en examen** : `DocumentException::examImportDisabled`.
+> Le reste (notamment toute la **phase 3**) est conservé comme plan à réaliser.
 
 ## Contexte
 

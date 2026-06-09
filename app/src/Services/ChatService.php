@@ -146,6 +146,7 @@ class ChatService
         if ($conversation !== null) {
             $messages = array_map(
                 static fn (array $m): array => [
+                    'id'       => (int) $m['id'],
                     'prompt'   => (string) $m['prompt'],
                     'response' => (string) $m['response'],
                     'model'    => (string) ($m['model_name'] ?? ''),
@@ -206,17 +207,6 @@ class ChatService
         $n    = $this->conversations->countByUserAndSession($userId, $sessionId) + 1;
 
         $conversation = $this->conversations->newConversation($userId, $modelId, $sessionId, 'SESSION - ' . $code . ' #' . $n);
-        return (int) $conversation['id'];
-    }
-
-    /**
-     * Creates a new free-mode conversation ("Conversation #N").
-     */
-    public function newFreeConversation(int $userId, int $modelId): int
-    {
-        $n = count($this->conversations->listFreeByUser($userId)) + 1;
-
-        $conversation = $this->conversations->newConversation($userId, $modelId, null, 'Conversation #' . $n);
         return (int) $conversation['id'];
     }
 

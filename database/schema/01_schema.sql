@@ -11,7 +11,11 @@ CREATE TABLE places (
     address VARCHAR(100),
     city VARCHAR(50),
     zip_code VARCHAR(10),
-    CONSTRAINT pk_places PRIMARY KEY (id)
+    display_name VARCHAR(255),
+    logo_path VARCHAR(255),
+    primary_color VARCHAR(7),
+    CONSTRAINT pk_places PRIMARY KEY (id),
+    CONSTRAINT ck_places_primary_color CHECK (primary_color IS NULL OR primary_color ~ '^#[0-9a-fA-F]{6}$')
 );
 
 CREATE TABLE departments (
@@ -272,6 +276,20 @@ CREATE TABLE researcher_authorizations (
     CONSTRAINT fk_researcher_authorizations_authorized_by FOREIGN KEY (authorized_by_id) REFERENCES department_administrators (id) ON DELETE SET NULL
 );
 
+-- A teacher's request to be habilitated (teachers.is_specialised), scoped to
+-- the teacher's own department via users.department_id.
+CREATE TABLE teacher_specialisation_requests (
+    teacher_id BIGINT,
+    decided_by_id BIGINT,
+    request TEXT,
+    requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    approved_at TIMESTAMPTZ,
+    rejected_at TIMESTAMPTZ,
+    CONSTRAINT pk_teacher_specialisation_requests PRIMARY KEY (teacher_id),
+    CONSTRAINT fk_teacher_specialisation_requests_teacher FOREIGN KEY (teacher_id) REFERENCES teachers (id) ON DELETE CASCADE,
+    CONSTRAINT fk_teacher_specialisation_requests_decided_by FOREIGN KEY (decided_by_id) REFERENCES department_administrators (id) ON DELETE SET NULL
+);
+
 CREATE TABLE model_department_accesses (
     model_id BIGINT,
     department_id BIGINT,
@@ -293,6 +311,7 @@ CREATE TABLE documents (
     id BIGSERIAL,
     session_id BIGINT,
     conversation_id BIGINT,
+    interaction_id BIGINT,
     uploaded_by_id BIGINT NOT NULL,
     original_name VARCHAR(255) NOT NULL,
     stored_path VARCHAR(255) NOT NULL,
@@ -304,6 +323,7 @@ CREATE TABLE documents (
     CONSTRAINT pk_documents PRIMARY KEY (id),
     CONSTRAINT fk_documents_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE,
     CONSTRAINT fk_documents_conversation FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
+    CONSTRAINT fk_documents_interaction FOREIGN KEY (interaction_id) REFERENCES interactions (id) ON DELETE SET NULL,
     CONSTRAINT fk_documents_uploaded_by FOREIGN KEY (uploaded_by_id) REFERENCES users (id) ON DELETE RESTRICT,
     CONSTRAINT ck_documents_scope CHECK (
         (session_id IS NOT NULL AND conversation_id IS NULL) OR
@@ -313,3 +333,4 @@ CREATE TABLE documents (
 );
 CREATE INDEX idx_documents_session ON documents (session_id);
 CREATE INDEX idx_documents_conversation ON documents (conversation_id);
+CREATE INDEX idx_documents_interaction ON documents (interaction_id);

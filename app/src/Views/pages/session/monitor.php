@@ -26,6 +26,7 @@ $canManage = $canManage ?? false;
             </p>
         </div>
         <div style="margin-left:auto;display:flex;gap:10px;">
+            <a href='/sessions' class="btn">Retour à la liste</a>
             <?php if ($view['students'] !== []): ?>
                 <button type="button" class="btn" id="btn-open-students">
                     <?= icon('users', '', 14) ?> Gérer les étudiants

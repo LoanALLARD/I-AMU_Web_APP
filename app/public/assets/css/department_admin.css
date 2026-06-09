@@ -1,5 +1,21 @@
 /* Department-admin console (pages/department_admin/*). Reuses tokens from style.css. */
 
+/* Tab nav (light theme variant of the super-admin dashboard nav). */
+.dashboard-nav {
+    max-width: 1040px; margin: 0 auto 24px;
+    border-bottom: 1px solid var(--gray-200, #e5e7eb);
+}
+.dashboard-nav-inner { display: flex; gap: .35rem; }
+.nav-link {
+    display: inline-flex; align-items: center; gap: .45rem;
+    padding: 12px 16px; margin-bottom: -1px;
+    color: var(--gray-400, #9ca3af); font-size: 14px; font-weight: 600;
+    text-decoration: none; border-bottom: 2px solid transparent;
+    transition: color .15s, border-color .15s;
+}
+.nav-link:hover { color: var(--gray-800, #1f2937); }
+.nav-link.is-active { color: var(--blue, #2563eb); border-bottom-color: var(--blue, #2563eb); }
+
 .admin-section { max-width: 1040px; margin: 0 auto 24px; }
 
 .admin-identity {
@@ -46,7 +62,7 @@
 
 .admin-pending-detail {
     padding: 12px 14px 14px; border-top: 1px solid var(--gray-100, #f3f4f6);
-    background: var(--gray-50, #fafafa); font-size: 13px;
+    background: var(--gray-100, #f7f8fc); font-size: 13px;
 }
 .admin-pending-detail dl { display: grid; grid-template-columns: 130px 1fr; gap: 6px 12px; margin: 0; }
 .admin-pending-detail dt { color: var(--gray-400, #9ca3af); font-weight: 600; }
@@ -75,7 +91,7 @@
 .admin-table th {
     font-size: 12px; font-weight: 600; text-transform: uppercase;
     letter-spacing: .03em; color: var(--gray-400, #9ca3af);
-    background: var(--gray-50, #fafafa);
+    background: var(--gray-100, #f7f8fc);
 }
 .admin-table tbody tr:last-child td { border-bottom: none; }
 .admin-table td form { margin: 0; }
@@ -89,6 +105,42 @@
     color: var(--gray-400, #9ca3af); font-size: 13px; margin: 8px 0 0;
 }
 .admin-empty[hidden] { display: none; }
+
+/* Per-member info trigger (replaces the old action column) + shared modal. */
+.badge-info {
+    display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
+    border: none; font: inherit; font-size: 12px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px;
+    background: var(--blue-light, #eff6ff); color: var(--blue, #2563eb);
+}
+.member-info-panel { font-size: 13px; }
+.member-info-panel dl {
+    display: grid; grid-template-columns: 150px 1fr; gap: 6px 12px; margin: 0;
+}
+.member-info-panel dt { color: var(--gray-400, #9ca3af); font-weight: 600; }
+.member-info-panel dd { margin: 0; color: var(--gray-800, #1f2937); }
+.member-info-panel form { margin: 16px 0 0; }
+
+.modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+}
+.modal-box {
+    background: var(--white, #fff); border-radius: 14px;
+    padding: 22px 26px; max-width: 440px; width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+.modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 14px;
+}
+.modal-head h2 { margin: 0; font-size: 16px; }
+.modal-close {
+    border: none; background: none; cursor: pointer; padding: 4px;
+    color: var(--gray-400, #9ca3af); display: inline-flex;
+}
+.modal-close:hover { color: var(--gray-800, #1f2937); }
 
 .admin-table th.is-sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 .admin-table th.is-sortable:hover { color: var(--blue, #2563eb); }

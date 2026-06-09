@@ -177,13 +177,13 @@ $themePref = match ($user['theme'] ?? null) {
             </a>
             <?php endif; ?>
             <?php if ($isTeacher): ?>
-                <a href="/sessions" class="topbar-tab<?= $page === 'sessions' ? ' active' : '' ?>">
+                <a href="/ressources" class="topbar-tab<?= $page === 'ressources' ? ' active' : '' ?>">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
                         <path d="M6 12v5c3 3 9 3 12 0v-5" />
                     </svg>
-                    Mes sessions
+                    Mes Ressources
                 </a>
             <?php endif; ?>
             <?php if ($isDeptAdmin): ?>
@@ -305,12 +305,12 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                     </span>
                 </div>
 
-                <form method="POST" action="/chat/new" class="new-chat-form">
-                    <?= csrf_field() ?>
-                    <?php if (!empty($env['sessionId'])): ?>
-                        <input type="hidden" name="session_id" value="<?= (int) $env['sessionId'] ?>">
-                    <?php endif; ?>
-                    <button type="submit" class="btn-new-chat" id="btnNewChat"
+                <?php /* "Nouvelle conversation" opens a blank chat client-side
+                   (startBlankChat in pages/home.php) instead of creating a
+                   conversation up front. The row is persisted only when the
+                   first message is sent (POST /chat). */ ?>
+                <div class="new-chat-form">
+                    <button type="button" class="btn-new-chat" id="btnNewChat"
                         <?= !empty($sessionClosed)
                             ? 'disabled style="opacity:.45;cursor:not-allowed;" title="Vous ne pouvez plus créer de conversation dans cette session."'
                             : '' ?>>
@@ -321,7 +321,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                         </svg>
                         Nouvelle conversation
                     </button>
-                </form>
+                </div>
 
                 <?php if (($env['mode'] ?? '') === 'session'): ?>
                     <a href="/chat" class="btn-leave-session"

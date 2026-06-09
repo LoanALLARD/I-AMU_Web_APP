@@ -13,6 +13,9 @@ use Models\ConversationRepository;
 use Models\SessionRepository;
 use Models\EnrollmentRepository;
 
+use Services\DocumentService;
+use Services\ChatService;
+
 class LLMController{
 
     public function handleChat(): void {
@@ -34,6 +37,10 @@ class LLMController{
         $context = [];
 
         $conversation_id = $data['conversation_id'] ?? null;
+        // Only sent when starting a brand-new chat from the "Nouvelle
+        // conversation" button: tells us which environment to create the
+        // conversation in (a session id, or 0/absent for free chat).
+        $sessionIdInput = isset($data['session_id']) ? (int) $data['session_id'] : 0;
         // Identify the user from the authenticated session (set at login),
         // never from the client payload. No email lookup needed.
         $userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
@@ -91,13 +98,33 @@ class LLMController{
         $conversationData = null;
         $conversationRepository = new ConversationRepository($pdo);
         $nameConversation = mb_substr($userMessage, 0, 40);
-        if ($conversation_id == null) {                                     // If the conversation isn't given create new one
-            $conversationData = $conversationRepository->newConversation(
-                $userId,
-                (int) $aiData['id'],
-                null,
-                $nameConversation
-            );
+        if ($conversation_id == null) {                                     // Blank chat: persist the conversation now (deferred creation).
+            if ($sessionIdInput > 0) {
+                // Session environment: delegate to ChatService so the session
+                // is validated (active, student still enrolled) and the row is
+                // named "SESSION - CODE #N" like the previous up-front path.
+                try {
+                    $newId = (new ChatService($pdo))->newSessionConversation(
+                        $userId,
+                        $sessionIdInput,
+                        (int) $aiData['id']
+                    );
+                } catch (\Throwable $e) {
+                    header('Content-Type: application/json');
+                    http_response_code(422);
+                    echo json_encode(['error' => $e->getMessage()]);
+                    return;
+                }
+                $conversationData = $conversationRepository->getConversationByUserIdAndConversationId($userId, $newId);
+            } else {
+                // Free environment: name the conversation after the first message.
+                $conversationData = $conversationRepository->newConversation(
+                    $userId,
+                    (int) $aiData['id'],
+                    null,
+                    $nameConversation
+                );
+            }
             $context = [];
         } else {
             // else recover the conversation and check if it's own by the same user
@@ -178,6 +205,16 @@ class LLMController{
             $postprompt = $promptRaw["post_prompt_override"];
         }
 
+        // Inject the conversation's documents (phase 2) into the system prompt
+        // so the model takes them into account. Empty when none are attached.
+        $documentService = new DocumentService($pdo);
+        $docsBlock = $documentService->buildSystemContext((int) $conversationData['id']);
+        if ($docsBlock !== '') {
+            $preprompt = ($preprompt !== null && trim($preprompt) !== '')
+                ? trim($preprompt) . "\n\n" . $docsBlock
+                : $docsBlock;
+        }
+
         $metadata = $conversationRepository->getContextByConversationIdAndUserId($conversationData['id'], $userId);
 
         $adapter = null;
@@ -231,7 +268,8 @@ class LLMController{
             return;
         }
 
-        // Persist the interaction only for a session-bound conversation.
+        // Persist the interaction (every conversation is persisted).
+        $boundDocs = [];
         if ($conversationData !== null && $response !== false && isset($response->response)) {
             $interaction = new InteractionRepository($pdo);
             $input_tokens  = isset($response->prompt_eval_count) ? (int) $response->prompt_eval_count : null;
@@ -246,6 +284,20 @@ class LLMController{
             );
             $meta_data = $adapter->formatMetadata($response);
             $var=$interaction->setContext($meta_data,$interactionData['id']);
+
+            // Tie the pending documents to this message (provenance) and return
+            // them so the UI can display them under the message just sent.
+            $interactionId = (int) $interactionData['id'];
+            $documentService->bindPendingToInteraction((int) $conversationData['id'], $interactionId);
+            foreach ($documentService->documentsForInteraction($interactionId) as $doc) {
+                $boundDocs[] = [
+                    'id'     => $doc->id(),
+                    'name'   => $doc->originalName(),
+                    'size'   => $doc->humanSize(),
+                    'kind'   => $doc->kindLabel(),
+                    'status' => $doc->status()->value,
+                ];
+            }
         }
 
         header('Content-Type: application/json');
@@ -255,6 +307,7 @@ class LLMController{
             'eval_count'        => $response->eval_count ?? null,
             'conversation_id'   => $conversationData['id'] ?? null,
             'conversation_name' => $conversationData['name'] ?? null,
+            'documents'         => $boundDocs,
         ]);
         
     }
