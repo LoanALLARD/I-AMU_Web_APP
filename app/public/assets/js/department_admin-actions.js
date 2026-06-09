@@ -98,6 +98,19 @@
         }
     }
 
+    /**
+     * Shows a [data-empty-any="k1 k2"] message only when every listed key is
+     * empty (e.g. the "no requests at all" line spanning both pending lists).
+     */
+    function refreshEmptyAny(key) {
+        var msgs = document.querySelectorAll('[data-empty-any~="' + key + '"]');
+        msgs.forEach(function (msg) {
+            var keys = msg.getAttribute('data-empty-any').split(/\s+/);
+            var allEmpty = keys.every(function (k) { return countRows(k) === 0; });
+            msg.hidden = !allEmpty;
+        });
+    }
+
     /** Refreshes the "(n)" count and the empty-state message for a list key. */
     function refreshListState(key) {
         if (!key) {
@@ -113,6 +126,7 @@
             empty.hidden = n !== 0;
         }
         toggleSectionVisibility(key);
+        refreshEmptyAny(key);
         resortTable(listTable(key));
     }
 

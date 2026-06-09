@@ -62,6 +62,7 @@
 
     // --- Department-admin console (department_admin role) --------------
     $router->add('GET',  '/department-admin',                         function() { (new DepartmentAdminController())->index(); });
+    $router->add('GET',  '/department-admin/users',                   function() { (new DepartmentAdminController())->users(); });
     $router->add('GET',  '/department-admin/addModel',                function() { (new DepartmentAdminController())->fromModel(); });
     $router->add('POST', '/department-admin/addModel',                function() { (new DepartmentAdminController())->addModel(); });
     $router->add('POST', '/department-admin/researchers/approve',     function() { (new DepartmentAdminController())->approveResearcher(); });
