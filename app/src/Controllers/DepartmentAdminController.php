@@ -242,7 +242,8 @@ class DepartmentAdminController extends Controller
     }
 
     public function addModel(): void {
-        // Extraction et nettoyage des données reçues du formulaire
+        $this->requireAuth(); // Sécurité recommandée
+
         $name          = $this->input('name', null);
         $size          = $this->input('size', null);
         $provider      = $this->input('provider', null);
@@ -250,21 +251,19 @@ class DepartmentAdminController extends Controller
         $apiUrl        = $this->input('api_url', null);
         $contextWindow = $this->input('context_window', null);
         
-        // Récupère "1" (Oui) ou "0" (Non) depuis le groupe radio 'is_shareable'
         $isShareable   = $this->input('is_shareable', '0');
         $user = $this->currentUser();
-        if ($isShareable === '1'){
+        $resource_id = $this->input('resource_id', null); 
+        if ($resource_id == null){
             $department_id = $user["department_id"];
-            $resource_id = null;
         }else {
             $department_id = null;
-            $resource_id = $this->input('resource_id', null);
         }
-        // Exemple de var_dump pour valider la bonne réception
+
         try {
             $pdo = Database::getConnection();   
             $Ai = new AiRepository($pdo);
-            $result=$Ai->addModel(
+            $result = $Ai->addModel(
                 $department_id,
                 $resource_id,
                 $name,
@@ -275,15 +274,21 @@ class DepartmentAdminController extends Controller
                 (int) $contextWindow,
                 $isShareable
             );
-            if ($result !=null) {
+
+            if ($result != null) {
                 $this->flash('success', "Le modèle a été ajouté avec succès.");
+                $user = $this->CurrentUser();
+                if($user['roles'][0] == "department_admin"){
+                    $this->redirect('/department-admin/addModel');    
+                };
                 $this->redirect('/chat');  
-            }else{
+            } else {
                 throw new \Exception("Erreur lors de l'insertion en base de données.");            
             }
-        }catch (\Throwable $e){
+        } catch (\Throwable $e) {
             $this->flash('error', "Impossible d'ajouter le modèle : " . $e->getMessage());
-            $this->redirect('/chat');
+            
+            $this->redirect('/department-admin/addModel');
         }
     }
 }

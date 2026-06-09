@@ -5,12 +5,18 @@
  * @var array $resources La liste des sessions/ressources disponibles
  */
 
-// Résolution du thème identique à chat.php
+// Résolution du thème
 $themePref = match ($user['theme'] ?? null) {
     'DARK'  => 'dark',
     'LIGHT' => 'light',
     default => 'auto',
 };
+
+// Extraction des permissions
+$role = $user["roles"][0] ?? '';
+$is_specialized = !empty($user["isSpecialized"]);
+$isTeacherSpecialized = ($role === 'teacher' && $is_specialized);
+$isAdmin = ($role === 'department_admin');
 ?>
 <script>
     (function () {
@@ -22,6 +28,20 @@ $themePref = match ($user['theme'] ?? null) {
 </script>
 
 <div class="admin-container">
+
+    <?php if (!empty($_SESSION['_flash'])): ?>
+        <div class="flash-stack" style="margin-bottom: 1.5rem;">
+            <?php foreach ($_SESSION['_flash'] as $flash): ?>
+                <div class="alert alert-<?= htmlspecialchars($flash['type']) ?>" 
+                     style="padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; font-weight: 600; cursor: pointer; 
+                     <?= $flash['type'] === 'error' ? 'background: #fee2e2; color: #991b1b; border: 1px solid #f87171;' : 'background: #dcfce7; color: #166534; border: 1px solid #4ade80;' ?>">
+                    <?= htmlspecialchars($flash['message']) ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <?php unset($_SESSION['_flash']); ?>
+    <?php endif; ?>
+
     <div class="admin-card">
         <div class="admin-card-header">
             <h3 class="admin-card-title">Ajouter un nouveau Modèle d'IA</h3>
@@ -70,40 +90,45 @@ $themePref = match ($user['theme'] ?? null) {
                     <input type="number" class="form-control" id="context_window" name="context_window" min="1" required placeholder="128000">
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Partager le modèle pour tous ?</label>
-                    <div class="radio-group-inline">
-                        <div class="radio-option">
-                            <input type="radio" id="share_yes" name="is_shareable" value="1" checked>
-                            <label for="share_yes">Oui, le partager</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" id="share_no" name="is_shareable" value="0">
-                            <label for="share_no">Non, ne pas le partager</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section-box d-none" id="resourceScopeBox" style="margin-top: 1.5rem; padding: 1.25rem; border-radius: 8px; background: var(--gray-100); border: 1px solid var(--gray-200);">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label for="resource_id" class="form-label">Associer à une ressource / session spécifique *</label>
-                        <select class="form-select" id="resource_id" name="resource_id">
-                            <option value="">-- Choisir la ressource propriétaire du modèle --</option>
-                            <?php if (!empty($resources) && is_array($resources)): ?>
-                                <?php foreach($resources as $res): ?>
-                                    <option value="<?= htmlspecialchars((int)$res['id']) ?>">
-                                        <?= htmlspecialchars($res['name']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </select>
-                        <div id="resource-error-message" class="text-danger d-none" style="color: #dc3545; font-size: 0.8rem; margin-top: 0.4rem;">
-                            Veuillez sélectionner une ressource si le modèle n'est pas partagé globalement.
+                <?php if ($isTeacherSpecialized) : ?>
+                    <input type="hidden" name="is_shareable" value="0">
+                    <div class="form-section-box" id="resourceScopeBox" style="margin-top: 1.5rem; padding: 1.25rem; border-radius: 8px; background: var(--gray-100); border: 1px solid var(--gray-200);">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="resource_id" class="form-label">Associer à une ressource / session spécifique *</label>
+                            <select class="form-select" id="resource_id" name="resource_id" required>
+                                <option value="">-- Choisir la ressource propriétaire du modèle --</option>
+                                <?php if (!empty($resources) && is_array($resources)): ?>
+                                    <?php foreach($resources as $res): ?>
+                                        <option value="<?= htmlspecialchars((string)$res['id']) ?>">
+                                            <?= htmlspecialchars($res['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                            <div id="resource-error-message" class="text-danger d-none" style="color: #dc3545; font-size: 0.8rem; margin-top: 0.4rem;">
+                                Veuillez sélectionner une ressource.
+                            </div>
                         </div>
                     </div>
-                </div>
+                <?php endif; ?>
 
-                <div class="form-actions">
+                <?php if ($isAdmin) : ?>
+                    <div class="form-group">
+                        <label class="form-label">Partager le modèle pour tous ?</label>
+                        <div class="radio-group-inline">
+                            <div class="radio-option">
+                                <input type="radio" id="share_yes" name="is_shareable" value="1" checked>
+                                <label for="share_yes">Oui, le partager pour tout le département</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="share_no" name="is_shareable" value="0">
+                                <label for="share_no">Non, ne pas le partager</label>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <div class="form-actions" style="margin-top: 2rem;">
                     <a href="/chat" class="btn-admin btn-secondary">Annuler</a>
                     <button type="submit" class="btn-admin btn-primary">Enregistrer le modèle</button>
                 </div>
@@ -115,48 +140,51 @@ $themePref = match ($user['theme'] ?? null) {
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('addModelForm');
-    const shareYes = document.getElementById('share_yes');
-    const shareNo = document.getElementById('share_no');
-    const resourceBox = document.getElementById('resourceScopeBox');
     const resourceSelect = document.getElementById('resource_id');
     const resourceError = document.getElementById('resource-error-message');
 
-    function toggleResourceVisibility() {
-        if (shareNo.checked) {
-            resourceBox.classList.remove('d-none');
-            resourceSelect.setAttribute('required', 'required');
-        } else {
-            resourceBox.classList.add('d-none');
-            resourceSelect.removeAttribute('required');
-            resourceSelect.value = ""; // Réinitialise si on re-coche "Oui"
-            resourceError.classList.add('d-none');
-            resourceSelect.classList.remove('is-invalid');
-        }
+    // Validation du formulaire
+    if (form) {
+        form.addEventListener('submit', function (event) {
+            let isValid = true;
+
+            if (resourceSelect) {
+                if (resourceSelect.value === "") {
+                    resourceSelect.classList.add('is-invalid');
+                    if (resourceError) resourceError.classList.remove('d-none');
+                    isValid = false;
+                } else {
+                    resourceSelect.classList.remove('is-invalid');
+                    if (resourceError) resourceError.classList.add('d-none');
+                }
+            }
+
+            if (!form.checkValidity() || !isValid) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        });
     }
 
-    // Écoute des changements sur les boutons radio
-    shareYes.addEventListener('change', toggleResourceVisibility);
-    shareNo.addEventListener('change', toggleResourceVisibility);
+    if (resourceSelect) {
+        resourceSelect.addEventListener('change', function () {
+            if (this.value !== "") {
+                this.classList.remove('is-invalid');
+                if (resourceError) resourceError.classList.add('d-none');
+            }
+        });
+    }
 
-    // Validation stricte à la soumission
-    form.addEventListener('submit', function (event) {
-        let isValid = true;
-
-        if (shareNo.checked && resourceSelect.value === "") {
-            event.preventDefault();
-            event.stopPropagation();
-            resourceError.classList.remove('d-none');
-            resourceSelect.classList.add('is-invalid');
-            isValid = false;
-        } else {
-            resourceError.classList.add('d-none');
-            resourceSelect.classList.remove('is-invalid');
-        }
-
-        if (!form.checkValidity() || !isValid) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
+    // Gestion de la fermeture automatique des alertes flash
+    document.querySelectorAll('.flash-stack .alert').forEach((el) => {
+        const dismiss = () => {
+            el.style.transition = 'opacity .3s ease, transform .3s ease';
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(-5px)';
+            setTimeout(() => el.remove(), 300);
+        };
+        el.addEventListener('click', dismiss);
+        setTimeout(dismiss, 5000); // Fait disparaître l'alerte au bout de 5 secondes
     });
 });
 </script>
