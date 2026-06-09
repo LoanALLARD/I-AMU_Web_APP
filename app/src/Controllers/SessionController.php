@@ -66,7 +66,12 @@ class SessionController extends Controller
     {
         $this->requireRole('teacher');
         $user = $this->currentUser();
-        $data = $this->sessions->createFormData((int) ($user['id'] ?? 0));
+        try {
+            $data = $this->sessions->createFormData((int) ($user['id'] ?? 0));
+        } catch (Throwable $e) {
+            $this->flash('error', $e->getMessage());
+            $this->redirect('/sessions');
+        }
 
         $this->render('pages/session/create', [
             'title'                => 'Nouvelle session',
@@ -345,6 +350,9 @@ class SessionController extends Controller
     public function showJoin(): void
     {
         $this->requireRole('student');
+        if ($this->redirectIfExamLocked()) {
+            return;
+        }
         $this->render('pages/session/join', [
             'title' => 'Rejoindre une session',
         ]);
@@ -355,6 +363,9 @@ class SessionController extends Controller
     {
         $this->requireRole('student');
         $this->verifyCsrf();
+        if ($this->redirectIfExamLocked()) {
+            return;
+        }
 
         $rawCode = (string) $this->input('access_code', '');
         $user    = $this->currentUser();
@@ -375,6 +386,28 @@ class SessionController extends Controller
     // ----------------------------------------------------------------
     // Helpers
     // ----------------------------------------------------------------
+
+    /**
+     * Redirects an exam-locked student back to their exam conversation and
+     * returns true; returns false when free to proceed. Keeps a student from
+     * joining a second session while an exam is running.
+     */
+    private function redirectIfExamLocked(): bool
+    {
+        if (!$this->hasRole('student')) {
+            return false;
+        }
+        $user = $this->currentUser();
+        $lock = (new \Services\ExamLockService(Database::getConnection()))
+            ->activeLockFor((int) ($user['id'] ?? 0));
+        if ($lock === null) {
+            return false;
+        }
+        $this->flash('error', 'Action indisponible pendant un examen.');
+        $this->redirect($lock['conversationId'] !== null
+            ? '/chat/' . $lock['conversationId']
+            : '/chat');
+    }
 
     /**
      * Loads a session, redirecting on miss and 403-ing if it is not owned by
@@ -456,7 +489,7 @@ class SessionController extends Controller
 
         return is_array($old) ? $old : [];
     }
-    
+
     public function getModelsByResource(): void
     {
         $resourceId = (int) $this->query('resource_id', 0);
@@ -464,14 +497,14 @@ class SessionController extends Controller
 
         $pdo = Database::getConnection();
         $aiRepo = new AiRepository($pdo);
-        
+
         $modelsByResource = $aiRepo->findAllActiveByResource($resourceId);
         $modelsByDeptAndShared = $aiRepo->findAllActiveBySession(null, $depId);
 
         $allModels = array_merge($modelsByResource, $modelsByDeptAndShared);
 
         $allModels = array_intersect_key(
-            $allModels, 
+            $allModels,
             array_unique(array_column($allModels, 'id'))
         );
         $allModels = array_values($allModels);

@@ -27,7 +27,8 @@
     $router->add('GET',  '/accueil',     function() { (new AccueilController())->index(); });
 
     $router->add('POST', '/chat',         function() { (new LLMController())->handleChat(); });
-    $router->add('POST', '/chat/new',     function() { (new AccueilController())->newChat(); });
+    $router->add('POST', '/chat/documents',             function()    { (new DocumentController())->uploadToConversation(); });
+    $router->add('POST', '/chat/documents/{id}/delete', function($id) { (new DocumentController())->deleteFromConversation($id); });
     $router->add('POST', '/chat/rename',    function() { (new AccueilController())->renameChat(); });
     $router->add('POST', '/chat/archive',   function() { (new AccueilController())->archiveChat(); });
     $router->add('POST', '/chat/unarchive', function() { (new AccueilController())->unarchiveChat(); });
@@ -50,6 +51,7 @@
     // --- Chat home + profile (authenticated) --------------------------
     $router->add('GET',  '/chat',                function()     { (new AccueilController())->index(); });
     $router->add('GET',  '/chat/session-status', function()     { (new AccueilController())->sessionStatus(); });
+    $router->add('GET',  '/chat/documents/{convId}', function($convId) { (new DocumentController())->conversationDocuments($convId); });
     $router->add('GET',  '/chat/{id}',           function($id)  { (new AccueilController())->index($id); });
     $router->add('GET',  '/profile',             function()     { (new ProfileController())->index(); });
     $router->add('POST', '/profile/theme',       function()     { (new ProfileController())->updateTheme(); });
@@ -114,6 +116,7 @@
 
     $router->add('POST', '/documents/{id}/delete', function($id) { (new DocumentController())->delete($id); });
     $router->add('GET',  '/documents/session_{sessionId}/{docId}', function($sessionId, $docId) { (new DocumentController())->download($sessionId, $docId); });
+    $router->add('GET',  '/documents/conversation_{conversationId}/{docId}', function($conversationId, $docId) { (new DocumentController())->downloadFromConversation($conversationId, $docId); });
 
     try {
         $router->compare($uri, $method);

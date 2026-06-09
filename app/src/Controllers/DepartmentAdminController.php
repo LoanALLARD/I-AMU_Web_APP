@@ -35,9 +35,10 @@ class DepartmentAdminController extends Controller
         $specialisations = new TeacherSpecialisationService($pdo);
 
         $this->render('pages/department_admin/dashboard', [
-            'titrePage'             => 'Administration',
-            'user'                  => $this->currentUser(),
-            'department'            => (new PlaceRepository($pdo))->departmentWithPlace($departmentId),
+            'titrePage'              => 'Administration',
+            'page'                   => 'admin',
+            'user'                   => $this->currentUser(),
+            'department'             => (new PlaceRepository($pdo))->departmentWithPlace($departmentId),
             'pendingResearchers'     => $authorizations->listPending($departmentId),
             'pendingSpecialisations' => $specialisations->listPending($departmentId),
             'habilitatedTeachers'    => $specialisations->listHabilitated($departmentId),
@@ -45,7 +46,7 @@ class DepartmentAdminController extends Controller
             'departmentMembers'      => $userRepository->listDepartmentMembers($departmentId),
             'researchers'            => $userRepository->listAuthorizedResearchers($departmentId),
             'revokedResearchers'     => $authorizations->listRevoked($departmentId),
-        ]);
+        ], 'chat');
     }
 
     public function approveResearcher(): void
@@ -331,10 +332,11 @@ class DepartmentAdminController extends Controller
 
         $this->render('pages/admin/formAddModel', [
             'user'         => $user,
+            'page'         => 'admin',
             'adapters'     => $adapters,
             'departments'  => $departments,
             'resources'    => $resources
-        ]);
+        ], 'chat');
     }
 
     public function addModel(): void {

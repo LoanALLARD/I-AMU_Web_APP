@@ -16,7 +16,6 @@ use Domain\SessionType;
 
 $isEdit = $mode === 'edit';
 $action = $isEdit ? '/sessions/' . $session->id() . '/update' : '/sessions/store';
-var_dump($action);
 
 $val = static function (string $key, mixed $default = '') use ($session, $oldInput, $isEdit) {
     if (array_key_exists($key, $oldInput)) {
@@ -31,6 +30,7 @@ $val = static function (string $key, mixed $default = '') use ($session, $oldInp
         'post_prompt'    => $session->postPromptOverride() ?? '',
         'instructions'   => $session->instructions() ?? '',
         'max_input_size' => $session->maxInputSize() ?? '',
+        'max_tokens'     => $session->maxTokens() ?? '',
         'resource_id'    => $session->resourceId(),
         'starts_at'      => $session->startsAt()?->format('Y-m-d\TH:i') ?? '',
         'duration_min'   => $session->startsAt() && $session->endsAt()
@@ -212,6 +212,21 @@ $typeCards = [
                 <input type="number" id="f-max" name="max_input_size" min="1" max="200000"
                        value="<?= htmlspecialchars((string) $val('max_input_size')) ?>"
                        placeholder="ex. 8192">
+                <span class="suffix">car</span>
+            </div>
+        </section>
+
+        <!-- Per-session request quota -->
+        <section class="fsection">
+            <div class="fsection-head">
+                <span class="fsection-label">Limite de tokens</span>
+                <span class="fsection-rule"></span>
+            </div>
+            <p class="fsection-hint">Nombre maximal de tokens qu'un étudiant peut utiliser sur la session. Laisser vide pour aucune limite.</p>
+            <div class="field-suffix field-suffix--narrow">
+                <input type="number" id="f-maxreq" name="max_tokens" min="1" max="10000"
+                       value="<?= htmlspecialchars((string) $val('max_tokens')) ?>"
+                       placeholder="ex. 20">
                 <span class="suffix">tok</span>
             </div>
         </section>
@@ -309,3 +324,4 @@ $jsPath = __DIR__ . '/../../../../public/assets/js/session-create.js';
 $jsVer  = is_file($jsPath) ? filemtime($jsPath) : 0;
 ?>
 <script src="/assets/js/session-create.js?v=<?= $jsVer ?>" defer></script>
+

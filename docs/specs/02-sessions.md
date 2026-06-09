@@ -3,17 +3,27 @@
 ## 0. Statut
 - **Priorité** : must-have
 - **Dépend de** : 00-foundations, 01-auth-account
-- **État POC** : implémenté (lifecycle déjà bien modélisé)
-- **État I-AMU (2026-06-02)** : **MVP enseignant livré** (CRUD + cycle de
-  vie + code d'accès), côté étudiant et temps réel à faire. Le détail
-  fait/pas-fait et les **divergences** (4 types au lieu de 3, schéma
-  pluriel, `max_input_size` unique) sont dans
-  [`SPEC-sessions-backend.md` § État d'avancement](./SPEC-sessions-backend.md).
+- **État (2026-06-09)** : **livré** côté enseignant (CRUD + cycle de vie +
+  code d'accès) **et** côté étudiant : `join` enrôle + crée la conversation
+  liée (cf. [SPEC-session-chat-join](./SPEC-session-chat-join.md)), suivi
+  live (cf. [SPEC-session-monitor](./SPEC-session-monitor.md)), co-supervision
+  (cf. [SPEC-session-supervisors](./SPEC-session-supervisors.md)), export
+  recherche (cf. [SPEC-session-export](./SPEC-session-export.md)), documents
+  de session (cf. [SPEC-documents-rag](./SPEC-documents-rag.md)). Reste à
+  faire : compteur temps réel / preflight Ollama réel.
 
-> ⚠️ Ce cahier des charges décrit la cible initiale ; certaines valeurs
-> ci-dessous (types `TP`/`EXAM`/`SANDBOX`, table `session` singulière)
-> ont évolué à l'implémentation. La source de vérité est le code +
-> [`SPEC-sessions-backend.md`](./SPEC-sessions-backend.md).
+> ⚠️ **Recadrage.** Ce cahier des charges décrit la cible **initiale** en
+> archi hexagonale ; plusieurs valeurs ci-dessous ont évolué et **font foi
+> dans le code** :
+> - **4 types** `EXAM` / `TUTORIAL` / `LAB` / `FREE_STUDY` (et non
+>   `TP`/`EXAM`/`SANDBOX`) — enum PG `session_type`.
+> - Tables **plurielles** : `sessions`, `session_models` (et non `session`,
+>   `authorizes`) ; PK `id` ; `teacher_id` **dérivé** via `resources.owner_id`.
+> - **Une seule** limite `max_input_size` (+ `max_tokens`) au lieu de 3.
+> - L'archi réelle est **MVC** : `Services\SessionService`,
+>   `Models\SessionRepository`, `Domain\Session` — pas de `PdoSessionRepository`
+>   ni d'interface. Source de vérité : le code +
+>   [`SPEC-sessions-backend.md`](./SPEC-sessions-backend.md).
 
 ## 1. Objectifs
 
@@ -64,6 +74,16 @@ L'enseignant peut :
 
 ## 3. Domaine
 
+> ⚠️ **Design hexagonal historique.** Le code réel : `Domain\Session`
+> (entité riche : `fromRow`/`toRow`, `start`/`end`/`cancel`,
+> `computedStatus`, `availableActions`, `rename`/`reschedule`/`reconfigure`),
+> enums `Domain\SessionType` (4 valeurs) et `Domain\SessionStatus`
+> (`label`/`badgeClass`/`isTerminal`). **Pas de value object `AccessCode`** :
+> le code d'accès est un `?string` sur `Session`, avec les helpers statiques
+> `Session::formatAccessCode()` (→ `ABC-123`) et
+> `Session::normalizeAccessCode()`. **Pas d'interface de repository** : voir
+> `Models\SessionRepository`.
+
 ### Entities — `App\Domain\Entities`
 
 ```php
@@ -96,12 +116,16 @@ final class Session
 }
 ```
 
-### Value Objects
+### Value Objects *(réel : enums `Domain/` + helpers sur `Session`)*
 
-- **`SessionType`** : enum (`TP`, `EXAM`, `SANDBOX`).
-- **`SessionStatus`** : enum (`Draft`, `Scheduled`, `Active`, `Ended`,
-  `Cancelled`).
-- **`AccessCode`** : 6 caractères `[A-Z0-9]`, auto-validation.
+- **`SessionType`** : enum string-backed `EXAM` / `TUTORIAL` / `LAB` /
+  `FREE_STUDY` (helpers `label()`, `badgeClass()`, `isExam()`).
+- **`SessionStatus`** : enum `DRAFT` / `SCHEDULED` / `ACTIVE` / `ENDED` /
+  `CANCELLED` (helpers `label()`, `badgeClass()`, `isTerminal()`).
+- **Code d'accès** : `CHAR(6)` `[A-Z0-9]` (`ck_sessions_access_code`),
+  **généré par le trigger `trg_generate_session_access_code`** au passage
+  `SCHEDULED`/`ACTIVE`. Pas de VO : `?string` + `Session::formatAccessCode()`
+  / `Session::normalizeAccessCode()`.
 
 ### Interfaces
 
@@ -191,45 +215,62 @@ final class SessionListView {
 
 ## 6. HTTP
 
-### Routes
+### Routes *(réellement déclarées dans [`public/index.php`](../../app/public/index.php))*
 
 ```
-GET   /sessions                       SessionController::index
-GET   /sessions/create                SessionController::create
-POST  /sessions/store                 SessionController::store
-GET   /sessions/{id}/edit             SessionController::edit
-POST  /sessions/{id}/update           SessionController::update
-POST  /sessions/{id}/cancel           SessionController::cancel
-POST  /sessions/{id}/start            SessionController::start
-POST  /sessions/{id}/end              SessionController::end
-GET   /sessions/{id}                  SessionController::dashboard
-POST  /sessions/join                  SessionController::join     # étudiant
+GET   /sessions                          SessionController::index
+GET   /sessions/create                   SessionController::create
+POST  /sessions/store                    SessionController::store
+GET   /session/models-by-resource        SessionController::getModelsByResource  # AJAX
+GET   /sessions/join                     SessionController::showJoin    # étudiant (form)
+POST  /sessions/join                     SessionController::join        # étudiant
+GET   /sessions/{id}/edit                SessionController::edit
+POST  /sessions/{id}/update              SessionController::update
+POST  /sessions/{id}/start               SessionController::start
+POST  /sessions/{id}/end                 SessionController::end
+POST  /sessions/{id}/cancel              SessionController::cancel
+GET   /sessions/{id}/monitor             SessionController::monitor     # cf. SPEC-session-monitor
+GET   /sessions/{id}/export              SessionController::export      # cf. SPEC-session-export
+POST  /sessions/{id}/documents           DocumentController::uploadToSession
+POST  /sessions/{id}/student-status      SessionController::setStudentActive
+GET   /sessions/{id}                      SessionController::dashboard
 ```
+
+> Les routes littérales sont enregistrées **avant** le wildcard `/sessions/{id}`
+> pour gagner. `join` → étudiant uniquement (cf.
+> [SPEC-session-chat-join](./SPEC-session-chat-join.md)).
 
 ### Views
 
-- `session/index.php` — liste : table desktop + cards mobile + menu 3 points.
-- `session/create.php` — layout 2 colonnes (formulaire + preview live).
-- `session/edit.php` — réutilise le layout de create, code en lecture seule.
-- `session/dashboard.php` — stats + barre d'actions contextuelles.
+- `pages/session/index.php` — liste : table desktop + cards mobile + section
+  « Sessions surveillées » (co-supervision).
+- `pages/session/create.php` — layout 2 colonnes (formulaire + preview live) ;
+  **réutilisé pour l'édition** (`$mode='edit'`, type + code en lecture seule),
+  il n'y a pas de `edit.php` séparé.
+- `pages/session/dashboard.php` — stats + actions contextuelles + documents.
+- `pages/session/monitor.php` — suivi 2 panneaux. `pages/session/join.php` —
+  saisie du code étudiant.
 
 ## 7. Base de données
 
-Table `session` (existante) avec colonne `status` (enum
-`session_status`) ajoutée au POC.
+Source de vérité : [`01_schema.sql`](../../database/schema/01_schema.sql)
+(pas de dossier `database/migrations/`). Table **`sessions`** (pluriel,
+PK `id`) avec :
 
-```sql
--- database/migrations/AAAA-MM-DD-session-status.sql (déjà appliqué en POC)
-CREATE TYPE session_status AS ENUM
-    ('DRAFT', 'SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED');
+- `status session_status_type NOT NULL DEFAULT 'DRAFT'`
+  (enum `'DRAFT','SCHEDULED','ACTIVE','ENDED','CANCELLED'`),
+- `type session_type` (`'EXAM','TUTORIAL','LAB','FREE_STUDY'`),
+- `access_code CHAR(6)` (`uq_sessions_access_code`,
+  `ck_sessions_access_code ~ '^[A-Z0-9]{6}$'`) — **généré par le trigger**
+  `trg_generate_session_access_code` au passage `SCHEDULED`/`ACTIVE`,
+- `pre_prompt_override`, `post_prompt_override`, `instructions`,
+  `max_input_size`, `max_tokens`, `starts_at`, `ends_at`, `closed_at`,
+- `resource_id` NOT NULL → `resources(id)` (le `teacher_id` est **dérivé**
+  de `resources.owner_id`, il n'y a pas de colonne `teacher_id`).
 
-ALTER TABLE session ADD COLUMN status session_status NOT NULL DEFAULT 'SCHEDULED';
-
--- Nouveau : post-prompt
-ALTER TABLE session ADD COLUMN IF NOT EXISTS post_prompt_override TEXT;
-```
-
-Table `authorizes` (existante) : `session_id` ↔ `model_id`.
+Table d'association **`session_models`** (`model_id` ↔ `session_id`) pour les
+modèles autorisés. `enrollments` (`student_id`, `session_id`, `is_active`)
+pour les inscriptions étudiantes.
 
 ## 8. Réutilisation POC
 

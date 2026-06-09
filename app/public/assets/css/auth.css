@@ -9,16 +9,31 @@ body.auth-body {
             radial-gradient(ellipse 400px 300px at 90% 90%, rgba(245,166,35,.06) 0%, transparent 70%);
 }
 
-/* Register / Login card */
+/* Outer cap shared by both pages. Set this to the width of the WIDEST card
+   (register). Each card may be narrower, never wider than this. */
+body.auth-body > main {
+    width: 100%;
+    max-width: 480px;
+}
+
+/* Register / Login card (base) */
 .register-card {
     background: var(--white);
     border-radius: var(--radius);
     box-shadow: var(--shadow-md);
     width: 100%;
-    max-width: 480px;
+    max-width: 480px;   /* register width */
     overflow: hidden;
     animation: slideUp .45s cubic-bezier(.22,.9,.32,1) both;
 }
+
+/* Login only*/
+.register-card.auth-card-login {
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 @keyframes slideUp {
     from { opacity: 0; transform: translateY(24px); }
     to   { opacity: 1; transform: translateY(0); }

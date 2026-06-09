@@ -168,6 +168,7 @@ CREATE TABLE sessions (
     pre_prompt_override TEXT,
     post_prompt_override TEXT,
     max_input_size INTEGER,
+    max_tokens INTEGER,
     instructions TEXT,
     type session_type,
     CONSTRAINT pk_sessions PRIMARY KEY (id),
@@ -176,7 +177,8 @@ CREATE TABLE sessions (
     CONSTRAINT ck_sessions_access_code CHECK (access_code IS NULL OR access_code ~ '^[A-Z0-9]{6}$'),
     CONSTRAINT ck_sessions_dates CHECK (ends_at IS NULL OR starts_at IS NULL OR ends_at > starts_at),
     CONSTRAINT ck_sessions_closed_at CHECK (closed_at IS NULL OR starts_at IS NULL OR closed_at >= starts_at),
-    CONSTRAINT ck_sessions_max_input_size CHECK (max_input_size IS NULL OR max_input_size > 0)
+    CONSTRAINT ck_sessions_max_input_size CHECK (max_input_size IS NULL OR max_input_size > 0),
+    CONSTRAINT ck_sessions_max_tokens CHECK (max_tokens IS NULL OR max_tokens > 0)
 );
 
 CREATE TABLE conversations (
@@ -305,6 +307,7 @@ CREATE TABLE documents (
     id BIGSERIAL,
     session_id BIGINT,
     conversation_id BIGINT,
+    interaction_id BIGINT,
     uploaded_by_id BIGINT NOT NULL,
     original_name VARCHAR(255) NOT NULL,
     stored_path VARCHAR(255) NOT NULL,
@@ -316,6 +319,7 @@ CREATE TABLE documents (
     CONSTRAINT pk_documents PRIMARY KEY (id),
     CONSTRAINT fk_documents_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE,
     CONSTRAINT fk_documents_conversation FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
+    CONSTRAINT fk_documents_interaction FOREIGN KEY (interaction_id) REFERENCES interactions (id) ON DELETE SET NULL,
     CONSTRAINT fk_documents_uploaded_by FOREIGN KEY (uploaded_by_id) REFERENCES users (id) ON DELETE RESTRICT,
     CONSTRAINT ck_documents_scope CHECK (
         (session_id IS NOT NULL AND conversation_id IS NULL) OR
@@ -325,3 +329,4 @@ CREATE TABLE documents (
 );
 CREATE INDEX idx_documents_session ON documents (session_id);
 CREATE INDEX idx_documents_conversation ON documents (conversation_id);
+CREATE INDEX idx_documents_interaction ON documents (interaction_id);
