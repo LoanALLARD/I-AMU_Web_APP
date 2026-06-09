@@ -106,6 +106,38 @@ class CreateSessionForm
             }
         }
 
+        // Document settings: the authorised file formats (an empty set means
+        // student imports are disabled for the session) and the max file size.
+        $documentsMaxBytes = null;
+        $rawDocMb = trim((string) ($post['documents_max_mb'] ?? ''));
+        if ($rawDocMb !== '') {
+            $mb = (int) $rawDocMb;
+            if ($mb < 1 || $mb > 10) {
+                $errors[] = 'Taille max des documents invalide (1 à 10 Mo).';
+            } else {
+                $documentsMaxBytes = $mb * 1024 * 1024;
+            }
+        }
+
+        $documentsEnabled = isset($post['documents_enabled']);
+
+        $documentsFormats = [];
+        foreach ((array) ($post['documents_types'] ?? []) as $t) {
+            $t = strtolower(trim((string) $t));
+            if (in_array($t, ['pdf', 'md', 'txt'], true)) {
+                $documentsFormats[] = $t;
+            }
+        }
+        $documentsFormats = array_values(array_unique($documentsFormats));
+
+        // The toggle drives whether any format is recorded: unchecked means no
+        // row in session_file_formats (imports disabled).
+        if (!$documentsEnabled) {
+            $documentsFormats = [];
+        } elseif ($documentsFormats === []) {
+            $errors[] = "Sélectionnez au moins un format autorisé (ou décochez l'import de documents).";
+        }
+
         $optional = static function (mixed $value): ?string {
             $value = trim((string) $value);
             return $value === '' ? null : $value;
@@ -124,6 +156,8 @@ class CreateSessionForm
                 'instructions'    => $optional($post['instructions'] ?? ''),
                 'maxInputSize'    => $maxInputSize,
                 'maxTokens'       => $maxTokens,
+                'documentsMaxBytes'     => $documentsMaxBytes,
+                'documentsFormats'      => $documentsFormats,
                 'accessCode'      => $isCreate ? $optional($post['access_code'] ?? '') : null,
             ],
             'errors' => $errors,

@@ -46,7 +46,10 @@ class ErrorController extends Controller
             'title'     => $title,
             'message'   => $message,
             'exception' => $exception,
-        ], 'main');
+            'user'      => $this->currentUser(),
+            'page'      => 'error',
+            'pageTitle' => $title,
+        ], 'chat');
     }
 
     /**

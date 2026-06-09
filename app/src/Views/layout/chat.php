@@ -15,12 +15,18 @@
  *   $content    — view output, injected by Core\Controller::render()
  */
 $user = $user ?? null;
-$page = $page ?? 'other';
-$pageTitle = $pageTitle ?? '';
+// Accept the session/legacy pages' `navSection` and `title` keys as fallbacks
+// so they can reuse this layout without renaming their render() payload.
+$page = $page ?? $navSection ?? 'other';
+$pageTitle = $pageTitle ?? $title ?? '';
 $conversation = $conversation ?? null;
 $conversations = $conversations ?? [];
 $env = $env ?? null;
 $archivedView = $archivedView ?? false;
+// Pages that display AI markdown opt in via needsMarkdown (chat replies and
+// the teacher monitor transcript). Drives loading marked/DOMPurify/highlight
+// + the shared renderer. Chat always needs it.
+$needsMarkdown = $needsMarkdown ?? ($page === 'chat');
 // Exam lockdown view-model (set by AccueilController for a locked student),
 // or null when free. Drives the stripped-down, navigation-free shell.
 $examLock = $examLock ?? null;
@@ -99,20 +105,28 @@ $themePref = match ($user['theme'] ?? null) {
     <?php if ($page === 'admin'): ?>
         <link rel="stylesheet" href="/assets/css/formAddModel.css<?= $v('formAddModel.css') ?>">
     <?php endif; ?>
+    <?php if ($page === 'error'): ?>
+        <link rel="stylesheet" href="/assets/css/error.css<?= $v('error.css') ?>">
+    <?php endif; ?>
+    <?php if ($page === 'rgpd'): ?>
+        <link rel="stylesheet" href="/assets/css/rgpd.css<?= $v('rgpd.css') ?>">
+    <?php endif; ?>
 
 
     <?php $jsDir = dirname(__DIR__, 3) . '/public/assets/js'; ?>
     <script src="/assets/js/clipboard.js<?= '?v=' . (@filemtime("$jsDir/clipboard.js") ?: 0) ?>" defer></script>
-    <?php if ($page === 'chat'): ?>
-        <?php /* Markdown rendering for AI replies (live + history). Loaded
-         synchronously in <head> so the chat view's inline script can use
-         marked / DOMPurify / hljs immediately. Vendored under
+    <?php if ($needsMarkdown): ?>
+        <?php /* Markdown rendering for AI replies (chat live + history, and the
+         teacher monitor transcript). Loaded synchronously in <head> so the
+         page's inline script can use marked / DOMPurify / hljs and the shared
+         window.renderMarkdown immediately. Vendored under
          public/assets/vendor (no CDN dependency). */ ?>
         <link rel="stylesheet"
             href="/assets/vendor/highlight/styles/github-dark.min.css<?= $vv('highlight/styles/github-dark.min.css') ?>">
         <script src="/assets/vendor/marked.min.js<?= $vv('marked.min.js') ?>"></script>
         <script src="/assets/vendor/purify.min.js<?= $vv('purify.min.js') ?>"></script>
         <script src="/assets/vendor/highlight/highlight.min.js<?= $vv('highlight/highlight.min.js') ?>"></script>
+        <script src="/assets/js/markdown.js<?= '?v=' . (@filemtime("$jsDir/markdown.js") ?: 0) ?>"></script>
     <?php endif; ?>
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>

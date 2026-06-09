@@ -17,7 +17,8 @@ class SessionRepository
     private const SELECT =
         'SELECT s.id, s.resource_id, r.owner_id AS teacher_id, s.name, s.type, s.status,
                 s.access_code, s.starts_at, s.ends_at, s.closed_at, s.pre_prompt_override,
-                s.post_prompt_override, s.instructions, s.max_input_size, s.max_tokens 
+                s.post_prompt_override, s.instructions, s.max_input_size, s.max_tokens,
+                s.documents_max_bytes
            FROM sessions s
            JOIN resources r ON r.id = s.resource_id';
 
@@ -100,10 +101,12 @@ class SessionRepository
         $stmt = $this->pdo->prepare(
             'INSERT INTO sessions
                 (resource_id, name, type, status, starts_at, ends_at, closed_at,
-                 pre_prompt_override, post_prompt_override, instructions, max_input_size, max_tokens)
+                 pre_prompt_override, post_prompt_override, instructions, max_input_size, max_tokens,
+                 documents_max_bytes)
              VALUES
                 (:resource_id, :name, :type, :status, :starts_at, :ends_at, :closed_at,
-                 :pre_prompt_override, :post_prompt_override, :instructions, :max_input_size,:max_tokens)
+                 :pre_prompt_override, :post_prompt_override, :instructions, :max_input_size, :max_tokens,
+                 :documents_max_bytes)
              RETURNING id, access_code'
         );
         $stmt->execute([
@@ -119,6 +122,7 @@ class SessionRepository
             'instructions'         => $data['instructions'],
             'max_input_size'       => $data['max_input_size'],
             'max_tokens'          => $data['max_tokens'],
+            'documents_max_bytes'     => $data['documents_max_bytes'],
         ]);
 
         /** @var array{id: int|string, access_code: ?string} $row */
@@ -142,7 +146,8 @@ class SessionRepository
                 name = :name, status = :status, starts_at = :starts_at, ends_at = :ends_at,
                 closed_at = :closed_at, pre_prompt_override = :pre_prompt_override,
                 post_prompt_override = :post_prompt_override, instructions = :instructions,
-                max_input_size = :max_input_size, max_tokens = :max_tokens
+                max_input_size = :max_input_size, max_tokens = :max_tokens,
+                documents_max_bytes = :documents_max_bytes
              WHERE id = :id'
         );
         $stmt->execute([
@@ -157,6 +162,7 @@ class SessionRepository
             'instructions'         => $data['instructions'],
             'max_input_size'       => $data['max_input_size'],
             'max_tokens'           => $data['max_tokens'],
+            'documents_max_bytes'     => $data['documents_max_bytes'],
         ]);
     }
 
@@ -195,6 +201,72 @@ class SessionRepository
             $this->pdo->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Names of the file formats a session authorises for student document
+     * imports. An empty list means imports are disabled for that session.
+     *
+     * @return list<string>
+     */
+    public function authorizedFormatsOf(int $sessionId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT ff.name
+               FROM session_file_formats sff
+               JOIN file_formats ff ON ff.id = sff.file_format_id
+              WHERE sff.session_id = :sid
+              ORDER BY ff.id'
+        );
+        $stmt->execute(['sid' => $sessionId]);
+
+        /** @var list<string> $names */
+        $names = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        return $names;
+    }
+
+    /**
+     * Replaces the whole authorised-format set in one transaction. Unknown
+     * names are ignored; an empty set disables imports for the session.
+     *
+     * @param list<string> $formatNames
+     */
+    public function setAuthorizedFormats(int $sessionId, array $formatNames): void
+    {
+        $unique = array_values(array_unique(array_map('strval', $formatNames)));
+
+        $this->pdo->beginTransaction();
+        try {
+            $delete = $this->pdo->prepare('DELETE FROM session_file_formats WHERE session_id = :sid');
+            $delete->execute(['sid' => $sessionId]);
+
+            $insert = $this->pdo->prepare(
+                'INSERT INTO session_file_formats (session_id, file_format_id)
+                 SELECT :sid, id FROM file_formats WHERE name = :name'
+            );
+            foreach ($unique as $name) {
+                $insert->execute(['sid' => $sessionId, 'name' => $name]);
+            }
+
+            $this->pdo->commit();
+        } catch (Throwable $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Every file format name the platform knows, for the session form.
+     *
+     * @return list<string>
+     */
+    public function listAllFileFormats(): array
+    {
+        /** @var list<string> $names */
+        $names = $this->pdo->query('SELECT name FROM file_formats ORDER BY id')->fetchAll(PDO::FETCH_COLUMN);
+
+        return $names;
     }
 
     /**

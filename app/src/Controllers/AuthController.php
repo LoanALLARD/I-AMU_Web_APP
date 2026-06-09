@@ -123,7 +123,12 @@ class AuthController extends Controller
 
     public function showRGPD(): void
     {
-        $this->render('pages/auth/rgpd_consent', ['titrePage' => 'Mentions RGPD']);
+        $this->render('pages/auth/rgpd_consent', [
+            'titrePage' => 'Mentions RGPD',
+            'pageTitle' => 'Mentions RGPD',
+            'page'      => 'rgpd',
+            'user'      => $this->currentUser(),
+        ], 'chat');
     }
 
     /**

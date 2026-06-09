@@ -123,7 +123,13 @@ $canManage = $canManage ?? false;
                             </div>
                             <div class="transcript-prompt"><?= nl2br(htmlspecialchars($t['prompt'])) ?></div>
                             <?php if ($t['response'] !== ''): ?>
-                                <div class="transcript-response"><?= nl2br(htmlspecialchars($t['response'])) ?></div>
+                                <?php /* The AI reply is markdown. The raw text rides on
+                                   data-markdown; markdown.js replaces the escaped
+                                   fallback below with rendered HTML on load. */ ?>
+                                <div class="transcript-response"
+                                    data-markdown="<?= htmlspecialchars($t['response'], ENT_QUOTES, 'UTF-8') ?>">
+                                    <?= nl2br(htmlspecialchars($t['response'])) ?>
+                                </div>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
@@ -200,3 +206,15 @@ $canManage = $canManage ?? false;
     })();
 </script>
 <?php endif; ?>
+
+<script>
+    // Render each AI reply's raw markdown into formatted HTML, using the
+    // shared renderer (assets/js/markdown.js, loaded by the layout). No-op
+    // when the libs are absent — the escaped fallback text stays in place.
+    (function () {
+        if (!window.renderMarkdown) return;
+        document.querySelectorAll('.transcript-response[data-markdown]').forEach((el) => {
+            window.renderMarkdown(el.getAttribute('data-markdown') ?? '', el);
+        });
+    })();
+</script>

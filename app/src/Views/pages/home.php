@@ -194,16 +194,23 @@ $canAddModel = $canAddModel ?? false;
             <?php endif; ?>
             <div class="chat-attachments" id="chatAttachments" hidden></div>
             <div class="input-wrapper">
-                <?php if (!$sessionClosed): ?>
+                <?php
+                $docCfg     = $documentsConfig ?? ['enabled' => true, 'acceptExts' => ['pdf', 'md', 'txt']];
+                $acceptMap  = ['pdf' => '.pdf,application/pdf', 'md' => '.md,.markdown,text/markdown', 'txt' => '.txt,text/plain'];
+                $acceptExts = !empty($docCfg['acceptExts']) ? $docCfg['acceptExts'] : ['pdf', 'md', 'txt'];
+                $acceptAttr = implode(',', array_map(static fn ($e) => $acceptMap[$e] ?? '', $acceptExts));
+                $typesLabel = implode(', ', array_map('strtoupper', $acceptExts));
+                ?>
+                <?php if (!$sessionClosed && !empty($docCfg['enabled'])): ?>
                 <button type="button" class="btn-attach" id="btnAttach"
-                    title="Joindre un document (PDF, Markdown, TXT)">
+                    title="Joindre un document (<?= htmlspecialchars($typesLabel) ?>)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                     </svg>
                 </button>
                 <input type="file" id="docFileInput" hidden multiple
-                    accept=".pdf,.md,.markdown,.txt,application/pdf,text/markdown,text/plain">
+                    accept="<?= htmlspecialchars($acceptAttr) ?>">
                 <?php endif; ?>
                 <textarea id="promptInput"
                       placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
@@ -343,57 +350,9 @@ $canAddModel = $canAddModel ?? false;
         });
     });
 
-    // Render an AI reply's markdown to sanitized HTML, then syntax-highlight
-    // its code blocks. Falls back to escaped plain text if the libs are absent.
-    function renderMarkdown(text, el) {
-        if (!el) return;
-        el.innerHTML = (window.marked && window.DOMPurify)
-            ? DOMPurify.sanitize(marked.parse(text ?? '', { breaks: true, gfm: true }))
-            : `<p>${escapeHtml(text ?? '')}</p>`;
-        if (window.hljs) {
-            el.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
-        }
-        addCodeCopyButtons(el);
-    }
-
-    // Adds a "Copier" button to each code block so the snippet alone can be
-    // copied (separate from the message-level copy action).
-    function addCodeCopyButtons(container) {
-        container.querySelectorAll('pre').forEach((pre) => {
-            // Wrap the <pre> so the button is pinned to a non-scrolling parent
-            // (the <pre> itself scrolls horizontally for long lines).
-            if (pre.parentElement.classList.contains('code-block')) return;
-            const wrap = document.createElement('div');
-            wrap.className = 'code-block';
-            pre.parentNode.insertBefore(wrap, pre);
-            wrap.appendChild(pre);
-
-            // Mirror the code language onto the <pre> so the CSS badge
-            // (pre[data-lang]::before) shows it (e.g. "PHP").
-            if (!pre.hasAttribute('data-lang')) {
-                const code = pre.querySelector('code');
-                const lang = code && code.className.match(/language-([\w-]+)/);
-                if (lang) pre.setAttribute('data-lang', lang[1]);
-            }
-
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'code-copy';
-            btn.textContent = 'Copier';
-            btn.addEventListener('click', () => {
-                const code = pre.querySelector('code') || pre;
-                window.copyToClipboard(code.textContent).then(() => {
-                    btn.textContent = 'Copié';
-                    btn.classList.add('is-copied');
-                    setTimeout(() => {
-                        btn.textContent = 'Copier';
-                        btn.classList.remove('is-copied');
-                    }, 1500);
-                });
-            });
-            wrap.appendChild(btn);
-        });
-    }
+    // Markdown rendering (window.renderMarkdown) is provided by the shared
+    // assets/js/markdown.js module, loaded synchronously in <head> by the
+    // layout — available here at parse time and for live streaming below.
 
     // On load: render persisted AI bubbles (raw markdown -> HTML), then jump to
     // the latest message so a reopened thread starts at the bottom.
