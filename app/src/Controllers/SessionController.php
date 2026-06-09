@@ -66,7 +66,12 @@ class SessionController extends Controller
     {
         $this->requireRole('teacher');
         $user = $this->currentUser();
-        $data = $this->sessions->createFormData((int) ($user['id'] ?? 0));
+        try {
+            $data = $this->sessions->createFormData((int) ($user['id'] ?? 0));
+        } catch (Throwable $e) {
+            $this->flash('error', $e->getMessage());
+            $this->redirect('/sessions');
+        }
 
         $this->render('pages/session/create', [
             'title'                => 'Nouvelle session',
