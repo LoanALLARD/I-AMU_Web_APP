@@ -7,7 +7,8 @@
  *   - "set-active" : replace the member row with the server-rendered one (new
  *                    status badge + toggled button), then re-apply the sort.
  *   - "move-row"   : move a request/researcher between lists (pending ->
- *                    authorized, authorized <-> revoked); the source element is
+ *                    authorized, authorized <-> revoked, or a habilitation
+ *                    request out of its pending list); the source element is
  *                    dropped and the server-rendered target element inserted.
  *
  * The server always renders the row markup (icons, CSRF, escaping), so the
@@ -71,7 +72,7 @@
         if (table) {
             return table.tBodies[0];
         }
-        return document.querySelector('[data-pending-list]'); // the pending key
+        return document.querySelector('[data-pending-list="' + key + '"]'); // a pending key
     }
 
     function countRows(key) {
@@ -79,7 +80,7 @@
         if (table) {
             return table.tBodies[0].rows.length;
         }
-        var list = document.querySelector('[data-pending-list]');
+        var list = document.querySelector('[data-pending-list="' + key + '"]');
         return list ? list.querySelectorAll('.admin-pending-row').length : 0;
     }
 
@@ -133,7 +134,8 @@
     function sourceOf(form) {
         var details = form.closest('.admin-pending-row');
         if (details) {
-            return { el: details, key: 'pending' };
+            var list = details.closest('[data-pending-list]');
+            return { el: details, key: list ? list.getAttribute('data-pending-list') : 'pending' };
         }
         var tr = form.closest('tr');
         var table = tr ? tr.closest('[data-researcher-table]') : null;

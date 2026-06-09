@@ -12,6 +12,7 @@ use Models\AiRepository;
 use Models\DepartmentRepository;
 use Models\ResourceRepository;
 use Services\ResearcherAuthorizationService;
+use Services\TeacherSpecialisationService;
 
 /**
  * Department-administrator console.
@@ -31,14 +32,17 @@ class DepartmentAdminController extends Controller
         $userRepository = new UserRepository($pdo);
         $authorizations = new ResearcherAuthorizationService($pdo);
 
+        $specialisations = new TeacherSpecialisationService($pdo);
+
         $this->render('pages/department_admin/dashboard', [
-            'titrePage'          => 'Administration',
-            'user'               => $this->currentUser(),
-            'department'         => (new PlaceRepository($pdo))->departmentWithPlace($departmentId),
-            'pendingResearchers' => $authorizations->listPending($departmentId),
-            'departmentMembers'  => $userRepository->listDepartmentMembers($departmentId),
-            'researchers'        => $userRepository->listAuthorizedResearchers($departmentId),
-            'revokedResearchers' => $authorizations->listRevoked($departmentId),
+            'titrePage'             => 'Administration',
+            'user'                  => $this->currentUser(),
+            'department'            => (new PlaceRepository($pdo))->departmentWithPlace($departmentId),
+            'pendingResearchers'    => $authorizations->listPending($departmentId),
+            'pendingSpecialisations' => $specialisations->listPending($departmentId),
+            'departmentMembers'     => $userRepository->listDepartmentMembers($departmentId),
+            'researchers'           => $userRepository->listAuthorizedResearchers($departmentId),
+            'revokedResearchers'    => $authorizations->listRevoked($departmentId),
         ]);
     }
 
@@ -72,6 +76,33 @@ class DepartmentAdminController extends Controller
         // Rejecting just drops the request: no target list (target stays null).
         $this->respond($result['success'],
             $result['success'] ? 'Demande chercheur refusée.' : $result['error']);
+    }
+
+    public function approveSpecialisation(): void
+    {
+        $this->requireRole('department_admin');
+        $this->verifyCsrf();
+
+        $teacherId = (int) $this->input('teacher_id');
+        $result = (new TeacherSpecialisationService(Database::getConnection()))
+            ->approve($teacherId, $this->currentDepartmentId(), (int) $this->currentUser()['id']);
+
+        // Approving just drops the request from the pending list (no target list).
+        $this->respond($result['success'],
+            $result['success'] ? 'Enseignant habilité.' : $result['error']);
+    }
+
+    public function rejectSpecialisation(): void
+    {
+        $this->requireRole('department_admin');
+        $this->verifyCsrf();
+
+        $teacherId = (int) $this->input('teacher_id');
+        $result = (new TeacherSpecialisationService(Database::getConnection()))
+            ->reject($teacherId, $this->currentDepartmentId(), (int) $this->currentUser()['id']);
+
+        $this->respond($result['success'],
+            $result['success'] ? 'Demande d\'habilitation refusée.' : $result['error']);
     }
 
     /**

@@ -5,6 +5,7 @@
  * @var array{id:int, email:string, first_name:string, last_name:string, roles:list<string>, department_id:int|null}|null $user
  * @var array{name:string, place_name:string}|null $department
  * @var list<array<string, mixed>> $pendingResearchers
+ * @var list<array<string, mixed>> $pendingSpecialisations
  * @var list<array<string, mixed>> $departmentMembers
  * @var list<array<string, mixed>> $researchers
  * @var list<array<string, mixed>> $revokedResearchers
@@ -12,6 +13,7 @@
 $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
 $department = $department ?? null;
 $pendingResearchers = $pendingResearchers ?? [];
+$pendingSpecialisations = $pendingSpecialisations ?? [];
 $departmentMembers = $departmentMembers ?? [];
 $researchers = $researchers ?? [];
 $revokedResearchers = $revokedResearchers ?? [];
@@ -55,13 +57,25 @@ $currentUserId = (int) ($user['id'] ?? 0);
     </div>
 
     <div class="admin-section">
-        <div class="admin-pending" data-pending-list>
+        <div class="admin-pending" data-pending-list="pending">
             <h2><?= icon('alert-triangle', '', 16) ?> Demandes chercheurs en attente (<span data-count="pending"><?= count($pendingResearchers) ?></span>)</h2>
             <?php foreach ($pendingResearchers as $p): ?>
                 <?php $this->renderPartial('partials/department_admin/pending_researcher_request', ['pending' => $p]); ?>
             <?php endforeach; ?>
             <p class="admin-empty" data-empty="pending"<?= $pendingResearchers === [] ? '' : ' hidden' ?>>
                 Aucune demande chercheur en attente.
+            </p>
+        </div>
+    </div>
+
+    <div class="admin-section">
+        <div class="admin-pending" data-pending-list="pending-spec">
+            <h2><?= icon('alert-triangle', '', 16) ?> Demandes d'habilitation en attente (<span data-count="pending-spec"><?= count($pendingSpecialisations) ?></span>)</h2>
+            <?php foreach ($pendingSpecialisations as $p): ?>
+                <?php $this->renderPartial('partials/department_admin/pending_specialisation_request', ['pending' => $p]); ?>
+            <?php endforeach; ?>
+            <p class="admin-empty" data-empty="pending-spec"<?= $pendingSpecialisations === [] ? '' : ' hidden' ?>>
+                Aucune demande d'habilitation en attente.
             </p>
         </div>
     </div>

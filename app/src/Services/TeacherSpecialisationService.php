@@ -56,4 +56,52 @@ final class TeacherSpecialisationService
 
         return $decision['rejected_at'] !== null ? 'rejected' : 'approved';
     }
+
+    // ----------------------------------------------------------------
+    // Department-admin side: review pending requests, scoped to a department.
+    // ----------------------------------------------------------------
+
+    /**
+     * Pending habilitation requests of a department's teachers.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listPending(int $departmentId): array
+    {
+        return $this->repo->findPendingByDepartment($departmentId);
+    }
+
+    /**
+     * Approves a pending request and habilitates the teacher.
+     *
+     * @return array{success: true} | array{success: false, error: string}
+     */
+    public function approve(int $teacherId, int $departmentId, int $adminId): array
+    {
+        if (!$this->users->isDepartmentMember($teacherId, $departmentId)) {
+            return ['success' => false, 'error' => 'Enseignant introuvable dans votre département.'];
+        }
+        if (!$this->repo->approve($teacherId, $adminId)) {
+            return ['success' => false, 'error' => 'Cette demande est introuvable ou déjà traitée.'];
+        }
+
+        return ['success' => true];
+    }
+
+    /**
+     * Rejects a pending request.
+     *
+     * @return array{success: true} | array{success: false, error: string}
+     */
+    public function reject(int $teacherId, int $departmentId, int $adminId): array
+    {
+        if (!$this->users->isDepartmentMember($teacherId, $departmentId)) {
+            return ['success' => false, 'error' => 'Enseignant introuvable dans votre département.'];
+        }
+        if ($this->repo->reject($teacherId, $adminId) === 0) {
+            return ['success' => false, 'error' => 'Cette demande est introuvable ou déjà traitée.'];
+        }
+
+        return ['success' => true];
+    }
 }

@@ -66,6 +66,8 @@
     $router->add('POST', '/department-admin/researchers/reject',      function() { (new DepartmentAdminController())->rejectResearcher(); });
     $router->add('POST', '/department-admin/researchers/revoke',      function() { (new DepartmentAdminController())->revokeResearcher(); });
     $router->add('POST', '/department-admin/researchers/reauthorize', function() { (new DepartmentAdminController())->reauthorizeResearcher(); });
+    $router->add('POST', '/department-admin/specialisations/approve', function() { (new DepartmentAdminController())->approveSpecialisation(); });
+    $router->add('POST', '/department-admin/specialisations/reject',  function() { (new DepartmentAdminController())->rejectSpecialisation(); });
     $router->add('POST', '/department-admin/users/set-active',        function() { (new DepartmentAdminController())->setUserActive(); });
 
     // --- Super admin (isolated session, URL-only — no internal link) --
