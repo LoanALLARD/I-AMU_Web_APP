@@ -17,8 +17,8 @@ use Services\ExamLockService;
  * `/chat/{id}`.
  *
  * Resolves the current chat environment (session-bound or free) so the
- * sidebar lists the right conversations, then renders the chat home. New
- * conversations are created via POST /chat/new.
+ * sidebar lists the right conversations, then renders the chat home. A new
+ * conversation is persisted on its first message (POST /chat), not up front.
  */
 class AccueilController extends Controller
 {
@@ -106,6 +106,13 @@ class AccueilController extends Controller
         if (is_array($envBlock) && isset($envBlock['sessionId']) && $envBlock['sessionId'] !== null) {
             $sessionDocuments = (new DocumentService($pdo))->listForSession((int) $envBlock['sessionId']);
         }
+        // Conversation documents (phase 2), grouped by the message they were
+        // sent with, so each appears under its message in the history.
+        $messageDocuments = [];
+        if ($conversationId !== null) {
+            $messageDocuments = (new DocumentService($pdo))->documentsByInteractionForConversation((int) $conversationId);
+        }
+
         $canAddModel = $_SESSION['isSpecialized'] ?? false;
         $this->render('pages/home', [
             'user' => $user,
@@ -115,6 +122,7 @@ class AccueilController extends Controller
             'conversation' => $env['conversation'],
             'conversations' => $env['conversations'],
             'messages' => $env['messages'],
+            'messageDocuments' => $messageDocuments,
             'sessionClosed' => $env['sessionClosed'],
             'closedReason' => $env['closedReason'],
             'env' => $env['env'],
@@ -139,40 +147,6 @@ class AccueilController extends Controller
             : ['closed' => false, 'reason' => ''];
 
         $this->json($status);
-    }
-
-    /**
-     * POST /chat/new — create a conversation in the current environment.
-     * A `session_id` field means a session conversation; absent means free.
-     */
-    public function newChat(): void
-    {
-        $this->requireAuth();
-        $this->redirectNonChatRoles();
-        $this->verifyCsrf();
-        $this->blockIfExamLocked();
-        $user = $this->currentUser();
-        $models = [];
-        try {
-            $pdo = Database::getConnection();
-            $aiRepository = new \Models\AiRepository($pdo);
-            $models = $aiRepository->findAllActiveBySession(null);
-        } catch (\Throwable $e) {
-            error_log('Impossible de charger les modèles : ' . $e->getMessage());
-        }
-        $sessionId = (int) $this->input('session_id', 0);
-
-        try {
-            $defaultModelId = (int) ($models[0]['id'] ?? 1);
-            $conversationId = $sessionId > 0
-                ? $this->chat->newSessionConversation((int) $user['id'], $sessionId, $defaultModelId)
-                : $this->chat->newFreeConversation((int) $user['id'], $defaultModelId);
-        } catch (\Throwable $e) {
-            $this->flash('error', $e->getMessage());
-            $this->redirect('/chat');
-        }
-
-        $this->redirect('/chat/' . $conversationId);
     }
 
     /**

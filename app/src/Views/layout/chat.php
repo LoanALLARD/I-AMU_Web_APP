@@ -305,12 +305,12 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                     </span>
                 </div>
 
-                <form method="POST" action="/chat/new" class="new-chat-form">
-                    <?= csrf_field() ?>
-                    <?php if (!empty($env['sessionId'])): ?>
-                        <input type="hidden" name="session_id" value="<?= (int) $env['sessionId'] ?>">
-                    <?php endif; ?>
-                    <button type="submit" class="btn-new-chat" id="btnNewChat"
+                <?php /* "Nouvelle conversation" opens a blank chat client-side
+                   (startBlankChat in pages/home.php) instead of creating a
+                   conversation up front. The row is persisted only when the
+                   first message is sent (POST /chat). */ ?>
+                <div class="new-chat-form">
+                    <button type="button" class="btn-new-chat" id="btnNewChat"
                         <?= !empty($sessionClosed)
                             ? 'disabled style="opacity:.45;cursor:not-allowed;" title="Vous ne pouvez plus créer de conversation dans cette session."'
                             : '' ?>>
@@ -321,7 +321,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                         </svg>
                         Nouvelle conversation
                     </button>
-                </form>
+                </div>
 
                 <?php if (($env['mode'] ?? '') === 'session'): ?>
                     <a href="/chat" class="btn-leave-session"

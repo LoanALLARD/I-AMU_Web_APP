@@ -16,6 +16,7 @@ $conversation = $conversation ?? null;
 $env = $env ?? null;
 $inSession = ($env['mode'] ?? 'libre') === 'session';
 $messages = $messages ?? [];
+$messageDocuments = $messageDocuments ?? [];
 $hasMessages = $messages !== [];
 $canAddModel = $canAddModel ?? false;
 ?>
@@ -119,52 +120,66 @@ $canAddModel = $canAddModel ?? false;
         </div>
 
         <div class="messages" id="messages">
-            <?php if ($hasMessages): ?>
-                <?php foreach ($messages as $m): ?>
-                    <div class="msg msg-user">
-                        <div class="msg-content"><?= htmlspecialchars(trim($m['prompt'])) ?></div>
-                    </div>
-                    <div class="msg msg-ai">
-                        <div class="msg-meta">
-                            <span class="msg-model"><?= htmlspecialchars($m['model']) ?></span>
+            <?php foreach ($messages as $m): ?>
+                <?php $docsOfMsg = $messageDocuments[$m['id'] ?? 0] ?? []; ?>
+                <div class="msg msg-user">
+                    <div class="msg-content"><?= htmlspecialchars(trim($m['prompt'])) ?></div>
+                    <?php if ($docsOfMsg !== []): ?>
+                        <div class="msg-docs">
+                            <?php foreach ($docsOfMsg as $doc): ?>
+                                <a class="msg-doc"
+                                   href="/documents/conversation_<?= (int) ($conversation['id'] ?? 0) ?>/<?= (int) $doc->id() ?>"
+                                   target="_blank" rel="noopener"
+                                   title="<?= htmlspecialchars($doc->kindLabel() . ' · ' . $doc->humanSize()) ?>">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    <span><?= htmlspecialchars($doc->originalName()) ?></span>
+                                </a>
+                            <?php endforeach; ?>
                         </div>
-                        <div class="msg-content" data-markdown="<?= htmlspecialchars($m['response'], ENT_QUOTES, 'UTF-8') ?>">
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="empty-state" id="emptyState">
-                    <div class="empty-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                        </svg>
-                    </div>
-                    <?php if ($sessionClosed): ?>
-                        <h2>Session terminée</h2>
-                        <p><?= htmlspecialchars($closedReason) ?> Cette conversation est en lecture seule.</p>
-                    <?php else: ?>
-                        <h2>Bonjour <?= htmlspecialchars($user['first_name'] ?? '') ?> !</h2>
-                        <p>Posez une question à l'IA ou sélectionnez un modèle pour commencer.</p>
-                        <div class="empty-suggestions">
-                            <button class="suggestion-chip" onclick="fillPrompt(this)">Explique-moi les pointeurs en C</button>
-                            <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en Python</button>
-                            <button class="suggestion-chip" onclick="fillPrompt(this)">Qu'est-ce que le pattern MVC ?</button>
-                        </div>
-                        <?php if (!$inSession && in_array('student', $user['roles'] ?? [], true)): ?>
-                            <a href="/sessions/join" class="empty-join-link">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                                    <polyline points="10 17 15 12 10 7" />
-                                    <line x1="15" y1="12" x2="3" y2="12" />
-                                </svg>
-                                Rejoindre une session avec un code
-                            </a>
-                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
-            <?php endif; ?>
+                <div class="msg msg-ai">
+                    <div class="msg-meta">
+                        <span class="msg-model"><?= htmlspecialchars($m['model']) ?></span>
+                    </div>
+                    <div class="msg-content" data-markdown="<?= htmlspecialchars($m['response'], ENT_QUOTES, 'UTF-8') ?>">
+                    </div>
+                </div>
+            <?php endforeach; ?>
+            <?php /* Always rendered so the "Nouvelle conversation" button can
+               restore a blank thread client-side (startBlankChat); hidden while
+               the open conversation already has messages. */ ?>
+            <div class="empty-state" id="emptyState"<?= $hasMessages ? ' style="display:none;"' : '' ?>>
+                <div class="empty-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                </div>
+                <?php if ($sessionClosed): ?>
+                    <h2>Session terminée</h2>
+                    <p><?= htmlspecialchars($closedReason) ?> Cette conversation est en lecture seule.</p>
+                <?php else: ?>
+                    <h2>Bonjour <?= htmlspecialchars($user['first_name'] ?? '') ?> !</h2>
+                    <p>Posez une question à l'IA ou sélectionnez un modèle pour commencer.</p>
+                    <div class="empty-suggestions">
+                        <button class="suggestion-chip" onclick="fillPrompt(this)">Explique-moi les pointeurs en C</button>
+                        <button class="suggestion-chip" onclick="fillPrompt(this)">Écris une fonction de tri en Python</button>
+                        <button class="suggestion-chip" onclick="fillPrompt(this)">Qu'est-ce que le pattern MVC ?</button>
+                    </div>
+                    <?php if (!$inSession && in_array('student', $user['roles'] ?? [], true)): ?>
+                        <a href="/sessions/join" class="empty-join-link">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                                <polyline points="10 17 15 12 10 7" />
+                                <line x1="15" y1="12" x2="3" y2="12" />
+                            </svg>
+                            Rejoindre une session avec un code
+                        </a>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
         </div>
         <div class="input-bar">
             <?php if ($sessionClosed): ?>
@@ -231,6 +246,17 @@ $canAddModel = $canAddModel ?? false;
     .input-wrapper .btn-attach:disabled { opacity: .4; cursor: not-allowed; }
     .chat-attachments { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 2px .5rem; }
     .chat-attachments[hidden] { display: none; }
+    /* Documents shown under the message they were sent with (provenance). */
+    .msg-docs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .msg-user .msg-docs { justify-content: flex-end; }
+    .msg-doc {
+        display: inline-flex; align-items: center; gap: 5px; max-width: 240px;
+        padding: 4px 9px; border-radius: 8px;
+        background: rgba(127, 127, 127, .14); color: inherit;
+        font-size: 12px; text-decoration: none;
+    }
+    .msg-doc span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .msg-doc:hover { background: rgba(127, 127, 127, .22); }
     .attach-chip {
         display: inline-flex; align-items: center; gap: 6px; max-width: 240px;
         padding: 4px 8px; border-radius: 999px;
@@ -252,6 +278,10 @@ $canAddModel = $canAddModel ?? false;
     const conversationContext = <?= json_encode($messages ?? []) ?>;
     const sessionMaxInputSize = <?= json_encode($env['maxInputSize'] ?? null) ?>;
     const sessionMaxTokens = <?= json_encode($env['maxTokens'] ?? null) ?>;
+    // Session of the current environment (null in free chat). Sent with the
+    // first message of a blank chat so the server creates the conversation in
+    // the right environment (free vs session).
+    const sessionEnvId = <?= json_encode($env['sessionId'] ?? null) ?>;
     let activeConvId = conversationId;
     const csrfToken = <?= json_encode(\Core\Csrf::generateToken()) ?>;
 
@@ -419,6 +449,41 @@ $canAddModel = $canAddModel ?? false;
         input.focus();
     }
 
+    // "Nouvelle conversation": open a blank chat WITHOUT creating it in the
+    // database. We only reset the view client-side; the conversation is
+    // persisted server-side when the first message is sent (handleChat with a
+    // null conversation_id). Staying client-side keeps the current environment
+    // (free vs session) and its sidebar list intact.
+    function startBlankChat() {
+        if (!input || input.disabled) return; // read-only (session closed)
+        activeConvId = null;
+
+        const messagesEl = document.getElementById('messages');
+        if (messagesEl) {
+            messagesEl.querySelectorAll('.msg').forEach((el) => el.remove());
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) emptyState.style.display = '';
+            messagesEl.scrollTop = 0;
+        }
+
+        const convNameEl = document.getElementById('convName');
+        if (convNameEl) convNameEl.textContent = 'Nouvelle conversation';
+
+        document.querySelectorAll('#convList .conv-row.active')
+            .forEach((el) => el.classList.remove('active'));
+
+        // Free chat has a stable blank URL; a session keeps its context (the
+        // sidebar still lists that session's conversations), so leave its URL.
+        if (!sessionEnvId) history.replaceState(null, '', '/chat');
+
+        input.value = '';
+        input.style.height = 'auto';
+        input.dispatchEvent(new Event('input'));
+        input.focus();
+    }
+
+    document.getElementById('btnNewChat')?.addEventListener('click', startBlankChat);
+
     async function sendMessage() {
         if (input.disabled || currentAbort) return;
         const message = input.value.trim();
@@ -444,6 +509,12 @@ $canAddModel = $canAddModel ?? false;
         userMsg.innerHTML = `<div class="msg-content">${escapeHtml(message)}</div>`;
         messagesEl.appendChild(userMsg);
 
+        // Show the attached documents under the message straight away (before the
+        // model answers) and empty the composer; rolled back if the send fails.
+        const sentDocs = getComposerDocs();
+        if (sentDocs.length) renderMsgDocs(userMsg, sentDocs);
+        clearComposerDocs();
+
         input.value = '';
         input.style.height = 'auto';
         counter.textContent = '0 car.';
@@ -463,6 +534,11 @@ $canAddModel = $canAddModel ?? false;
         try {
             const startTime = performance.now();
 
+            // A fresh (blank) chat has no conversation yet: the server creates
+            // it from this first message and returns its id/name below. We pass
+            // the environment's session id so it lands in the right environment.
+            const wasBlank = !activeConvId;
+
             const res = await fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -470,6 +546,7 @@ $canAddModel = $canAddModel ?? false;
                     model: selectedModel,
                     message: message,
                     conversation_id: activeConvId,
+                    session_id: wasBlank ? sessionEnvId : null,
                     context: conversationContext
                 })
             });
@@ -492,6 +569,9 @@ $canAddModel = $canAddModel ?? false;
                 const msg = data.error ?? 'Une erreur est survenue.';
                 aiMsg.querySelector('.msg-content').innerHTML =
                     `<p class="msg-error">${escapeHtml(msg)}</p>`;
+                // The send failed: the documents were not bound — undo the
+                // optimistic display and put them back in the composer.
+                if (sentDocs.length) { userMsg.querySelector('.msg-docs')?.remove(); refreshComposerDocs(); }
                 return;
             }
 
@@ -513,7 +593,7 @@ $canAddModel = $canAddModel ?? false;
             // Reuse the same conversation for the next messages of a fresh chat.
             if (newConvId) activeConvId = newConvId;
 
-            if (newConvId && !conversationId) {
+            if (newConvId && wasBlank) {
                 window._activeConvId = newConvId;
                 history.replaceState(null, '', `/chat/${newConvId}`);
 
@@ -558,6 +638,8 @@ $canAddModel = $canAddModel ?? false;
             aiMsg.querySelector('.msg-content').innerHTML = err.name === 'AbortError'
                 ? '<p class="msg-error">Génération interrompue.</p>'
                 : '<p class="msg-error">Erreur de connexion au modèle.</p>';
+            // Re-sync the composer with the server's true pending documents.
+            if (sentDocs.length) refreshComposerDocs();
         } finally {
             currentAbort = null;
             setSending(false);
@@ -577,6 +659,23 @@ $canAddModel = $canAddModel ?? false;
         const original = btn.innerHTML;
         btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> copié`;
         setTimeout(() => btn.innerHTML = original, 1500);
+    }
+
+    // Renders, under a user message bubble, the documents that were sent with
+    // it (download links). Assigned by the attachments module below.
+    let clearComposerDocs = () => {};
+    let getComposerDocs = () => [];
+    let refreshComposerDocs = () => {};
+    function renderMsgDocs(msgEl, docs) {
+        if (!msgEl || !docs || !docs.length) return;
+        const wrap = document.createElement('div');
+        wrap.className = 'msg-docs';
+        wrap.innerHTML = docs.map((d) => `
+            <a class="msg-doc" href="/documents/conversation_${activeConvId}/${d.id}" target="_blank" rel="noopener" title="${escapeHtml(d.kind)} · ${escapeHtml(d.size)}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span>${escapeHtml(d.name)}</span>
+            </a>`).join('');
+        msgEl.appendChild(wrap);
     }
 
     // ---- Document attachments (phase 2): join files to the conversation so the
@@ -664,6 +763,12 @@ $canAddModel = $canAddModel ?? false;
             const btn = e.target.closest('.attach-remove');
             if (btn) removeDoc(btn.dataset.id);
         });
+
+        // Bridge to sendMessage: read the pending docs (to show them under the
+        // message at once), empty the composer, or restore it on failure.
+        getComposerDocs = () => docs.slice();
+        clearComposerDocs = () => { docs = []; renderChips(); };
+        refreshComposerDocs = () => { refresh(); };
 
         refresh();
     })();

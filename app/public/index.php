@@ -29,7 +29,6 @@
     $router->add('POST', '/chat',         function() { (new LLMController())->handleChat(); });
     $router->add('POST', '/chat/documents',             function()    { (new DocumentController())->uploadToConversation(); });
     $router->add('POST', '/chat/documents/{id}/delete', function($id) { (new DocumentController())->deleteFromConversation($id); });
-    $router->add('POST', '/chat/new',     function() { (new AccueilController())->newChat(); });
     $router->add('POST', '/chat/rename',    function() { (new AccueilController())->renameChat(); });
     $router->add('POST', '/chat/archive',   function() { (new AccueilController())->archiveChat(); });
     $router->add('POST', '/chat/unarchive', function() { (new AccueilController())->unarchiveChat(); });

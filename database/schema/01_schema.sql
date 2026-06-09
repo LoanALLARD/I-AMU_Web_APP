@@ -293,6 +293,7 @@ CREATE TABLE documents (
     id BIGSERIAL,
     session_id BIGINT,
     conversation_id BIGINT,
+    interaction_id BIGINT,
     uploaded_by_id BIGINT NOT NULL,
     original_name VARCHAR(255) NOT NULL,
     stored_path VARCHAR(255) NOT NULL,
@@ -304,6 +305,7 @@ CREATE TABLE documents (
     CONSTRAINT pk_documents PRIMARY KEY (id),
     CONSTRAINT fk_documents_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE,
     CONSTRAINT fk_documents_conversation FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
+    CONSTRAINT fk_documents_interaction FOREIGN KEY (interaction_id) REFERENCES interactions (id) ON DELETE SET NULL,
     CONSTRAINT fk_documents_uploaded_by FOREIGN KEY (uploaded_by_id) REFERENCES users (id) ON DELETE RESTRICT,
     CONSTRAINT ck_documents_scope CHECK (
         (session_id IS NOT NULL AND conversation_id IS NULL) OR
@@ -313,3 +315,4 @@ CREATE TABLE documents (
 );
 CREATE INDEX idx_documents_session ON documents (session_id);
 CREATE INDEX idx_documents_conversation ON documents (conversation_id);
+CREATE INDEX idx_documents_interaction ON documents (interaction_id);

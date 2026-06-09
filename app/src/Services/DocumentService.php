@@ -150,7 +150,8 @@ class DocumentService
     // ----------------------------------------------------------------
 
     /**
-     * Documents attached to a conversation the caller owns.
+     * Pending documents (not yet sent with a message) of a conversation the
+     * caller owns — i.e. what the chat composer shows as removable chips.
      *
      * @return list<Document>
      */
@@ -162,8 +163,51 @@ class DocumentService
 
         return array_map(
             static fn (array $r): Document => Document::fromRow($r),
-            $this->documents->listByConversation($conversationId)
+            $this->documents->listPendingByConversation($conversationId)
         );
+    }
+
+    /**
+     * Ties a conversation's still-pending documents to the message just sent, so
+     * each document is recorded under the message it was sent with (provenance).
+     * The documents stay readable/injected for the whole conversation.
+     */
+    public function bindPendingToInteraction(int $conversationId, int $interactionId): void
+    {
+        $this->documents->bindPendingToInteraction($conversationId, $interactionId);
+    }
+
+    /**
+     * Documents tied to a single message. No access check: the caller already
+     * resolved the conversation/interaction as its own.
+     *
+     * @return list<Document>
+     */
+    public function documentsForInteraction(int $interactionId): array
+    {
+        return array_map(
+            static fn (array $r): Document => Document::fromRow($r),
+            $this->documents->listByInteraction($interactionId)
+        );
+    }
+
+    /**
+     * Documents already sent, grouped by the message (interaction) they belong
+     * to — used to render them under their message in the conversation history.
+     * No access check: the caller already resolved the conversation as its own.
+     *
+     * @return array<int, list<Document>>
+     */
+    public function documentsByInteractionForConversation(int $conversationId): array
+    {
+        $map = [];
+        foreach ($this->documents->listBoundByConversation($conversationId) as $row) {
+            $doc = Document::fromRow($row);
+            $iid = (int) $row['interaction_id'];
+            $map[$iid][] = $doc;
+        }
+
+        return $map;
     }
 
     /**
