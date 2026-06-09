@@ -135,6 +135,7 @@ $currentUserId = (int) ($user['id'] ?? 0);
                         <th>Email</th>
                         <th data-sort="text">Rôle</th>
                         <th data-sort="text">Statut</th>
+                        <th data-sort="text">Dernière connexion</th>
                         <th></th>
                     </tr>
                 </thead>

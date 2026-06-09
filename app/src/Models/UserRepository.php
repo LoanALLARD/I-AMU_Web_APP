@@ -173,12 +173,12 @@ class UserRepository
      * Students and teachers attached to a department, role derived from the
      * inheritance tables. Department admins are excluded on purpose.
      *
-     * @return list<array{id:int, email:string, first_name:string, last_name:string, is_active:bool, role:string}>
+     * @return list<array{id:int, email:string, first_name:string, last_name:string, is_active:bool, last_login_at:?string, role:string}>
      */
     public function listDepartmentMembers(int $departmentId): array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT u.id, u.email, u.first_name, u.last_name, u.is_active,
+            "SELECT u.id, u.email, u.first_name, u.last_name, u.is_active, u.last_login_at,
                     CASE WHEN t.id IS NOT NULL THEN 'teacher' ELSE 'student' END AS role
              FROM users u
              LEFT JOIN teachers t ON t.id = u.id
@@ -189,7 +189,7 @@ class UserRepository
         );
         $stmt->execute(['dept' => $departmentId]);
 
-        /** @var list<array{id:int, email:string, first_name:string, last_name:string, is_active:bool, role:string}> $rows */
+        /** @var list<array{id:int, email:string, first_name:string, last_name:string, is_active:bool, last_login_at:?string, role:string}> $rows */
         $rows = $stmt->fetchAll();
 
         return $rows;
@@ -200,12 +200,12 @@ class UserRepository
      * re-render its table row after a state change. Scoped to the department so
      * it cannot read a member of another one.
      *
-     * @return array{id:int, email:string, first_name:string, last_name:string, is_active:bool, role:string}|null
+     * @return array{id:int, email:string, first_name:string, last_name:string, is_active:bool, last_login_at:?string, role:string}|null
      */
     public function findMemberRow(int $userId, int $departmentId): ?array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT u.id, u.email, u.first_name, u.last_name, u.is_active,
+            "SELECT u.id, u.email, u.first_name, u.last_name, u.is_active, u.last_login_at,
                     CASE WHEN t.id IS NOT NULL THEN 'teacher' ELSE 'student' END AS role
              FROM users u
              LEFT JOIN teachers t ON t.id = u.id

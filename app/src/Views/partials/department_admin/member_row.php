@@ -5,11 +5,13 @@
  * escaping, badges -- has a single source of truth and the row re-rendered
  * after an action matches the initially-rendered ones exactly.
  *
- * @var array<string, mixed> $member  Row with id, first_name, last_name, email, role, is_active
+ * @var array<string, mixed> $member  Row with id, first_name, last_name, email, role, is_active, last_login_at
  * @var int $currentUserId  The logged-in admin's id (its own row shows no action)
  */
 $m = $member;
 $isTeacher = $m['role'] === 'teacher';
+$lastLogin = $m['last_login_at'] ?? null;
+$lastLoginLabel = $lastLogin === null ? 'jamais' : date('Y-m-d H:i', strtotime((string) $lastLogin));
 ?>
 <tr data-user-id="<?= (int) $m['id'] ?>">
     <td><?= htmlspecialchars(trim($m['first_name'] . ' ' . $m['last_name'])) ?></td>
@@ -26,6 +28,7 @@ $isTeacher = $m['role'] === 'teacher';
             <span class="badge badge-draft"><?= icon('lock', '', 12) ?> Désactivé</span>
         <?php endif; ?>
     </td>
+    <td class="mono" data-sort-value="<?= htmlspecialchars((string) ($lastLogin ?? '')) ?>"><?= htmlspecialchars($lastLoginLabel) ?></td>
     <td data-action-cell>
         <?php if ((int) $m['id'] !== ($currentUserId ?? 0)): ?>
         <form method="POST" action="/department-admin/users/set-active" data-ajax-action="set-active">
