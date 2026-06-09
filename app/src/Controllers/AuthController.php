@@ -182,4 +182,9 @@ class AuthController extends Controller
 
         $this->redirect('/login');
     }
+
+    public function showRGPDResearcher(): void
+    {
+        $this->render('pages/auth/rgpd_consent_researcher', ['titrePage' => 'Engagement chercheur — RGPD']);
+    }
 }

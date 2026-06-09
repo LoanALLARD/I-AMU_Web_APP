@@ -167,7 +167,8 @@ final class AuthService
                     'last_name'       => $lastName,
                     'department_id'   => $registration['department_id'],
                     'laboratory_id'   => $registration['laboratory_id'],
-                    'consent_version' => '1.0',
+                    'consent_version' => $isResearcher ? 'researcher-1.0' : 'member-1.0',
+
                 ],
                 $registration['role']
             );
