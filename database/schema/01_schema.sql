@@ -11,7 +11,11 @@ CREATE TABLE places (
     address VARCHAR(100),
     city VARCHAR(50),
     zip_code VARCHAR(10),
-    CONSTRAINT pk_places PRIMARY KEY (id)
+    display_name VARCHAR(255),
+    logo_path VARCHAR(255),
+    primary_color VARCHAR(7),
+    CONSTRAINT pk_places PRIMARY KEY (id),
+    CONSTRAINT ck_places_primary_color CHECK (primary_color IS NULL OR primary_color ~ '^#[0-9a-fA-F]{6}$')
 );
 
 CREATE TABLE departments (

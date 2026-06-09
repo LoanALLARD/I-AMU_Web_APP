@@ -85,6 +85,11 @@
     $router->add('GET',  '/super-admin',                   function() { (new SuperAdminController())->index(); });
     $router->add('GET',  '/super-admin/department-admins', function() { (new SuperAdminController())->departmentAdmins(); });
     $router->add('GET',  '/super-admin/places',            function() { (new SuperAdminController())->places(); });
+    $router->add('POST', '/super-admin/places',            function() { (new SuperAdminController())->addPlace(); });
+    $router->add('POST', '/super-admin/places/delete',     function() { (new SuperAdminController())->deletePlace(); });
+    $router->add('POST', '/super-admin/places/branding',   function() { (new SuperAdminController())->updateBranding(); });
+    $router->add('POST', '/super-admin/departments',       function() { (new SuperAdminController())->addDepartment(); });
+    $router->add('POST', '/super-admin/departments/toggle', function() { (new SuperAdminController())->toggleDepartment(); });
     $router->add('GET',  '/super-admin/email-domains',     function() { (new SuperAdminController())->emailDomains(); });
     $router->add('POST', '/super-admin/email-domains',     function() { (new SuperAdminController())->addEmailDomain(); });
     $router->add('POST', '/super-admin/email-domains/role',   function() { (new SuperAdminController())->changeEmailDomainRole(); });
