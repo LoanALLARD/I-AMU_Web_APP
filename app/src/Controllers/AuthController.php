@@ -192,7 +192,7 @@ class AuthController extends Controller
 
     public function showRGPDResearcher(): void
     {
-        $this->render('pages/auth/rgpd_consent_researcher', ['titrePage' => 'Engagement chercheur — RGPD']);
+        $this->render('pages/auth/gdpr_consent_researcher', ['titrePage' => 'Engagement chercheur — RGPD', 'page' => 'gdpr']);
     }
 
     /** Shows the acceptance form for a signed invitation link. */
