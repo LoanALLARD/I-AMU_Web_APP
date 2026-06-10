@@ -32,6 +32,15 @@ class SuperAdminController extends Controller
         );
     }
 
+    public function showSetting(){
+
+        $this->renderPanel(
+            'pages/superadmin/settings',
+            'Administrateurs de departement',
+            'department-admins',
+        );
+    }
+
     public function places(): void
     {
         $service = new PlaceService(Database::getConnection());
