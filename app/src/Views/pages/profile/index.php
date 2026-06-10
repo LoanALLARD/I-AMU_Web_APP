@@ -13,7 +13,6 @@ $roles = $user['roles'] ?? [];
 $isTeacher = in_array('teacher', $roles, true);
 $isSpecialized = !empty($user['isSpecialized']);
 
-// French UI labels for roles
 $roleLabels = [
     'student'          => 'étudiant',
     'teacher'          => 'enseignant',
@@ -22,7 +21,6 @@ $roleLabels = [
 ];
 $roleFr = static fn(string $r): string => $roleLabels[$r] ?? $r;
 
-// Current theme choice for the selector
 $themeCur = match ($user['theme'] ?? null) {
     'LIGHT' => 'light',
     'DARK'  => 'dark',
@@ -41,6 +39,7 @@ $themeCur = match ($user['theme'] ?? null) {
     <div class="profile-grid">
 
         <div>
+            <!-- Identité -->
             <div class="dashboard-card">
                 <h2>Identité</h2>
                 <div class="kv-grid">
@@ -89,37 +88,53 @@ $themeCur = match ($user['theme'] ?? null) {
                 <?php endif; ?>
             </div>
 
-            <div class="profile-card">
-                <h2>Compte et données</h2>
-
-                <!-- Deactivation -->
-                <h3>Désactiver mon compte</h3>
-                <p class="section-desc">
-                    La désactivation rend votre compte inaccessible. Vous ne pourrez plus
-                    vous connecter tant qu'un administrateur n'aura pas réactivé votre compte.
-                </p>
-                <button type="button" class="btn danger" id="btn-deactivate-account">
-                    <?= icon('user-x', '', 12) ?> Désactiver mon compte
-                </button>
-
-                <hr>
-
-                <!-- Data deletion -->
-                <h3>Suppression de vos données</h3>
-                <p class="section-desc">
-                    Pour exercer votre droit à l'effacement (article 17 du RGPD),
-                    envoyez votre demande par email au délégué à la protection des données.
-                </p>
-                <div class="dpo-block">
-                    <a href="mailto:dpo@univ-amu.fr" class="dpo-link">
-                        dpo@univ-amu.fr
-                    </a>
-                    <p class="dpo-hint">
-                        Précisez votre nom, prénom et adresse email universitaire.
-                        Délai de traitement : 30 jours.
-                    </p>
+            <!-- Zone à risque -->
+            <div class="danger-zone">
+                <div class="danger-zone-header">
+                    <?= icon('alert-triangle', '', 15) ?>
+                    <span>Zone à risque</span>
                 </div>
-                <a href="/rgpd_consent" class="rgpd-link">Consulter les mentions d'information RGPD</a>
+
+                <div class="danger-zone-body">
+
+                    <!-- Désactiver le compte -->
+                    <div class="danger-row">
+                        <div class="danger-row-info">
+                            <p class="danger-row-title">Désactiver mon compte</p>
+                            <p class="danger-row-desc">
+                                Rend votre compte inaccessible immédiatement. Un administrateur
+                                peut le réactiver sur demande.
+                            </p>
+                        </div>
+                        <button type="button" class="btn danger" id="btn-deactivate-account">
+                            <?= icon('user-x', '', 13) ?> Désactiver
+                        </button>
+                    </div>
+
+                    <div class="danger-zone-sep"></div>
+
+                    <!-- Retirer le consentement à la recherche -->
+                    <div class="danger-row">
+                        <div class="danger-row-info">
+                            <p class="danger-row-title">Retirer mon consentement à la recherche</p>
+                            <p class="danger-row-desc">
+                                Retire votre consentement au traitement de vos données pour les projets de recherche. 
+                                Pour toute question, contactez&nbsp;
+                                <a href="mailto:dpo@univ-amu.fr" class="danger-link">dpo@univ-amu.fr</a>.
+                            </p>
+                        </div>
+                        <button type="button" class="btn danger" id="btn-withdraw-consent">
+                            <?= icon('shield-off', '', 13) ?> Retirer le consentement
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="danger-zone-footer">
+                    <a href="/rgpd_consent" class="rgpd-link">
+                        <?= icon('plus', '', 12) ?> Consulter les mentions d'information RGPD
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -151,67 +166,91 @@ $themeCur = match ($user['theme'] ?? null) {
                 <hr>
                 <form method="POST" action="/profile/theme" class="theme-select">
                     <?= csrf_field() ?>
-                    <button type="submit" name="theme" value="auto" class="theme-opt<?= $themeCur === 'auto' ? ' is-active' : '' ?>">Automatique</button>
+                    <button type="submit" name="theme" value="auto"  class="theme-opt<?= $themeCur === 'auto'  ? ' is-active' : '' ?>">Automatique</button>
                     <button type="submit" name="theme" value="light" class="theme-opt<?= $themeCur === 'light' ? ' is-active' : '' ?>">Clair</button>
-                    <button type="submit" name="theme" value="dark" class="theme-opt<?= $themeCur === 'dark' ? ' is-active' : '' ?>">Sombre</button>
+                    <button type="submit" name="theme" value="dark"  class="theme-opt<?= $themeCur === 'dark'  ? ' is-active' : '' ?>">Sombre</button>
                 </form>
             </div>
         </aside>
     </div>
 </div>
 
-<!-- Deactivation confirmation modal -->
+<!-- Modal : désactivation du compte -->
 <div class="modal-overlay" id="modal-deactivate">
     <div class="modal-box">
-        <h2>Confirmer la désactivation</h2>
+        <div class="modal-icon modal-icon--danger"><?= icon('user-x', '', 22) ?></div>
+        <h2>Désactiver mon compte</h2>
         <p>Êtes-vous sûr de vouloir désactiver votre compte ?</p>
-        <ul>
+        <ul class="modal-list">
             <li>Vous serez immédiatement déconnecté</li>
             <li>Vous ne pourrez plus vous connecter</li>
-            <li>Vos données seront conservées à des fins de recherche</li>
-            <li>Pour supprimer vos données, contactez <strong>dpo@univ-amu.fr</strong></li>
+            <li>Vos données sont conservées ; pour les supprimer, contactez <strong>dpo@univ-amu.fr</strong></li>
         </ul>
-
         <form method="POST" action="/profile/deactivate" class="modal-actions">
             <?= csrf_field() ?>
-            <button type="button" class="btn btn-cancel" id="btn-cancel-deactivate">
-                Annuler
-            </button>
-            <button type="submit" class="btn danger">
-                Désactiver mon compte
-            </button>
+            <button type="button" class="btn ghost modal-cancel" data-modal="modal-deactivate">Annuler</button>
+            <button type="submit" class="btn danger">Désactiver mon compte</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal : retrait du consentement à la recherche -->
+<div class="modal-overlay" id="modal-consent">
+    <div class="modal-box">
+        <div class="modal-icon modal-icon--danger"><?= icon('shield-off', '', 22) ?></div>
+        <h2>Retirer mon consentement à la recherche</h2>
+        <p>Cette action a des conséquences importantes :</p>
+        <ul class="modal-list">
+            <li>Vos données ne pourront plus être utilisées dans le cadre des projets de recherche auxquels vous avez consenti</li>
+            <li>Aucune nouvelle donnée ne sera intégrée aux analyses de recherche après le traitement de votre demande</li> 
+            <li>Ce processus peut prendre jusqu'à <strong>30 jours</strong></li>
+        </ul>
+        <form method="POST" action="/profile/withdraw-consent" class="modal-actions">
+            <?= csrf_field() ?>
+            <button type="button" class="btn ghost modal-cancel" data-modal="modal-consent">Annuler</button>
+            <button type="submit" class="btn danger">Retirer mon consentement</button>
         </form>
     </div>
 </div>
 
 <script>
-    (function() {
-        const btnOpen   = document.getElementById('btn-deactivate-account');
-        const btnCancel = document.getElementById('btn-cancel-deactivate');
-        const modal     = document.getElementById('modal-deactivate');
+(function () {
+    // Ouvrir une modal
+    function openModal(id) {
+        const m = document.getElementById(id);
+        if (m) m.style.display = 'flex';
+    }
 
-        if (!btnOpen || !modal) return;
+    // Fermer une modal
+    function closeModal(id) {
+        const m = document.getElementById(id);
+        if (m) m.style.display = 'none';
+    }
 
-        btnOpen.addEventListener('click', function() {
-            modal.style.display = 'flex';
+    document.getElementById('btn-deactivate-account')
+        ?.addEventListener('click', () => openModal('modal-deactivate'));
+
+    document.getElementById('btn-withdraw-consent')
+        ?.addEventListener('click', () => openModal('modal-consent'));
+
+    // Boutons Annuler (data-modal="id")
+    document.querySelectorAll('.modal-cancel').forEach(btn => {
+        btn.addEventListener('click', () => closeModal(btn.dataset.modal));
+    });
+
+    // Clic sur le fond
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) closeModal(overlay.id);
         });
+    });
 
-        btnCancel.addEventListener('click', function() {
-            modal.style.display = 'none';
+    // Touche Échap
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            if (m.style.display === 'flex') closeModal(m.id);
         });
-
-        // Close on backdrop click
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-
-        // Close on Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && modal.style.display === 'flex') {
-                modal.style.display = 'none';
-            }
-        });
-    })();
+    });
+})();
 </script>

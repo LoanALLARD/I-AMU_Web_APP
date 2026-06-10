@@ -18,6 +18,8 @@ $user = $user ?? null;
 // Accept the session/legacy pages' `navSection` and `title` keys as fallbacks
 // so they can reuse this layout without renaming their render() payload.
 $page = $page ?? $navSection ?? 'other';
+// Per-place branding (logo / display name / primary colour) for this user.
+$brand = placeBranding();
 $pageTitle = $pageTitle ?? $title ?? '';
 $conversation = $conversation ?? null;
 $conversations = $conversations ?? [];
@@ -77,7 +79,7 @@ $themePref = match ($user['theme'] ?? null) {
         })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I-AMU<?= $pageTitle !== '' ? ' · ' . htmlspecialchars($pageTitle) : '' ?></title>
+    <title><?= htmlspecialchars($brand['name']) ?><?= $pageTitle !== '' ? ' · ' . htmlspecialchars($pageTitle) : '' ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -97,6 +99,26 @@ $themePref = match ($user['theme'] ?? null) {
     <link rel="stylesheet" href="/assets/css/shell.css<?= $v('shell.css') ?>">
     <link rel="stylesheet" href="/assets/css/sessions.css<?= $v('sessions.css') ?>">
     <link rel="stylesheet" href="/assets/css/profile.css<?= $v('profile.css') ?>">
+    <?php if ($brand['color'] !== null): ?>
+    <?php
+        /* Per-place primary colour: override the brand accent and derive its
+           shades. Light mode uses the colour as-is; dark mode lightens it so it
+           stays legible on a dark surface. */
+        $c = htmlspecialchars($brand['color']);
+    ?>
+    <style>
+        :root:not([data-theme="dark"]) {
+            --blue: <?= $c ?>;
+            --blue-dark: color-mix(in srgb, <?= $c ?> 82%, #000);
+            --blue-light: color-mix(in srgb, <?= $c ?> 12%, #fff);
+        }
+        [data-theme="dark"] {
+            --blue: color-mix(in srgb, <?= $c ?> 68%, #fff);
+            --blue-dark: color-mix(in srgb, <?= $c ?> 50%, #fff);
+            --blue-light: color-mix(in srgb, <?= $c ?> 22%, #12141d);
+        }
+    </style>
+    <?php endif; ?>
     <?php /* Admin and researcher pages reuse the .admin-section / .admin-table
        styles, both defined in department_admin.css. */ ?>
     <?php if ($page === 'admin' || $page === 'researcher'): ?>
@@ -128,14 +150,14 @@ $themePref = match ($user['theme'] ?? null) {
         <script src="/assets/vendor/highlight/highlight.min.js<?= $vv('highlight/highlight.min.js') ?>"></script>
         <script src="/assets/js/markdown.js<?= '?v=' . (@filemtime("$jsDir/markdown.js") ?: 0) ?>"></script>
     <?php endif; ?>
-    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <link rel="icon" href="<?= htmlspecialchars($brand['favicon']) ?>">
 </head>
 
 <body class="app-body page-<?= htmlspecialchars($page) ?>">
 
     <header class="app-topbar">
         <a href="<?= $isDeptAdmin ? '/department-admin' : ($isResearcher ? '/researcher' : '/chat') ?>" class="topbar-brand" aria-label="Accueil I-AMU">
-            <img src="/assets/img/logo.png" alt="">
+            <img src="<?= htmlspecialchars($brand['logo']) ?>" alt="<?= htmlspecialchars($brand['name']) ?>">
             <div class="topbar-brand-text">
                 <span><?= htmlspecialchars($roleLabel) ?></span>
             </div>
@@ -258,7 +280,7 @@ $themePref = match ($user['theme'] ?? null) {
 lives in the topbar; inside the drawer it gives the slide-out menu
 its own identity above the navigation. */ ?>
             <div class="sidebar-brand">
-                <img src="/assets/img/logo.png" alt="">
+                <img src="<?= htmlspecialchars($brand['logo']) ?>" alt="<?= htmlspecialchars($brand['name']) ?>">
                 <div class="sidebar-brand-text">
                     <span><?= htmlspecialchars($roleLabel) ?></span>
                 </div>

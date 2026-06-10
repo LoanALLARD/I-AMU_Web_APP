@@ -3,12 +3,19 @@
  * Teacher's resource + session tabbed list.
  *
  * @var list<array<string, mixed>> $ressources
- * @var list<array<string, mixed>> $sessions
- * @var string                     $navSection  'ressources' | 'sessions'
+ * @var list<array<string, mixed>> $sessions     Owned sessions (SessionService::listForTeacher)
+ * @var list<array<string, mixed>> $supervised   Read-only supervised sessions
+ * @var string                     $navSection   'ressources' | 'sessions'
  * @var array<string, mixed>       $user
  */
 
-$activeTab = $navSection === 'sessions' ? 'sessions' : 'ressources';
+$activeTab  = $navSection === 'sessions' ? 'sessions' : 'ressources';
+$supervised = $supervised ?? [];
+// Type badge class -> Lucide icon, used by the shared _session_list partial.
+$typeIcon = static fn (string $typeClass): string => [
+    'badge-exam'   => 'lock',
+    'badge-course' => 'book',
+][$typeClass] ?? 'book';
 
 $stateLabels = [
     'DRAFT'     => ['label' => 'Brouillon', 'class' => 'badge-draft'],
@@ -162,7 +169,7 @@ $stateLabels = [
 
 <?php else: /* onglet sessions */ ?>
 
-    <?php if ($sessions === []): ?>
+    <?php if ($sessions === [] && $supervised === []): ?>
         <div class="session-empty">
             <p>Aucune session pour le moment.</p>
             <a href="/sessions/create" class="btn primary" style="margin-top:8px">
@@ -170,41 +177,26 @@ $stateLabels = [
             </a>
         </div>
     <?php else: ?>
-        <div class="session-table-wrap">
-            <table class="session-table">
-                <thead>
-                    <tr>
-                        <th>Libellé</th>
-                        <th>Ressource</th>
-                        <th>Type</th>
-                        <th>État</th>
-                        <th>Code</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($sessions as $s): ?>
-                    <tr>
-                        <td class="cell-strong"><?= htmlspecialchars((string) $s['name']) ?></td>
-                        <td><span class="cell-mono"><?= htmlspecialchars((string) ($s['resourceName'] ?? '—')) ?></span></td>
-                        <td><span class="cell-muted" style="font-size:13px"><?= htmlspecialchars((string) ($s['typeLabel'] ?? '—')) ?></span></td>
-                        <td><span class="badge <?= htmlspecialchars($s['statusClass'] ?? 'badge-draft') ?>"><?= htmlspecialchars($s['statusLabel'] ?? 'Inconnu') ?></span></td>
-                        <td>
-                            <?php if (!empty($s['accessCode'])): ?>
-                                <span class="cell-mono"><?= htmlspecialchars((string) $s['accessCode']) ?></span>
-                            <?php else: ?>
-                                <span class="cell-muted">—</span>
-                            <?php endif; ?>
-                        </td>
-                        <td class="cell-actions">
-                            <a href="/sessions/<?= (int) $s['id'] ?>" class="btn ghost sm"><?= icon('eye', '', 13) ?> Voir</a>
-                            <a href="/sessions/<?= (int) $s['id'] ?>/edit" class="btn ghost sm"><?= icon('edit', '', 13) ?> Modifier</a>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+        <?php /* Shared session list (desktop table + mobile cards), reused for
+           the owned list and the read-only supervised list. */ ?>
+        <?php if ($sessions !== []): ?>
+            <?php $rows = $sessions; $readonly = false; require __DIR__ . '/../../partials/_session_list.php'; ?>
+        <?php endif; ?>
+
+        <?php if ($supervised !== []): ?>
+            <div class="page-header" style="margin-top:28px;">
+                <div class="page-header-row" style="align-items:center;">
+                    <div>
+                        <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                            <h2 style="margin:0;font-size:18px;">Sessions surveillées</h2>
+                            <span class="mono" style="font-size:11px;color:var(--gray-400);"><?= count($supervised) ?> session(s)</span>
+                        </div>
+                        <p class="page-sub" style="margin-top:6px;">Sessions de ressources où vous êtes enseignant responsable — lecture seule.</p>
+                    </div>
+                </div>
+            </div>
+            <?php $rows = $supervised; $readonly = true; require __DIR__ . '/../../partials/_session_list.php'; ?>
+        <?php endif; ?>
     <?php endif; ?>
 
 <?php endif; ?>
