@@ -159,4 +159,19 @@ class ProfileController extends Controller
         $this->flash('success', 'Thème mis à jour.');
         $this->redirect('/profile');
     }
+
+    public function updateResearchOpposition(): void
+    {
+        $this->requireAuth();
+        $this->verifyCsrf();
+
+        $user = $this->currentUser();
+
+        $opposed = true;
+
+        (new UserRepository(Database::getConnection()))->updateResearchOpposition((int) $user['id'], $opposed);
+
+        $this->flash('success', 'Préférence de recherche mise à jour.');
+        $this->redirect('/profile');
+    }
 }
