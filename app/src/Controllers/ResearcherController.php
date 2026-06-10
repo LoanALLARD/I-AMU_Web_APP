@@ -56,7 +56,7 @@ class ResearcherController extends Controller
         $researcherId = (int) $this->currentUser()['id'];
         $ids = array_map(
             'intval',
-            array_filter(explode(',', (string) $this->query('departments', '')), 'strlen')
+            array_filter(explode(',', (string) $this->query('departments', '')), static fn (string $s): bool => $s !== '')
         );
 
         $result = (new ResearcherAnalyticsService(Database::getConnection()))
