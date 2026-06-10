@@ -66,7 +66,7 @@ class DepartmentAdminController extends Controller
             ];
         }
 
-        $limit = 2;
+        $limit = 10;
         $members = $userRepo->listDepartmentMembers($departmentId, $cursor, $limit);
         $numberOfMembers = $userRepo->CountDepartmentMembers($departmentId);
 
