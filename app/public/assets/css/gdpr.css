@@ -1,4 +1,4 @@
-.rgpd-page {
+.gdpr-page {
     font-family: 'Nunito Sans', sans-serif;
     width: 100%;
     max-width: 800px;
@@ -13,7 +13,7 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
-.rgpd-header {
+.gdpr-header {
     background: var(--blue);
     border-radius: var(--radius) var(--radius) 0 0;
     padding: 2rem 2.5rem;
@@ -25,7 +25,7 @@
     position: relative;
     overflow: hidden;
 }
-.rgpd-header::before {
+.gdpr-header::before {
     content: '';
     position: absolute;
     top: -60px; right: -60px;
@@ -34,7 +34,7 @@
     background: rgba(255,255,255,.06);
     pointer-events: none;
 }
-.rgpd-header::after {
+.gdpr-header::after {
     content: '';
     position: absolute;
     bottom: -80px; left: -40px;
@@ -44,7 +44,7 @@
     pointer-events: none;
 }
 
-.rgpd-page .rgpd-label {
+.gdpr-page .gdpr-label {
     font-family: 'JetBrains Mono', monospace;
     font-size: .62rem;
     letter-spacing: .15em;
@@ -56,7 +56,7 @@
     z-index: 1;
 }
 
-.rgpd-title {
+.gdpr-title {
     font-family: 'Nunito', sans-serif;
     font-size: 1.55rem;
     font-weight: 700;
@@ -68,7 +68,7 @@
     z-index: 1;
 }
 
-.rgpd-meta {
+.gdpr-meta {
     font-family: 'JetBrains Mono', monospace;
     font-size: .68rem;
     color: rgba(255,255,255,.5);
@@ -78,7 +78,7 @@
 }
 
 
-.rgpd-intro {
+.gdpr-intro {
     background: var(--white);
     color: var(--gray-600);
     padding: 1.5rem 2.5rem;
@@ -88,17 +88,17 @@
     box-shadow: var(--shadow-sm);
 }
 
-.rgpd-section {
+.gdpr-section {
     background: var(--white);
     margin-bottom: 0;
     padding: 2rem 2.5rem;
     border-bottom: 1px solid var(--gray-200);
 }
-.rgpd-section:last-of-type {
+.gdpr-section:last-of-type {
     border-bottom: none;
 }
 
-.rgpd-section-num {
+.gdpr-section-num {
     font-family: 'JetBrains Mono', monospace;
     font-size: .62rem;
     letter-spacing: .12em;
@@ -108,7 +108,7 @@
     margin-bottom: .4rem;
 }
 
-.rgpd-section h2 {
+.gdpr-section h2 {
     font-family: 'Nunito', sans-serif;
     font-size: 1.1rem;
     font-weight: 700;
@@ -116,12 +116,12 @@
     color: var(--gray-800);
 }
 
-.rgpd-section p {
+.gdpr-section p {
     margin: 0 0 .75rem;
     font-size: .93rem;
 }
 
-.rgpd-table {
+.gdpr-table {
     width: 100%;
     border-collapse: collapse;
     font-size: .88rem;
@@ -129,7 +129,7 @@
     border-radius: 8px;
     overflow: hidden;
 }
-.rgpd-table th {
+.gdpr-table th {
     font-family: 'JetBrains Mono', monospace;
     font-size: .62rem;
     letter-spacing: .1em;
@@ -139,19 +139,19 @@
     background: var(--blue);
     color: var(--white);
 }
-.rgpd-table td {
+.gdpr-table td {
     padding: .6rem .75rem;
     border-bottom: 1px solid var(--gray-200);
     vertical-align: top;
     font-family: 'Nunito Sans', sans-serif;
 }
-.rgpd-table tr:nth-child(even) td {
+.gdpr-table tr:nth-child(even) td {
     background: var(--gray-100);
 }
-.rgpd-table tr:last-child td {
+.gdpr-table tr:last-child td {
     border-bottom: none;
 }
-.rgpd-table td:first-child {
+.gdpr-table td:first-child {
     font-family: 'JetBrains Mono', monospace;
     font-size: .78rem;
     color: var(--gray-600);
@@ -160,24 +160,24 @@
     font-weight: 500;
 }
 
-.rgpd-rights {
+.gdpr-rights {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: .75rem;
     margin-top: .75rem;
 }
-.rgpd-right-card {
+.gdpr-right-card {
     border: 1.5px solid var(--gray-200);
     padding: .9rem 1rem;
     background: var(--gray-100);
     border-radius: var(--radius);
     transition: border-color .18s, box-shadow .18s;
 }
-.rgpd-right-card:hover {
+.gdpr-right-card:hover {
     border-color: var(--blue);
     box-shadow: 0 2px 8px rgba(26,115,200,.08);
 }
-.rgpd-right-card strong {
+.gdpr-right-card strong {
     display: block;
     font-family: 'Nunito', sans-serif;
     font-size: .85rem;
@@ -185,14 +185,14 @@
     margin-bottom: .25rem;
     color: var(--gray-800);
 }
-.rgpd-right-card p {
+.gdpr-right-card p {
     font-size: .8rem;
     color: var(--gray-400);
     margin: 0;
     line-height: 1.5;
 }
 
-.rgpd-contact {
+.gdpr-contact {
     background: var(--gold-light);
     border-left: 3px solid var(--gold);
     padding: 1rem 1.25rem;
@@ -200,7 +200,7 @@
     font-size: .9rem;
     border-radius: 0 var(--radius) var(--radius) 0;
 }
-.rgpd-contact strong {
+.gdpr-contact strong {
     display: block;
     margin-bottom: .35rem;
     font-family: 'JetBrains Mono', monospace;
@@ -209,16 +209,16 @@
     text-transform: uppercase;
     color: var(--gold);
 }
-.rgpd-contact a {
+.gdpr-contact a {
     color: var(--blue);
     text-decoration: none;
     font-weight: 600;
 }
-.rgpd-contact a:hover {
+.gdpr-contact a:hover {
     text-decoration: underline;
 }
 
-.rgpd-warning {
+.gdpr-warning {
     border: 1.5px solid var(--blue);
     background: var(--blue-light);
     padding: 1rem 1.25rem;
@@ -236,7 +236,7 @@
     color: var(--blue);
 }
 
-.rgpd-footer {
+.gdpr-footer {
     background: var(--white);
     margin-top: 0;
     padding: 1.5rem 2.5rem;
@@ -249,13 +249,13 @@
     gap: 1rem;
     box-shadow: 0 4px 16px rgba(26,115,200,.06);
 }
-.rgpd-footer p {
+.gdpr-footer p {
     font-family: 'JetBrains Mono', monospace;
     font-size: .68rem;
     color: var(--gray-400);
     margin: 0;
 }
-.rgpd-footer a {
+.gdpr-footer a {
     color: var(--blue);
     font-family: 'Nunito', sans-serif;
     font-size: .82rem;
@@ -266,18 +266,18 @@
     background: var(--blue-light);
     transition: background .18s, color .18s;
 }
-.rgpd-footer a:hover {
+.gdpr-footer a:hover {
     background: var(--blue);
     color: var(--white);
 }
 
 @media (max-width: 560px) {
-    .rgpd-page { margin: 0; }
-    .rgpd-header { padding: 1.5rem 1.25rem; flex-direction: column; align-items: flex-start; }
-    .rgpd-meta { text-align: left; }
-    .rgpd-title { font-size: 1.25rem; }
-    .rgpd-intro { padding: 1.25rem; }
-    .rgpd-section { padding: 1.5rem 1.25rem; }
-    .rgpd-footer { padding: 1.25rem; }
-    .rgpd-table td:first-child { white-space: normal; width: auto; }
+    .gdpr-page { margin: 0; }
+    .gdpr-header { padding: 1.5rem 1.25rem; flex-direction: column; align-items: flex-start; }
+    .gdpr-meta { text-align: left; }
+    .gdpr-title { font-size: 1.25rem; }
+    .gdpr-intro { padding: 1.25rem; }
+    .gdpr-section { padding: 1.5rem 1.25rem; }
+    .gdpr-footer { padding: 1.25rem; }
+    .gdpr-table td:first-child { white-space: normal; width: auto; }
 }

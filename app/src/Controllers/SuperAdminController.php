@@ -30,13 +30,58 @@ class SuperAdminController extends Controller
 
         $this->renderPanel(
             'pages/superadmin/department-admins',
-            'Administrateurs',
+            'Administrateurs de département',
+            'department-admins',
+            ['departments' => $this->allDepartments()]
+        );
+    }
+
+    public function showSetting(): void
+    {
+        $this->renderPanel(
+            'pages/superadmin/settings',
+            'Administrateurs de departement',
             'department-admins',
             [
-                'places'            => $places->all(),
-                'departmentAdmins'  => $users->listDepartmentAdmins(),
+                'user'      => $this->currentSuperAdmin(),
             ]
         );
+    }
+
+    public function updateInfo(): void
+    {
+        $admin = $this->currentSuperAdmin();
+
+        $first_name          = $this->input('first_name', null);
+        $last_name           = $this->input('last_name', null);
+        $email               = $this->input('email',null);
+        $password            = $this->input('password',null);
+        $password_confirm    = $this->input('password_confirm',null);
+
+        $pdo = Database::getConnection();
+        $adminRepository = new SuperAdministratorRepository($pdo);
+
+        try{
+            if ($password && $password_confirm && $password != $password_confirm) {
+                throw new Exception("Les mots de passe ne correspondent pas.");
+            }
+            if ($first_name) {$adminRepository->updateFirstName($admin["id"],$first_name);}
+            if ($last_name) {$adminRepository->updateLastName($admin["id"],$last_name);}
+            if ($email) {$adminRepository->updateEmail($admin["id"],$email);}
+            if ($password) {$adminRepository->updatePassword($admin["id"],$password);}
+
+            if (isset($_SESSION['super_admin_id'])) {
+                if ($first_name) { $_SESSION['super_admin_first_name'] = $first_name; }
+                if ($last_name)  { $_SESSION['super_admin_last_name']  = $last_name; }
+                if ($email)      { $_SESSION['super_admin_email']      = $email; }
+            }
+
+        }catch(Exception $e){
+            header('Content-Type: application/json');
+            http_response_code(422);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+        $this->showSetting();
     }
 
     public function places(): void
@@ -45,7 +90,7 @@ class SuperAdminController extends Controller
 
         $this->renderPanel(
             'pages/superadmin/places',
-            'Sites et departements',
+            'Sites et départements',
             'places',
             [
                 'places'      => $service->listPlaces(),
@@ -341,29 +386,3 @@ class SuperAdminController extends Controller
         );
         $this->redirect('/super-admin/department-admins');
     }
-
-    /**
-     * Revokes a department admin's access by deactivating the account (POST).
-     */
-    public function revokeDepartmentAdmin(): void
-    {
-        $this->requireSuperAdmin();
-        $this->verifyCsrf();
-        $repo = new \Models\userRepository(Database::getConnection());
-
-        try {
-            $changed = $repo->deleteAdmin((int) $this->input('id', 0));
-        } catch (\Throwable $e) {
-
-            error_log('REVOKE ADMIN DELETE ERROR: ' . $e->getMessage());
-            $this->flash('error', 'Impossible de supprimer cet administrateur : des donnees liees existent (conversations, documents).');
-            $this->redirect('/super-admin/department-admins');
-        }
-
-        $this->flash(
-            $changed > 0 ? 'success' : 'error',
-            $changed > 0 ? 'Administrateur supprime.' : 'Aucun administrateur a supprimer.'
-        );
-        $this->redirect('/super-admin/department-admins');
-    }
-}

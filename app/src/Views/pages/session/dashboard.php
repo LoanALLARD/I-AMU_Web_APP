@@ -20,8 +20,8 @@ $canManage = $canManage ?? false;
                 class="badge <?= htmlspecialchars($view['statusClass']) ?>"><?= htmlspecialchars($view['statusLabel']) ?></span>
             <?php if ($view['accessCode'] !== ''): ?>
                 <code class="access-code-cell" style="font-size:13px;color:var(--gray-600);">
-                            <?= htmlspecialchars($view['accessCode']) ?>
-                        </code>
+                                <?= htmlspecialchars($view['accessCode']) ?>
+                            </code>
             <?php endif; ?>
         </div>
     </div>
@@ -29,6 +29,9 @@ $canManage = $canManage ?? false;
         <?php if (!empty($view['canMonitor'])): ?>
             <a href="/sessions/<?= (int) $view['id'] ?>/monitor" class="btn primary">
                 <?= icon('user', '', 12) ?> Suivi
+            </a>
+            <a href="/sessions/<?= (int) $view['id'] ?>/stats" class="btn">
+                <?= icon('chart-line', '', 12) ?> Statistiques
             </a>
             <button type="button" class="btn" id="btn-open-export">
                 <?= icon('archive', '', 12) ?> Exporter (JSON)
@@ -133,12 +136,13 @@ $canManage = $canManage ?? false;
             </p>
 
             <?php
-            $importLabel   = (string) $view['documentsImportLabel'];
+            $importLabel = (string) $view['documentsImportLabel'];
             $importEnabled = str_starts_with($importLabel, 'Autorisé');
             ?>
             <div class="doc-setting">
                 <span class="kv-key">Import étudiant</span>
-                <span class="doc-setting-state <?= $importEnabled ? 'is-on' : 'is-off' ?>"><?= htmlspecialchars($importLabel) ?></span>
+                <span
+                    class="doc-setting-state <?= $importEnabled ? 'is-on' : 'is-off' ?>"><?= htmlspecialchars($importLabel) ?></span>
             </div>
 
             <div class="doc-list-head">
@@ -158,18 +162,20 @@ $canManage = $canManage ?? false;
                         <div class="doc-item">
                             <div class="doc-item-main">
                                 <a href="/documents/session_<?= (int) $doc->sessionId() ?>/<?= (int) $doc->id() ?>"
-                                   target="_blank" rel="noopener" class="doc-item-link">
-                                    <?= icon('book', '', 13) ?> <?= htmlspecialchars($doc->originalName()) ?>
+                                    target="_blank" rel="noopener" class="doc-item-link">
+                                    <?= icon('book', '', 13) ?>         <?= htmlspecialchars($doc->originalName()) ?>
                                 </a>
                                 <span class="doc-item-meta">
-                                    <?= htmlspecialchars($doc->kindLabel()) ?> · <?= htmlspecialchars($doc->humanSize()) ?> · <?= htmlspecialchars($doc->status()->label()) ?>
+                                    <?= htmlspecialchars($doc->kindLabel()) ?> · <?= htmlspecialchars($doc->humanSize()) ?> ·
+                                    <?= htmlspecialchars($doc->status()->label()) ?>
                                 </span>
                             </div>
                             <?php if ($canManage): ?>
-                                <form method="POST" action="/documents/<?= (int) $doc->id() ?>/delete"
-                                      class="doc-item-delete" onsubmit="return confirm('Supprimer ce document ?')">
+                                <form method="POST" action="/documents/<?= (int) $doc->id() ?>/delete" class="doc-item-delete"
+                                    onsubmit="return confirm('Supprimer ce document ?')">
                                     <?= csrf_field() ?>
-                                    <button type="submit" class="btn bordered sm" title="Supprimer"><?= icon('x-circle', '', 13) ?></button>
+                                    <button type="submit" class="btn bordered sm"
+                                        title="Supprimer"><?= icon('x-circle', '', 13) ?></button>
                                 </form>
                             <?php endif; ?>
                         </div>

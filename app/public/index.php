@@ -83,9 +83,11 @@
     // --- Super admin (isolated session, URL-only — no internal link) --
     // Dedicated login + panel, reachable only by direct URL (decision D1,
     // SPEC-superadmin-auth.md). Never linked from the user-facing app.
-    $router->add('GET',  '/super-admin/login',  function() { (new SuperAdminAuthController())->showLogin(); });
-    $router->add('POST', '/super-admin/login',  function() { (new SuperAdminAuthController())->login(); });
-    $router->add('POST', '/super-admin/logout', function() { (new SuperAdminAuthController())->logout(); });
+    $router->add('GET',  '/super-admin/login',             function() { (new SuperAdminAuthController())->showLogin(); });
+    $router->add('POST', '/super-admin/login',             function() { (new SuperAdminAuthController())->login(); });
+    $router->add('POST', '/super-admin/logout',            function() { (new SuperAdminAuthController())->logout(); });
+    $router->add('GET',  '/super-admin/settings',          function() { (new SuperAdminController())->showSetting();});
+    $router->add('POST', '/super-admin/settings/update',   function() { (new SuperAdminController())->updateInfo();});
     $router->add('GET',  '/super-admin',                   function() { (new SuperAdminController())->index(); });
     $router->add('GET',  '/super-admin/department-admins', function() { (new SuperAdminController())->departmentAdmins(); });
     $router->add('GET',  '/super-admin/places',            function() { (new SuperAdminController())->places(); });
@@ -110,7 +112,9 @@
     // --- Researcher space (researcher role) ---------------------------
     $router->add('GET',  '/researcher',                 function() { (new ResearcherController())->index(); });
     $router->add('GET',  '/researcher/data',            function() { (new ResearcherController())->data(); });
+    $router->add('GET',  '/researcher/data/stats',      function() { (new ResearcherController())->stats(); });
     $router->add('GET',  '/researcher/export',          function() { (new ResearcherController())->export(); });
+    $router->add('GET',  '/researcher/export/download', function() { (new ResearcherController())->exportDownload(); });
     $router->add('POST', '/researcher/requests',        function() { (new ResearcherController())->requestAccess(); });
     $router->add('POST', '/researcher/requests/cancel', function() { (new ResearcherController())->cancelRequest(); });
 
@@ -129,6 +133,7 @@
     $router->add('POST', '/sessions/{id}/end',    function($id) { (new SessionController())->end($id); });
     $router->add('POST', '/sessions/{id}/cancel', function($id) { (new SessionController())->cancel($id); });
     $router->add('GET',  '/sessions/{id}/monitor', function($id) { (new SessionController())->monitor($id); });
+    $router->add('GET',  '/sessions/{id}/stats',   function($id) { (new SessionController())->stats($id); });
     $router->add('GET',  '/sessions/{id}/export',  function($id) { (new SessionController())->export($id); });
     $router->add('POST', '/sessions/{id}/documents', function($id) { (new DocumentController())->uploadToSession($id); });
     $router->add('POST', '/sessions/{id}/student-status', function($id) { (new SessionController())->setStudentActive($id); });
@@ -139,7 +144,8 @@
     $router->add('POST', '/ressources/store',        function()    { (new RessourceController())->store(); });
     $router->add('GET',  '/ressources/{id}/edit',    function($id) { (new RessourceController())->edit($id); });
     $router->add('POST', '/ressources/{id}/update',  function($id) { (new RessourceController())->update($id); });
-    $router->add('POST', '/ressources/{id}/delete',  function($id) { (new RessourceController())->delete($id); });
+    $router->add('POST', '/ressources/{id}/archive',  function($id) { (new RessourceController())->archive($id); });
+    $router->add('POST', '/ressources/{id}/restore',  function($id) { (new RessourceController())->restore($id); });
 
     $router->add('POST', '/documents/{id}/delete', function($id) { (new DocumentController())->delete($id); });
     $router->add('GET',  '/documents/session_{sessionId}/{docId}', function($sessionId, $docId) { (new DocumentController())->download($sessionId, $docId); });

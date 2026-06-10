@@ -130,13 +130,15 @@ $themePref = match ($user['theme'] ?? null) {
     <?php if ($page === 'error'): ?>
         <link rel="stylesheet" href="/assets/css/error.css<?= $v('error.css') ?>">
     <?php endif; ?>
-    <?php if ($page === 'rgpd'): ?>
-        <link rel="stylesheet" href="/assets/css/rgpd.css<?= $v('rgpd.css') ?>">
+    <?php if ($page === 'gdpr'): ?>
+        <link rel="stylesheet" href="/assets/css/gdpr.css<?= $v('gdpr.css') ?>">
     <?php endif; ?>
 
 
     <?php $jsDir = dirname(__DIR__, 3) . '/public/assets/js'; ?>
     <script src="/assets/js/clipboard.js<?= '?v=' . (@filemtime("$jsDir/clipboard.js") ?: 0) ?>" defer></script>
+    <?php /* Easter egg: Konami code -> retro CRT mode. Self-contained. */ ?>
+    <script src="/assets/js/konami.js<?= '?v=' . (@filemtime("$jsDir/konami.js") ?: 0) ?>" defer></script>
     <?php if ($needsMarkdown): ?>
         <?php /* Markdown rendering for AI replies (chat live + history, and the
          teacher monitor transcript). Loaded synchronously in <head> so the

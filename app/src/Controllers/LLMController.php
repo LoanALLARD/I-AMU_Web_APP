@@ -141,7 +141,6 @@ class LLMController{
                 $conversationData['name'] = $nameConversation;
             }
         }
-
         if ($conversationData == null){
             header('Content-Type: application/json');
             http_response_code(404);
@@ -277,7 +276,7 @@ class LLMController{
             $result = $ai->askStream($userMessage, $context, $preprompt, $postprompt, $onChunk);
         } catch (\Throwable $e) {
             echo "event: error\n";
-            echo 'data: ' . json_encode(['error' => 'Le modele est indisponible.']) . "\n\n";
+            echo 'data: ' . json_encode(['error' => 'Le modèle est indisponible.']) . "\n\n";
             flush();
             return;
         }
@@ -326,5 +325,59 @@ class LLMController{
                 'documents'         => $boundDocs,
             ]) . "\n\n";
         flush();
+    }
+}
+        // Final event: metadata the UI needs once generation is done. The
+        // interaction id lets the chat wire its satisfaction thumbs (feedback).
+        echo "event: done\n";
+        echo 'data: ' . json_encode([
+                'prompt_eval_count' => $result['prompt_eval_count'],
+                'eval_count'        => $result['eval_count'],
+                'conversation_id'   => $conversationData['id'] ?? null,
+                'conversation_name' => $conversationData['name'] ?? null,
+                'interaction_id'    => $interactionId,
+                'documents'         => $boundDocs,
+            ]) . "\n\n";
+        flush();
+    }
+
+    /**
+     * Records the satisfaction rating a student gives to one of their own AI
+     * responses (the chat thumbs up/down). Persists `interactions.user_feedback`
+     * scoped to the authenticated user's own conversations, so nobody can rate
+     * another student's interaction. Expects JSON { interaction_id, value }
+     * with value in {1, 0, -1}.
+     */
+    public function recordFeedback(): void
+    {
+        header('Content-Type: application/json');
+
+        $data = json_decode((string) file_get_contents('php://input'), true);
+        $interactionId = isset($data['interaction_id']) ? (int) $data['interaction_id'] : 0;
+        $value         = isset($data['value']) ? (int) $data['value'] : 99;
+
+        if ($interactionId <= 0 || !in_array($value, [1, 0, -1], true)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Requête invalide.']);
+            return;
+        }
+
+        $userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
+        if ($userId <= 0) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Non authentifié.']);
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $ok  = (new InteractionRepository($pdo))->setFeedback($interactionId, $userId, $value);
+
+        if (!$ok) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Interaction introuvable.']);
+            return;
+        }
+
+        echo json_encode(['ok' => true, 'value' => $value]);
     }
 }

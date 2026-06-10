@@ -28,20 +28,16 @@ final class AdminInviteService
 
     public function __construct(PDO $pdo)
     {
-        $config            = require __DIR__ . '/../Config/config.php';
-        $this->users       = new UserRepository($pdo);
+        $config = require __DIR__ . '/../Config/config.php';
+        $this->users = new UserRepository($pdo);
         $this->superAdmins = new SuperAdministratorRepository($pdo);
-        $this->secret      = (string) ($config['app']['secret'] ?? '');
+        $this->secret = (string) ($config['app']['secret'] ?? '');
     }
 
     /**
      * Builds a signed token: base64url(email|deptId|role|expiresAt).signature
      */
-    public function makeToken(
-        string $email,
-        int $departmentId,
-        string $role = self::ROLE_DEPARTMENT_ADMIN
-    ): string {
+    public function makeToken(string $email, int $departmentId, string $role = self::ROLE_DEPARTMENT_ADMIN): string {
         $expiresAt = time() + self::TTL_SECONDS;
         $payload   = $email . '|' . $departmentId . '|' . $role . '|' . $expiresAt;
         $encoded   = $this->base64UrlEncode($payload);
@@ -88,6 +84,7 @@ final class AdminInviteService
         } else {
             return null;
         }
+        [$email, $departmentId, $expiresAt] = $fields;
 
         if ((int) $expiresAt < time()) {
             return null;

@@ -236,7 +236,7 @@ body.auth-body > main {
     margin-bottom: 1.1rem !important;
 }
 
-.rgpd-group.promo-collapse.show {
+.gdpr-group.promo-collapse.show {
     margin-top: 1.25rem !important;
     margin-bottom: 1.25rem !important;
     padding-top: .85rem !important;
@@ -244,8 +244,8 @@ body.auth-body > main {
     border-width: 1.5px !important;
 }
 
-/* RGPD consent checkbox */
-.rgpd-group {
+/* GDPR consent checkbox */
+.gdpr-group {
     background: var(--blue-light);
     border: 1.5px solid rgba(26,115,200,.2);
     border-radius: 8px;
@@ -255,7 +255,7 @@ body.auth-body > main {
     align-items: flex-start;
     gap: .75rem;
 }
-.rgpd-group input[type="checkbox"] {
+.gdpr-group input[type="checkbox"] {
     width: 17px;
     height: 17px;
     accent-color: var(--blue);
@@ -263,7 +263,7 @@ body.auth-body > main {
     margin-top: 2px;
     cursor: pointer;
 }
-.rgpd-group .rgpd-label {
+.gdpr-group .gdpr-label {
     font-size: .84rem;
     color: var(--gray-800);
     line-height: 1.55;
@@ -271,13 +271,13 @@ body.auth-body > main {
     letter-spacing: 0;
     font-weight: 400;
 }
-.rgpd-group .rgpd-label a {
+.gdpr-group .gdpr-label a {
     color: var(--blue);
     font-weight: 700;
     text-decoration: none;
     border-bottom: 1px dashed var(--blue);
 }
-.rgpd-group .rgpd-label a:hover { border-bottom-style: solid; }
+.gdpr-group .gdpr-label a:hover { border-bottom-style: solid; }
 
 /* Submit button */
 .btn-submit {

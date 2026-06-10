@@ -149,12 +149,3 @@
         </section>
     </main>
 </div>
-
-<?php
-$sortJs   = __DIR__ . '/../../../../public/assets/js/table-sort.js';
-$inviteJs = __DIR__ . '/../../../../public/assets/js/admin-invite.js';
-$sortVer   = is_file($sortJs) ? filemtime($sortJs) : 0;
-$inviteVer = is_file($inviteJs) ? filemtime($inviteJs) : 0;
-?>
-<script src="/assets/js/table-sort.js?v=<?= $sortVer ?>" defer></script>
-<script src="/assets/js/admin-invite.js?v=<?= $inviteVer ?>" defer></script>

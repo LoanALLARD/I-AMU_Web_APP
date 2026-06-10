@@ -18,10 +18,13 @@ final class ResearcherAuthorizationService
     private ResearcherAuthorizationRepository $repo;
     private PlaceRepository $places;
 
-    public function __construct(PDO $pdo)
-    {
-        $this->repo   = new ResearcherAuthorizationRepository($pdo);
-        $this->places = new PlaceRepository($pdo);
+    public function __construct(
+        PDO $pdo,
+        ?ResearcherAuthorizationRepository $repo = null,
+        ?PlaceRepository $places = null
+    ) {
+        $this->repo   = $repo ?? new ResearcherAuthorizationRepository($pdo);
+        $this->places = $places ?? new PlaceRepository($pdo);
     }
 
     /**
@@ -179,6 +182,34 @@ final class ResearcherAuthorizationService
             },
             $this->repo->findByResearcher($researcherId)
         );
+    }
+
+    /**
+     * The researcher's active accesses, grouped by place. An authorization is
+     * department-scoped, but several departments of one site are folded under a
+     * single place entry so the analysis view can list them together.
+     *
+     * @return list<array{place_id:int, place_name:string, departments:list<array{department_id:int, department_name:string}>}>
+     */
+    public function listActiveGroupedByPlace(int $researcherId): array
+    {
+        $grouped = [];
+        foreach ($this->repo->findActiveByResearcher($researcherId) as $row) {
+            $placeId = (int) $row['place_id'];
+            if (!isset($grouped[$placeId])) {
+                $grouped[$placeId] = [
+                    'place_id'     => $placeId,
+                    'place_name'   => (string) $row['place_name'],
+                    'departments'  => [],
+                ];
+            }
+            $grouped[$placeId]['departments'][] = [
+                'department_id'   => (int) $row['department_id'],
+                'department_name' => (string) $row['department_name'],
+            ];
+        }
+
+        return array_values($grouped);
     }
 
     /** Maps the timestamp pair to a status; the most recent decision wins. */
