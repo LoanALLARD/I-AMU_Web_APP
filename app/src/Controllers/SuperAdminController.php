@@ -160,9 +160,12 @@ class SuperAdminController extends Controller
         $service = new \Services\AdminInviteService(Database::getConnection());
         $token   = $service->makeToken($email, $departmentId);
 
-        $config = require __DIR__ . '/../Config/config.php';
-        $link   = ($config['app']['url'] ?? 'http://localhost:8085')
-                . '/admin-invite/accept?token=' . urlencode($token);
+        // Derive the base URL from the current request so the link points to
+        // the host the super admin actually reached the app through.
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host   = $_SERVER['HTTP_HOST'] ?? 'localhost:8085';
+        $link   = $scheme . '://' . $host
+            . '/admin-invite/accept?token=' . urlencode($token);;
 
         $mail = new \Services\MailService();
         $sent = $mail->send(
