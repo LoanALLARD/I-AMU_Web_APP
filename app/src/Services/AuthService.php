@@ -168,8 +168,8 @@ final class AuthService
                     'last_name'       => $lastName,
                     'department_id'   => $registration['department_id'],
                     'laboratory_id'   => $registration['laboratory_id'],
-                    'consent_version' => '1.0',
-                    'promo_year'      => $promo_year
+                    'promo_year'      => $promo_year,
+                    'consent_version' => $isResearcher ? 'researcher-1.0' : 'member-1.0'
 
                 ],
                 $registration['role']
@@ -178,9 +178,12 @@ final class AuthService
             $token = bin2hex(random_bytes(32));
             $this->users->setVerifyToken($userId, $token);
 
-            // --- Send verification email ---
-            $config = require __DIR__ . '/../Config/config.php';
-            $link   = ($config['app']['url'] ?? 'http://localhost:8085') . '/verify-email?token=' . $token;
+            // Derive the base URL from the current request so the link points to
+            // the host the super admin actually reached the app through.
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host   = $_SERVER['HTTP_HOST'] ?? 'localhost:8085';
+            $link   = $scheme . '://' . $host
+                . '/admin-invite/accept?token=' . urlencode($token);
 
             $mail = new MailService();
             $mail->send(

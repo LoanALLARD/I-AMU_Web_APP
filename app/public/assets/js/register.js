@@ -54,12 +54,18 @@
     // `required` (a hidden required select would block submission).
     const researcherCheckbox = document.getElementById('is_researcher');
     const affiliationFields  = document.getElementById('affiliation-fields');
+    const consentMember      = document.getElementById('consent-text-member');
+    const consentResearcher  = document.getElementById('consent-text-researcher');
 
     function applyResearcherMode(isResearcher) {
         affiliationFields.hidden = isResearcher;
         placeSelect.required = !isResearcher;
         if (isResearcher) {
             deptSelect.required = false;
+        }
+        if (consentMember && consentResearcher) {
+            consentMember.hidden = isResearcher;
+            consentResearcher.hidden = !isResearcher;
         }
     }
 

@@ -36,13 +36,14 @@ class ResourceRepository
                     r.state,
                     (r.owner_id = :tid1) AS is_owner
              FROM resources r
-             WHERE r.owner_id = :tid2
+             WHERE (r.owner_id = :tid2
                 OR EXISTS (
                     SELECT 1
                     FROM teacher_resources tr
                     WHERE tr.resource_id = r.id
                       AND tr.teacher_id  = :tid3
-                )
+                ))
+                AND r.state !='ARCHIVED'
              ORDER BY r.code"
         );
         $stmt->execute(['tid1' => $teacherId, 'tid2' => $teacherId, 'tid3' => $teacherId]);
@@ -92,6 +93,59 @@ class ResourceRepository
         return $stmt->fetch() ?: null;
     }
 
+    /**
+     * Archived resources owned by the teacher.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findArchivedByOwner(int $teacherId): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT r.id,
+                    r.department_id,
+                    r.owner_id,
+                    r.code,
+                    r.name,
+                    r.description,
+                    r.semester,
+                    r.state,
+                    true AS is_owner
+            FROM resources r
+            WHERE r.owner_id = :tid
+            AND r.state = 'ARCHIVED'
+            ORDER BY r.code"
+        );
+        $stmt->execute(['tid' => $teacherId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
+
+    /**
+     * Archives a resource (sets state to ARCHIVED).
+     */
+    public function archive(int $id): void
+    {
+        $stmt = $this->pdo->prepare(
+            "UPDATE resources SET state = 'ARCHIVED' WHERE id = :id"
+        );
+        $stmt->execute(['id' => $id]);
+    }
+
+    /**
+     * Restores an archived resource by resetting its state to DRAFT.
+     */
+    public function restore(int $id): void
+    {
+        $stmt = $this->pdo->prepare(
+            "UPDATE resources SET state = 'DRAFT' WHERE id = :id"
+        );
+        $stmt->execute(['id' => $id]);
+    }
+
+    
     /**
      * Whether the teacher is attached to the resource via `teacher_resources`,
      * i.e. a co-teacher / read-only supervisor. This is distinct from being the
@@ -200,16 +254,6 @@ class ResourceRepository
         ]);
     }
  
-    /**
-     * Deletes a resource by id. The FK ON DELETE RESTRICT on sessions
-     * will bubble up as a PDOException if sessions still reference it —
-     * callers must catch and surface this as a domain error.
-     */
-    public function delete(int $id): void
-    {
-        $stmt = $this->pdo->prepare('DELETE FROM resources WHERE id = :id');
-        $stmt->execute(['id' => $id]);
-    }
 
     /**
      * Returns the ids of all teachers currently assigned to a resource

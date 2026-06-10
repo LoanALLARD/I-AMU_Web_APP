@@ -45,6 +45,7 @@
     $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
     $router->add('POST', '/reactivate',  function() { (new AuthController())->reactivate();});
     $router->add('GET',  '/rgpd_consent', function() { (new AuthController())->showRGPD(); });
+    $router->add('GET',  '/rgpd_consent_researcher', function() { (new AuthController())->showRGPDResearcher(); });
     $router->add('GET',  '/verify-email',function() { (new AuthController())->verifyEmail(); });
 
     // AJAX: departments of a place, for the registration form's dependent select.
@@ -97,6 +98,12 @@
     $router->add('POST', '/super-admin/email-domains',     function() { (new SuperAdminController())->addEmailDomain(); });
     $router->add('POST', '/super-admin/email-domains/role',   function() { (new SuperAdminController())->changeEmailDomainRole(); });
     $router->add('POST', '/super-admin/email-domains/toggle', function() { (new SuperAdminController())->toggleEmailDomain(); });
+    $router->add('POST', '/super-admin/department-admins/invite', function () { (new SuperAdminController())->inviteDepartmentAdmin(); });
+
+    //Admin invitation
+    $router->add('GET',  '/admin-invite/accept', function () { (new AuthController())->showAcceptInvite(); });
+    $router->add('POST', '/admin-invite/accept', function () { (new AuthController())->acceptInvite(); });
+
 
     // --- Researcher space (researcher role) ---------------------------
     $router->add('GET',  '/researcher',                 function() { (new ResearcherController())->index(); });
@@ -131,7 +138,8 @@
     $router->add('POST', '/ressources/store',        function()    { (new RessourceController())->store(); });
     $router->add('GET',  '/ressources/{id}/edit',    function($id) { (new RessourceController())->edit($id); });
     $router->add('POST', '/ressources/{id}/update',  function($id) { (new RessourceController())->update($id); });
-    $router->add('POST', '/ressources/{id}/delete',  function($id) { (new RessourceController())->delete($id); });
+    $router->add('POST', '/ressources/{id}/archive',  function($id) { (new RessourceController())->archive($id); });
+    $router->add('POST', '/ressources/{id}/restore',  function($id) { (new RessourceController())->restore($id); });
 
     $router->add('POST', '/documents/{id}/delete', function($id) { (new DocumentController())->delete($id); });
     $router->add('GET',  '/documents/session_{sessionId}/{docId}', function($sessionId, $docId) { (new DocumentController())->download($sessionId, $docId); });

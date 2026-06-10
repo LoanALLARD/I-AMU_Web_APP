@@ -35,7 +35,7 @@ class SuperAdminAuthController extends Controller
         }
         $this->render(
             'pages/superadmin/login',
-            ['titrePage' => 'Connexion administration'],
+            ['titrePage' => 'Connexion administration', 'bodyClass' => 'auth-body'],
             'superadmin'
         );
     }
@@ -57,6 +57,7 @@ class SuperAdminAuthController extends Controller
                 'pages/superadmin/login',
                 [
                     'titrePage' => 'Connexion administration',
+                    'bodyClass' => 'auth-body',
                     'error'     => $result['error'],
                     'email'     => $email,
                 ],
