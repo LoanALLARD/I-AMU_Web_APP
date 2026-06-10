@@ -263,6 +263,35 @@ class ResearcherAuthorizationRepository
     }
 
     /**
+     * The departments a researcher currently has active access to, each carrying
+     * its place so the caller can group them by site. Revoked/pending grants are
+     * excluded.
+     *
+     * @return list<array{place_id:int, place_name:string, department_id:int, department_name:string}>
+     */
+    public function findActiveByResearcher(int $researcherId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT d.place_id,
+                    p.name AS place_name,
+                    ra.department_id,
+                    d.name AS department_name
+             FROM researcher_authorizations ra
+             JOIN departments d ON d.id = ra.department_id
+             JOIN places p ON p.id = d.place_id
+             WHERE ra.researcher_id = :rid
+               AND ' . self::ACTIVE_PREDICATE . '
+             ORDER BY p.name, d.name'
+        );
+        $stmt->execute(['rid' => $researcherId]);
+
+        /** @var list<array{place_id:int, place_name:string, department_id:int, department_name:string}> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
+
+    /**
      * A researcher's requests with department, place and raw timestamps.
      *
      * @return list<array<string, mixed>>

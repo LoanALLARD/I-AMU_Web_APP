@@ -100,6 +100,7 @@
     // --- Researcher space (researcher role) ---------------------------
     $router->add('GET',  '/researcher',                 function() { (new ResearcherController())->index(); });
     $router->add('GET',  '/researcher/data',            function() { (new ResearcherController())->data(); });
+    $router->add('GET',  '/researcher/data/stats',      function() { (new ResearcherController())->stats(); });
     $router->add('GET',  '/researcher/export',          function() { (new ResearcherController())->export(); });
     $router->add('POST', '/researcher/requests',        function() { (new ResearcherController())->requestAccess(); });
     $router->add('POST', '/researcher/requests/cancel', function() { (new ResearcherController())->cancelRequest(); });
