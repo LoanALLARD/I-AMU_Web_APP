@@ -34,7 +34,6 @@ return [
     ],
 
     'app' => [
-        'url' => $_ENV['APP_URL'] ?? 'http://localhost:8085',
         'secret' => $_ENV['APP_SECRET'] ?? '',
     ],
     // Debug mode (APP_DEBUG=true in dev). When on, the error page shows the
