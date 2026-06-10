@@ -110,6 +110,8 @@ INSERT INTO teacher_resources (teacher_id, resource_id) VALUES
     ((SELECT id FROM users WHERE email = 'luc.moreau@univ-amu.fr'),
      (SELECT id FROM resources WHERE code = 'INF101')),
     ((SELECT id FROM users WHERE email = 'claire.petit@univ-amu.fr'),
+     (SELECT id FROM resources WHERE code = 'INF202')),
+    ((SELECT id FROM users WHERE email = 'marie.dupont@univ-amu.fr'),
      (SELECT id FROM resources WHERE code = 'INF202'));
 
 INSERT INTO student_resources (student_id, resource_id) VALUES
