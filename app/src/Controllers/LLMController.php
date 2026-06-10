@@ -283,6 +283,7 @@ class LLMController{
 
         // Persist the interaction (every conversation is persisted).
         $boundDocs = [];
+        $interactionId = null;
         if ($conversationData !== null && $result['response'] !== '') {
             $interaction = new InteractionRepository($pdo);
             $interactionData = $interaction->newInteration(
@@ -315,18 +316,6 @@ class LLMController{
             }
         }
 
-        // Final event: metadata the UI needs once generation is done.
-        echo "event: done\n";
-        echo 'data: ' . json_encode([
-                'prompt_eval_count' => $result['prompt_eval_count'],
-                'eval_count'        => $result['eval_count'],
-                'conversation_id'   => $conversationData['id'] ?? null,
-                'conversation_name' => $conversationData['name'] ?? null,
-                'documents'         => $boundDocs,
-            ]) . "\n\n";
-        flush();
-    }
-}
         // Final event: metadata the UI needs once generation is done. The
         // interaction id lets the chat wire its satisfaction thumbs (feedback).
         echo "event: done\n";
@@ -341,7 +330,8 @@ class LLMController{
         flush();
     }
 
-    /**
+
+/**
      * Records the satisfaction rating a student gives to one of their own AI
      * responses (the chat thumbs up/down). Persists `interactions.user_feedback`
      * scoped to the authenticated user's own conversations, so nobody can rate
