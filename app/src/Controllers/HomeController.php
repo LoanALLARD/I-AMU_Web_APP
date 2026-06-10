@@ -20,7 +20,7 @@ use Services\ExamLockService;
  * sidebar lists the right conversations, then renders the chat home. A new
  * conversation is persisted on its first message (POST /chat), not up front.
  */
-class AccueilController extends Controller
+class HomeController extends Controller
 {
     private ChatService $chat;
     private ExamLockService $examLocks;

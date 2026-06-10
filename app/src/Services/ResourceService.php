@@ -15,7 +15,7 @@ use PDO;
  * owning teacher may create, edit, or delete it. Deletion is blocked at the
  * database level when sessions still reference the resource.
  */
-class RessourceService
+class ResourceService
 {
     private ResourceRepository $resources;
     private UserRepository $users;

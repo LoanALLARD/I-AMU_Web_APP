@@ -29,7 +29,7 @@ $archivedView = $archivedView ?? false;
 // the teacher monitor transcript). Drives loading marked/DOMPurify/highlight
 // + the shared renderer. Chat always needs it.
 $needsMarkdown = $needsMarkdown ?? ($page === 'chat');
-// Exam lockdown view-model (set by AccueilController for a locked student),
+// Exam lockdown view-model (set by HomeController for a locked student),
 // or null when free. Drives the stripped-down, navigation-free shell.
 $examLock = $examLock ?? null;
 // "Chat" nav target: stay inside the open session conversation instead of

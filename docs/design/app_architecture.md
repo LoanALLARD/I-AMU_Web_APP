@@ -335,7 +335,7 @@ Ce qui se lit directement sur le graphe :
 │   ├── Config/
 │   │   └── config.php
 │   ├── Controllers/             ← le « C » : endpoints HTTP
-│   │   ├── AccueilController.php
+│   │   ├── HomeController.php
 │   │   ├── AuthController.php
 │   │   ├── LLMController.php
 │   │   └── dbController.php
