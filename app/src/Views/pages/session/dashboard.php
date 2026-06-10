@@ -35,6 +35,7 @@ $canManage = $canManage ?? false;
             </button>
         <?php endif; ?>
         <?php if ($canManage): ?>
+            <a href="/sessions" class="btn">Retour à la liste</a>
             <?php if ($view['canEdit']): ?>
                 <a href="/sessions/<?= (int) $view['id'] ?>/edit" class="btn">
                     <?= icon('edit', '', 12) ?> Modifier
