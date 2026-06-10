@@ -2,8 +2,10 @@
 /** Panel header (title bar + nav). Expects `$superAdmin` and `$activeNav` in scope. */
 $nav = [
     'department-admins' => ['/super-admin/department-admins', 'Administrateurs', 'users'],
-    'places'            => ['/super-admin/places',            'Sites & départements', 'building'],
+    'places'            => ['/super-admin/places',            'Sites & departements', 'building'],
     'email-domains'     => ['/super-admin/email-domains',     'Domaines email', 'settings'],
+    'settings'          => ['/super-admin/settings',          'Paramètre du compte', 'settings']
+
 ];
 $active = $activeNav ?? 'department-admins';
 ?>
