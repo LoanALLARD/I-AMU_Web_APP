@@ -107,16 +107,30 @@ class ProfileController extends Controller
         $this->verifyCsrf();
         $user = $this->currentUser();
 
-        $result = $this->auth->updateProfile(
-            (int) $user['id'],
-            (string) $this->input('first_name', ''),
-            (string) $this->input('last_name', '')
-        );
+        $title = $this->input('title', null);
+        $password = $this->input('password', null);
+        $password_confirm = $this->input('password_confirm', null);
 
-        $this->flash(
-            $result['success'] ? 'success' : 'error',
-            $result['success'] ? 'Profil mis à jour.' : $result['error']
-        );
+        $pdo = Database::getConnection();
+        $userRepository = new UserRepository($pdo);
+
+        try {
+            if ($password && $password_confirm && $password != $password_confirm) {
+                throw new \Exception("Les mots de passe ne correspondent pas.");
+            }
+            if ($password) {
+                $userRepository->updatePassword($user["id"], $password);
+            }
+            if ($title) {
+                $userRepository->updateTitle($user["id"], $title);
+            }
+
+            $this->flash('success', 'Vos informations ont été mises à jour avec succès.');
+
+        } catch (\Exception $e) {
+            $this->flash('error', "Une erreur est survenue : " . $e->getMessage());
+        }
+        
         $this->redirect('/profile');
     }
 
