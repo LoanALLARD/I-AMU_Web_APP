@@ -128,44 +128,48 @@ $canManage = $canManage ?? false;
 
         <div class="dashboard-card">
             <h2>Documents</h2>
-            <p class="kv-key" style="margin:2px 0 10px;line-height:1.5;">
+            <p class="doc-card-hint">
                 Joints à la session, consultables par les étudiants inscrits (PDF, Markdown ou TXT — 10 Mo max).
             </p>
-            <div class="kv-grid" style="margin:0 0 14px;">
-                <span class="kv-key">import étudiant</span>
-                <span class="kv-val"><?= htmlspecialchars($view['documentsImportLabel']) ?></span>
+
+            <?php
+            $importLabel   = (string) $view['documentsImportLabel'];
+            $importEnabled = str_starts_with($importLabel, 'Autorisé');
+            ?>
+            <div class="doc-setting">
+                <span class="kv-key">Import étudiant</span>
+                <span class="doc-setting-state <?= $importEnabled ? 'is-on' : 'is-off' ?>"><?= htmlspecialchars($importLabel) ?></span>
             </div>
 
-            <?php if ($canManage): ?>
-                <button type="button" class="btn primary" id="btn-open-doc-modal">
-                    <?= icon('upload', '', 12) ?> Ajouter
-                </button>
-            <?php endif; ?>
+            <div class="doc-list-head">
+                <span class="kv-key">Documents joints<?= $documents !== [] ? ' · ' . count($documents) : '' ?></span>
+                <?php if ($canManage): ?>
+                    <button type="button" class="btn primary sm" id="btn-open-doc-modal">
+                        <?= icon('upload', '', 12) ?> Ajouter
+                    </button>
+                <?php endif; ?>
+            </div>
 
             <?php if ($documents === []): ?>
-                <p style="color:var(--gray-400);font-size:12px;margin-top:12px;">Aucun document pour l'instant.</p>
+                <p class="doc-empty">Aucun document pour l'instant.</p>
             <?php else: ?>
-                <div style="display:flex;flex-direction:column;gap:6px;margin-top:14px;">
+                <div class="doc-list">
                     <?php foreach ($documents as $doc): ?>
-                        <div
-                            style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--gray-200);border-radius:8px;">
-                            <div style="min-width:0;">
+                        <div class="doc-item">
+                            <div class="doc-item-main">
                                 <a href="/documents/session_<?= (int) $doc->sessionId() ?>/<?= (int) $doc->id() ?>"
-                                    target="_blank" rel="noopener"
-                                    style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-800);text-decoration:none;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                                    <?= icon('book', '', 13) ?>         <?= htmlspecialchars($doc->originalName()) ?>
+                                   target="_blank" rel="noopener" class="doc-item-link">
+                                    <?= icon('book', '', 13) ?> <?= htmlspecialchars($doc->originalName()) ?>
                                 </a>
-                                <span style="font-size:11px;color:var(--gray-400);">
-                                    <?= htmlspecialchars($doc->kindLabel()) ?> · <?= htmlspecialchars($doc->humanSize()) ?> ·
-                                    <?= htmlspecialchars($doc->status()->label()) ?>
+                                <span class="doc-item-meta">
+                                    <?= htmlspecialchars($doc->kindLabel()) ?> · <?= htmlspecialchars($doc->humanSize()) ?> · <?= htmlspecialchars($doc->status()->label()) ?>
                                 </span>
                             </div>
                             <?php if ($canManage): ?>
                                 <form method="POST" action="/documents/<?= (int) $doc->id() ?>/delete"
-                                    style="margin:0;flex-shrink:0;" onsubmit="return confirm('Supprimer ce document ?')">
+                                      class="doc-item-delete" onsubmit="return confirm('Supprimer ce document ?')">
                                     <?= csrf_field() ?>
-                                    <button type="submit" class="btn bordered" title="Supprimer"
-                                        style="padding:4px 8px;"><?= icon('x-circle', '', 13) ?></button>
+                                    <button type="submit" class="btn bordered sm" title="Supprimer"><?= icon('x-circle', '', 13) ?></button>
                                 </form>
                             <?php endif; ?>
                         </div>

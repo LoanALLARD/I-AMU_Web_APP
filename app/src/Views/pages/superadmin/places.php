@@ -145,10 +145,35 @@ foreach ($departments as $d) {
                                         <input type="file" id="branding-logo-<?= (int) $p['id'] ?>"
                                                name="logo" accept="image/*">
                                     </div>
+                                    <?php if (!empty($p['logo_path'])): ?>
+                                        <label style="display:inline-flex;align-items:center;gap:.35rem;font-size:12px;cursor:pointer;color:var(--refuse);margin-top:.45rem;">
+                                            <input type="checkbox" name="remove_logo" value="1"> Supprimer (revenir au logo I-AMU)
+                                        </label>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="form-group branding-favicon">
+                                    <label for="branding-favicon-<?= (int) $p['id'] ?>">Favicon</label>
+                                    <div class="branding-logo-field">
+                                        <span class="branding-logo-preview">
+                                            <?php if (!empty($p['favicon_path'])): ?>
+                                                <img src="<?= htmlspecialchars($p['favicon_path']) ?>" alt="Favicon du lieu">
+                                            <?php else: ?>
+                                                <?= icon('image', '', 26) ?>
+                                            <?php endif; ?>
+                                        </span>
+                                        <input type="file" id="branding-favicon-<?= (int) $p['id'] ?>"
+                                               name="favicon" accept="image/*">
+                                    </div>
+                                    <?php if (!empty($p['favicon_path'])): ?>
+                                        <label style="display:inline-flex;align-items:center;gap:.35rem;font-size:12px;cursor:pointer;color:var(--refuse);margin-top:.45rem;">
+                                            <input type="checkbox" name="remove_favicon" value="1"> Supprimer (favicon par défaut)
+                                        </label>
+                                    <?php endif; ?>
                                 </div>
 
                                 <div class="form-group branding-name">
-                                    <label for="branding-name-<?= (int) $p['id'] ?>">Nom affiche</label>
+                                    <label for="branding-name-<?= (int) $p['id'] ?>">Nom de l'application</label>
                                     <input type="text" id="branding-name-<?= (int) $p['id'] ?>"
                                            name="display_name" maxlength="255"
                                            value="<?= htmlspecialchars($brandName) ?>"

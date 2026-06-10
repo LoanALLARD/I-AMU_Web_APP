@@ -125,6 +125,7 @@ class UserRepository
      *     last_name: string,
      *     department_id: int|null,
      *     consent_version: string,
+     *     promo_year: int,
      *     laboratory_id?: int|null
      * } $user
      * @param 'teacher'|'student'|'researcher' $role
@@ -220,8 +221,9 @@ class UserRepository
         return $rows;
     }
 
-    public function CountDepartmentMembers(int $departmentId){
-        $query =$this->pdo->prepare(
+    public function CountDepartmentMembers(int $departmentId): int
+    {
+        $query = $this->pdo->prepare(
             'SELECT count(*) From users u
             LEFT JOIN teachers t ON t.id = u.id
             LEFT JOIN students s ON s.id = u.id
@@ -229,13 +231,14 @@ class UserRepository
             AND (t.id IS NOT NULL OR s.id IS NOT NULL)'
         );
 
-        $query->execute(['dep_id'=>$departmentId]);
+        $query->execute(['dep_id' => $departmentId]);
 
-        $rows = $query->fetch();
-        return $rows;
-
+        return (int) $query->fetchColumn();
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     public function findUsers(string $firstSecondName, int $depId): array
     {
         $query = $this->pdo->prepare(
@@ -257,7 +260,9 @@ class UserRepository
             'dep_id' => $depId
         ]);
 
-        return $query->fetchAll();
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $query->fetchAll();
+        return $rows;
     }
     /**
      * A single member row (same projection as listDepartmentMembers), to
@@ -412,5 +417,19 @@ class UserRepository
         $row = $query->fetch();
         
         return $row;
+    }
+
+    public function updateResearchOpposition(int $userId, bool $opposed): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE users
+            SET research_opposed = :opposed
+            WHERE id = :id'
+        );  
+
+        $stmt->bindValue('opposed', $opposed, PDO::PARAM_BOOL);
+        $stmt->bindValue('id', $userId, PDO::PARAM_INT);
+
+        $stmt->execute();
     }
 }

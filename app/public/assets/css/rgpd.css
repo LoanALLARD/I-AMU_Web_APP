@@ -2,6 +2,7 @@
     font-family: 'Nunito Sans', sans-serif;
     width: 100%;
     max-width: 800px;
+    margin: 0 auto;
     color: var(--gray-800);
     line-height: 1.75;
     animation: slideUp .45s cubic-bezier(.22,.9,.32,1) both;
@@ -76,10 +77,6 @@
     z-index: 1;
 }
 
-.rgpd-header + .rgpd-intro {
-    border-top: 3px solid;
-    border-image: linear-gradient(90deg, var(--blue) 0%, var(--gold) 100%) 1;
-}
 
 .rgpd-intro {
     background: var(--white);
@@ -87,7 +84,6 @@
     padding: 1.5rem 2.5rem;
     font-size: .93rem;
     font-style: italic;
-    border-left: 4px solid var(--gold);
     margin-bottom: 0;
     box-shadow: var(--shadow-sm);
 }
@@ -245,7 +241,6 @@
     margin-top: 0;
     padding: 1.5rem 2.5rem;
     border-top: 3px solid;
-    border-image: linear-gradient(90deg, var(--blue) 0%, var(--gold) 100%) 1;
     border-radius: 0 0 var(--radius) var(--radius);
     display: flex;
     justify-content: space-between;

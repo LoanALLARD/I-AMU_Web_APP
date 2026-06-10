@@ -128,7 +128,7 @@
                 <td>Accès à l'ensemble des données à des fins d'analyse scientifique, après autorisation d'un administrateur</td>
             </tr>
             <tr>
-                <td>Administrateurs</td>
+                <td>Administrateur de département</td>
                 <td>Accès technique à des fins de maintenance et de gestion des rôles</td>
             </tr>
             <tr>
@@ -147,16 +147,8 @@
                 <td>Durée du cursus universitaire + 1 an, ou jusqu'à suppression du compte</td>
             </tr>
             <tr>
-                <td>Historique des conversations</td>
-                <td>Paramétrable par l'utilisateur dans son espace personnel (par défaut : 3 ans)</td>
-            </tr>
-            <tr>
                 <td>Données de recherche</td>
                 <td>Jusqu'à la dernière publication scientifique associée au projet (date projetée communiquée par le responsable de traitement)</td>
-            </tr>
-            <tr>
-                <td>Journaux techniques</td>
-                <td>6 mois glissants</td>
             </tr>
         </table>
     </div>
@@ -234,7 +226,7 @@
     <div class="rgpd-footer">
         <p>I-AMU · IUT Informatique · Aix-Marseille Université<br>
             Document établi conformément au RGPD (UE) 2016/679 et à la loi Informatique et Libertés</p>
-        <a href="/register">← Retour à l'inscription</a>
+        <a href="/chat">← Retour à l'accueil</a>
     </div>
 
 </div>

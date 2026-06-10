@@ -17,7 +17,7 @@ $activeNav = 'users';
     ]); ?>
 
     <div class="admin-section">
-        <h2><?= icon('users', '', 16) ?> Utilisateurs du département (<?= $numberOfMembers["count"] ?? 0 ?>)</h2>
+        <h2><?= icon('users', '', 16) ?> Utilisateurs du département (<?= $numberOfMembers ?>)</h2>
         
         <div class="search-bar-container" style="margin-bottom: 20px;">
             <div class="input-group">
