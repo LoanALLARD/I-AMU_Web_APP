@@ -347,4 +347,41 @@ class UserRepository
         
         return $row;
     }
+
+    public function createDepartmentAdmin(array $user, int $invitedById)
+    {
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare(
+                'INSERT INTO users (email, password_hash, first_name, last_name, department_id, consent_at, consent_version)
+                 VALUES (:email, :hash, :fn, :ln, :department_id, NOW(), :ver)
+                 RETURNING id'
+            );
+            $stmt->execute([
+                'email'         => $user['email'],
+                'hash'          => $user['password_hash'],
+                'fn'            => $user['first_name'],
+                'ln'            => $user['last_name'],
+                'department_id' => $user['department_id'],
+                'ver'           => $user['consent_version'] ?? '1.0',
+            ]);
+            $userId = (int) $stmt->fetchColumn();
+
+            $roleStmt = $this->pdo->prepare(
+                'INSERT INTO department_administrators (id, invited_by_id)
+                 VALUES (:id, :invited_by)'
+            );
+            $roleStmt->execute([
+                'id'         => $userId,
+                'invited_by' => $invitedById > 0 ? $invitedById : null,
+            ]);
+
+            $this->pdo->commit();
+
+            return $userId;
+        } catch (Throwable $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
+    }
 }
