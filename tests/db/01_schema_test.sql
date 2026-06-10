@@ -10,7 +10,7 @@ SELECT plan(16);
 
 -- ENUM types must exist with exactly the expected labels.
 SELECT has_type('theme_type');
-SELECT enum_has_labels('theme_type', ARRAY['LIGHT', 'DARK']);
+SELECT enum_has_labels('theme_type', ARRAY['LIGHT', 'DARK', 'AUTO']);
 
 SELECT has_type('resource_state_type');
 SELECT enum_has_labels('resource_state_type', ARRAY['DRAFT', 'PUBLISHED', 'ARCHIVED']);
