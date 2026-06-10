@@ -150,6 +150,7 @@ class ChatService
                     'prompt'   => (string) $m['prompt'],
                     'response' => (string) $m['response'],
                     'model'    => (string) ($m['model_name'] ?? ''),
+                    'feedback' => isset($m['user_feedback']) && $m['user_feedback'] !== null ? (int) $m['user_feedback'] : null,
                 ],
              $this->interactions->listByConversation((int) $conversation['id'])
             );

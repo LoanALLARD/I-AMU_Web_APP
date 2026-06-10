@@ -11,11 +11,16 @@ $initials = strtoupper(
 );
 $roles = $user['roles'] ?? [];
 $isTeacher = in_array('teacher', $roles, true);
+$isAdmin = in_array('admin', $roles, true) || in_array('department_admin', $roles, true);
+$isResearcher = in_array('researcher', $roles, true);
 $isSpecialized = !empty($user['isSpecialized']);
+// Only teachers and students use the LLM, so only they get usage stats.
+$usesLlm = $isTeacher || in_array('student', $roles, true);
 
 $roleLabels = [
     'student'          => 'étudiant',
     'teacher'          => 'enseignant',
+    'researcher'       => 'chercheur',
     'department_admin' => 'admin de département',
     'admin'            => 'administrateur',
 ];
@@ -25,6 +30,38 @@ $themeCur = match ($user['theme'] ?? null) {
     'LIGHT' => 'light',
     'DARK'  => 'dark',
     default => 'auto',
+};
+
+/** @var array<string,mixed> $stats */
+$stats   = $stats ?? [];
+$fmtInt  = static fn (int $n): string => number_format($n, 0, ',', ' ');
+$points  = $stats['activity'] ?? [];
+$maxDay  = $points !== [] ? max(array_column($points, 'total')) : 0;
+
+// Energy footprint, with unit promotion (Wh -> kWh, g -> kg) for readability.
+$energy = $stats['energy'] ?? ['wh' => 0.0, 'gco2' => 0.0, 'eq_car_km' => 0.0, 'eq_phone_charges' => 0.0, 'eq_led_hours' => 0.0];
+$ef = $stats['energy_factors'] ?? ['wh_per_output_token' => 0.0, 'input_token_weight' => 0.0, 'reference_size_b' => 0.0, 'grid_gco2_per_kwh' => 0.0];
+$fmtNum = static fn (float $n, int $d = 1): string => number_format($n, $d, ',', ' ');
+$fmtEnergy = static function (float $wh) use ($fmtNum): string {
+    return $wh >= 1000 ? $fmtNum($wh / 1000, 2) . ' kWh' : $fmtNum($wh, 1) . ' Wh';
+};
+$fmtCo2 = static function (float $g) use ($fmtNum): string {
+    return $g >= 1000 ? $fmtNum($g / 1000, 2) . ' kg' : $fmtNum($g, 1) . ' g';
+};
+
+// "aujourd'hui" / "hier" / "il y a N jours" from a stored timestamp.
+$relativeDay = static function (?string $ts): string {
+    if ($ts === null) {
+        return 'jamais';
+    }
+    $days = (int) (new \DateTimeImmutable('today'))
+        ->diff((new \DateTimeImmutable($ts))->setTime(0, 0))
+        ->format('%r%a');
+    return match (true) {
+        $days >= 0  => "aujourd'hui",
+        $days === -1 => 'hier',
+        default     => 'il y a ' . abs($days) . ' jours',
+    };
 };
 ?>
 <div class="page-header">
@@ -88,6 +125,173 @@ $themeCur = match ($user['theme'] ?? null) {
                 <?php endif; ?>
             </div>
 
+            <!-- Statistiques de consommation (profs et eleves uniquement) -->
+            <?php if ($usesLlm): ?>
+            <div class="dashboard-card stats-card">
+                <h2><?= icon('chart-line', '', 16) ?> Ma consommation</h2>
+                <p class="page-sub">Un aperçu de votre utilisation de l'assistant IA.</p>
+
+                <div class="stats-metric-grid">
+                    <article class="stats-metric">
+                        <span class="stats-metric-icon"><?= icon('messages-square', '', 18) ?></span>
+                        <span class="stats-metric-value"><?= $fmtInt((int) ($stats['conversations'] ?? 0)) ?></span>
+                        <span class="stats-metric-label">Conversations</span>
+                    </article>
+                    <article class="stats-metric">
+                        <span class="stats-metric-icon"><?= icon('message-circle', '', 18) ?></span>
+                        <span class="stats-metric-value"><?= $fmtInt((int) ($stats['interactions'] ?? 0)) ?></span>
+                        <span class="stats-metric-label">Messages envoyés</span>
+                    </article>
+                    <article class="stats-metric">
+                        <span class="stats-metric-icon"><?= icon('copy', '', 18) ?></span>
+                        <span class="stats-metric-value">
+                            <?= $fmtInt((int) ($stats['input_tokens'] ?? 0) + (int) ($stats['output_tokens'] ?? 0)) ?>
+                        </span>
+                        <span class="stats-metric-label">Tokens échangés</span>
+                    </article>
+                    <article class="stats-metric">
+                        <span class="stats-metric-icon"><?= icon('database', '', 18) ?></span>
+                        <span class="stats-metric-value stats-metric-value--text">
+                            <?= htmlspecialchars($stats['top_model'] ?? '—') ?>
+                        </span>
+                        <span class="stats-metric-label">Modèle le plus utilisé</span>
+                    </article>
+                    <article class="stats-metric">
+                        <span class="stats-metric-icon"><?= icon('messages-square', '', 18) ?></span>
+                        <span class="stats-metric-value">
+                            <?php $mpc = $stats['messages_per_conversation'] ?? null; ?>
+                            <?= $mpc !== null ? number_format((float) $mpc, 1, ',', ' ') : '—' ?>
+                        </span>
+                        <span class="stats-metric-label">Messages / conversation</span>
+                    </article>
+                    <article class="stats-metric">
+                        <span class="stats-metric-icon"><?= icon('clock', '', 18) ?></span>
+                        <span class="stats-metric-value stats-metric-value--text">
+                            <?= htmlspecialchars($relativeDay($stats['last_activity'] ?? null)) ?>
+                        </span>
+                        <span class="stats-metric-label">Dernière activité</span>
+                    </article>
+                </div>
+
+                <div class="stats-activity">
+                    <h3 class="stats-activity-title">
+                        <?= icon('chart-line', '', 14) ?>
+                        Activité (<?= (int) ($stats['activity_days'] ?? 30) ?> derniers jours)
+                    </h3>
+                    <?php if (($stats['activity_total'] ?? 0) > 0): ?>
+                        <div class="stats-bars" role="img"
+                             aria-label="Messages envoyés par jour sur les <?= (int) ($stats['activity_days'] ?? 30) ?> derniers jours">
+                            <?php foreach ($points as $p): ?>
+                                <?php
+                                $total = (int) $p['total'];
+                                $h = $maxDay > 0 ? max(3, (int) round($total / $maxDay * 100)) : 3;
+                                $label = $total . ' le ' . $p['day'];
+                                ?>
+                                <span class="stats-bar<?= $total === 0 ? ' is-empty' : '' ?>"
+                                      style="height: <?= $h ?>%" title="<?= htmlspecialchars($label) ?>"></span>
+                            <?php endforeach; ?>
+                        </div>
+                        <p class="stats-bars-foot">
+                            <?= $fmtInt((int) $stats['activity_total']) ?> message<?= (int) $stats['activity_total'] > 1 ? 's' : '' ?> sur la période
+                        </p>
+                    <?php else: ?>
+                        <p class="no-message">Aucune activité sur la période.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Empreinte ecologique -->
+            <div class="dashboard-card eco-card">
+                <h2><?= icon('flask-conical', '', 16) ?> Empreinte écologique</h2>
+                <p class="page-sub">
+                    Estimation indicative de l'impact de vos échanges avec l'IA.
+                    Chaque requête consomme de l'électricité&nbsp;: ces chiffres aident à en prendre conscience.
+                </p>
+
+                <div class="eco-figures">
+                    <div class="eco-figure">
+                        <span class="eco-figure-icon"><?= icon('database', '', 18) ?></span>
+                        <span class="eco-figure-value"><?= htmlspecialchars($fmtEnergy((float) $energy['wh'])) ?></span>
+                        <span class="eco-figure-label">Énergie estimée</span>
+                    </div>
+                    <div class="eco-figure">
+                        <span class="eco-figure-icon"><?= icon('flask-conical', '', 18) ?></span>
+                        <span class="eco-figure-value"><?= htmlspecialchars($fmtCo2((float) $energy['gco2'])) ?> CO₂</span>
+                        <span class="eco-figure-label">Émissions estimées</span>
+                    </div>
+                </div>
+
+                <ul class="eco-equivalents">
+                    <li>
+                        <?= icon('chart-line', '', 13) ?>
+                        soit environ <strong><?= htmlspecialchars($fmtNum((float) $energy['eq_car_km'], 2)) ?>&nbsp;km</strong> en voiture
+                    </li>
+                    <li>
+                        <?= icon('database', '', 13) ?>
+                        ou <strong><?= htmlspecialchars($fmtNum((float) $energy['eq_phone_charges'], 1)) ?></strong> recharge(s) de téléphone
+                    </li>
+                    <li>
+                        <?= icon('clock', '', 13) ?>
+                        ou une ampoule LED allumée <strong><?= htmlspecialchars($fmtNum((float) $energy['eq_led_hours'], 1)) ?>&nbsp;h</strong>
+                    </li>
+                </ul>
+
+                <div class="eco-tips">
+                    <p class="eco-tips-title"><?= icon('check', '', 13) ?> Réduire son empreinte</p>
+                    <ul>
+                        <li>Privilégiez des prompts clairs et concis : moins de tokens, moins d'énergie.</li>
+                        <li>Réutilisez une conversation existante plutôt que d'en relancer une à chaque question.</li>
+                        <li>Pour les tâches simples, un modèle plus léger suffit souvent.</li>
+                    </ul>
+                </div>
+
+                <details class="eco-method">
+                    <summary>
+                        <?= icon('alert-triangle', '', 12) ?>
+                        Comment ce chiffre est-il calculé&nbsp;?
+                    </summary>
+                    <div class="eco-method-body">
+                        <p>
+                            Le calcul part du nombre de <strong>tokens</strong> (unités de texte) échangés,
+                            la seule donnée réellement mesurée&nbsp;:
+                        </p>
+                        <ol>
+                            <li>
+                                Les tokens <em>générés</em> par l'IA pèsent plus que ceux de votre question&nbsp;:
+                                produire une réponse fait travailler le modèle à chaque mot, alors que lire votre
+                                message ne se fait qu'une fois.
+                            </li>
+                            <li>
+                                Plus le modèle est gros (en milliards de paramètres), plus il consomme par token.
+                                Le coût est ajusté selon la taille du modèle utilisé.
+                            </li>
+                            <li>
+                                On en déduit une <strong>énergie</strong> (Wh), convertie en <strong>CO₂</strong>
+                                via l'intensité carbone du réseau électrique (~50&nbsp;g/kWh, mix français).
+                            </li>
+                        </ol>
+                        <p>En clair, avec les facteurs actuels&nbsp;:</p>
+                        <pre class="eco-formula"><code>énergie (Wh) = Σ (tokens_sortie + <?= htmlspecialchars(rtrim(rtrim(number_format((float) $ef['input_token_weight'], 2, '.', ''), '0'), '.')) ?> × tokens_entrée)
+               × <?= htmlspecialchars(rtrim(rtrim(number_format((float) $ef['wh_per_output_token'], 6, '.', ''), '0'), '.')) ?> Wh/token
+               × (taille_modèle_B ÷ <?= htmlspecialchars(rtrim(rtrim(number_format((float) $ef['reference_size_b'], 1, '.', ''), '0'), '.')) ?>)
+
+CO₂ (g)      = énergie ÷ 1000 × <?= htmlspecialchars(rtrim(rtrim(number_format((float) $ef['grid_gco2_per_kwh'], 1, '.', ''), '0'), '.')) ?> g/kWh</code></pre>
+                        <p class="eco-formula-note">
+                            La somme (Σ) additionne chaque modèle séparément, car un modèle plus gros
+                            consomme davantage par token.
+                        </p>
+
+                        <p class="eco-method-limit">
+                            <strong>Limites&nbsp;:</strong> il s'agit d'une estimation, pas d'une mesure.
+                            La consommation réelle dépend du matériel (GPU), du refroidissement des serveurs
+                            et de l'électricité réellement utilisée, que nous ne mesurons pas. Ces valeurs ne
+                            sont fournies qu'à titre indicatif, pour donner un ordre de grandeur.
+                        </p>
+                    </div>
+                </details>
+            </div>
+            <?php endif; ?>
+            <?php if (!$isAdmin): ?>
             <!-- Zone à risque -->
             <div class="danger-zone">
                 <div class="danger-zone-header">
@@ -112,7 +316,7 @@ $themeCur = match ($user['theme'] ?? null) {
                     </div>
 
                     <div class="danger-zone-sep"></div>
-
+                    <?php if (!$isAdmin && !$isResearcher): ?>
                     <!-- Retirer le consentement à la recherche -->
                     <div class="danger-row">
                         <div class="danger-row-info">
@@ -127,15 +331,17 @@ $themeCur = match ($user['theme'] ?? null) {
                             <?= icon('shield-off', '', 13) ?> Retirer le consentement
                         </button>
                     </div>
+                    <?php endif; ?>
 
                 </div>
 
                 <div class="danger-zone-footer">
-                    <a href="/rgpd_consent" class="rgpd-link">
+                    <a href="/gdpr_consent" class="gdpr-link">
                         <?= icon('plus', '', 12) ?> Consulter les mentions d'information RGPD
                     </a>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
 
         <aside>

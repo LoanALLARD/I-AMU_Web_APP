@@ -7,7 +7,7 @@ use PDO;
 class InteractionRepository {
 
     private PDO $pdo;
-    
+
     public function __construct(PDO $pdo){
         $this->pdo = $pdo;
     }
@@ -49,10 +49,10 @@ class InteractionRepository {
 
         $querySelect = $this->pdo->prepare('SELECT * FROM interactions WHERE id = :id');
         $querySelect->execute(['id' => $idGenere]);
-        
+
         $result = $querySelect->fetch();
 
-        return $result ?: null; 
+        return $result ?: null;
     }
     /**
      * Full prompt/response history of a conversation, oldest first, with the
@@ -65,7 +65,7 @@ class InteractionRepository {
     public function listByConversation(int $conversationId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT i.id, i.prompt, i.response, i.sent_at, m.name AS model_name
+            'SELECT i.id, i.prompt, i.response, i.sent_at, i.user_feedback, m.name AS model_name
                FROM interactions i
                JOIN conversations c ON c.id = i.conversation_id
                JOIN models m ON m.id = c.model_id
@@ -84,7 +84,7 @@ class InteractionRepository {
         $query = $this->pdo->prepare('
             UPDATE interactions set api_metadata = :metadata where id = :id
         ');
-        
+
         $query->execute([
             'metadata' => $metadata,
             'id'       => $interaction_id
@@ -92,12 +92,33 @@ class InteractionRepository {
 
         $idGenere = $this->pdo->lastInsertId();
 
-            if (!$idGenere) {
-                return null;
-            }
-            
+        if (!$idGenere) {
+            return null;
+        }
+
         return TRUE;
-    }   
+    }
+
+    /**
+     * Records the student's rating on one of their OWN AI responses
+     * (1 = useful, -1 = not useful, 0 = neutral/cleared). Scoped to interactions
+     * of a conversation the user owns, so nobody can rate another user's
+     * interaction. Returns whether a row was updated.
+     */
+    public function setFeedback(int $interactionId, int $userId, int $value): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE interactions i
+                SET user_feedback = :val
+               FROM conversations c
+              WHERE i.id = :iid
+                AND c.id = i.conversation_id
+                AND c.user_id = :uid'
+        );
+        $stmt->execute(['val' => $value, 'iid' => $interactionId, 'uid' => $userId]);
+
+        return $stmt->rowCount() > 0;
+    }
 
     /**
      * @return array<array<string, mixed>>

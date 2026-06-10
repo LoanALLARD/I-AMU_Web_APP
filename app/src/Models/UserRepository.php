@@ -418,4 +418,63 @@ class UserRepository
         
         return $row;
     }
+
+    /**
+     * Creates a department-admin: users row + department_administrators row.
+     * invited_by_id references the super admin who issued the invitation and the email is marked verified
+     *
+     * @param array{email: string, password_hash: string, first_name: string, last_name: string, department_id: int|null, consent_version?: string } $user
+     *
+     * @throws Throwable if any statement fails (the transaction is rolled back).
+     */
+    public function createDepartmentAdmin(array $user, int $invitedById): int
+    {
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare(
+                'INSERT INTO users (email, password_hash, first_name, last_name, department_id, consent_at, consent_version, email_verified_at)
+                 VALUES (:email, :hash, :fn, :ln, :department_id, NOW(), :ver, NOW())
+                 RETURNING id'
+            );
+            $stmt->execute([
+                'email'         => $user['email'],
+                'hash'          => $user['password_hash'],
+                'fn'            => $user['first_name'],
+                'ln'            => $user['last_name'],
+                'department_id' => $user['department_id'],
+                'ver'           => $user['consent_version'] ?? '1.0',
+            ]);
+            $userId = (int) $stmt->fetchColumn();
+
+            $roleStmt = $this->pdo->prepare(
+                'INSERT INTO department_administrators (id, invited_by_id)
+                 VALUES (:id, :invited_by)'
+            );
+            $roleStmt->execute([
+                'id'         => $userId,
+                'invited_by' => $invitedById > 0 ? $invitedById : null,
+            ]);
+
+            $this->pdo->commit();
+
+            return $userId;
+        } catch (Throwable $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    public function updateResearchOpposition(int $userId, bool $opposed): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE users
+            SET research_opposed = :opposed
+            WHERE id = :id'
+        );
+
+        $stmt->bindValue('opposed', $opposed, PDO::PARAM_BOOL);
+        $stmt->bindValue('id', $userId, PDO::PARAM_INT);
+
+        $stmt->execute();
+    }
 }

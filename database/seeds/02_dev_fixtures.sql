@@ -356,7 +356,7 @@ INSERT INTO interactions (conversation_id, prompt, response,
      'Avec plaisir.',
      150, 3, 15, NULL);
 
--- RGPD: some users object to having their data used for research.
+-- GDPR: some users object to having their data used for research.
 UPDATE users SET research_opposed = TRUE
  WHERE email IN ('lea.vert@etu.univ-amu.fr', 'orphan@univ-amu.fr');
 

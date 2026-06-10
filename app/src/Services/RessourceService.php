@@ -137,21 +137,36 @@ class RessourceService
     }
 
     /**
-     * Deletes a resource the teacher owns.
+     * Archives a resource the teacher owns (sets state to ARCHIVED).
+     * Unlike deletion, this never fails due to linked sessions.
      *
-     * @throws \RuntimeException  If sessions still reference the resource
+     * @throws \RuntimeException  On ownership mismatch
      */
-    public function delete(int $resourceId, int $teacherId): void
+    public function archive(int $resourceId, int $teacherId): void
     {
         $this->loadOwned($resourceId, $teacherId);
+        $this->resources->archive($resourceId);
+    }
 
-        try {
-            $this->resources->delete($resourceId);
-        } catch (PDOException) {
-            throw new \RuntimeException(
-                'Cette ressource est rattachée à une ou plusieurs sessions et ne peut pas être supprimée.'
-            );
-        }
+    /**
+     * Restores an archived resource the teacher owns (sets state back to DRAFT).
+     *
+     * @throws \RuntimeException  On ownership mismatch
+     */
+    public function restore(int $resourceId, int $teacherId): void
+    {
+        $this->loadOwned($resourceId, $teacherId);
+        $this->resources->restore($resourceId);
+    }
+
+    /**
+     * Returns archived resources owned by the teacher.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listArchivedForTeacher(int $teacherId): array
+    {
+        return $this->resources->findArchivedByOwner($teacherId);
     }
 
     /**

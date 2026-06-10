@@ -28,6 +28,7 @@
     $router->add('GET',  '/accueil',     function() { (new AccueilController())->index(); });
 
     $router->add('POST', '/chat',         function() { (new LLMController())->handleChat(); });
+    $router->add('POST', '/chat/feedback',function() { (new LLMController())->recordFeedback(); });
     $router->add('POST', '/chat/documents',             function()    { (new DocumentController())->uploadToConversation(); });
     $router->add('POST', '/chat/documents/{id}/delete', function($id) { (new DocumentController())->deleteFromConversation($id); });
     $router->add('POST', '/chat/rename',    function() { (new AccueilController())->renameChat(); });
@@ -44,7 +45,8 @@
     $router->add('POST', '/register',    function() { (new AuthController())->register(); });
     $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
     $router->add('POST', '/reactivate',  function() { (new AuthController())->reactivate();});
-    $router->add('GET',  '/rgpd_consent', function() { (new AuthController())->showRGPD(); });
+    $router->add('GET',  '/gdpr_consent', function() { (new AuthController())->showGDPR(); });
+    $router->add('GET',  '/gdpr_consent_researcher', function() { (new AuthController())->showGDPRResearcher(); });
     $router->add('GET',  '/verify-email',function() { (new AuthController())->verifyEmail(); });
 
     // AJAX: departments of a place, for the registration form's dependent select.
@@ -61,6 +63,7 @@
     $router->add('POST', '/profile/update',      function()     { (new ProfileController())->updateProfile(); });
     $router->add('POST', '/profile/password',    function()     { (new ProfileController())->changePassword(); });
     $router->add('POST', '/profile/request-specialisation', function() { (new ProfileController())->requestSpecialisation(); });
+    $router->add('POST', '/profile/withdraw-consent', function() { (new ProfileController())->updateResearchOpposition(); });
 
     // --- Department-admin console (department_admin role) --------------
     $router->add('GET',  '/department-admin',                         function() { (new DepartmentAdminController())->index(); });
@@ -98,11 +101,19 @@
     $router->add('POST', '/super-admin/email-domains',     function() { (new SuperAdminController())->addEmailDomain(); });
     $router->add('POST', '/super-admin/email-domains/role',   function() { (new SuperAdminController())->changeEmailDomainRole(); });
     $router->add('POST', '/super-admin/email-domains/toggle', function() { (new SuperAdminController())->toggleEmailDomain(); });
+    $router->add('POST', '/super-admin/department-admins/invite', function () { (new SuperAdminController())->inviteDepartmentAdmin(); });
+
+    //Admin invitation
+    $router->add('GET',  '/admin-invite/accept', function () { (new AuthController())->showAcceptInvite(); });
+    $router->add('POST', '/admin-invite/accept', function () { (new AuthController())->acceptInvite(); });
+
 
     // --- Researcher space (researcher role) ---------------------------
     $router->add('GET',  '/researcher',                 function() { (new ResearcherController())->index(); });
     $router->add('GET',  '/researcher/data',            function() { (new ResearcherController())->data(); });
+    $router->add('GET',  '/researcher/data/stats',      function() { (new ResearcherController())->stats(); });
     $router->add('GET',  '/researcher/export',          function() { (new ResearcherController())->export(); });
+    $router->add('GET',  '/researcher/export/download', function() { (new ResearcherController())->exportDownload(); });
     $router->add('POST', '/researcher/requests',        function() { (new ResearcherController())->requestAccess(); });
     $router->add('POST', '/researcher/requests/cancel', function() { (new ResearcherController())->cancelRequest(); });
 
@@ -121,6 +132,7 @@
     $router->add('POST', '/sessions/{id}/end',    function($id) { (new SessionController())->end($id); });
     $router->add('POST', '/sessions/{id}/cancel', function($id) { (new SessionController())->cancel($id); });
     $router->add('GET',  '/sessions/{id}/monitor', function($id) { (new SessionController())->monitor($id); });
+    $router->add('GET',  '/sessions/{id}/stats',   function($id) { (new SessionController())->stats($id); });
     $router->add('GET',  '/sessions/{id}/export',  function($id) { (new SessionController())->export($id); });
     $router->add('POST', '/sessions/{id}/documents', function($id) { (new DocumentController())->uploadToSession($id); });
     $router->add('POST', '/sessions/{id}/student-status', function($id) { (new SessionController())->setStudentActive($id); });
@@ -131,7 +143,8 @@
     $router->add('POST', '/ressources/store',        function()    { (new RessourceController())->store(); });
     $router->add('GET',  '/ressources/{id}/edit',    function($id) { (new RessourceController())->edit($id); });
     $router->add('POST', '/ressources/{id}/update',  function($id) { (new RessourceController())->update($id); });
-    $router->add('POST', '/ressources/{id}/delete',  function($id) { (new RessourceController())->delete($id); });
+    $router->add('POST', '/ressources/{id}/archive',  function($id) { (new RessourceController())->archive($id); });
+    $router->add('POST', '/ressources/{id}/restore',  function($id) { (new RessourceController())->restore($id); });
 
     $router->add('POST', '/documents/{id}/delete', function($id) { (new DocumentController())->delete($id); });
     $router->add('GET',  '/documents/session_{sessionId}/{docId}', function($sessionId, $docId) { (new DocumentController())->download($sessionId, $docId); });

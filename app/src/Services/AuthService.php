@@ -22,7 +22,7 @@ use Services\MailService;
  *     `users.id`, `users.last_login_at`, `teachers.id`, `students.id`.
  *   - `users` no longer carries `gdpr_consent` / `gdpr_consent_at`; the
  *     equivalent is now `consent_at` + `consent_version`. We do not touch
- *     these fields here — they are owned by spec 06 (RGPD).
+ *     these fields here — they are owned by spec 06 (GDPR).
  */
 final class AuthService
 {
@@ -103,7 +103,7 @@ final class AuthService
      *
      * Behaviour:
      *   - Format-validates the form input (email, password >= 8 chars,
-     *     password_confirm match, RGPD consent ticked).
+     *     password_confirm match, GDPR consent ticked).
      *   - Looks up the email domain in `email_domain_configs` to derive the
      *     role (active domains only). An unknown / disabled domain is
      *     rejected — only domains an admin configured can register.
@@ -128,7 +128,7 @@ final class AuthService
         $placeId         = (int) ($data['place_id']                ?? 0);
         $departmentId    = (int) ($data['department_id']           ?? 0);
         $isResearcher    = (bool)  ($data['is_researcher']         ?? false);
-        $rgpdConsent     = (bool)  ($data['rgpd_consent']          ?? false);
+        $gdprConsent     = (bool)  ($data['gdpr_consent']          ?? false);
         $promo_year      = (int) ($data['promo_year']              ?? '');
 
         // ----- Format validation ------------------------------------
@@ -138,7 +138,7 @@ final class AuthService
             $passwordConfirm,
             $firstName,
             $lastName,
-            $rgpdConsent
+            $gdprConsent
         );
         if ($validationError !== null) {
             return ['success' => false, 'error' => $validationError];
@@ -168,8 +168,8 @@ final class AuthService
                     'last_name'       => $lastName,
                     'department_id'   => $registration['department_id'],
                     'laboratory_id'   => $registration['laboratory_id'],
-                    'consent_version' => '1.0',
-                    'promo_year'      => $promo_year
+                    'promo_year'      => $promo_year,
+                    'consent_version' => $isResearcher ? 'researcher-1.0' : 'member-1.0'
 
                 ],
                 $registration['role']
@@ -178,9 +178,12 @@ final class AuthService
             $token = bin2hex(random_bytes(32));
             $this->users->setVerifyToken($userId, $token);
 
-            // --- Send verification email ---
-            $config = require __DIR__ . '/../Config/config.php';
-            $link   = ($config['app']['url'] ?? 'http://localhost:8085') . '/verify-email?token=' . $token;
+            // Derive the base URL from the current request so the link points to
+            // the host the super admin actually reached the app through.
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host   = $_SERVER['HTTP_HOST'] ?? 'localhost:8085';
+            $link   = $scheme . '://' . $host
+                . '/admin-invite/accept?token=' . urlencode($token);
 
             $mail = new MailService();
             $mail->send(
@@ -334,7 +337,7 @@ final class AuthService
         string $passwordConfirm,
         string $firstName,
         string $lastName,
-        bool $rgpdConsent
+        bool $gdprConsent
     ): ?string {
         if ($email === '' || $password === '' || $firstName === '' || $lastName === '') {
             return 'Tous les champs sont obligatoires.';
@@ -348,7 +351,7 @@ final class AuthService
         if ($password !== $passwordConfirm) {
             return 'Les mots de passe ne correspondent pas.';
         }
-        if (!$rgpdConsent) {
+        if (!$gdprConsent) {
             return 'Vous devez accepter les conditions RGPD pour créer un compte.';
         }
 

@@ -121,12 +121,12 @@ class AuthController extends Controller
          'auth');
     }
 
-    public function showRGPD(): void
+    public function showGDPR(): void
     {
-        $this->render('pages/auth/rgpd_consent', [
+        $this->render('pages/auth/gdpr_consent', [
             'titrePage' => 'Mentions RGPD',
             'pageTitle' => 'Mentions RGPD',
-            'page'      => 'rgpd',
+            'page'      => 'gdpr',
             'user'      => $this->currentUser(),
         ], 'chat');
     }
@@ -145,7 +145,7 @@ class AuthController extends Controller
             'place_id'         => $this->input('place_id', ''),
             'department_id'    => $this->input('department_id', ''),
             'is_researcher'    => (bool) $this->input('is_researcher', false),
-            'rgpd_consent'     => (bool) $this->input('rgpd_consent', false),
+            'gdpr_consent'     => (bool) $this->input('gdpr_consent', false),
             'promo_year'       => $this->input('promo_year',null)
         ];
 
@@ -190,6 +190,67 @@ class AuthController extends Controller
         $this->redirect('/login');
     }
 
+    public function showGDPRResearcher(): void
+    {
+        $this->render('pages/auth/gdpr_consent_researcher', ['titrePage' => 'Engagement chercheur — RGPD']);
+    }
+
+    /** Shows the acceptance form for a signed invitation link. */
+    public function showAcceptInvite(): void
+    {
+        $token   = $this->query('token', '');
+        $service = new \Services\AdminInviteService(Database::getConnection());
+        $data    = $service->verifyToken($token);
+
+        if ($data === null) {
+            $this->flash('error', 'Lien invalide ou expiré.');
+            $this->redirect('/login');
+        }
+
+        $this->render('pages/auth/accept-invite', [
+            'titrePage' => 'Activer mon compte administrateur',
+            'token'     => $token,
+            'email'     => $data['email'],
+        ], 'auth');
+    }
+
+    /** Creates the department-admin account from the invitation. */
+    public function acceptInvite(): void
+    {
+        $this->verifyCsrf();
+
+        $token   = (string) $this->input('token', '');
+        $service = new \Services\AdminInviteService(Database::getConnection());
+
+        // invited_by_id: a department_administrators row needs a super admin id.
+        // Fall back to the first super admin when the link is opened logged-out.
+        $pdo            = Database::getConnection();
+        $invitedById    = (int) $pdo->query('SELECT id FROM super_administrators ORDER BY id LIMIT 1')->fetchColumn();
+
+        $result = $service->accept(
+            $token,
+            (string) $this->input('password', ''),
+            (string) $this->input('password_confirm', ''),
+            (string) $this->input('first_name', ''),
+            (string) $this->input('last_name', ''),
+            $invitedById
+        );
+
+        if (!$result['success']) {
+            $data = $service->verifyToken($token);
+            $this->render('pages/auth/accept-invite', [
+                'titrePage' => 'Activer mon compte administrateur',
+                'token'     => $token,
+                'email'     => $data['email'] ?? '',
+                'error'     => $result['error'],
+            ], 'auth');
+            return;
+        }
+
+        $this->flash('success', 'Compte administrateur créé. Vous pouvez vous connecter.');
+        $this->redirect('/login');
+    }
+
     /**
      * POST /domain_name
      * Vérifie le domaine en base de données et renvoie le rôle associé.
@@ -202,7 +263,7 @@ class AuthController extends Controller
 
         $pdo  = \Data\Database::getConnection();
         $domainRepo = new \Models\EmailDomainRepository($pdo);
-        
+
         // Récupération de tous les domaines (selon ta méthode actuelle)
         $domains = $domainRepo->findAll();
 

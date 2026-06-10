@@ -45,6 +45,7 @@ class RessourceController extends Controller
             'title'      => 'Mes ressources',
             'navSection' => 'ressources',
             'ressources' => $this->ressources->listForTeacher((int) ($user['id'] ?? 0)),
+            'archived'   => $this->ressources->listArchivedForTeacher((int) ($user['id'] ?? 0)),
             'sessions'   => $this->sessions->listForTeacher((int) ($user['id'] ?? 0)),
             'user'       => $user,
         ]);
@@ -144,16 +145,33 @@ class RessourceController extends Controller
         $this->redirect('/ressources');
     }
 
-    /** POST /ressources/{id}/delete */
-    public function delete(string $id): void
+    /** POST /ressources/{id}/archive */
+    public function archive(string $id): void
     {
         $this->requireRole('teacher');
         $this->verifyCsrf();
         $user = $this->currentUser();
 
         try {
-            $this->ressources->delete((int) $id, (int) ($user['id'] ?? 0));
-            $this->flash('success', 'Ressource supprimée.');
+            $this->ressources->archive((int) $id, (int) ($user['id'] ?? 0));
+            $this->flash('success', 'Ressource archivée.');
+        } catch (\RuntimeException $e) {
+            $this->flash('error', $e->getMessage());
+        }
+
+        $this->redirect('/ressources');
+    }
+
+    /** POST /ressources/{id}/restore */
+    public function restore(string $id): void
+    {
+        $this->requireRole('teacher');
+        $this->verifyCsrf();
+        $user = $this->currentUser();
+
+        try {
+            $this->ressources->restore((int) $id, (int) ($user['id'] ?? 0));
+            $this->flash('success', 'Ressource restaurée.');
         } catch (\RuntimeException $e) {
             $this->flash('error', $e->getMessage());
         }

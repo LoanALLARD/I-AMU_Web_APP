@@ -23,7 +23,7 @@ class LLMController{
         // raw data of the request
         $jsonRaw = file_get_contents('php://input');
 
-        // Transaltion of the raw data to a associative array  
+        // Transaltion of the raw data to a associative array
         $data = json_decode($jsonRaw, true);
         if (!$data || !isset($data['model']) || !isset($data['message'])) {
             header('Content-Type: application/json');
@@ -45,7 +45,7 @@ class LLMController{
         // never from the client payload. No email lookup needed.
         $userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
         // $userId = 1;
-        
+
         if ($userId <= 0) {
             header('Content-Type: application/json');
             http_response_code(401);
@@ -90,7 +90,7 @@ class LLMController{
             echo json_encode(['error' => "the model is not supported."]);
             // throw new \Exception ("Error, model : ".$modelName." is unknow");
             return;
-        }        
+        }
 
         // A conversation id is only sent on a session-bound chat. We resolve
         // it (with an ownership check) so the interaction can be persisted.
@@ -139,16 +139,16 @@ class LLMController{
                     $nameConversation
                 );
                 $conversationData['name'] = $nameConversation;
-            }        
-        }                                                           
-                
+            }
+        }
+
         if ($conversationData == null){
             header('Content-Type: application/json');
             http_response_code(404);
             echo json_encode(['error' => "this user has no conversation corresponding with id :". $conversation_id ]);
             // throw new \Exception ("Error, this user has no conversation corresponding");
             return;
-        }    
+        }
 
         // A student deactivated by the teacher cannot send in the session
         // (server-side enforcement of the "disconnect").
@@ -255,38 +255,55 @@ class LLMController{
             $aiData["api_url"],
             $adapter,
         );
-        $responseRaw = $ai->ask($userMessage, $context,$preprompt,$postprompt);
-        $response = json_decode($responseRaw);
+        // Switch to a streamed response. From here we stop sending a single
+        // JSON body: each token is pushed as a Server-Sent Event the moment
+        // Ollama produces it. All validation errors above already returned
+        // a normal JSON error before reaching this point.
+        while (ob_get_level() > 0) {
+            ob_end_flush();
+        }
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache');
+        header('X-Accel-Buffering: no');
+        ob_implicit_flush(true);
 
-        if ($response === null || (is_object($response) && isset($response->error))) {
-            $detail = is_object($response) && isset($response->error)
-                ? (string) $response->error
-                : 'Le modele est indisponible.';
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => $detail]);
+        $onChunk = static function (string $piece): void {
+            echo "event: token\n";
+            echo 'data: ' . json_encode(['text' => $piece]) . "\n\n";
+            flush();
+        };
+
+        try {
+            $result = $ai->askStream($userMessage, $context, $preprompt, $postprompt, $onChunk);
+        } catch (\Throwable $e) {
+            echo "event: error\n";
+            echo 'data: ' . json_encode(['error' => 'Le modele est indisponible.']) . "\n\n";
+            flush();
             return;
         }
 
         // Persist the interaction (every conversation is persisted).
         $boundDocs = [];
-        if ($conversationData !== null && $response !== false && isset($response->response)) {
+        $interactionId = null;
+        if ($conversationData !== null && $result['response'] !== '') {
             $interaction = new InteractionRepository($pdo);
-            $input_tokens  = isset($response->prompt_eval_count) ? (int) $response->prompt_eval_count : null;
-            $output_tokens = isset($response->eval_count) ? (int) $response->eval_count : null;
-
             $interactionData = $interaction->newInteration(
                 (int) $conversationData['id'],
                 $userMessage,
-                (string) $response->response,
-                $input_tokens,
-                $output_tokens
+                $result['response'],
+                $result['prompt_eval_count'],
+                $result['eval_count']
             );
-            $meta_data = $adapter->formatMetadata($response);
-            $var=$interaction->setContext($meta_data,$interactionData['id']);
+            // Store the provider context so the next turn keeps the thread.
+            $meta_data = json_encode([
+                'context'        => $result['context'],
+                'total_duration' => null,
+                'done_reason'    => 'stop',
+            ]);
+            $interaction->setContext($meta_data, $interactionData['id']);
 
-            // Tie the pending documents to this message (provenance) and return
-            // them so the UI can display them under the message just sent.
+            // Tie the conversation's pending documents to this message and
+            // collect them so the UI can show them under the message.
             $interactionId = (int) $interactionData['id'];
             $documentService->bindPendingToInteraction((int) $conversationData['id'], $interactionId);
             foreach ($documentService->documentsForInteraction($interactionId) as $doc) {
@@ -300,16 +317,57 @@ class LLMController{
             }
         }
 
+        // Final event: metadata the UI needs once generation is done. The
+        // interaction id lets the chat wire its satisfaction thumbs (feedback).
+        echo "event: done\n";
+        echo 'data: ' . json_encode([
+                'prompt_eval_count' => $result['prompt_eval_count'],
+                'eval_count'        => $result['eval_count'],
+                'conversation_id'   => $conversationData['id'] ?? null,
+                'conversation_name' => $conversationData['name'] ?? null,
+                'interaction_id'    => $interactionId,
+                'documents'         => $boundDocs,
+            ]) . "\n\n";
+        flush();
+    }
+
+    /**
+     * Records the satisfaction rating a student gives to one of their own AI
+     * responses (the chat thumbs up/down). Persists `interactions.user_feedback`
+     * scoped to the authenticated user's own conversations, so nobody can rate
+     * another student's interaction. Expects JSON { interaction_id, value }
+     * with value in {1, 0, -1}.
+     */
+    public function recordFeedback(): void
+    {
         header('Content-Type: application/json');
-        echo json_encode([
-            'response'          => $response->response,
-            'prompt_eval_count' => $response->prompt_eval_count ?? null,
-            'eval_count'        => $response->eval_count ?? null,
-            'conversation_id'   => $conversationData['id'] ?? null,
-            'conversation_name' => $conversationData['name'] ?? null,
-            'documents'         => $boundDocs,
-        ]);
-        
+
+        $data = json_decode((string) file_get_contents('php://input'), true);
+        $interactionId = isset($data['interaction_id']) ? (int) $data['interaction_id'] : 0;
+        $value         = isset($data['value']) ? (int) $data['value'] : 99;
+
+        if ($interactionId <= 0 || !in_array($value, [1, 0, -1], true)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Requête invalide.']);
+            return;
+        }
+
+        $userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
+        if ($userId <= 0) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Non authentifié.']);
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $ok  = (new InteractionRepository($pdo))->setFeedback($interactionId, $userId, $value);
+
+        if (!$ok) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Interaction introuvable.']);
+            return;
+        }
+
+        echo json_encode(['ok' => true, 'value' => $value]);
     }
 }
-

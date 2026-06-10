@@ -37,19 +37,19 @@ $canAddModel = $canAddModel ?? false;
                             <polyline points="6 9 12 15 18 9" />
                         </svg>
                     </button>
-                <div class="model-dropdown" id="modelDropdown">
-                    <div class="model-dropdown-header">Modèles disponibles</div>
-                    <?php if (empty($models)): ?>
-                        <div class="model-dropdown-empty">Aucun modèle disponible</div>
-                    <?php else: ?>
-                        <?php foreach ($models as $i => $model):?>
-                            <button class="model-dropdown-item<?= $i === 0 ? ' active' : '' ?>"
-                                    data-model="<?= htmlspecialchars($model['name']) ?>"
-                                    type="button">
-                                <span class="model-dropdown-letter"><?= strtoupper(substr($model['name'], 0, 1)) ?></span>
-                                <div class="model-dropdown-info">
-                                    <span class="model-dropdown-name"><?= htmlspecialchars($model['name']) ?></span>
-                                    <span class="model-dropdown-meta">
+                    <div class="model-dropdown" id="modelDropdown">
+                        <div class="model-dropdown-header">Modèles disponibles</div>
+                        <?php if (empty($models)): ?>
+                            <div class="model-dropdown-empty">Aucun modèle disponible</div>
+                        <?php else: ?>
+                            <?php foreach ($models as $i => $model):?>
+                                <button class="model-dropdown-item<?= $i === 0 ? ' active' : '' ?>"
+                                        data-model="<?= htmlspecialchars($model['name']) ?>"
+                                        type="button">
+                                    <span class="model-dropdown-letter"><?= strtoupper(substr($model['name'], 0, 1)) ?></span>
+                                    <div class="model-dropdown-info">
+                                        <span class="model-dropdown-name"><?= htmlspecialchars($model['name']) ?></span>
+                                        <span class="model-dropdown-meta">
                                         <?php
                                         $meta = [];
                                         if ($model['size'] ?? null) {
@@ -61,25 +61,25 @@ $canAddModel = $canAddModel ?? false;
                                         echo htmlspecialchars(implode(' · ', $meta) ?: 'local · ollama');
                                         ?>
                                     </span>
-                                </div>
-                                <svg class="model-dropdown-check" width="16" height="16" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="20 6 9 17 4 12"/>
-                                </svg>
-                            </button>
-                        <?php endforeach; ?>
-                        <?php if ($canAddModel): ?>
-                            <a class="model-dropdown-item admin-action-item" href="/department-admin/addModel">
+                                    </div>
+                                    <svg class="model-dropdown-check" width="16" height="16" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </button>
+                            <?php endforeach; ?>
+                            <?php if ($canAddModel): ?>
+                                <a class="model-dropdown-item admin-action-item" href="/department-admin/addModel">
                                 <span class="model-dropdown-letter">
                                     <img src="/assets/img/add.svg" style="height: 20px;">
                                 </span>
-                                <div class="model-dropdown-info">
-                                    <span class="model-dropdown-name">Ajouter un Modèle d'IA</span>
-                                </div>
-                            </a>
+                                    <div class="model-dropdown-info">
+                                        <span class="model-dropdown-name">Ajouter un Modèle d'IA</span>
+                                    </div>
+                                </a>
+                            <?php endif; ?>
                         <?php endif; ?>
-                    <?php endif; ?>
-                </div>
+                    </div>
                 </div>
 
                 <?php if ($inSession && ($sessionDocuments ?? []) !== []): ?>
@@ -88,8 +88,8 @@ $canAddModel = $canAddModel ?? false;
                             <?= icon('book', '', 14) ?>
                             <span class="model-tag-name">Documents (<?= count($sessionDocuments) ?>)</span>
                             <svg class="model-selector-chevron" id="docChevron" width="14" height="14" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                                stroke-linejoin="round">
+                                 fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                 stroke-linejoin="round">
                                 <polyline points="6 9 12 15 18 9" />
                             </svg>
                         </button>
@@ -97,13 +97,13 @@ $canAddModel = $canAddModel ?? false;
                             <div class="model-dropdown-header">Documents de la session</div>
                             <?php foreach ($sessionDocuments as $doc): ?>
                                 <a class="model-dropdown-item"
-                                    href="/documents/session_<?= (int) $doc->sessionId() ?>/<?= (int) $doc->id() ?>"
-                                    target="_blank" rel="noopener" style="text-decoration:none;color:inherit;"
-                                    title="<?= htmlspecialchars($doc->originalName()) ?>">
+                                   href="/documents/session_<?= (int) $doc->sessionId() ?>/<?= (int) $doc->id() ?>"
+                                   target="_blank" rel="noopener" style="text-decoration:none;color:inherit;"
+                                   title="<?= htmlspecialchars($doc->originalName()) ?>">
                                     <span class="model-dropdown-letter"><?= icon('book', '', 13) ?></span>
                                     <div class="model-dropdown-info" style="min-width:0;">
                                         <span class="model-dropdown-name"
-                                            style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                              style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                                             <?= htmlspecialchars($doc->originalName()) ?>
                                         </span>
                                         <span class="model-dropdown-meta">
@@ -138,7 +138,7 @@ $canAddModel = $canAddModel ?? false;
                         </div>
                     <?php endif; ?>
                 </div>
-                <div class="msg msg-ai">
+                <div class="msg msg-ai" data-interaction="<?= (int) $m['id'] ?>" data-feedback="<?= $m['feedback'] === null ? '' : (int) $m['feedback'] ?>">
                     <div class="msg-meta">
                         <span class="msg-model"><?= htmlspecialchars($m['model']) ?></span>
                     </div>
@@ -185,7 +185,7 @@ $canAddModel = $canAddModel ?? false;
             <?php if ($sessionClosed): ?>
                 <div class="session-closed-banner">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
+                         stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
@@ -213,17 +213,17 @@ $canAddModel = $canAddModel ?? false;
                     accept="<?= htmlspecialchars($acceptAttr) ?>">
                 <?php endif; ?>
                 <textarea id="promptInput"
-                      placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
-                      <?php if (!empty($env['maxInputSize'])): ?>maxlength="<?= (int) $env['maxInputSize'] ?>"<?php endif; ?>
+                          placeholder="<?= $sessionClosed ? 'Session terminée — envoi désactivé' : 'Écrivez votre message…' ?>"
+                          <?php if (!empty($env['maxInputSize'])): ?>maxlength="<?= (int) $env['maxInputSize'] ?>"<?php endif; ?>
                       rows="1" <?= $sessionClosed ? 'disabled' : 'autofocus' ?>></textarea>
                 <button class="btn-send" id="btnSend" disabled title="Envoyer">
                     <svg class="icon-send" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                         stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13" />
                         <polygon points="22 2 15 22 11 13 2 9 22 2" />
                     </svg>
                     <svg class="icon-stop" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"
-                        aria-hidden="true">
+                         aria-hidden="true">
                         <rect x="6" y="6" width="12" height="12" rx="2" />
                     </svg>
                 </button>
@@ -354,11 +354,17 @@ $canAddModel = $canAddModel ?? false;
     // assets/js/markdown.js module, loaded synchronously in <head> by the
     // layout — available here at parse time and for live streaming below.
 
-    // On load: render persisted AI bubbles (raw markdown -> HTML), then jump to
-    // the latest message so a reopened thread starts at the bottom.
+    // On load: render persisted AI bubbles (raw markdown -> HTML), attach the
+    // satisfaction thumbs (restoring the student's previous rating), then jump
+    // to the latest message so a reopened thread starts at the bottom.
     (function () {
         document.querySelectorAll('.msg-ai .msg-content[data-markdown]').forEach((el) => {
             renderMarkdown(el.getAttribute('data-markdown') ?? '', el);
+        });
+        document.querySelectorAll('.msg-ai[data-interaction]').forEach((el) => {
+            const id = parseInt(el.getAttribute('data-interaction') ?? '0', 10);
+            const raw = el.getAttribute('data-feedback');
+            attachFeedback(el, id, raw ? parseInt(raw, 10) : 0);
         });
         const m = document.getElementById('messages');
         if (m) m.scrollTop = m.scrollHeight;
@@ -501,6 +507,7 @@ $canAddModel = $canAddModel ?? false;
             const res = await fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                signal: currentAbort.signal,
                 body: JSON.stringify({
                     model: selectedModel,
                     message: message,
@@ -510,43 +517,71 @@ $canAddModel = $canAddModel ?? false;
                 })
             });
 
+            const contentEl = aiMsg.querySelector('.msg-content');
 
-            const text = await res.text();
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch (e) {
-                console.error("Response n'est pas du JSON valide", text);
-                aiMsg.querySelector('.msg-content').innerHTML =
-                    '<p class="msg-error">Réponse invalide du serveur.</p>';
+            // Pre-stream failures (auth, limits) still come back as a JSON
+            // error with a non-2xx status, before any token is streamed.
+            const ctype = res.headers.get('Content-Type') || '';
+            if (!res.ok || ctype.includes('application/json')) {
+                let msg = 'Une erreur est survenue.';
+                try { const j = await res.json(); msg = j.error ?? msg; } catch (e) {}
+                contentEl.innerHTML = `<p class="msg-error">${escapeHtml(msg)}</p>`;
                 return;
             }
 
-            // Server-side limits / auth: the endpoint returns an error JSON
-            // with a non-2xx status (429 token cap, 422 char cap, 403, etc.).
-            if (!res.ok || data.error) {
-                const msg = data.error ?? 'Une erreur est survenue.';
-                aiMsg.querySelector('.msg-content').innerHTML =
-                    `<p class="msg-error">${escapeHtml(msg)}</p>`;
-                // The send failed: the documents were not bound — undo the
-                // optimistic display and put them back in the composer.
-                if (sentDocs.length) { userMsg.querySelector('.msg-docs')?.remove(); refreshComposerDocs(); }
-                return;
+            // Read the SSE body chunk by chunk and grow the answer live.
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let sseBuffer = '';
+            let fullText = '';
+            let meta = {};
+
+            contentEl.textContent = ''; // remove the typing indicator
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                sseBuffer += decoder.decode(value, { stream: true });
+
+                // SSE events are separated by a blank line.
+                let sep;
+                while ((sep = sseBuffer.indexOf('\n\n')) !== -1) {
+                    const rawEvent = sseBuffer.slice(0, sep);
+                    sseBuffer = sseBuffer.slice(sep + 2);
+
+                    let eventName = 'message';
+                    let dataStr = '';
+                    rawEvent.split('\n').forEach((line) => {
+                        if (line.startsWith('event:')) eventName = line.slice(6).trim();
+                        else if (line.startsWith('data:')) dataStr += line.slice(5).trim();
+                    });
+                    if (!dataStr) continue;
+
+                    let payload;
+                    try { payload = JSON.parse(dataStr); } catch (e) { continue; }
+
+                    if (eventName === 'token') {
+                        fullText += payload.text ?? '';
+                        // Plain text while streaming, markdown is rendered once at the end.
+                        contentEl.textContent = fullText;
+                        messagesEl.scrollTop = messagesEl.scrollHeight;
+                    } else if (eventName === 'done') {
+                        meta = payload;
+                    } else if (eventName === 'error') {
+                        contentEl.innerHTML = `<p class="msg-error">${escapeHtml(payload.error ?? 'Erreur du modèle.')}</p>`;
+                        return;
+                    }
+                }
             }
 
-            const endTime = performance.now();
-            const durationStr = ((endTime - startTime) / 1000).toFixed(2) + 's';
+            // Final markdown render once the full answer is in.
+            renderMarkdown(fullText || 'Pas de réponse.', contentEl);
 
-
-            const responseText = data.response ?? 'Pas de réponse.';
-            renderMarkdown(responseText, aiMsg.querySelector('.msg-content'));
-
-
-            const newConvId = data.conversation_id ?? null;
-            const newConvName = data.conversation_name ?? 'Nouvelle conversation';
-            const reply = data.response || 'Pas de réponse.';
-            const inputTokens = data.prompt_eval_count || 0;
-            const outputTokens = data.eval_count || 0;
+            const durationStr = ((performance.now() - startTime) / 1000).toFixed(2) + 's';
+            const newConvId = meta.conversation_id ?? null;
+            const newConvName = meta.conversation_name ?? 'Nouvelle conversation';
+            const inputTokens = meta.prompt_eval_count || 0;
+            const outputTokens = meta.eval_count || 0;
             const totalTokens = inputTokens + outputTokens;
 
             // Reuse the same conversation for the next messages of a fresh chat.
@@ -593,6 +628,7 @@ $canAddModel = $canAddModel ?? false;
                     </span>
             `;
             aiMsg.appendChild(actions);
+            attachFeedback(aiMsg, meta.interaction_id ?? null, 0);
         } catch (err) {
             aiMsg.querySelector('.msg-content').innerHTML = err.name === 'AbortError'
                 ? '<p class="msg-error">Génération interrompue.</p>'
@@ -619,6 +655,56 @@ $canAddModel = $canAddModel ?? false;
         btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> copié`;
         setTimeout(() => btn.innerHTML = original, 1500);
     }
+
+    // Appends the satisfaction thumbs (👍/👎) to an AI bubble, reusing the
+    // bubble's actions bar when it already has one (sent message) or creating a
+    // feedback-only bar (reloaded history). `current` is the stored rating
+    // (1 / -1 / 0) so the active button is highlighted on load.
+    function attachFeedback(aiMsg, interactionId, current) {
+        if (!aiMsg || !interactionId) return;
+        let bar = aiMsg.querySelector('.msg-actions');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.className = 'msg-actions';
+            aiMsg.appendChild(bar);
+        }
+        const span = document.createElement('span');
+        span.className = 'msg-feedback';
+        span.dataset.interaction = String(interactionId);
+        span.innerHTML = `
+            <button type="button" class="msg-action fb-btn fb-up${current === 1 ? ' is-active' : ''}" data-val="1" title="Réponse utile" aria-label="Réponse utile">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>
+            </button>
+            <button type="button" class="msg-action fb-btn fb-down${current === -1 ? ' is-active' : ''}" data-val="-1" title="Réponse peu utile" aria-label="Réponse peu utile">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg>
+            </button>`;
+        bar.appendChild(span);
+    }
+
+    // One delegated handler for every thumb (history + freshly sent). Clicking
+    // the active rating clears it (sends 0 / neutral); otherwise it sets the
+    // clicked value. The UI only commits once the server confirms.
+    document.getElementById('messages')?.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.fb-btn');
+        if (!btn) return;
+        const span = btn.closest('.msg-feedback');
+        if (!span) return;
+        const interactionId = parseInt(span.dataset.interaction ?? '0', 10);
+        if (!interactionId) return;
+        const value = btn.classList.contains('is-active') ? 0 : parseInt(btn.dataset.val ?? '0', 10);
+        try {
+            const res = await fetch('/chat/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ interaction_id: interactionId, value })
+            });
+            if (!res.ok) return;
+            span.querySelectorAll('.fb-btn').forEach((b) => b.classList.remove('is-active'));
+            if (value !== 0) btn.classList.add('is-active');
+        } catch (err) {
+            /* network hiccup: leave the UI unchanged */
+        }
+    });
 
     // Renders, under a user message bubble, the documents that were sent with
     // it (download links). Assigned by the attachments module below.
@@ -732,7 +818,7 @@ $canAddModel = $canAddModel ?? false;
         refresh();
     })();
 
-<?php if ($inSession && !$sessionClosed): ?>
+    <?php if ($inSession && !$sessionClosed): ?>
     // Live enforcement: poll the session status so that a student deactivated
     // by the teacher (or a session that closes) flips to read-only within a few
     // seconds, without a manual reload. The reloaded page is server-rendered
@@ -754,7 +840,5 @@ $canAddModel = $canAddModel ?? false;
         };
         const timer = setInterval(tick, 8000);
     })();
-<?php endif; ?>
+    <?php endif; ?>
 </script>
-
-

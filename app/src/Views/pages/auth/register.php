@@ -59,10 +59,10 @@
                        placeholder="Répétez votre mot de passe" required>
             </div>
 
-            <div class="rgpd-group promo-collapse" id="research-container">
+            <div class="gdpr-group promo-collapse" id="research-container">
                 <input type="checkbox" id="is_researcher" name="is_researcher" value="1"
                        <?= !empty($data['is_researcher']) ? 'checked' : '' ?>>
-                <label for="is_researcher" class="rgpd-label">
+                <label for="is_researcher" class="gdpr-label">
                     Je suis un chercheur.
                 </label>
             </div>
@@ -89,12 +89,19 @@
                 </div>
             </div>
 
-            <div class="rgpd-group">
-                <input type="checkbox" id="rgpd_consent" name="rgpd_consent" value="1" required>
-                <label for="rgpd_consent" class="rgpd-label">
-                    J'accepte le traitement de mes données personnelles dans le cadre
-                    de la recherche scientifique sur l'usage de l'IA.
-                    <a href="/rgpd_consent" target="_blank">En savoir plus</a>
+            <div class="gdpr-group">
+                <input type="checkbox" id="gdpr_consent" name="gdpr_consent" value="1" required>
+                <label for="gdpr_consent" class="gdpr-label">
+                    <span id="consent-text-member">
+                        J'accepte le traitement de mes données personnelles dans le cadre
+                        de la recherche scientifique sur l'usage de l'IA.
+                        <a href="/gdpr_consent" target="_blank">En savoir plus</a>
+                    </span>
+                    <span id="consent-text-researcher" hidden>
+                        En tant que chercheur, je m'engage à respecter les conditions d'accès
+                        et de traitement des données de la plateforme I-AMU.
+                        <a href="/gdpr_consent_researcher" target="_blank">En savoir plus</a>
+                    </span>
                 </label>
             </div>
 
