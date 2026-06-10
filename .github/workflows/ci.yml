@@ -77,6 +77,25 @@ jobs:
         name: PHP tests (phpunit)
         runs-on: ubuntu-latest
 
+        # The integration suite (tests/Integration) runs against a real
+        # Postgres. IntegrationTestCase skips when DB_* is unreachable, so
+        # this service is what makes those tests actually execute in CI; the
+        # unit suite ignores it.
+        services:
+            postgres:
+                image: postgres:14
+                env:
+                    POSTGRES_DB: iamu_ci
+                    POSTGRES_USER: iamu_ci
+                    POSTGRES_PASSWORD: iamu_ci_password
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U iamu_ci"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
         defaults:
             run:
                 working-directory: app
@@ -107,7 +126,20 @@ jobs:
             - name: Install dev dependencies
               run: composer install --prefer-dist --no-progress --no-interaction
 
+            - name: Load database schema (for the integration suite)
+              env:
+                  PGPASSWORD: iamu_ci_password
+              run: |
+                  psql -h localhost -p 5432 -U iamu_ci -d iamu_ci -v ON_ERROR_STOP=1 -f ../database/schema/01_schema.sql
+                  psql -h localhost -p 5432 -U iamu_ci -d iamu_ci -v ON_ERROR_STOP=1 -f ../database/schema/02_triggers.sql
+
             - name: PHPUnit
+              env:
+                  DB_HOST: localhost
+                  DB_PORT: "5432"
+                  DB_NAME: iamu_ci
+                  DB_USER: iamu_ci
+                  DB_PASSWORD: iamu_ci_password
               run: vendor/bin/phpunit --display-warnings
 
     # ────────────────────────────────────────────────────────────────
