@@ -155,6 +155,7 @@
     $router->add('POST', '/ressources/{id}/update',  function($id) { (new ResourceController())->update($id); });
     $router->add('POST', '/ressources/{id}/archive',  function($id) { (new ResourceController())->archive($id); });
     $router->add('POST', '/ressources/{id}/restore',  function($id) { (new ResourceController())->restore($id); });
+    $router->add('POST', '/ressources/{id}/publish', function($id) { (new ResourceController())->publish($id); });
 
     $router->add('POST', '/documents/{id}/delete', function($id) { (new DocumentController())->delete($id); });
     $router->add('GET',  '/documents/session_{sessionId}/{docId}', function($sessionId, $docId) { (new DocumentController())->download($sessionId, $docId); });

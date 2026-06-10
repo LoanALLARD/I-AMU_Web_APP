@@ -179,6 +179,24 @@ class ResourceController extends Controller
         $this->redirect('/ressources');
     }
 
+    /** POST /ressources/{id}/publish */
+    public function publish(string $id): void
+    {
+        $this->requireRole('teacher');
+        $this->verifyCsrf();
+        $user = $this->currentUser();
+ 
+        try {
+            $this->resources->publish((int) $id, (int) ($user['id'] ?? 0));
+            $this->flash('success', 'Ressource publiée.');
+        } catch (\RuntimeException $e) {
+            $this->flash('error', $e->getMessage());
+        }
+ 
+        $this->redirect('/ressources');
+    }
+
+
     // ----------------------------------------------------------------
     // Helpers
     // ----------------------------------------------------------------
