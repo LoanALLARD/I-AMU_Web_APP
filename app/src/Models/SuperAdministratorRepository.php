@@ -70,17 +70,6 @@ class SuperAdministratorRepository
     }
 
     /**
-     * Total number of super admin accounts. Used by the run-once bootstrap
-     * script to refuse creating a second account.
-     */
-    public function count(): int
-    {
-        $stmt = $this->pdo->query('SELECT COUNT(*) FROM super_administrators');
-
-        return (int) $stmt->fetchColumn();
-    }
-
-    /**
      * Inserts a super admin and returns its id. The caller hashes the
      * password (the repository only stores what it is given).
      */

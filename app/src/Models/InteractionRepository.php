@@ -120,19 +120,4 @@ class InteractionRepository {
         return $stmt->rowCount() > 0;
     }
 
-    /**
-     * @return array<array<string, mixed>>
-     */
-    public function getInteractionsByConversationId(int $conversation_id): array
-    {
-        $query = $this->pdo->prepare('
-        SELECT * FROM interactions where conversation_id = :conversation_id
-        ');
-
-        $query->execute([
-            'conversation_id'=>$conversation_id
-        ]);
-
-        return $query->fetchAll();
-    }
 }

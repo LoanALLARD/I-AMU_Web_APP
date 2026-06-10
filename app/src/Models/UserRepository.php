@@ -386,16 +386,6 @@ class UserRepository
         return $stmt->rowCount() > 0;
     }
 
-    public function isEmailVerified(int $userId): bool
-    {
-        $stmt = $this->pdo->prepare(
-            'SELECT email_verified_at FROM users WHERE id = :id'
-        );
-        $stmt->execute(['id' => $userId]);
-        $row = $stmt->fetch();
-        return $row !== false && $row['email_verified_at'] !== null;
-    }
-
     public function isTeacherSpecialized(int $id): bool
     {
         $query = $this->pdo->prepare(

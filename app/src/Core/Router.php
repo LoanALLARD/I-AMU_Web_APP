@@ -82,14 +82,4 @@ final class Router
         // No route matched — let the global handler render the 404 page.
         throw new HttpException(404, 'Cette page n\'existe pas.');
     }
-
-    /**
-     * Backwards-compatible alias for callers that still use the old name.
-     *
-     * @deprecated Use {@see dispatch()} instead.
-     */
-    public function compare(string $requestUrl, string $requestedMethod): void
-    {
-        $this->dispatch($requestUrl, $requestedMethod);
-    }
 }

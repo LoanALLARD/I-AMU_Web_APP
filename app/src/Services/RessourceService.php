@@ -7,7 +7,6 @@ namespace Services;
 use Models\ResourceRepository;
 use Models\UserRepository;
 use PDO;
-use PDOException;
 
 /**
  * Business logic for teacher-owned resources (courses).

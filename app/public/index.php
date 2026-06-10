@@ -1,7 +1,7 @@
 <?php
-    // Hand-written autoloader (runtime). Composer's vendor/autoload.php
-    // is reserved for dev tools (PHPStan, PHPUnit, PHPCS).
-    
+    // bootstrap.php loads Composer's PSR-4 autoloader (vendor/autoload.php),
+    // shared by the runtime and the dev tools (PHPStan, PHPUnit, PHPCS).
+
     require dirname(__DIR__) . '/src/bootstrap.php';
 
     session_start();
@@ -151,7 +151,7 @@
     $router->add('GET',  '/documents/conversation_{conversationId}/{docId}', function($conversationId, $docId) { (new DocumentController())->downloadFromConversation($conversationId, $docId); });
 
     try {
-        $router->compare($uri, $method);
+        $router->dispatch($uri, $method);
     } catch (HttpException $e) {
         (new ErrorController())->show($e->statusCode(), $e);
     } catch (\Throwable $e) {
