@@ -158,7 +158,7 @@ class UserRepository
                 );
                 $roleStmt->execute(['id' => $userId, 'lab' => $user['laboratory_id'] ?? null]);
             } else if ($role == 'teacher') {
-                $roleStmt = $this->pdo->prepare("INSERT INTO teacher (id) VALUES (:id)");
+                $roleStmt = $this->pdo->prepare("INSERT INTO teachers (id) VALUES (:id)");
                 $roleStmt->execute(['id' => $userId]);
             }else{
                 $roleStmt = $this->pdo->prepare("INSERT INTO students (id,year) VALUES (:id,:year)");
@@ -385,16 +385,6 @@ class UserRepository
         );
         $stmt->execute(['token' => $token]);
         return $stmt->rowCount() > 0;
-    }
-
-    public function isEmailVerified(int $userId): bool
-    {
-        $stmt = $this->pdo->prepare(
-            'SELECT email_verified_at FROM users WHERE id = :id'
-        );
-        $stmt->execute(['id' => $userId]);
-        $row = $stmt->fetch();
-        return $row !== false && $row['email_verified_at'] !== null;
     }
 
     public function isTeacherSpecialized(int $id): bool

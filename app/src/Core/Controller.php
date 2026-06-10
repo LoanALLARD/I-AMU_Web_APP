@@ -208,7 +208,7 @@ abstract class Controller
     /**
      * Returns the currently logged-in user as a flat array, or null.
      *
-     * @return array{id:int, email:string, first_name:string, last_name:string, roles:list<string>, department_id:int|null}|null
+     * @return array{id:int, email:string, first_name:string, last_name:string, roles:list<string>, isSpecialized:bool, theme:string|null, department_id:int|null}|null
      */
     protected function currentUser(): ?array
     {

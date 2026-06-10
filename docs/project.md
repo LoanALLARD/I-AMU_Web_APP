@@ -42,7 +42,7 @@ git show poc:app/Controllers/SessionController.php
 - Web: Apache 2.4 + mod_rewrite (Docker).
 - Front: vanilla JS + marked.js (markdown) + highlight.js (code).
 - Tests: PHPUnit 10 (upcoming).
-- Autoloader: custom (`app/autoload.php`) — not Composer's.
+- Autoloader: Composer PSR-4 (`vendor/autoload.php`), required in `src/bootstrap.php` — shared by the runtime and the dev tools.
 
 ## 5. Writing style (all files)
 

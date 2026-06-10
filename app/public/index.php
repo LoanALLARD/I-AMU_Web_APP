@@ -1,12 +1,12 @@
 <?php
-    // Hand-written autoloader (runtime). Composer's vendor/autoload.php
-    // is reserved for dev tools (PHPStan, PHPUnit, PHPCS).
-    
+    // bootstrap.php loads Composer's PSR-4 autoloader (vendor/autoload.php),
+    // shared by the runtime and the dev tools (PHPStan, PHPUnit, PHPCS).
+
     require dirname(__DIR__) . '/src/bootstrap.php';
 
     session_start();
     use Core\Router;
-    use Controllers\AccueilController;
+    use Controllers\HomeController;
     use Controllers\LLMController;
     use Controllers\AuthController;
     use Controllers\SessionController;
@@ -18,21 +18,21 @@
     use Controllers\SuperAdminAuthController;
     use Controllers\SuperAdminController;
     use Controllers\ErrorController;
-    use Controllers\RessourceController;
+    use Controllers\ResourceController;
     use Core\HttpException;
 
 // routeur
     $router = new Router();
 
-    $router->add('GET',  '/',            function() { (new AccueilController())->index(); });
-    $router->add('GET',  '/accueil',     function() { (new AccueilController())->index(); });
+    $router->add('GET',  '/',            function() { (new HomeController())->index(); });
+    $router->add('GET',  '/accueil',     function() { (new HomeController())->index(); });
 
     $router->add('POST', '/chat',         function() { (new LLMController())->handleChat(); });
     $router->add('POST', '/chat/documents',             function()    { (new DocumentController())->uploadToConversation(); });
     $router->add('POST', '/chat/documents/{id}/delete', function($id) { (new DocumentController())->deleteFromConversation($id); });
-    $router->add('POST', '/chat/rename',    function() { (new AccueilController())->renameChat(); });
-    $router->add('POST', '/chat/archive',   function() { (new AccueilController())->archiveChat(); });
-    $router->add('POST', '/chat/unarchive', function() { (new AccueilController())->unarchiveChat(); });
+    $router->add('POST', '/chat/rename',    function() { (new HomeController())->renameChat(); });
+    $router->add('POST', '/chat/archive',   function() { (new HomeController())->archiveChat(); });
+    $router->add('POST', '/chat/unarchive', function() { (new HomeController())->unarchiveChat(); });
 
     $uri = $_SERVER['REQUEST_URI'];
     $method = $_SERVER['REQUEST_METHOD'];
@@ -52,10 +52,10 @@
     $router->add('GET',  '/places/{id}/departments', function($id) { (new PlaceController())->departments($id); });
 
     // --- Chat home + profile (authenticated) --------------------------
-    $router->add('GET',  '/chat',                function()     { (new AccueilController())->index(); });
-    $router->add('GET',  '/chat/session-status', function()     { (new AccueilController())->sessionStatus(); });
+    $router->add('GET',  '/chat',                function()     { (new HomeController())->index(); });
+    $router->add('GET',  '/chat/session-status', function()     { (new HomeController())->sessionStatus(); });
     $router->add('GET',  '/chat/documents/{convId}', function($convId) { (new DocumentController())->conversationDocuments($convId); });
-    $router->add('GET',  '/chat/{id}',           function($id)  { (new AccueilController())->index($id); });
+    $router->add('GET',  '/chat/{id}',           function($id)  { (new HomeController())->index($id); });
     $router->add('GET',  '/profile',             function()     { (new ProfileController())->index(); });
     $router->add('POST', '/profile/theme',       function()     { (new ProfileController())->updateTheme(); });
     $router->add('POST', '/profile/deactivate',  function()     { (new ProfileController())->deactivate(); });
@@ -139,20 +139,20 @@
     $router->add('POST', '/sessions/{id}/student-status', function($id) { (new SessionController())->setStudentActive($id); });
     $router->add('GET',  '/sessions/{id}',        function($id) { (new SessionController())->dashboard($id); });
 
-    $router->add('GET',  '/ressources',              function()    { (new RessourceController())->index(); });
-    $router->add('GET',  '/ressources/create',       function()    { (new RessourceController())->create(); });
-    $router->add('POST', '/ressources/store',        function()    { (new RessourceController())->store(); });
-    $router->add('GET',  '/ressources/{id}/edit',    function($id) { (new RessourceController())->edit($id); });
-    $router->add('POST', '/ressources/{id}/update',  function($id) { (new RessourceController())->update($id); });
-    $router->add('POST', '/ressources/{id}/archive',  function($id) { (new RessourceController())->archive($id); });
-    $router->add('POST', '/ressources/{id}/restore',  function($id) { (new RessourceController())->restore($id); });
+    $router->add('GET',  '/ressources',              function()    { (new ResourceController())->index(); });
+    $router->add('GET',  '/ressources/create',       function()    { (new ResourceController())->create(); });
+    $router->add('POST', '/ressources/store',        function()    { (new ResourceController())->store(); });
+    $router->add('GET',  '/ressources/{id}/edit',    function($id) { (new ResourceController())->edit($id); });
+    $router->add('POST', '/ressources/{id}/update',  function($id) { (new ResourceController())->update($id); });
+    $router->add('POST', '/ressources/{id}/archive',  function($id) { (new ResourceController())->archive($id); });
+    $router->add('POST', '/ressources/{id}/restore',  function($id) { (new ResourceController())->restore($id); });
 
     $router->add('POST', '/documents/{id}/delete', function($id) { (new DocumentController())->delete($id); });
     $router->add('GET',  '/documents/session_{sessionId}/{docId}', function($sessionId, $docId) { (new DocumentController())->download($sessionId, $docId); });
     $router->add('GET',  '/documents/conversation_{conversationId}/{docId}', function($conversationId, $docId) { (new DocumentController())->downloadFromConversation($conversationId, $docId); });
 
     try {
-        $router->compare($uri, $method);
+        $router->dispatch($uri, $method);
     } catch (HttpException $e) {
         (new ErrorController())->show($e->statusCode(), $e);
     } catch (\Throwable $e) {

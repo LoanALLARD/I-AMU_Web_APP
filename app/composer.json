@@ -1,6 +1,6 @@
 {
     "name": "iamu/web-app",
-    "description": "I-AMU — encadrement pédagogique LLM (PHP 8.3 / PostgreSQL 17 / Ollama). NOTE: the production runtime uses app/autoload.php, not vendor/autoload.php. Composer is used only to install dev tooling (PHPStan, PHPCS, PHPUnit) and, later, prod libs (PHPMailer). The PSR-4 'autoload' section below is kept in sync with app/autoload.php so the dev tools can resolve classes the same way the runtime does.",
+    "description": "I-AMU — encadrement pédagogique LLM (PHP 8.1+ / PostgreSQL / Ollama). NOTE: both the runtime and the dev tooling (PHPStan, PHPCS, PHPUnit) autoload through Composer's PSR-4 (vendor/autoload.php), required in src/bootstrap.php. The PSR-4 'autoload' section below maps the app namespaces (Controllers, Core, Data, Models, Domain, Services) to src/.",
     "type": "project",
     "license": "proprietary",
     "require": {
@@ -14,7 +14,6 @@
     },
     "autoload": {
         "psr-4": {
-            "Src\\": "src/",
             "Controllers\\": "src/Controllers/",
             "Core\\": "src/Core/",
             "Data\\": "src/Data/",

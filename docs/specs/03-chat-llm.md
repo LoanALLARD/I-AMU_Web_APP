@@ -263,22 +263,22 @@ final class SyncResult {
 ### Routes *(réellement déclarées dans [`public/index.php`](../../app/public/index.php))*
 
 ```
-GET   /chat                          AccueilController::index          # shell + dernière conv
-GET   /chat/{id}                     AccueilController::index($id)     # conversation ouverte
-GET   /chat/session-status           AccueilController::sessionStatus  # AJAX (clôture session)
+GET   /chat                          HomeController::index          # shell + dernière conv
+GET   /chat/{id}                     HomeController::index($id)     # conversation ouverte
+GET   /chat/session-status           HomeController::sessionStatus  # AJAX (clôture session)
 POST  /chat                          LLMController::handleChat         # appel modèle -> JSON
-POST  /chat/new                      AccueilController::newChat        # nouvelle conversation
-POST  /chat/rename                   AccueilController::renameChat
-POST  /chat/archive                  AccueilController::archiveChat
-POST  /chat/unarchive                AccueilController::unarchiveChat
+POST  /chat/new                      HomeController::newChat        # nouvelle conversation
+POST  /chat/rename                   HomeController::renameChat
+POST  /chat/archive                  HomeController::archiveChat
+POST  /chat/unarchive                HomeController::unarchiveChat
 POST  /chat/documents                DocumentController::uploadToConversation
 GET   /chat/documents/{convId}       DocumentController::conversationDocuments
 POST  /chat/documents/{id}/delete    DocumentController::deleteFromConversation
 ```
 
-> Le contrôleur de page est **`AccueilController`** (pas `ChatController`,
-> qui existe mais n'est **pas** routé — code mort). L'appel modèle est isolé
-> dans **`LLMController::handleChat`**.
+> Le contrôleur de page est **`HomeController`** (l'ancien `ChatController`,
+> non routé, a été supprimé). L'appel modèle est isolé dans
+> **`LLMController::handleChat`**.
 
 ### Views
 

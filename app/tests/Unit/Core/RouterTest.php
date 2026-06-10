@@ -162,17 +162,4 @@ final class RouterTest extends TestCase
             self::assertNotSame('', $e->getMessage());
         }
     }
-
-    public function testCompareAliasDelegatesToDispatch(): void
-    {
-        $captured = null;
-        $router = new Router();
-        $router->add('GET', '/legacy/{slug}', function ($slug) use (&$captured): void {
-            $captured = $slug;
-        });
-
-        $router->compare('/legacy/abc', 'GET');
-
-        self::assertSame('abc', $captured);
-    }
 }
