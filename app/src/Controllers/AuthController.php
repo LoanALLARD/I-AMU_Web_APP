@@ -121,12 +121,12 @@ class AuthController extends Controller
          'auth');
     }
 
-    public function showRGPD(): void
+    public function showGDPR(): void
     {
-        $this->render('pages/auth/rgpd_consent', [
+        $this->render('pages/auth/gdpr_consent', [
             'titrePage' => 'Mentions RGPD',
             'pageTitle' => 'Mentions RGPD',
-            'page'      => 'rgpd',
+            'page'      => 'gdpr',
             'user'      => $this->currentUser(),
         ], 'chat');
     }
@@ -145,7 +145,7 @@ class AuthController extends Controller
             'place_id'         => $this->input('place_id', ''),
             'department_id'    => $this->input('department_id', ''),
             'is_researcher'    => (bool) $this->input('is_researcher', false),
-            'rgpd_consent'     => (bool) $this->input('rgpd_consent', false),
+            'gdpr_consent'     => (bool) $this->input('gdpr_consent', false),
             'promo_year'       => $this->input('promo_year',null)
         ];
 
@@ -190,9 +190,9 @@ class AuthController extends Controller
         $this->redirect('/login');
     }
 
-    public function showRGPDResearcher(): void
+    public function showGDPRResearcher(): void
     {
-        $this->render('pages/auth/rgpd_consent_researcher', ['titrePage' => 'Engagement chercheur — RGPD']);
+        $this->render('pages/auth/gdpr_consent_researcher', ['titrePage' => 'Engagement chercheur — RGPD']);
     }
 
     /** Shows the acceptance form for a signed invitation link. */

@@ -158,7 +158,7 @@ SELECT lives_ok(
 );
 
 -- ============================================================
--- users: research_opposed defaults to FALSE and is NOT NULL (RGPD)
+-- users: research_opposed defaults to FALSE and is NOT NULL (GDPR)
 -- ============================================================
 
 INSERT INTO users (email, password_hash) VALUES ('optout@univ-amu.fr', 'h');

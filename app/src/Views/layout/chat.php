@@ -130,8 +130,8 @@ $themePref = match ($user['theme'] ?? null) {
     <?php if ($page === 'error'): ?>
         <link rel="stylesheet" href="/assets/css/error.css<?= $v('error.css') ?>">
     <?php endif; ?>
-    <?php if ($page === 'rgpd'): ?>
-        <link rel="stylesheet" href="/assets/css/rgpd.css<?= $v('rgpd.css') ?>">
+    <?php if ($page === 'gdpr'): ?>
+        <link rel="stylesheet" href="/assets/css/gdpr.css<?= $v('gdpr.css') ?>">
     <?php endif; ?>
 
 

@@ -281,7 +281,7 @@ SELECT results_eq(
 -- ============================================================
 -- RESTRICT: an export trace protects both its conversation and its
 -- researcher (conversation_exports.* are ON DELETE RESTRICT, so the
--- RGPD audit trail cannot be silently dropped).
+-- GDPR audit trail cannot be silently dropped).
 -- ============================================================
 
 INSERT INTO users (id, email, password_hash) VALUES
