@@ -12,6 +12,10 @@ use PDO;
 final class ResearcherAnalyticsService
 {
     private const ACTIVITY_DAYS = 30;
+    private const KEYWORD_LIMIT = 30;
+
+    /** Privacy floor: a keyword surfaces only if used by this many distinct consenting students. */
+    private const KEYWORD_MIN_STUDENTS = 2;
 
     /**
      * Fixed salt for the export pseudonyms. Keeps the token stable across
@@ -60,6 +64,8 @@ final class ResearcherAnalyticsService
             $this->analytics->dailyActivity($scoped, self::ACTIVITY_DAYS),
             self::ACTIVITY_DAYS
         );
+        $keywords = $this->analytics->topKeywords($scoped, self::KEYWORD_LIMIT, self::KEYWORD_MIN_STUDENTS);
+        $shape = $this->analytics->promptShape($scoped);
 
         $feedbackTotal = $agg['feedback_positive'] + $agg['feedback_negative'] + $agg['feedback_neutral'];
         $satisfaction = $feedbackTotal > 0
@@ -88,6 +94,18 @@ final class ResearcherAnalyticsService
                 'activity' => [
                     'days'   => self::ACTIVITY_DAYS,
                     'points' => $activity,
+                ],
+                'keywords' => [
+                    'min_students' => self::KEYWORD_MIN_STUDENTS,
+                    'total'        => $keywords['total'],
+                    'words'        => $keywords['words'],
+                ],
+                'shape' => [
+                    'avg_prompt_chars'    => $shape['avg_prompt_chars'] !== null ? round($shape['avg_prompt_chars']) : null,
+                    'avg_prompt_words'    => $shape['avg_prompt_words'] !== null ? round($shape['avg_prompt_words'], 1) : null,
+                    'avg_conversation_depth' => $shape['avg_interactions_per_conversation'] !== null
+                        ? round($shape['avg_interactions_per_conversation'], 1)
+                        : null,
                 ],
             ],
         ];
