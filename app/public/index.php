@@ -4,6 +4,15 @@
 
     require dirname(__DIR__) . '/src/bootstrap.php';
 
+    // Harden the session cookie before the session starts.
+    session_set_cookie_params([
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'secure'   => (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off'),
+        'path'     => '/',
+    ]);
+    ini_set('session.use_strict_mode', '1');
+    
     session_start();
     use Core\Router;
     use Controllers\HomeController;

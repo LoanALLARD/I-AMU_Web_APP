@@ -348,6 +348,15 @@ final class AuthService
         if (strlen($password) < 8) {
             return 'Le mot de passe doit faire au moins 8 caractères.';
         }
+        if (!preg_match('/[A-Z]/', $password)) {
+            return 'Le mot de passe doit contenir au moins une majuscule.';
+        }
+        if (!preg_match('/[0-9]/', $password)) {
+            return 'Le mot de passe doit contenir au moins un chiffre.';
+        }
+        if (!preg_match('/[^A-Za-z0-9]/', $password)) {
+            return 'Le mot de passe doit contenir au moins un caractère spécial.';
+        }
         if ($password !== $passwordConfirm) {
             return 'Les mots de passe ne correspondent pas.';
         }
