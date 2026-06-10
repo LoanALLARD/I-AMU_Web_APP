@@ -187,7 +187,7 @@ class ResourceController extends Controller
         $user = $this->currentUser();
  
         try {
-            $this->ressources->publish((int) $id, (int) ($user['id'] ?? 0));
+            $this->resources->publish((int) $id, (int) ($user['id'] ?? 0));
             $this->flash('success', 'Ressource publiée.');
         } catch (\RuntimeException $e) {
             $this->flash('error', $e->getMessage());

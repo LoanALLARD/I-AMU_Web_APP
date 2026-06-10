@@ -148,14 +148,14 @@
     $router->add('POST', '/sessions/{id}/student-status', function($id) { (new SessionController())->setStudentActive($id); });
     $router->add('GET',  '/sessions/{id}',        function($id) { (new SessionController())->dashboard($id); });
 
-    $router->add('GET',  '/ressources',              function()    { (new RessourceController())->index(); });
-    $router->add('GET',  '/ressources/create',       function()    { (new RessourceController())->create(); });
-    $router->add('POST', '/ressources/store',        function()    { (new RessourceController())->store(); });
-    $router->add('GET',  '/ressources/{id}/edit',    function($id) { (new RessourceController())->edit($id); });
-    $router->add('POST', '/ressources/{id}/update',  function($id) { (new RessourceController())->update($id); });
-    $router->add('POST', '/ressources/{id}/archive',  function($id) { (new RessourceController())->archive($id); });
-    $router->add('POST', '/ressources/{id}/restore',  function($id) { (new RessourceController())->restore($id); });
-    $router->add('POST', '/ressources/{id}/publish', function($id) { (new RessourceController())->publish($id); });
+    $router->add('GET',  '/ressources',              function()    { (new ResourceController())->index(); });
+    $router->add('GET',  '/ressources/create',       function()    { (new ResourceController())->create(); });
+    $router->add('POST', '/ressources/store',        function()    { (new ResourceController())->store(); });
+    $router->add('GET',  '/ressources/{id}/edit',    function($id) { (new ResourceController())->edit($id); });
+    $router->add('POST', '/ressources/{id}/update',  function($id) { (new ResourceController())->update($id); });
+    $router->add('POST', '/ressources/{id}/archive',  function($id) { (new ResourceController())->archive($id); });
+    $router->add('POST', '/ressources/{id}/restore',  function($id) { (new ResourceController())->restore($id); });
+    $router->add('POST', '/ressources/{id}/publish', function($id) { (new ResourceController())->publish($id); });
 
     $router->add('POST', '/documents/{id}/delete', function($id) { (new DocumentController())->delete($id); });
     $router->add('GET',  '/documents/session_{sessionId}/{docId}', function($sessionId, $docId) { (new DocumentController())->download($sessionId, $docId); });
