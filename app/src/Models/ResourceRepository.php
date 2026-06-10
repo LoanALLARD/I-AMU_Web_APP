@@ -67,11 +67,12 @@ class ResourceRepository
         $stmt = $this->pdo->prepare(
             'SELECT r.id, r.department_id, r.owner_id, r.code, r.name, r.description, r.semester, r.state
                FROM resources r
-              WHERE r.owner_id = :tid1
+              WHERE (r.owner_id = :tid1
                  OR EXISTS (
                      SELECT 1 FROM teacher_resources tr
                       WHERE tr.resource_id = r.id AND tr.teacher_id = :tid2
-                 )
+                 ))
+                 AND r.state !=\'ARCHIVED\'
               ORDER BY r.code'
         );
         $stmt->execute(['tid1' => $teacherId, 'tid2' => $teacherId]);
@@ -144,6 +145,18 @@ class ResourceRepository
         );
         $stmt->execute(['id' => $id]);
     }
+
+    /**
+     * Sets a resource's state to PUBLISHED.
+     */
+    public function publish(int $id): void
+    {
+        $stmt = $this->pdo->prepare(
+            "UPDATE resources SET state = 'PUBLISHED' WHERE id = :id"
+        );
+        $stmt->execute(['id' => $id]);
+    }
+
 
     
     /**

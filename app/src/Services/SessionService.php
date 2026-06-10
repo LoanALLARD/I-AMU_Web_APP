@@ -230,7 +230,7 @@ class SessionService
     {
         // No code to preview: the database trigger assigns one only when
         // the session becomes scheduled/active.
-        $resourceData = $this->resources->findAllByOwner($teacherId);
+        $resourceData = $this->resources->findAllAccessibleByTeacher($teacherId);
         if ($resourceData == null){
             throw new InvalidArgumentException("L'enseignent doit être associé à au minimum une ressource, \n veuillez contacter un administrateur");
         }
@@ -251,7 +251,7 @@ class SessionService
      */
     public function editFormData(Session $session, int $teacherId): array
     {
-        $resourceData = $this->resources->findAllByOwner($teacherId);
+        $resourceData = $this->resources->findAllAccessibleByTeacher($teacherId);
         if ($resourceData == null){
             throw new InvalidArgumentException("L'enseignent doit être associé à au minimum une ressource, \n veuillez contacter un administrateur");
         }
@@ -714,6 +714,26 @@ class SessionService
             'sessionName'    => $session->name(),
         ];
     }
+
+    /**
+     * Publishes a DRAFT resource the teacher owns (sets state to PUBLISHED).
+     *
+     * @throws \RuntimeException  On ownership mismatch or wrong state
+     */
+    public function publish(int $resourceId, int $teacherId): void
+    {
+        $row = $this->loadOwned($resourceId, $teacherId);
+ 
+        if ($row['state'] === 'PUBLISHED') {
+            throw new \RuntimeException('Cette ressource est déjà publiée.');
+        }
+        if ($row['state'] === 'ARCHIVED') {
+            throw new \RuntimeException('Une ressource archivée ne peut pas être publiée directement. Restaurez-la d\'abord.');
+        }
+ 
+        $this->resources->publish($resourceId);
+    }
+
 
     // ----------------------------------------------------------------
     // Helpers
