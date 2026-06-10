@@ -16,7 +16,7 @@
 .nav-link:hover { color: var(--gray-800, #1f2937); }
 .nav-link.is-active { color: var(--blue, #2563eb); border-bottom-color: var(--blue, #2563eb); }
 
-.admin-section { max-width: 1040px; margin: 0 auto 24px; }
+.admin-section { max-width: 1040px; margin: 16px auto 24px; }
 
 .admin-identity {
     display: flex; align-items: center; gap: 12px;

@@ -43,9 +43,6 @@ $nav = [
         <a href="/department-admin/addModel" class="btn sm" style="margin-left:auto;">
             <?= icon('plus', '', 13) ?> ajouter un model
         </a>
-        <a href="/logout" class="btn danger sm" style="margin-left:auto;">
-            <?= icon('lock', '', 13) ?> Se déconnecter
-        </a>
     </div>
 </div>
 
