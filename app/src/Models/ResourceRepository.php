@@ -139,7 +139,7 @@ class ResourceRepository
         $idGenere = $this->pdo->lastInsertId();
 
         if (!$idGenere) {
-            return null;
+            throw new \RuntimeException('Failed to insert resource.');
         }
 
         $statement = $this->pdo->prepare('INSERT INTO teacher_resources (resource_id, teacher_id) VALUES (:rid, :tid)');
@@ -151,9 +151,13 @@ class ResourceRepository
         $querySelect = $this->pdo->prepare('SELECT * FROM resources WHERE id = :id');
         $querySelect->execute(['id' => $idGenere]);
 
+        /** @var array<string, mixed>|false $result */
         $result = $querySelect->fetch();
+        if ($result === false) {
+            throw new \RuntimeException('Inserted resource could not be reloaded.');
+        }
 
-        return $result ?: null;
+        return $result;
     }
  
     /**
