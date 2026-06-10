@@ -16,7 +16,9 @@ use Services\PlaceService;
  */
 class SuperAdminController extends Controller
 {
-    /** No landing page of its own; redirect to the first section. */
+    /**
+     * No landing page of its own; redirect to the first section.
+     */
     public function index(): void
     {
         $this->requireSuperAdmin();
@@ -59,11 +61,11 @@ class SuperAdminController extends Controller
         $password_confirm = $this->input('password_confirm', null);
 
         $pdo = Database::getConnection();
-        $adminRepository = new SuperAdministratorRepository($pdo);
+        $adminRepository = new \Models\SuperAdministratorRepository($pdo);
 
         try {
             if ($password && $password_confirm && $password != $password_confirm) {
-                throw new Exception("Les mots de passe ne correspondent pas.");
+                throw new \Exception("Les mots de passe ne correspondent pas.");
             }
             if ($first_name) {
                 $adminRepository->updateFirstName($admin["id"], $first_name);
@@ -90,7 +92,7 @@ class SuperAdminController extends Controller
                 }
             }
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             header('Content-Type: application/json');
             http_response_code(422);
             echo json_encode(['error' => $e->getMessage()]);
@@ -113,7 +115,9 @@ class SuperAdminController extends Controller
         );
     }
 
-    /** Adds a site (POST). */
+    /**
+     * Adds a site (POST).
+     */
     public function addPlace(): void
     {
         $this->requireSuperAdmin();
@@ -131,7 +135,9 @@ class SuperAdminController extends Controller
         $this->redirect('/super-admin/places');
     }
 
-    /** Deletes a site (POST). */
+    /**
+     * Deletes a site (POST).
+     */
     public function deletePlace(): void
     {
         $this->requireSuperAdmin();
@@ -144,7 +150,9 @@ class SuperAdminController extends Controller
         $this->redirect('/super-admin/places');
     }
 
-    /** Adds a department to a site (POST). */
+    /**
+     * Adds a department to a site (POST).
+     */
     public function addDepartment(): void
     {
         $this->requireSuperAdmin();
@@ -161,7 +169,9 @@ class SuperAdminController extends Controller
         $this->redirect('/super-admin/places');
     }
 
-    /** Updates a site's branding: display name, logo, primary color (POST). */
+    /**
+     * Updates a site's branding: display name, logo, primary color (POST).
+     */
     public function updateBranding(): void
     {
         $this->requireSuperAdmin();
@@ -182,7 +192,9 @@ class SuperAdminController extends Controller
         $this->redirect('/super-admin/places');
     }
 
-    /** Enables or disables a department (POST). */
+    /**
+     * Enables or disables a department (POST).
+     */
     public function toggleDepartment(): void
     {
         $this->requireSuperAdmin();
@@ -211,7 +223,9 @@ class SuperAdminController extends Controller
         );
     }
 
-    /** Adds an authorized email domain (POST). */
+    /**
+     * Adds an authorized email domain (POST).
+     */
     public function addEmailDomain(): void
     {
         $this->requireSuperAdmin();
@@ -233,7 +247,9 @@ class SuperAdminController extends Controller
         $this->redirect('/super-admin/email-domains');
     }
 
-    /** Changes a domain's role (POST). */
+    /**
+     * Changes a domain's role (POST).
+     */
     public function changeEmailDomainRole(): void
     {
         $this->requireSuperAdmin();
@@ -254,7 +270,9 @@ class SuperAdminController extends Controller
         $this->redirect('/super-admin/email-domains');
     }
 
-    /** Enables or disables a domain (POST). */
+    /**
+     * Enables or disables a domain (POST).
+     */
     public function toggleEmailDomain(): void
     {
         $this->requireSuperAdmin();
@@ -316,7 +334,9 @@ class SuperAdminController extends Controller
         );
     }
 
-    /** Sends a signed invitation link by email (POST). */
+    /**
+     * Sends a signed invitation link by email (POST).
+     */
     public function inviteDepartmentAdmin(): void
     {
         $this->requireSuperAdmin();
