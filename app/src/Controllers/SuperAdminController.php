@@ -298,7 +298,9 @@ class SuperAdminController extends Controller
         $this->redirect('/super-admin/department-admins');
     }
 
-    /** Sends a signed super admin invitation link by email (POST). */
+    /**
+     * Sends a signed super admin invitation link by email (POST).
+     */
     public function inviteSuperAdmin(): void
     {
         $this->requireSuperAdmin();
@@ -340,34 +342,27 @@ class SuperAdminController extends Controller
         $this->redirect('/super-admin/department-admins');
     }
 
-    /** Revokes a department admin's access by deactivating the account (POST). */
+    /**
+     * Revokes a department admin's access by deactivating the account (POST).
+     */
     public function revokeDepartmentAdmin(): void
     {
         $this->requireSuperAdmin();
         $this->verifyCsrf();
+        $repo = new \Models\userRepository(Database::getConnection());
 
-        $users   = new \Models\UserRepository(Database::getConnection());
-        $changed = $users->deactivate((int) $this->input('id', 0));
+        try {
+            $changed = $repo->deleteAdmin((int) $this->input('id', 0));
+        } catch (\Throwable $e) {
 
-        $this->flash(
-            $changed > 0 ? 'success' : 'error',
-            $changed > 0 ? 'Acces revoque.' : 'Aucun acces actif a revoquer.'
-        );
-        $this->redirect('/super-admin/department-admins');
-    }
-
-    /** Restores a previously revoked department admin's access (POST). */
-    public function reactivateDepartmentAdmin(): void
-    {
-        $this->requireSuperAdmin();
-        $this->verifyCsrf();
-
-        $users   = new \Models\UserRepository(Database::getConnection());
-        $changed = $users->reactivate((int) $this->input('id', 0));
+            error_log('REVOKE ADMIN DELETE ERROR: ' . $e->getMessage());
+            $this->flash('error', 'Impossible de supprimer cet administrateur : des donnees liees existent (conversations, documents).');
+            $this->redirect('/super-admin/department-admins');
+        }
 
         $this->flash(
             $changed > 0 ? 'success' : 'error',
-            $changed > 0 ? 'Acces reactive.' : 'Aucun acces a reactiver.'
+            $changed > 0 ? 'Administrateur supprime.' : 'Aucun administrateur a supprimer.'
         );
         $this->redirect('/super-admin/department-admins');
     }

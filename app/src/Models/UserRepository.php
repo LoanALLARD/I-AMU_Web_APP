@@ -510,4 +510,16 @@ class UserRepository
 
         $stmt->execute();
     }
+
+    /**
+     * Hard-deletes a department admin user. The department_administrators row
+     * is removed automatically. Returns the number of deleted users rows
+     */
+    public function deleteAdmin(int $adminId): int
+    {
+        $stmt = $this->pdo->prepare('DELETE FROM users WHERE id = :id');
+        $stmt->execute(['id' => $adminId]);
+
+        return $stmt->rowCount();
+    }
 }

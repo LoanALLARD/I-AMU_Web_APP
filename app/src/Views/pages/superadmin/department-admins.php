@@ -116,14 +116,6 @@
                                             <?= icon('x', '', 15) ?> Revoquer
                                         </button>
                                     </form>
-                                <?php else: ?>
-                                    <form method="POST" action="/super-admin/department-admins/reactivate">
-                                        <?= csrf_field() ?>
-                                        <input type="hidden" name="id" value="<?= (int) $admin['id'] ?>">
-                                        <button type="submit" class="btn-row">
-                                            <?= icon('check', '', 15) ?> Reactiver
-                                        </button>
-                                    </form>
                                 <?php endif; ?>
                             </td>
                         </tr>

@@ -101,7 +101,6 @@
     $router->add('POST', '/super-admin/department-admins/invite', function () { (new SuperAdminController())->inviteDepartmentAdmin(); });
     $router->add('POST', '/super-admin/super-admins/invite', function () { (new SuperAdminController())->inviteSuperAdmin(); });
     $router->add('POST', '/super-admin/department-admins/revoke', function () { (new SuperAdminController())->revokeDepartmentAdmin(); });
-    $router->add('POST', '/super-admin/department-admins/reactivate', function () { (new SuperAdminController())->reactivateDepartmentAdmin(); });
 
     //Admin invitation
     $router->add('GET',  '/admin-invite/accept', function () { (new AuthController())->showAcceptInvite(); });
