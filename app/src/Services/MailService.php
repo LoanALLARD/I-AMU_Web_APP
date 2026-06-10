@@ -96,7 +96,9 @@ final class MailService
         return true;
     }
 
-    /** @param resource $socket */
+    /**
+     * @param resource $socket
+     */
     private function ehlo($socket): void
     {
         $this->command($socket, "EHLO i-amu", 250);

@@ -70,6 +70,19 @@ class SuperAdministratorRepository
     }
 
     /**
+     * Whether a super admin already exists for the given email.
+     */
+    public function emailExists(string $email): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM super_administrators WHERE email = :email'
+        );
+        $stmt->execute(['email' => $email]);
+
+        return $stmt->fetchColumn() !== false;
+    }
+
+    /**
      * Total number of super admin accounts. Used by the run-once bootstrap
      * script to refuse creating a second account.
      */

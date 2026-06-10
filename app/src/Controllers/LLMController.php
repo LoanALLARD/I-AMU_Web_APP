@@ -141,7 +141,6 @@ class LLMController{
                 $conversationData['name'] = $nameConversation;
             }
         }
-
         if ($conversationData == null){
             header('Content-Type: application/json');
             http_response_code(404);
@@ -331,7 +330,8 @@ class LLMController{
         flush();
     }
 
-    /**
+
+/**
      * Records the satisfaction rating a student gives to one of their own AI
      * responses (the chat thumbs up/down). Persists `interactions.user_feedback`
      * scoped to the authenticated user's own conversations, so nobody can rate
