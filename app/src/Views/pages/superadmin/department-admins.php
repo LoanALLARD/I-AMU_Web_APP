@@ -149,3 +149,9 @@
         </section>
     </main>
 </div>
+
+<?php
+$inviteJs  = __DIR__ . '/../../../../public/assets/js/admin-invite.js';
+$inviteVer = is_file($inviteJs) ? filemtime($inviteJs) : 0;
+?>
+<script src="/assets/js/admin-invite.js?v=<?= $inviteVer ?>" defer></script>
