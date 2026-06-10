@@ -598,16 +598,23 @@ body.superadmin-body--full > main {
     color: var(--gray-600, #4b5563);
     margin: -.5rem 0 1rem;
 }
-/* Three columns aligned at the top: logo (auto) | name (fills) | color (auto).
-   Each is a .form-group so labels sit on one baseline and controls line up. */
+/* Logo | Favicon | Name | Colour. Flex-wrap (not a fixed grid) so each field
+   keeps its natural width and wraps cleanly instead of overlapping — the old
+   3-column grid broke once the Favicon field was added as a 4th item. */
 .branding-row {
-    display: grid;
-    grid-template-columns: auto minmax(12rem, 1fr) auto;
+    display: flex;
+    flex-wrap: wrap;
     align-items: start;
-    gap: 1.25rem;
+    gap: 1.25rem 2rem;
     margin-bottom: 1.25rem;
 }
 .branding-row .form-group { margin-bottom: 0; }
+/* Labels are inline by default (auth.css only uppercases them) — force block so
+   every field's label sits on top, including the narrow colour swatch. */
+.branding-row label { display: block; margin-bottom: .4rem; }
+.branding-name { flex: 1 1 14rem; min-width: 12rem; }
+.branding-name input[type="text"] { width: 100%; }
+.branding-color { flex: 0 0 auto; }
 
 /* Logo: preview swatch + file button on one row, under the shared label. */
 .branding-logo-field { display: flex; align-items: center; gap: .65rem; }
@@ -625,7 +632,8 @@ body.superadmin-body--full > main {
     overflow: hidden;
 }
 .branding-logo-preview img { width: 100%; height: 100%; object-fit: contain; }
-.branding-logo input[type="file"] { font-size: .82rem; color: var(--gray-600, #4b5563); }
+.branding-logo input[type="file"],
+.branding-favicon input[type="file"] { font-size: .82rem; color: var(--gray-600, #4b5563); max-width: 11rem; }
 
 /* Color: native input trimmed to read as a 44px swatch, matching input height. */
 .branding-color input[type="color"] {
@@ -641,8 +649,70 @@ body.superadmin-body--full > main {
 .btn-branding-save { margin-top: 0; }
 
 @media (max-width: 980px) {
-    .branding-row { grid-template-columns: 1fr; gap: 1rem; }
+    .branding-row { gap: 1rem 1.5rem; }
+    .branding-name { flex-basis: 100%; }
 }
 @media (max-width: 860px) {
     .places-layout { grid-template-columns: 1fr; }
+}
+
+/* ── "Domaines configurés" — table collapses into stacked cards on mobile ──
+   One markup (the table keeps working with its sort/role-edit JS); CSS only
+   restacks the cells and pulls each field label from its data-label. */
+@media (max-width: 720px) {
+    /* Reclaim horizontal space — the desktop 2rem/1.75rem gutters are wasteful
+       on a phone and contribute to the table overflowing. */
+    .dashboard-content { padding: 1.1rem; }
+    .panel-section { padding: 1.2rem 1.1rem; }
+
+    /* The <table> itself must become a block so it fills the card width
+       instead of shrink-wrapping to the old fixed column widths. */
+    .domain-table,
+    .domain-table tbody,
+    .domain-table tr,
+    .domain-table td { display: block; width: auto; }
+    .domain-table { font-size: .92rem; }
+    .domain-table thead { display: none; }
+    .domain-table .col-role,
+    .domain-table .col-state,
+    .domain-table .col-action { width: auto; }
+
+    .domain-table tr {
+        border: 1px solid var(--gray-200, #e5e7eb);
+        border-radius: 12px;
+        padding: .25rem .95rem;
+        margin-bottom: .8rem;
+        background: var(--white, #fff);
+    }
+
+    .domain-table td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-width: 0;
+        padding: .6rem 0;
+        border-bottom: 1px solid var(--gray-100, #f3f4f6);
+        text-align: left;
+        white-space: normal;
+    }
+    .domain-table tr td:last-child { border-bottom: none; }
+
+    /* Field label, taken from the header cell we hid */
+    .domain-table td::before {
+        content: attr(data-label);
+        flex: none;
+        font-size: .68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: var(--gray-500);
+    }
+
+    /* Long domain value shrinks with an ellipsis rather than forcing width */
+    .domain-table .cell-domain { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .domain-table .col-action { text-align: left; white-space: normal; }
+
+    /* No hover on touch → keep the role-edit pencil visible so it stays usable */
+    .domain-table .role-edit-toggle { opacity: 1; }
 }
