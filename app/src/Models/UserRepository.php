@@ -419,14 +419,22 @@ class UserRepository
         return $row;
     }
 
-    public function createDepartmentAdmin(array $user, int $invitedById)
+    /**
+     * Creates a department-admin: users row + department_administrators row.
+     * invited_by_id references the super admin who issued the invitation and the email is marked verified
+     *
+     * @param array{email: string, password_hash: string, first_name: string, last_name: string, department_id: int|null, consent_version?: string } $user
+     *
+     * @throws Throwable if any statement fails (the transaction is rolled back).
+     */
+    public function createDepartmentAdmin(array $user, int $invitedById): int
     {
         $this->pdo->beginTransaction();
         try {
             $stmt = $this->pdo->prepare(
                 'INSERT INTO users (email, password_hash, first_name, last_name, department_id, consent_at, consent_version, email_verified_at)
-                VALUES (:email, :hash, :fn, :ln, :department_id, NOW(), :ver, NOW())
-                RETURNING id'
+                 VALUES (:email, :hash, :fn, :ln, :department_id, NOW(), :ver, NOW())
+                 RETURNING id'
             );
             $stmt->execute([
                 'email'         => $user['email'],

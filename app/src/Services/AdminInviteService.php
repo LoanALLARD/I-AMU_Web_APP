@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Services;
 
-use Models\PlaceRepository;
 use Models\UserRepository;
 use PDO;
 
@@ -18,14 +17,12 @@ final class AdminInviteService
     private const TTL_SECONDS = 7 * 24 * 3600;
 
     private UserRepository $users;
-    private PlaceRepository $places;
     private string $secret;
 
     public function __construct(PDO $pdo)
     {
         $config       = require __DIR__ . '/../Config/config.php';
         $this->users  = new UserRepository($pdo);
-        $this->places = new PlaceRepository($pdo);
         $this->secret = (string) ($config['app']['secret'] ?? '');
     }
 
