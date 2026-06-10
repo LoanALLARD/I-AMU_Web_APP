@@ -35,7 +35,7 @@ $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '
                     
                     <div class="card-actions">
                         <button type="button" class="btn" id="btn-toggle-edit">
-                            <?= icon('edit-3', '', 14) ?> Modifier mes informations
+                            <?= icon('edit', '', 14) ?> Modifier mes informations
                         </button>
                     </div>
                 </div>
