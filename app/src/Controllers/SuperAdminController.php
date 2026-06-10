@@ -26,12 +26,16 @@ class SuperAdminController extends Controller
     public function departmentAdmins(): void
     {
         $places = new \Models\PlaceRepository(Database::getConnection());
+        $users  = new \Models\UserRepository(Database::getConnection());
 
         $this->renderPanel(
             'pages/superadmin/department-admins',
-            'Administrateurs de departement',
+            'Administrateurs',
             'department-admins',
-            ['departments' => $this->allDepartments()]
+            [
+                'places'            => $places->all(),
+                'departmentAdmins'  => $users->listDepartmentAdmins(),
+            ]
         );
     }
 
@@ -294,29 +298,77 @@ class SuperAdminController extends Controller
         $this->redirect('/super-admin/department-admins');
     }
 
-    /**
-     * Flat list of departments with their place, for the invite select.
-     *
-     * @return list<array{id:int, label:string}>
-     */
-    private function allDepartments(): array
+    /** Sends a signed super admin invitation link by email (POST). */
+    public function inviteSuperAdmin(): void
     {
-        $pdo  = Database::getConnection();
-        $stmt = $pdo->query(
-            'SELECT d.id, d.name, p.name AS place_name
-             FROM departments d
-             JOIN places p ON p.id = d.place_id
-             WHERE d.is_active = TRUE
-             ORDER BY p.name, d.name'
-        );
-        $rows = $stmt->fetchAll();
+        $this->requireSuperAdmin();
+        $this->verifyCsrf();
 
-        return array_map(
-            static fn ($r) => [
-                'id'    => (int) $r['id'],
-                'label' => $r['name'] . ' (' . $r['place_name'] . ')',
-            ],
-            $rows
+        $email = strtolower(trim((string) $this->input('email', '')));
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->flash('error', 'Adresse email invalide.');
+            $this->redirect('/super-admin/department-admins');
+        }
+
+        $service = new \Services\AdminInviteService(Database::getConnection());
+        $token   = $service->makeSuperAdminToken($email);
+
+        // Derive the base URL from the current request so the link points to
+        // the host the super admin actually reached the app through.
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host   = $_SERVER['HTTP_HOST'] ?? 'localhost:8085';
+        $link   = $scheme . '://' . $host
+            . '/admin-invite/accept?token=' . urlencode($token);
+
+        $mail = new \Services\MailService();
+        $sent = $mail->send(
+            $email,
+            'Invitation super administrateur — I-AMU',
+            '<h2>Invitation super administrateur</h2>'
+            . '<p>Vous avez ete invite a devenir super administrateur sur I-AMU.</p>'
+            . '<p>Cliquez sur le lien ci-dessous pour creer votre compte (valable 7 jours) :</p>'
+            . '<p><a href="' . htmlspecialchars($link) . '">Activer mon compte super administrateur</a></p>'
+            . '<p>Si vous n\'attendiez pas cette invitation, ignorez cet email.</p>'
         );
+
+        $this->flash(
+            $sent ? 'success' : 'error',
+            $sent ? 'Invitation envoyee a ' . htmlspecialchars($email) . '.'
+                : "L'envoi de l'email a echoue."
+        );
+        $this->redirect('/super-admin/department-admins');
+    }
+
+    /** Revokes a department admin's access by deactivating the account (POST). */
+    public function revokeDepartmentAdmin(): void
+    {
+        $this->requireSuperAdmin();
+        $this->verifyCsrf();
+
+        $users   = new \Models\UserRepository(Database::getConnection());
+        $changed = $users->deactivate((int) $this->input('id', 0));
+
+        $this->flash(
+            $changed > 0 ? 'success' : 'error',
+            $changed > 0 ? 'Acces revoque.' : 'Aucun acces actif a revoquer.'
+        );
+        $this->redirect('/super-admin/department-admins');
+    }
+
+    /** Restores a previously revoked department admin's access (POST). */
+    public function reactivateDepartmentAdmin(): void
+    {
+        $this->requireSuperAdmin();
+        $this->verifyCsrf();
+
+        $users   = new \Models\UserRepository(Database::getConnection());
+        $changed = $users->reactivate((int) $this->input('id', 0));
+
+        $this->flash(
+            $changed > 0 ? 'success' : 'error',
+            $changed > 0 ? 'Acces reactive.' : 'Aucun acces a reactiver.'
+        );
+        $this->redirect('/super-admin/department-admins');
     }
 }

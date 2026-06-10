@@ -211,6 +211,9 @@ class AuthController extends Controller
             'titrePage' => 'Activer mon compte administrateur',
             'token'     => $token,
             'email'     => $data['email'],
+            'roleLabel' => $data['role'] === \Services\AdminInviteService::ROLE_SUPER_ADMIN
+                ? 'Super administrateur'
+                : 'Administrateur de departement',
         ], 'auth');
     }
 
@@ -221,27 +224,45 @@ class AuthController extends Controller
 
         $token   = (string) $this->input('token', '');
         $service = new \Services\AdminInviteService(Database::getConnection());
+        $data    = $service->verifyToken($token);
 
-        // invited_by_id: a department_administrators row needs a super admin id.
-        // Fall back to the first super admin when the link is opened logged-out.
-        $pdo            = Database::getConnection();
-        $invitedById    = (int) $pdo->query('SELECT id FROM super_administrators ORDER BY id LIMIT 1')->fetchColumn();
+        $password        = (string) $this->input('password', '');
+        $passwordConfirm = (string) $this->input('password_confirm', '');
+        $firstName       = (string) $this->input('first_name', '');
+        $lastName        = (string) $this->input('last_name', '');
 
-        $result = $service->accept(
-            $token,
-            (string) $this->input('password', ''),
-            (string) $this->input('password_confirm', ''),
-            (string) $this->input('first_name', ''),
-            (string) $this->input('last_name', ''),
-            $invitedById
-        );
+        if ($data !== null && $data['role'] === \Services\AdminInviteService::ROLE_SUPER_ADMIN) {
+            $result = $service->acceptSuperAdmin(
+                $token,
+                $password,
+                $passwordConfirm,
+                $firstName,
+                $lastName
+            );
+        } else {
+            // invited_by_id: a department_administrators row needs a super admin id.
+            // Fall back to the first super admin when the link is opened logged-out.
+            $pdo         = Database::getConnection();
+            $invitedById = (int) $pdo->query('SELECT id FROM super_administrators ORDER BY id LIMIT 1')->fetchColumn();
+
+            $result = $service->accept(
+                $token,
+                $password,
+                $passwordConfirm,
+                $firstName,
+                $lastName,
+                $invitedById
+            );
+        }
 
         if (!$result['success']) {
-            $data = $service->verifyToken($token);
             $this->render('pages/auth/accept-invite', [
                 'titrePage' => 'Activer mon compte administrateur',
                 'token'     => $token,
                 'email'     => $data['email'] ?? '',
+                'roleLabel' => ($data['role'] ?? '') === \Services\AdminInviteService::ROLE_SUPER_ADMIN
+                    ? 'Super administrateur'
+                    : 'Administrateur de departement',
                 'error'     => $result['error'],
             ], 'auth');
             return;

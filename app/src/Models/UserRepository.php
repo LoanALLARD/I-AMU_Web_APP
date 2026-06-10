@@ -6,6 +6,7 @@ namespace Models;
 
 use PDO;
 use Throwable;
+use Models\SuperAdministratorRepository;
 
 /**
  * Data access for the `users` table
@@ -462,6 +463,38 @@ class UserRepository
             $this->pdo->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Lists every department administrator with their department and site,
+     * for the super admin management panel. Ordered active first, then by name.
+     *
+     * @return list<array{id:int, email:string, first_name:?string, last_name:?string, is_active:bool, department_name:?string, place_name:?string}>
+     */
+    public function listDepartmentAdmins(): array
+    {
+        $stmt = $this->pdo->query(
+            'SELECT u.id, u.email, u.first_name, u.last_name, u.is_active,
+                    d.name AS department_name, p.name AS place_name
+             FROM department_administrators da
+             JOIN users u ON u.id = da.id
+             LEFT JOIN departments d ON d.id = u.department_id
+             LEFT JOIN places p ON p.id = d.place_id
+             ORDER BY u.is_active DESC, u.last_name, u.first_name'
+        );
+
+        return array_map(
+            static fn (array $row): array => [
+                'id'              => (int) $row['id'],
+                'email'           => (string) $row['email'],
+                'first_name'      => $row['first_name'] !== null ? (string) $row['first_name'] : null,
+                'last_name'       => $row['last_name'] !== null ? (string) $row['last_name'] : null,
+                'is_active'       => (bool) $row['is_active'],
+                'department_name' => $row['department_name'] !== null ? (string) $row['department_name'] : null,
+                'place_name'      => $row['place_name'] !== null ? (string) $row['place_name'] : null,
+            ],
+            $stmt->fetchAll()
+        );
     }
 
     public function updateResearchOpposition(int $userId, bool $opposed): void

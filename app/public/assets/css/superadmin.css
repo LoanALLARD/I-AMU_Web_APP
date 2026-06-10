@@ -716,3 +716,33 @@ body.superadmin-body--full > main {
     /* No hover on touch → keep the role-edit pencil visible so it stays usable */
     .domain-table .role-edit-toggle { opacity: 1; }
 }
+/* In-page tabs (Administrateurs panel) */
+.admin-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--gray-200, #e5e7eb);
+}
+.admin-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .7rem 1rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    color: var(--gray-600, #4b5563);
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+}
+.admin-tab:hover {
+    color: #0f172a;
+}
+.admin-tab.is-active {
+    color: #0f172a;
+    border-bottom-color: #dc2626;
+}
