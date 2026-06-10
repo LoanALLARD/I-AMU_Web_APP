@@ -11,12 +11,12 @@ namespace Services;
 final class MailService
 {
     private string $host;
-    private int    $port;
+    private int $port;
     private string $from;
 
     public function __construct()
     {
-        $config     = require __DIR__ . '/../Config/config.php';
+        $config = require __DIR__ . '/../Config/config.php';
         $this->host = $config['mail']['host'];
         $this->port = $config['mail']['port'];
         $this->from = $config['mail']['from'];
@@ -40,7 +40,7 @@ final class MailService
         $this->write($socket, "DATA\r\n");
         $this->read($socket);
 
-        $headers  = "From: I-AMU <{$this->from}>\r\n";
+        $headers = "From: I-AMU <{$this->from}>\r\n";
         $headers .= "To: {$to}\r\n";
         $headers .= "Subject: {$subject}\r\n";
         $headers .= "MIME-Version: 1.0\r\n";

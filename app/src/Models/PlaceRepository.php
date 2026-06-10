@@ -105,7 +105,7 @@ class PlaceRepository
     public function findAllPlaces(): array
     {
         $stmt = $this->pdo->query(
-            'SELECT id, name, address, city, zip_code, display_name, logo_path, primary_color
+            'SELECT id, name, address, city, zip_code, display_name, logo_path, favicon_path, primary_color
              FROM places ORDER BY id DESC'
         );
 
@@ -118,6 +118,7 @@ class PlaceRepository
                 'zip_code'      => $row['zip_code'] !== null ? (string) $row['zip_code'] : null,
                 'display_name'  => $row['display_name'] !== null ? (string) $row['display_name'] : null,
                 'logo_path'     => $row['logo_path'] !== null ? (string) $row['logo_path'] : null,
+                'favicon_path'  => $row['favicon_path'] !== null ? (string) $row['favicon_path'] : null,
                 'primary_color' => $row['primary_color'] !== null ? (string) $row['primary_color'] : null,
             ],
             $stmt->fetchAll()
@@ -154,12 +155,12 @@ class PlaceRepository
      * A single place's branding row, or null if it does not exist. Used to read
      * the current logo path before replacing it.
      *
-     * @return array{id:int, display_name:?string, logo_path:?string, primary_color:?string}|null
+     * @return array{id:int, display_name:?string, logo_path:?string, favicon_path:?string, primary_color:?string}|null
      */
     public function findBrandingById(int $id): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, display_name, logo_path, primary_color FROM places WHERE id = :id'
+            'SELECT id, display_name, logo_path, favicon_path, primary_color FROM places WHERE id = :id'
         );
         $stmt->execute(['id' => $id]);
 
@@ -172,6 +173,36 @@ class PlaceRepository
             'id'            => (int) $row['id'],
             'display_name'  => $row['display_name'] !== null ? (string) $row['display_name'] : null,
             'logo_path'     => $row['logo_path'] !== null ? (string) $row['logo_path'] : null,
+            'favicon_path'  => $row['favicon_path'] !== null ? (string) $row['favicon_path'] : null,
+            'primary_color' => $row['primary_color'] !== null ? (string) $row['primary_color'] : null,
+        ];
+    }
+
+    /**
+     * Branding of the place a department belongs to, to theme the app for that
+     * department's members. Null when the department (or its place) is missing.
+     *
+     * @return array{display_name:?string, logo_path:?string, favicon_path:?string, primary_color:?string}|null
+     */
+    public function findBrandingByDepartment(int $departmentId): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT p.display_name, p.logo_path, p.favicon_path, p.primary_color
+               FROM departments d
+               JOIN places p ON p.id = d.place_id
+              WHERE d.id = :did'
+        );
+        $stmt->execute(['did' => $departmentId]);
+
+        $row = $stmt->fetch();
+        if ($row === false) {
+            return null;
+        }
+
+        return [
+            'display_name'  => $row['display_name'] !== null ? (string) $row['display_name'] : null,
+            'logo_path'     => $row['logo_path'] !== null ? (string) $row['logo_path'] : null,
+            'favicon_path'  => $row['favicon_path'] !== null ? (string) $row['favicon_path'] : null,
             'primary_color' => $row['primary_color'] !== null ? (string) $row['primary_color'] : null,
         ];
     }
@@ -182,18 +213,20 @@ class PlaceRepository
      * passed when a new logo was uploaded; otherwise the caller reuses the
      * current value so this never blanks an existing logo by accident.
      */
-    public function updateBranding(int $id, ?string $displayName, ?string $logoPath, ?string $primaryColor): void
+    public function updateBranding(int $id, ?string $displayName, ?string $logoPath, ?string $faviconPath, ?string $primaryColor): void
     {
         $stmt = $this->pdo->prepare(
             'UPDATE places
              SET display_name = :display_name,
                  logo_path = :logo_path,
+                 favicon_path = :favicon_path,
                  primary_color = :primary_color
              WHERE id = :id'
         );
         $stmt->execute([
             'display_name'  => $displayName,
             'logo_path'     => $logoPath,
+            'favicon_path'  => $faviconPath,
             'primary_color' => $primaryColor,
             'id'            => $id,
         ]);

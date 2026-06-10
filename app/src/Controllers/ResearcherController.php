@@ -31,12 +31,24 @@ class ResearcherController extends Controller
         ], 'chat');
     }
 
-    /** GET /researcher/data — browse and export accessible department data. */
+    /** GET /researcher/data — browse and analyse accessible department data. */
     public function data(): void
     {
         $this->requireRole('researcher');
 
         $this->render('pages/researcher/data', [
+            'titrePage' => 'Espace chercheur',
+            'page'      => 'researcher',
+            'user'      => $this->currentUser(),
+        ], 'chat');
+    }
+
+    /** GET /researcher/export — export accessible department data. */
+    public function export(): void
+    {
+        $this->requireRole('researcher');
+
+        $this->render('pages/researcher/export', [
             'titrePage' => 'Espace chercheur',
             'page'      => 'researcher',
             'user'      => $this->currentUser(),

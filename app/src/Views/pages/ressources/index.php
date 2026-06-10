@@ -205,6 +205,31 @@ $stateLabels = [
                 </tbody>
             </table>
         </div>
+
+        <!-- Mobile cards -->
+        <div class="session-cards">
+            <?php foreach ($sessions as $s): ?>
+            <div class="session-card">
+                <div class="session-card-head">
+                    <span class="session-card-title"><?= htmlspecialchars((string) $s['name']) ?></span>
+                    <?php if (!empty($s['accessCode'])): ?>
+                        <span class="cell-mono cell-muted"><?= htmlspecialchars((string) $s['accessCode']) ?></span>
+                    <?php endif; ?>
+                </div>
+                <div class="session-card-meta">
+                    <span class="badge <?= htmlspecialchars($s['statusClass'] ?? 'badge-draft') ?>"><?= htmlspecialchars($s['statusLabel'] ?? 'Inconnu') ?></span>
+                    <span class="cell-muted"><?= htmlspecialchars((string) ($s['resourceName'] ?? '—')) ?></span>
+                    <?php if (!empty($s['typeLabel'])): ?>
+                        <span class="cell-muted">· <?= htmlspecialchars((string) $s['typeLabel']) ?></span>
+                    <?php endif; ?>
+                </div>
+                <div class="session-card-actions">
+                    <a href="/sessions/<?= (int) $s['id'] ?>" class="btn ghost sm"><?= icon('eye', '', 13) ?> Voir</a>
+                    <a href="/sessions/<?= (int) $s['id'] ?>/edit" class="btn ghost sm"><?= icon('edit', '', 13) ?> Modifier</a>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
     <?php endif; ?>
 
 <?php endif; ?>

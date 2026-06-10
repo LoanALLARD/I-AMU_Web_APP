@@ -70,6 +70,7 @@ class RessourceService
      * Validates and creates a new resource.
      *
      * @param array<string, mixed> $data  POST-sourced fields
+     * @param list<int> $assignedTeacherIds
      * @return array<string, mixed>       The inserted row
      * @throws \RuntimeException          On validation failure
      */
@@ -106,6 +107,7 @@ class RessourceService
      * Validates and updates an existing resource the teacher owns.
      *
      * @param array<string, mixed> $data
+     * @param list<int> $assignedTeacherIds
      * @throws \RuntimeException  On ownership mismatch or validation failure
      */
     public function update(int $resourceId, array $data, int $teacherId, array $assignedTeacherIds = []): void
