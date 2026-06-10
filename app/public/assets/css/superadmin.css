@@ -746,3 +746,39 @@ body.superadmin-body--full > main {
     color: #0f172a;
     border-bottom-color: #dc2626;
 }
+
+/* Panel form fields: match the register form look. auth.css scopes its field
+   styling to .auth-body, which the super admin panel does not use, so the
+   invite/add forms need their own copy here. Scoped to .domain-form to avoid
+   touching table selects (.role-select) and the branding inputs. */
+.domain-form label {
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--gray-600, #4b5563);
+}
+.domain-form input[type="text"],
+.domain-form input[type="email"],
+.domain-form input[type="password"],
+.domain-form input[type="number"],
+.domain-form select {
+    width: 100%;
+    border: 1.5px solid var(--gray-200, #e5e7eb);
+    border-radius: 8px;
+    padding: .6rem .85rem;
+    font-size: .92rem;
+    font-family: inherit;
+    color: var(--gray-800, #1f2937);
+    background: #fff;
+    transition: border-color .18s, box-shadow .18s;
+    outline: none;
+}
+.domain-form input:focus,
+.domain-form select:focus {
+    border-color: var(--blue);
+}
+.domain-form input::placeholder {
+    color: var(--gray-400, #9ca3af);
+    font-size: .87rem;
+}
