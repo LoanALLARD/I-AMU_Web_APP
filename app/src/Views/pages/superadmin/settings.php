@@ -1,184 +1,132 @@
+<?php 
+$initials = strtoupper(
+    substr($user['first_name'] ?? '·', 0, 1)
+    . substr($user['last_name']  ?? '·', 0, 1)
+);
+$displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
+?>
+
 <div class="Settings">
 
-    <?php require __DIR__ . '/_header.php'; ?>
-<div class="page-header">
-
-
-<div class="page-body">
-    <div class="profile-grid">
-
-        <div>
-            <div class="dashboard-card">
-                <h2>Identité</h2>
-                <div class="kv-grid">
-                    <span class="kv-key">prénom</span>
-                    <span class="kv-val"><?= htmlspecialchars($user['first_name'] ?? '—') ?></span>
-                    <span class="kv-key">nom</span>
-                    <span class="kv-val"><?= htmlspecialchars($user['last_name'] ?? '—') ?></span>
-                    <span class="kv-key">email</span>
-                    <span class="kv-val mono"><?= htmlspecialchars($user['email'] ?? '—') ?></span>
-                    <?php if ($isTeacher): ?>
-                        <span class="kv-key">habilitation</span>
-                        <span class="kv-val">
-                            <?php if ($isSpecialized): ?>
-                                <span class="badge badge-habilitated">habilité</span>
-                            <?php elseif ($specRequestStatus === 'pending'): ?>
-                                <span class="badge badge-not-habilitated">demande en attente</span>
-                            <?php elseif ($specRequestStatus === 'rejected'): ?>
-                                <span class="badge badge-rejected">demande refusée</span>
-                            <?php else: ?>
-                                <span class="badge badge-not-habilitated">non habilité</span>
-                            <?php endif; ?>
-                        </span>
-                    <?php endif; ?>
-                </div>
-
-                <?php if ($isTeacher && !$isSpecialized && in_array($specRequestStatus, ['none', 'rejected'], true)): ?>
-                    <div class="spec-request">
-                        <p class="section-desc">
-                            <?php if ($specRequestStatus === 'rejected'): ?>
-                                Votre demande précédente a été refusée. Vous pouvez en soumettre une nouvelle.
-                            <?php else: ?>
-                                L'habilitation vous permet d'importer vos propres modèles d'IA
-                                dans vos ressources. Faites-en la demande à l'administrateur de
-                                votre département.
-                            <?php endif; ?>
-                        </p>
-                        <form method="POST" action="/profile/request-specialisation">
-                            <?= csrf_field() ?>
-                            <textarea name="request" rows="2" maxlength="500"
-                                      placeholder="Motif de votre demande (facultatif)"></textarea>
-                            <button type="submit" class="btn">
-                                <?= icon('send', '', 12) ?> Demander mon habilitation
-                            </button>
-                        </form>
-                    </div>
-                <?php endif; ?>
+    <?php $activeNav = 'settings';require __DIR__ . '/_header.php'; ?>
+    
+    <div class="dashboard-content">
+        <div class="page-header">
+            <div class="page-header-row">
+                <h1>Mon profil</h1>
+                <span class="mono">compte personnel</span>
             </div>
-
-            <div class="profile-card">
-                <h2>Compte et données</h2>
-
-                <!-- Deactivation -->
-                <h3>Désactiver mon compte</h3>
-                <p class="section-desc">
-                    La désactivation rend votre compte inaccessible. Vous ne pourrez plus
-                    vous connecter tant qu'un administrateur n'aura pas réactivé votre compte.
-                </p>
-                <button type="button" class="btn danger" id="btn-deactivate-account">
-                    <?= icon('user-x', '', 12) ?> Désactiver mon compte
-                </button>
-
-                <hr>
-
-                <!-- Data deletion -->
-                <h3>Suppression de vos données</h3>
-                <p class="section-desc">
-                    Pour exercer votre droit à l'effacement (article 17 du RGPD),
-                    envoyez votre demande par email au délégué à la protection des données.
-                </p>
-                <div class="dpo-block">
-                    <a href="mailto:dpo@univ-amu.fr" class="dpo-link">
-                        dpo@univ-amu.fr
-                    </a>
-                    <p class="dpo-hint">
-                        Précisez votre nom, prénom et adresse email universitaire.
-                        Délai de traitement : 30 jours.
-                    </p>
-                </div>
-                <a href="/rgpd_consent" class="rgpd-link">Consulter les mentions d'information RGPD</a>
-            </div>
+            <p class="page-sub">Informations de votre compte et gestion de vos données personnelles.</p>
         </div>
 
-        <aside>
-            <div class="profile-aside-card">
-                <div class="profile-avatar">
-                    <?= htmlspecialchars($initials) ?>
-                </div>
-                <div class="profile-display-name"><?= htmlspecialchars($displayName) ?></div>
-                <?php if ($roles !== []): ?>
-                    <div class="profile-roles">
-                        <?php foreach ($roles as $role): ?>
-                            <span class="badge badge-<?= htmlspecialchars($role) ?>"><?= htmlspecialchars($roleFr($role)) ?></span>
-                        <?php endforeach; ?>
+        <div class="page-body">
+            <div class="profile-flex-centered">
+
+                <div class="dashboard-card">
+                    <h2>Identité</h2>
+                    <div class="kv-grid">
+                        <span class="kv-key">prénom</span>
+                        <span class="kv-val"><?= htmlspecialchars($user['first_name'] ?? '—') ?></span>
+                        <span class="kv-key">nom</span>
+                        <span class="kv-val"><?= htmlspecialchars($user['last_name'] ?? '—') ?></span>
+                        <span class="kv-key">email</span>
+                        <span class="kv-val mono"><?= htmlspecialchars($user['email'] ?? '—') ?></span>
                     </div>
-                <?php else: ?>
-                    <div class="profile-no-role">aucun rôle</div>
-                <?php endif; ?>
-                <a href="/logout" class="profile-logout">
-                    <?= icon('lock', '', 12) ?> Se déconnecter
-                </a>
-            </div>
+                    
+                    <div class="card-actions">
+                        <button type="button" class="btn" id="btn-toggle-edit">
+                            <?= icon('edit-3', '', 14) ?> Modifier mes informations
+                        </button>
+                    </div>
+                </div>
 
-            <div class="profile-card">
-                <h2>Apparence</h2>
-                <p class="page-sub">
-                    Thème de l'interface. « Automatique » suit le réglage de votre appareil.
-                </p>
-                <hr>
-                <form method="POST" action="/profile/theme" class="theme-select">
-                    <?= csrf_field() ?>
-                    <button type="submit" name="theme" value="auto" class="theme-opt<?= $themeCur === 'auto' ? ' is-active' : '' ?>">Automatique</button>
-                    <button type="submit" name="theme" value="light" class="theme-opt<?= $themeCur === 'light' ? ' is-active' : '' ?>">Clair</button>
-                    <button type="submit" name="theme" value="dark" class="theme-opt<?= $themeCur === 'dark' ? ' is-active' : '' ?>">Sombre</button>
-                </form>
+
+                <div class="dashboard-card edit-form-card" id="edit-form-card">
+                    <h2>Modifier mes informations</h2>
+                    <form method="POST" action="/super-admin/settings/update" class="edit-profile-form">
+                        <?= csrf_field() ?>
+                        
+                        <div class="form-group">
+                            <label for="first_name">Prénom</label>
+                            <input type="text" id="first_name" name="first_name" placeholder="<?= htmlspecialchars($user['first_name'] ?? '') ?>" >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="last_name">Nom</label>
+                            <input type="text" id="last_name" name="last_name" placeholder="<?= htmlspecialchars($user['last_name'] ?? '') ?>" >
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="email">Adresse Email</label>
+                            <input type="email" id="email" name="email" placeholder="<?= htmlspecialchars($user['email'] ?? '') ?>" >
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="password">Nouveau mot de passe <span class="hint">(laisser vide pour ne pas modifier)</span></label>
+                            <input type="password" id="password" name="password">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="password_confirm">Confirmer le mot de passe</label>
+                            <input type="password" id="password_confirm" name="password_confirm">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>
+                                <input type="checkbox" id="toggle-password-visibility"> Afficher les mots de passe
+                            </label>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn ghost" id="btn-cancel-edit">Annuler</button>
+                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        </div>
+                    </form>
+                </div>
+
+                <aside class="profile-aside-card">
+                    <div class="profile-avatar">
+                        <?= htmlspecialchars($initials) ?>
+                    </div>
+                    <div class="profile-display-name"><?= htmlspecialchars($displayName) ?></div>
+                    <span class="badge badge-super-admin">Super Administateur</span>
+                    <a href="/logout" class="profile-logout">
+                        <?= icon('lock', '', 12) ?> Se déconnecter
+                    </a>
+                </aside>
             </div>
-        </aside>
+        </div>
     </div>
 </div>
-
-<!-- Deactivation confirmation modal -->
-<div class="modal-overlay" id="modal-deactivate">
-    <div class="modal-box">
-        <h2>Confirmer la désactivation</h2>
-        <p>Êtes-vous sûr de vouloir désactiver votre compte ?</p>
-        <ul>
-            <li>Vous serez immédiatement déconnecté</li>
-            <li>Vous ne pourrez plus vous connecter</li>
-            <li>Vos données seront conservées à des fins de recherche</li>
-            <li>Pour supprimer vos données, contactez <strong>dpo@univ-amu.fr</strong></li>
-        </ul>
-
-        <form method="POST" action="/profile/deactivate" class="modal-actions">
-            <?= csrf_field() ?>
-            <button type="button" class="btn btn-cancel" id="btn-cancel-deactivate">
-                Annuler
-            </button>
-            <button type="submit" class="btn danger">
-                Désactiver mon compte
-            </button>
-        </form>
-    </div>
-</div>
-
 <script>
-    (function() {
-        const btnOpen   = document.getElementById('btn-deactivate-account');
-        const btnCancel = document.getElementById('btn-cancel-deactivate');
-        const modal     = document.getElementById('modal-deactivate');
+document.addEventListener('DOMContentLoaded', () => {
+    const btnToggleEdit = document.getElementById('btn-toggle-edit');
+    const btnCancelEdit = document.getElementById('btn-cancel-edit');
+    const editFormCard = document.getElementById('edit-form-card');
 
-        if (!btnOpen || !modal) return;
+    btnToggleEdit?.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        editFormCard.classList.toggle('is-open');
+        
+        if (editFormCard.classList.contains('is-open')) {
+            setTimeout(() => {
+                editFormCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+        }
+    });
 
-        btnOpen.addEventListener('click', function() {
-            modal.style.display = 'flex';
-        });
+    btnCancelEdit?.addEventListener('click', () => {
+        editFormCard.classList.remove('is-open');
+    });
+});
+const togglePasswordVisibility = document.getElementById('toggle-password-visibility');
+const passwordInput = document.getElementById('password');
+const passwordConfirmInput = document.getElementById('password_confirm');
 
-        btnCancel.addEventListener('click', function() {
-            modal.style.display = 'none';
-        });
-
-        // Close on backdrop click
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-
-        // Close on Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && modal.style.display === 'flex') {
-                modal.style.display = 'none';
-            }
-        });
-    })();
+togglePasswordVisibility?.addEventListener('change', () => {
+    const isChecked = togglePasswordVisibility.checked;
+    passwordInput.type = isChecked ? 'text' : 'password';
+    passwordConfirmInput.type = isChecked ? 'text' : 'password';
+});
 </script>

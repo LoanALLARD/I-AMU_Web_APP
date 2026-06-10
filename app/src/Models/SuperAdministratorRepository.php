@@ -104,4 +104,55 @@ class SuperAdministratorRepository
 
         return (int) $stmt->fetchColumn();
     }
+
+    public function updatePassword(int $id, string $password): bool
+    {
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        
+        $query = $this->pdo->prepare(
+            'UPDATE super_administrators SET password_hash = :password WHERE id = :id'
+        );
+
+        return $query->execute([
+            'password' => $hash,
+            'id'       => $id
+        ]);
+    }
+
+    public function updateFirstName(int $id, string $firstName): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE super_administrators SET first_name = :first_name WHERE id = :id'
+        );
+
+        return $query->execute([
+            'first_name' => $firstName,
+            'id'         => $id
+        ]);
+    }
+
+    public function updateLastName(int $id, string $lastName): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE super_administrators SET last_name = :last_name WHERE id = :id'
+        );
+
+        return $query->execute([
+            'last_name' => $lastName,
+            'id'        => $id
+        ]);
+    }
+
+    public function updateEmail(int $id, string $email): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE super_administrators SET email = :email WHERE id = :id'
+        );
+
+        return $query->execute([
+            'email' => $email,
+            'id'    => $id
+        ]);
+    }
+
 }

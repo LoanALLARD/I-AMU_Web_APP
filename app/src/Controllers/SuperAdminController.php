@@ -8,6 +8,7 @@ use Core\Controller;
 use Data\Database;
 use Services\EmailDomainService;
 use Services\PlaceService;
+use Models\SuperAdministratorRepository;
 
 /**
  * Super administrator panel (see docs/specs/05-admin-research.md A.0.1 / A.2).
@@ -38,7 +39,46 @@ class SuperAdminController extends Controller
             'pages/superadmin/settings',
             'Administrateurs de departement',
             'department-admins',
+            [
+                'user'      => $this->currentSuperAdmin(),
+            ]
         );
+    }
+
+    public function updateInfo(){
+
+        $admin = $this->currentSuperAdmin();
+
+        $first_name          = $this->input('first_name', null);
+        $last_name           = $this->input('last_name', null);
+        $email               = $this->input('email',null);
+        $password            = $this->input('password',null);
+        $password_confirm    = $this->input('password_confirm',null);
+
+        $pdo = Database::getConnection();
+        $adminRepository = new SuperAdministratorRepository($pdo);
+        
+        try{
+            if ($password && $password_confirm && $password != $password_confirm) {
+                throw new Exception("Les mots de passe ne correspondent pas.");
+            }
+            if ($first_name) {$adminRepository->updateFirstName($admin["id"],$first_name);}
+            if ($last_name) {$adminRepository->updateLastName($admin["id"],$last_name);}
+            if ($email) {$adminRepository->updateEmail($admin["id"],$email);}
+            if ($password) {$adminRepository->updatePassword($admin["id"],$password);}
+
+            if (isset($_SESSION['super_admin_id'])) {
+                if ($first_name) { $_SESSION['super_admin_first_name'] = $first_name; }
+                if ($last_name)  { $_SESSION['super_admin_last_name']  = $last_name; }
+                if ($email)      { $_SESSION['super_admin_email']      = $email; }
+            }
+
+        }catch(Exception $e){
+            header('Content-Type: application/json');
+            http_response_code(422);
+            echo json_encode(['error' => $e->getMessage()]);
+        } 
+        $this->showSetting();
     }
 
     public function places(): void

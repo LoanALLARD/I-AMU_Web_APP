@@ -85,6 +85,7 @@
     $router->add('POST', '/super-admin/login',             function() { (new SuperAdminAuthController())->login(); });
     $router->add('POST', '/super-admin/logout',            function() { (new SuperAdminAuthController())->logout(); });
     $router->add('GET',  '/super-admin/settings',          function() { (new SuperAdminController())->showSetting();});
+    $router->add('POST', '/super-admin/settings/update',   function() { (new SuperAdminController())->updateInfo();});
     $router->add('GET',  '/super-admin',                   function() { (new SuperAdminController())->index(); });
     $router->add('GET',  '/super-admin/department-admins', function() { (new SuperAdminController())->departmentAdmins(); });
     $router->add('GET',  '/super-admin/places',            function() { (new SuperAdminController())->places(); });
