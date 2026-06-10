@@ -353,9 +353,9 @@ class UserRepository
         $this->pdo->beginTransaction();
         try {
             $stmt = $this->pdo->prepare(
-                'INSERT INTO users (email, password_hash, first_name, last_name, department_id, consent_at, consent_version)
-                 VALUES (:email, :hash, :fn, :ln, :department_id, NOW(), :ver)
-                 RETURNING id'
+                'INSERT INTO users (email, password_hash, first_name, last_name, department_id, consent_at, consent_version, email_verified_at)
+                VALUES (:email, :hash, :fn, :ln, :department_id, NOW(), :ver, NOW())
+                RETURNING id'
             );
             $stmt->execute([
                 'email'         => $user['email'],
