@@ -13,6 +13,7 @@ CREATE TABLE places (
     zip_code VARCHAR(10),
     display_name VARCHAR(255),
     logo_path VARCHAR(255),
+    favicon_path VARCHAR(255),
     primary_color VARCHAR(7),
     CONSTRAINT pk_places PRIMARY KEY (id),
     CONSTRAINT ck_places_primary_color CHECK (primary_color IS NULL OR primary_color ~ '^#[0-9a-fA-F]{6}$')

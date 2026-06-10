@@ -106,7 +106,10 @@ class SuperAdminController extends Controller
             (int) $this->input('id', 0),
             (string) $this->input('display_name', ''),
             (string) $this->input('primary_color', ''),
-            $_FILES['logo'] ?? null
+            $_FILES['logo'] ?? null,
+            $_FILES['favicon'] ?? null,
+            (bool) $this->input('remove_logo', false),
+            (bool) $this->input('remove_favicon', false)
         );
 
         $this->flashResult($result, 'Personnalisation enregistrée.');

@@ -142,13 +142,15 @@ final class PlaceService
     /**
      * Updates a place's branding (display name, logo, primary color).
      * - Blank display name / color clear the override (NULL = I-AMU default).
-     * - A logo is only replaced when a file is actually uploaded; the old file
-     *   is then deleted. Sending no file keeps the current logo.
+     * - A logo/favicon is only replaced when a file is actually uploaded; the
+     *   old file is then deleted. Sending no file keeps the current one, unless
+     *   the matching remove flag is set, which clears it (back to I-AMU default).
      *
      * @param array<string, mixed>|null $logoFile a single $_FILES entry, or null
+     * @param array<string, mixed>|null $faviconFile a single $_FILES entry, or null
      * @return array{success: true} | array{success: false, error: string}
      */
-    public function updateBranding(int $id, string $displayName, string $primaryColor, ?array $logoFile): array
+    public function updateBranding(int $id, string $displayName, string $primaryColor, ?array $logoFile, ?array $faviconFile, bool $removeLogo = false, bool $removeFavicon = false): array
     {
         $current = $this->places->findBrandingById($id);
         if ($current === null) {
@@ -173,12 +175,29 @@ final class PlaceService
             }
             $this->deleteLogoFile($current['logo_path']);
             $logoPath = $stored;
+        } elseif ($removeLogo) {
+            $this->deleteLogoFile($current['logo_path']);
+            $logoPath = null;
+        }
+
+        $faviconPath = $current['favicon_path'];
+        if ($this->hasUpload($faviconFile)) {
+            $stored = $this->storeLogo($id, $faviconFile);
+            if ($stored === false) {
+                return ['success' => false, 'error' => 'Le favicon est invalide (image PNG, JPEG, SVG ou WebP, 2 Mo max).'];
+            }
+            $this->deleteLogoFile($current['favicon_path']);
+            $faviconPath = $stored;
+        } elseif ($removeFavicon) {
+            $this->deleteLogoFile($current['favicon_path']);
+            $faviconPath = null;
         }
 
         $this->places->updateBranding(
             $id,
             $displayName === '' ? null : $displayName,
             $logoPath,
+            $faviconPath,
             $color
         );
 
