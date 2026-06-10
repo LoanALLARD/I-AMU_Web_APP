@@ -318,13 +318,14 @@
     cursor: pointer;
     white-space: nowrap;
     flex-shrink: 0;
-    background: var(--refuse);
-    color: #ffffff;
+    background: var(--white);
+    color: var(--refuse);
     transition: background 0.18s, transform 0.12s;
     text-decoration: none;
 }
 .danger-zone .btn.danger:hover {
-    background: #991b1b;
+    border-color: var(--refuse);
+    background: var(--refuse-bg);
     transform: translateY(-1px);
 }
 
@@ -406,8 +407,8 @@
     padding: 9px 16px;
     border: 1.5px solid var(--gray-200);
     border-radius: var(--r-1);
-    background: var(--white);
-    color: var(--refuse);
+    background: var(--refuse);
+    color: var(--white);
     font-family: var(--font-sans);
     font-size: 0.82rem;
     font-weight: 600;
@@ -415,8 +416,9 @@
     transition: border-color 0.18s, background 0.18s, transform 0.12s;
 }
 .profile-logout:hover {
-    border-color: var(--refuse);
-    background: var(--refuse-bg);
+    border-color: var(--refuse-bg);
+    background: var(--white-bg);
+    color: var(--refuse);
     transform: translateY(-1px);
 }
 
