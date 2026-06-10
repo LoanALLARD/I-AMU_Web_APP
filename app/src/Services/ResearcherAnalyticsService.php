@@ -23,10 +23,13 @@ final class ResearcherAnalyticsService
     private ResearcherAnalyticsRepository $analytics;
     private ResearcherAuthorizationRepository $auth;
 
-    public function __construct(PDO $pdo)
-    {
-        $this->analytics = new ResearcherAnalyticsRepository($pdo);
-        $this->auth      = new ResearcherAuthorizationRepository($pdo);
+    public function __construct(
+        PDO $pdo,
+        ?ResearcherAnalyticsRepository $analytics = null,
+        ?ResearcherAuthorizationRepository $auth = null
+    ) {
+        $this->analytics = $analytics ?? new ResearcherAnalyticsRepository($pdo);
+        $this->auth      = $auth ?? new ResearcherAuthorizationRepository($pdo);
     }
 
     /**
