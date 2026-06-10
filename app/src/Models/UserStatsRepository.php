@@ -18,7 +18,7 @@ class UserStatsRepository
      *
      * @return array{
      *     conversations:int, interactions:int,
-     *     input_tokens:int, output_tokens:int, avg_latency:?float
+     *     input_tokens:int, output_tokens:int, last_activity:?string
      * }
      */
     public function personalAggregate(int $userId): array
@@ -28,7 +28,7 @@ class UserStatsRepository
                     COUNT(i.id)                         AS interactions,
                     COALESCE(SUM(i.input_tokens), 0)    AS input_tokens,
                     COALESCE(SUM(i.output_tokens), 0)   AS output_tokens,
-                    AVG(i.latency)                      AS avg_latency
+                    MAX(i.sent_at)                      AS last_activity
              FROM conversations c
              LEFT JOIN interactions i ON i.conversation_id = c.id
              WHERE c.user_id = :user_id'
@@ -42,8 +42,70 @@ class UserStatsRepository
             'interactions'  => (int) ($row['interactions'] ?? 0),
             'input_tokens'  => (int) ($row['input_tokens'] ?? 0),
             'output_tokens' => (int) ($row['output_tokens'] ?? 0),
-            'avg_latency'   => $row['avg_latency'] !== null ? (float) $row['avg_latency'] : null,
+            'last_activity' => $row['last_activity'] !== null ? (string) $row['last_activity'] : null,
         ];
+    }
+
+    /**
+     * The model the user has used most (by interaction count), or null when none.
+     * Conversations without interactions do not count toward usage.
+     *
+     * @return array{name:string, interactions:int}|null
+     */
+    public function topModel(int $userId): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT m.name             AS name,
+                    COUNT(i.id)        AS interactions
+             FROM conversations c
+             JOIN interactions i ON i.conversation_id = c.id
+             JOIN models m ON m.id = c.model_id
+             WHERE c.user_id = :user_id
+             GROUP BY m.id, m.name
+             ORDER BY interactions DESC, m.name ASC
+             LIMIT 1'
+        );
+        $stmt->execute(['user_id' => $userId]);
+        $row = $stmt->fetch();
+
+        if ($row === false) {
+            return null;
+        }
+
+        return ['name' => (string) $row['name'], 'interactions' => (int) $row['interactions']];
+    }
+
+    /**
+     * Token totals grouped by the model that produced them, for energy estimation
+     * (a bigger model costs more per token). Only models that actually ran appear.
+     *
+     * @return list<array{model_size:?string, input_tokens:int, output_tokens:int}>
+     */
+    public function tokensByModel(int $userId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT m.size                          AS model_size,
+                    COALESCE(SUM(i.input_tokens), 0)  AS input_tokens,
+                    COALESCE(SUM(i.output_tokens), 0) AS output_tokens
+             FROM conversations c
+             JOIN interactions i ON i.conversation_id = c.id
+             JOIN models m ON m.id = c.model_id
+             WHERE c.user_id = :user_id
+             GROUP BY m.id, m.size'
+        );
+        $stmt->execute(['user_id' => $userId]);
+
+        /** @var list<array{model_size:?string, input_tokens:int, output_tokens:int}> $rows */
+        $rows = array_map(
+            static fn (array $r): array => [
+                'model_size'    => $r['model_size'] !== null ? (string) $r['model_size'] : null,
+                'input_tokens'  => (int) $r['input_tokens'],
+                'output_tokens' => (int) $r['output_tokens'],
+            ],
+            $stmt->fetchAll()
+        );
+
+        return $rows;
     }
 
     /**

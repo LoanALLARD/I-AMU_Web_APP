@@ -6,21 +6,21 @@ namespace Controllers;
 
 use Core\Controller;
 use Data\Database;
-use Services\RessourceService;
+use Services\ResourceService;
 use Services\SessionService;
 
 /**
  * Teacher-facing HTTP entry point for the Resource (course) feature.
  */
-class RessourceController extends Controller
+class ResourceController extends Controller
 {
-    private RessourceService $ressources;
+    private ResourceService $resources;
     private \Services\SessionService $sessions;
 
     public function __construct()
     {
         $pdo = Database::getConnection();
-        $this->ressources = new RessourceService($pdo);
+        $this->resources = new ResourceService($pdo);
         $this->sessions   = new \Services\SessionService($pdo);
     }
 
@@ -41,11 +41,11 @@ class RessourceController extends Controller
         $this->requireRole('teacher');
         $user = $this->currentUser();
 
-        $this->render('pages/ressources/index', [
+        $this->render('pages/resources/index', [
             'title'      => 'Mes ressources',
             'navSection' => 'ressources',
-            'ressources' => $this->ressources->listForTeacher((int) ($user['id'] ?? 0)),
-            'archived'   => $this->ressources->listArchivedForTeacher((int) ($user['id'] ?? 0)),
+            'ressources' => $this->resources->listForTeacher((int) ($user['id'] ?? 0)),
+            'archived'   => $this->resources->listArchivedForTeacher((int) ($user['id'] ?? 0)),
             'sessions'   => $this->sessions->listForTeacher((int) ($user['id'] ?? 0)),
             'user'       => $user,
         ]);
@@ -57,11 +57,11 @@ class RessourceController extends Controller
         $this->requireRole('teacher');
         $user = $this->currentUser();
 
-        $this->render('pages/ressources/create', [
+        $this->render('pages/resources/create', [
             'title'            => 'Nouvelle ressource',
             'mode'             => 'create',
             'resource'         => null,
-            'deptTeachers'     => $this->ressources->listDepartmentTeachers(
+            'deptTeachers'     => $this->resources->listDepartmentTeachers(
                                       (int) ($user['department_id'] ?? 0),
                                       (int) ($user['id'] ?? 0)
                                   ),
@@ -80,7 +80,7 @@ class RessourceController extends Controller
         $assignedIds = $this->extractAssignedTeacherIds();
 
         try {
-            $row = $this->ressources->create(
+            $row = $this->resources->create(
                 $_POST,
                 (int) ($user['id'] ?? 0),
                 (int) ($user['department_id'] ?? 0),
@@ -106,15 +106,15 @@ class RessourceController extends Controller
         $user     = $this->currentUser();
         $resource = $this->loadOwned((int) $id, (int) ($user['id'] ?? 0));
 
-        $this->render('pages/ressources/create', [
+        $this->render('pages/resources/create', [
             'title'        => 'Modifier la ressource',
             'mode'         => 'edit',
             'resource'     => $resource,
-            'deptTeachers' => $this->ressources->listDepartmentTeachers(
+            'deptTeachers' => $this->resources->listDepartmentTeachers(
                                   (int) ($user['department_id'] ?? 0),
                                   (int) ($user['id'] ?? 0)
                               ),
-            'assignedIds'  => $this->ressources->assignedTeacherIds((int) $id),
+            'assignedIds'  => $this->resources->assignedTeacherIds((int) $id),
             'oldInput'     => $this->popOldInput(),
         ]);
     }
@@ -129,7 +129,7 @@ class RessourceController extends Controller
         $assignedIds = $this->extractAssignedTeacherIds();
 
         try {
-            $this->ressources->update(
+            $this->resources->update(
                 (int) $id,
                 $_POST,
                 (int) ($user['id'] ?? 0),
@@ -153,7 +153,7 @@ class RessourceController extends Controller
         $user = $this->currentUser();
 
         try {
-            $this->ressources->archive((int) $id, (int) ($user['id'] ?? 0));
+            $this->resources->archive((int) $id, (int) ($user['id'] ?? 0));
             $this->flash('success', 'Ressource archivée.');
         } catch (\RuntimeException $e) {
             $this->flash('error', $e->getMessage());
@@ -170,7 +170,7 @@ class RessourceController extends Controller
         $user = $this->currentUser();
 
         try {
-            $this->ressources->restore((int) $id, (int) ($user['id'] ?? 0));
+            $this->resources->restore((int) $id, (int) ($user['id'] ?? 0));
             $this->flash('success', 'Ressource restaurée.');
         } catch (\RuntimeException $e) {
             $this->flash('error', $e->getMessage());
@@ -223,7 +223,7 @@ class RessourceController extends Controller
     private function loadOwned(int $resourceId, int $teacherId): array
     {
         try {
-            return $this->ressources->loadOwned($resourceId, $teacherId);
+            return $this->resources->loadOwned($resourceId, $teacherId);
         } catch (\RuntimeException) {
             http_response_code(403);
             $this->render('pages/error', [

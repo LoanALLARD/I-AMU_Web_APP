@@ -23,10 +23,13 @@ final class ResearcherAnalyticsService
     private ResearcherAnalyticsRepository $analytics;
     private ResearcherAuthorizationRepository $auth;
 
-    public function __construct(PDO $pdo)
-    {
-        $this->analytics = new ResearcherAnalyticsRepository($pdo);
-        $this->auth      = new ResearcherAuthorizationRepository($pdo);
+    public function __construct(
+        PDO $pdo,
+        ?ResearcherAnalyticsRepository $analytics = null,
+        ?ResearcherAuthorizationRepository $auth = null
+    ) {
+        $this->analytics = $analytics ?? new ResearcherAnalyticsRepository($pdo);
+        $this->auth      = $auth ?? new ResearcherAuthorizationRepository($pdo);
     }
 
     /**
@@ -42,14 +45,14 @@ final class ResearcherAnalyticsService
             static fn (int $id): bool => $id > 0
         )));
         if ($requested === []) {
-            return ['success' => false, 'error' => 'Aucun departement selectionne.'];
+            return ['success' => false, 'error' => 'Aucun département sélectionné.'];
         }
 
         // Anti-IDOR: refuse if any requested id is not an active grant.
         $allowed = $this->authorizedDepartmentIds($researcherId);
         $scoped = array_values(array_intersect($requested, $allowed));
         if (count($scoped) !== count($requested)) {
-            return ['success' => false, 'error' => 'Acces non autorise a ce perimetre.'];
+            return ['success' => false, 'error' => 'Accès non autorisé à ce périmètre.'];
         }
 
         $agg = $this->analytics->aggregate($scoped);

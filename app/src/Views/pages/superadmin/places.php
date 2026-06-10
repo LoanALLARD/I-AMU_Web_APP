@@ -33,10 +33,10 @@ foreach ($departments as $d) {
             <!-- Left column: the list of places + the add-place form -->
             <section class="panel-section places-master">
                 <h2>Sites</h2>
-                <p class="section-lead">Selectionnez un site pour voir ses departements.</p>
+                <p class="section-lead">Sélectionnez un site pour voir ses départements.</p>
 
                 <?php if (empty($places)): ?>
-                    <p class="section-empty">Aucun site configure pour le moment.</p>
+                    <p class="section-empty">Aucun site configuré pour le moment.</p>
                 <?php else: ?>
                     <ul class="place-list">
                         <?php foreach ($places as $p): ?>
@@ -101,7 +101,7 @@ foreach ($departments as $d) {
 
                 <div class="places-detail-empty" data-place-empty>
                     <span class="page-placeholder-icon"><?= icon('building', '', 28) ?></span>
-                    <p>Selectionnez un site dans la liste pour gerer ses departements.</p>
+                    <p>Sélectionnez un site dans la liste pour gérer ses départements.</p>
                 </div>
 
                 <?php foreach ($places as $p): ?>
@@ -115,7 +115,7 @@ foreach ($departments as $d) {
                         ])));
                         ?>
                         <p class="section-lead">
-                            <?= $address !== '' ? htmlspecialchars($address) : 'Adresse non renseignee.' ?>
+                            <?= $address !== '' ? htmlspecialchars($address) : 'Adresse non renseignée.' ?>
                         </p>
 
                         <?php
@@ -128,7 +128,7 @@ foreach ($departments as $d) {
                             <input type="hidden" name="id" value="<?= (int) $p['id'] ?>">
                             <h3>Personnalisation du lieu</h3>
                             <p class="branding-hint">
-                                Laissez vide pour utiliser l'identite I-AMU par defaut.
+                                Laissez vide pour utiliser l'identité I-AMU par défaut.
                             </p>
 
                             <div class="branding-row">
@@ -194,13 +194,13 @@ foreach ($departments as $d) {
 
                         <?php $deps = $departmentsByPlace[$p['id']] ?? []; ?>
                         <?php if (empty($deps)): ?>
-                            <p class="section-empty">Aucun departement sur ce site.</p>
+                            <p class="section-empty">Aucun département sur ce site.</p>
                         <?php else: ?>
                             <table class="domain-table">
                                 <thead>
                                     <tr>
                                         <th>Nom</th>
-                                        <th class="col-state">Etat</th>
+                                        <th class="col-state">État</th>
                                         <th class="col-action">Action</th>
                                     </tr>
                                 </thead>
@@ -227,11 +227,11 @@ foreach ($departments as $d) {
                                                     <input type="hidden" name="is_active" value="<?= $d['is_active'] ? '0' : '1' ?>">
                                                     <?php if ($d['is_active']): ?>
                                                         <button type="submit" class="btn-row btn-row-danger">
-                                                            <?= icon('x', '', 15) ?> Desactiver
+                                                            <?= icon('x', '', 15) ?> Désactiver
                                                         </button>
                                                     <?php else: ?>
                                                         <button type="submit" class="btn-row">
-                                                            <?= icon('check', '', 15) ?> Reactiver
+                                                            <?= icon('check', '', 15) ?> Réactiver
                                                         </button>
                                                     <?php endif; ?>
                                                 </form>
@@ -245,7 +245,7 @@ foreach ($departments as $d) {
                         <form method="POST" action="/super-admin/departments" class="department-form">
                             <?= csrf_field() ?>
                             <input type="hidden" name="place_id" value="<?= (int) $p['id'] ?>">
-                            <h3>Ajouter un departement</h3>
+                            <h3>Ajouter un département</h3>
                             <div class="form-group">
                                 <label for="dept-name-<?= (int) $p['id'] ?>">Nom</label>
                                 <input type="text" id="dept-name-<?= (int) $p['id'] ?>" name="name"
@@ -254,11 +254,11 @@ foreach ($departments as $d) {
                             <div class="form-group">
                                 <label for="dept-description-<?= (int) $p['id'] ?>">Description</label>
                                 <textarea id="dept-description-<?= (int) $p['id'] ?>" name="description" rows="2"
-                                          placeholder="Description du departement (optionnel)"></textarea>
+                                          placeholder="Description du département (optionnel)"></textarea>
                             </div>
                             <button type="submit" class="btn-submit">
                                 <?= icon('plus', '', 16) ?>
-                                Ajouter le departement
+                                Ajouter le département
                             </button>
                         </form>
 

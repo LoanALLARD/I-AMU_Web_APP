@@ -21,7 +21,7 @@ require __DIR__ . '/_header.php';
 
                 <!-- Left column: accordion of sites + their departments -->
                 <aside class="analysis-sites">
-                    <p class="section-lead">Selectionnez un site ou un departement a analyser.</p>
+                    <p class="section-lead">Sélectionnez un site ou un département à analyser.</p>
 
                     <ul class="site-accordion">
                         <?php foreach ($places as $place): ?>
@@ -49,13 +49,13 @@ require __DIR__ . '/_header.php';
                                         <?php if ($siteSelectable): ?>
                                             <span class="site-action"><?= icon('chart-line', '', 13) ?> Vue d'ensemble</span>
                                         <?php endif; ?>
-                                        <span class="site-count" title="<?= $deptCount ?> departement(s) accessible(s)"><?= $deptCount ?></span>
+                                        <span class="site-count" title="<?= $deptCount ?> département(s) accessible(s)"><?= $deptCount ?></span>
                                         <?= icon('chevron-right', 'site-chevron', 18) ?>
                                     </span>
                                 </button>
                                 <div class="dept-panel" hidden>
                                     <?php if ($siteSelectable): ?>
-                                        <p class="dept-hint">Cliquez le site pour une vue d'ensemble, ou un departement.</p>
+                                        <p class="dept-hint">Cliquez le site pour une vue d'ensemble, ou un département.</p>
                                     <?php endif; ?>
                                     <ul class="dept-list">
                                         <?php foreach ($place['departments'] as $dept): ?>
@@ -81,12 +81,12 @@ require __DIR__ . '/_header.php';
                 <section class="analysis-dashboard">
                     <div class="dashboard-empty" data-dashboard-empty>
                         <span class="page-placeholder-icon"><?= icon('chart-line', '', 28) ?></span>
-                        <p>Selectionnez un site ou un departement dans la liste pour afficher son tableau de bord.</p>
+                        <p>Sélectionnez un site ou un département dans la liste pour afficher son tableau de bord.</p>
                     </div>
 
                     <div class="dashboard-loading" data-dashboard-loading hidden>
                         <span class="dashboard-spinner" aria-hidden="true"></span>
-                        <p>Chargement des donnees...</p>
+                        <p>Chargement des données...</p>
                     </div>
 
                     <div class="dashboard-error" data-dashboard-error hidden>
@@ -119,7 +119,7 @@ require __DIR__ . '/_header.php';
                             <article class="metric-card">
                                 <span class="metric-icon"><?= icon('arrow-down', '', 18) ?></span>
                                 <span class="metric-value" data-metric="input_tokens">0</span>
-                                <span class="metric-label">Tokens entree</span>
+                                <span class="metric-label">Tokens entrée</span>
                             </article>
                             <article class="metric-card">
                                 <span class="metric-icon"><?= icon('arrow-up', '', 18) ?></span>
@@ -146,17 +146,17 @@ require __DIR__ . '/_header.php';
                                     <li class="sat-neu"><?= icon('minus', '', 14) ?> <span data-metric="feedback_neutral">0</span> neutres</li>
                                 </ul>
                             </div>
-                            <p class="no-message" data-satisfaction-empty hidden>Aucun feedback sur ce perimetre.</p>
+                            <p class="no-message" data-satisfaction-empty hidden>Aucun feedback sur ce périmètre.</p>
                         </section>
 
                         <section class="dashboard-block">
-                            <h4 class="block-title"><?= icon('chart-line', '', 15) ?> Activite (<span data-metric="activity_days">30</span> derniers jours)</h4>
+                            <h4 class="block-title"><?= icon('chart-line', '', 15) ?> Activité (<span data-metric="activity_days">30</span> derniers jours)</h4>
                             <div class="chart">
                                 <div class="chart-axis-y" data-sparkline-axis-y></div>
-                                <div class="sparkline" data-sparkline role="img" aria-label="Activite des interactions par jour"></div>
+                                <div class="sparkline" data-sparkline role="img" aria-label="Activité des interactions par jour"></div>
                                 <div class="chart-axis-x" data-sparkline-axis></div>
                             </div>
-                            <p class="sparkline-foot"><span data-metric="activity_total">0</span> interactions sur la periode</p>
+                            <p class="sparkline-foot"><span data-metric="activity_total">0</span> interactions sur la période</p>
                         </section>
                     </div>
                 </section>

@@ -1,12 +1,21 @@
 <?php
-    // Hand-written autoloader (runtime). Composer's vendor/autoload.php
-    // is reserved for dev tools (PHPStan, PHPUnit, PHPCS).
-    
+    // bootstrap.php loads Composer's PSR-4 autoloader (vendor/autoload.php),
+    // shared by the runtime and the dev tools (PHPStan, PHPUnit, PHPCS).
+
     require dirname(__DIR__) . '/src/bootstrap.php';
 
+    // Harden the session cookie before the session starts.
+    session_set_cookie_params([
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'secure'   => (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off'),
+        'path'     => '/',
+    ]);
+    ini_set('session.use_strict_mode', '1');
+    
     session_start();
     use Core\Router;
-    use Controllers\AccueilController;
+    use Controllers\HomeController;
     use Controllers\LLMController;
     use Controllers\AuthController;
     use Controllers\SessionController;
@@ -18,22 +27,21 @@
     use Controllers\SuperAdminAuthController;
     use Controllers\SuperAdminController;
     use Controllers\ErrorController;
-    use Controllers\RessourceController;
+    use Controllers\ResourceController;
     use Core\HttpException;
 
 // routeur
     $router = new Router();
 
-    $router->add('GET',  '/',            function() { (new AccueilController())->index(); });
-    $router->add('GET',  '/accueil',     function() { (new AccueilController())->index(); });
+    $router->add('GET',  '/',            function() { (new HomeController())->index(); });
+    $router->add('GET',  '/accueil',     function() { (new HomeController())->index(); });
 
     $router->add('POST', '/chat',         function() { (new LLMController())->handleChat(); });
-    $router->add('POST', '/chat/feedback',function() { (new LLMController())->recordFeedback(); });
     $router->add('POST', '/chat/documents',             function()    { (new DocumentController())->uploadToConversation(); });
     $router->add('POST', '/chat/documents/{id}/delete', function($id) { (new DocumentController())->deleteFromConversation($id); });
-    $router->add('POST', '/chat/rename',    function() { (new AccueilController())->renameChat(); });
-    $router->add('POST', '/chat/archive',   function() { (new AccueilController())->archiveChat(); });
-    $router->add('POST', '/chat/unarchive', function() { (new AccueilController())->unarchiveChat(); });
+    $router->add('POST', '/chat/rename',    function() { (new HomeController())->renameChat(); });
+    $router->add('POST', '/chat/archive',   function() { (new HomeController())->archiveChat(); });
+    $router->add('POST', '/chat/unarchive', function() { (new HomeController())->unarchiveChat(); });
 
     $uri = $_SERVER['REQUEST_URI'];
     $method = $_SERVER['REQUEST_METHOD'];
@@ -45,18 +53,18 @@
     $router->add('POST', '/register',    function() { (new AuthController())->register(); });
     $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
     $router->add('POST', '/reactivate',  function() { (new AuthController())->reactivate();});
-    $router->add('GET',  '/gdpr_consent', function() { (new AuthController())->showGDPR(); });
-    $router->add('GET',  '/gdpr_consent_researcher', function() { (new AuthController())->showGDPRResearcher(); });
+    $router->add('GET',  '/rgpd_consent', function() { (new AuthController())->showRGPD(); });
+    $router->add('GET',  '/rgpd_consent_researcher', function() { (new AuthController())->showRGPDResearcher(); });
     $router->add('GET',  '/verify-email',function() { (new AuthController())->verifyEmail(); });
 
     // AJAX: departments of a place, for the registration form's dependent select.
     $router->add('GET',  '/places/{id}/departments', function($id) { (new PlaceController())->departments($id); });
 
     // --- Chat home + profile (authenticated) --------------------------
-    $router->add('GET',  '/chat',                function()     { (new AccueilController())->index(); });
-    $router->add('GET',  '/chat/session-status', function()     { (new AccueilController())->sessionStatus(); });
+    $router->add('GET',  '/chat',                function()     { (new HomeController())->index(); });
+    $router->add('GET',  '/chat/session-status', function()     { (new HomeController())->sessionStatus(); });
     $router->add('GET',  '/chat/documents/{convId}', function($convId) { (new DocumentController())->conversationDocuments($convId); });
-    $router->add('GET',  '/chat/{id}',           function($id)  { (new AccueilController())->index($id); });
+    $router->add('GET',  '/chat/{id}',           function($id)  { (new HomeController())->index($id); });
     $router->add('GET',  '/profile',             function()     { (new ProfileController())->index(); });
     $router->add('POST', '/profile/theme',       function()     { (new ProfileController())->updateTheme(); });
     $router->add('POST', '/profile/deactivate',  function()     { (new ProfileController())->deactivate(); });
@@ -69,7 +77,7 @@
     $router->add('GET',  '/department-admin',                         function() { (new DepartmentAdminController())->index(); });
     $router->add('GET',  '/department-admin/users',                   function() { (new DepartmentAdminController())->users(); });
     $router->add('GET',  '/department-admin/search',                  function() { (new DepartmentAdminController())->GetUsersByName(); });
-    $router->add('GET',  '/department-admin/addModel',                function() { (new DepartmentAdminController())->fromModel(); });
+    $router->add('GET',  '/department-admin/addModel',                function() { (new DepartmentAdminController())->formModel(); });
     $router->add('POST', '/department-admin/addModel',                function() { (new DepartmentAdminController())->addModel(); });
     $router->add('POST', '/department-admin/researchers/approve',     function() { (new DepartmentAdminController())->approveResearcher(); });
     $router->add('POST', '/department-admin/researchers/reject',      function() { (new DepartmentAdminController())->rejectResearcher(); });
@@ -84,9 +92,11 @@
     // --- Super admin (isolated session, URL-only — no internal link) --
     // Dedicated login + panel, reachable only by direct URL (decision D1,
     // SPEC-superadmin-auth.md). Never linked from the user-facing app.
-    $router->add('GET',  '/super-admin/login',  function() { (new SuperAdminAuthController())->showLogin(); });
-    $router->add('POST', '/super-admin/login',  function() { (new SuperAdminAuthController())->login(); });
-    $router->add('POST', '/super-admin/logout', function() { (new SuperAdminAuthController())->logout(); });
+    $router->add('GET',  '/super-admin/login',             function() { (new SuperAdminAuthController())->showLogin(); });
+    $router->add('POST', '/super-admin/login',             function() { (new SuperAdminAuthController())->login(); });
+    $router->add('POST', '/super-admin/logout',            function() { (new SuperAdminAuthController())->logout(); });
+    $router->add('GET',  '/super-admin/settings',          function() { (new SuperAdminController())->showSetting();});
+    $router->add('POST', '/super-admin/settings/update',   function() { (new SuperAdminController())->updateInfo();});
     $router->add('GET',  '/super-admin',                   function() { (new SuperAdminController())->index(); });
     $router->add('GET',  '/super-admin/department-admins', function() { (new SuperAdminController())->departmentAdmins(); });
     $router->add('GET',  '/super-admin/places',            function() { (new SuperAdminController())->places(); });
@@ -100,6 +110,8 @@
     $router->add('POST', '/super-admin/email-domains/role',   function() { (new SuperAdminController())->changeEmailDomainRole(); });
     $router->add('POST', '/super-admin/email-domains/toggle', function() { (new SuperAdminController())->toggleEmailDomain(); });
     $router->add('POST', '/super-admin/department-admins/invite', function () { (new SuperAdminController())->inviteDepartmentAdmin(); });
+    $router->add('POST', '/super-admin/super-admins/invite', function () { (new SuperAdminController())->inviteSuperAdmin(); });
+    $router->add('POST', '/super-admin/department-admins/revoke', function () { (new SuperAdminController())->revokeDepartmentAdmin(); });
 
     //Admin invitation
     $router->add('GET',  '/admin-invite/accept', function () { (new AuthController())->showAcceptInvite(); });
@@ -150,7 +162,7 @@
     $router->add('GET',  '/documents/conversation_{conversationId}/{docId}', function($conversationId, $docId) { (new DocumentController())->downloadFromConversation($conversationId, $docId); });
 
     try {
-        $router->compare($uri, $method);
+        $router->dispatch($uri, $method);
     } catch (HttpException $e) {
         (new ErrorController())->show($e->statusCode(), $e);
     } catch (\Throwable $e) {

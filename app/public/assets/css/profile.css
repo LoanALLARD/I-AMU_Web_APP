@@ -643,6 +643,13 @@
     line-height: 1.1;
 }
 
+/* Textual values (model name, relative date) wrap instead of overflowing. */
+.stats-metric-value--text {
+    font-size: 0.95rem;
+    line-height: 1.25;
+    word-break: break-word;
+}
+
 .stats-metric-label {
     font-family: var(--font-mono);
     font-size: 0.68rem;
@@ -697,6 +704,298 @@
     margin: 8px 0 0;
     font-size: 0.75rem;
     color: var(--gray-400);
+}
+
+/* Eco footprint card */
+
+.eco-card h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: none;
+    letter-spacing: normal;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--accept, var(--gray-800));
+    margin: 0 0 4px;
+}
+
+.eco-card .page-sub {
+    margin: 0 0 18px;
+}
+
+.eco-figures {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.eco-figure {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 14px 16px;
+    border: 1px solid var(--accept, var(--gray-200));
+    border-radius: var(--r-2, var(--r-1));
+    background: var(--accept-bg, var(--gray-100));
+}
+
+.eco-figure-icon {
+    color: var(--accept, var(--blue));
+    margin-bottom: 2px;
+}
+
+.eco-figure-value {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    line-height: 1.1;
+}
+
+.eco-figure-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gray-400);
+}
+
+.eco-equivalents {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.eco-equivalents li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--gray-600);
+}
+
+.eco-equivalents li svg {
+    color: var(--accept, var(--gray-400));
+    flex-shrink: 0;
+}
+
+.eco-equivalents strong {
+    color: var(--gray-800);
+}
+
+.eco-tips {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--gray-200);
+}
+
+.eco-tips-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 8px;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.eco-tips ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.8rem;
+    color: var(--gray-600);
+    line-height: 1.6;
+}
+
+.eco-method {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--gray-200);
+}
+
+.eco-method > summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    list-style: none;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    user-select: none;
+}
+
+.eco-method > summary::-webkit-details-marker {
+    display: none;
+}
+
+.eco-method > summary::after {
+    content: "+";
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    line-height: 1;
+    color: var(--gray-400);
+}
+
+.eco-method[open] > summary::after {
+    content: "−";
+}
+
+.eco-method > summary:hover {
+    color: var(--blue);
+}
+
+.eco-method > summary svg {
+    flex-shrink: 0;
+    color: var(--gray-400);
+}
+
+.eco-method-body {
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: var(--gray-600);
+    line-height: 1.6;
+}
+
+.eco-method-body p {
+    margin: 0 0 8px;
+}
+
+.eco-method-body ol {
+    margin: 0 0 8px;
+    padding-left: 18px;
+}
+
+.eco-method-body ol li {
+    margin-bottom: 6px;
+}
+
+.eco-method-body strong {
+    color: var(--gray-800);
+}
+
+/* Code block follows the theme (gray-100/gray-800 invert together). */
+.eco-formula {
+    margin: 0 0 8px;
+    padding: 12px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--r-1);
+    background: var(--gray-100);
+    overflow-x: auto;
+}
+
+.eco-formula code {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    line-height: 1.7;
+    color: var(--gray-800);
+    white-space: pre;
+}
+
+.eco-formula-note {
+    font-size: 0.72rem !important;
+    color: var(--gray-400) !important;
+    font-style: italic;
+}
+
+.eco-method-limit {
+    margin-top: 10px !important;
+    padding: 10px 12px;
+    border-radius: var(--r-1);
+    background: var(--gray-50, var(--gray-100));
+    color: var(--gray-600);
+}
+
+.edit-form-card {
+    /* Isoler sur une nouvelle ligne en dessous */
+    flex: 1 1 100%; 
+    order: 3; 
+    
+    /* État initial (fermé) pour l'animation */
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    margin-top: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+    
+    /* Animation fluide */
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.edit-form-card.is-open {
+    /* État final (ouvert) */
+    max-height: 800px; /* Valeur suffisamment grande pour contenir le form */
+    opacity: 1;
+    margin-top: 24px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+    border-width: 1px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.form-group .hint {
+    font-weight: 400;
+    color: var(--gray-400);
+    font-size: 0.75rem;
+}
+
+.form-group input {
+    padding: 10px 12px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-1);
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    color: var(--gray-800);
+    transition: border-color 0.15s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--blue, #0070f3);
+}
+
+.form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px solid var(--gray-200);
+}
+
+.btn-primary {
+    background: var(--blue, #0070f3);
+    color: white;
+}
+.btn-primary:hover {
+    background: #005bb5;
+    transform: translateY(-1px);
 }
 
 /* Responsive */

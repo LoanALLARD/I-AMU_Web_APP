@@ -103,11 +103,11 @@ $isAdmin = ($role === 'department_admin');
 
                 <?php if ($isAdmin) : ?>
                     <div class="form-group">
-                        <label class="form-label">Partager le modèle pour tous ?</label>
+                        <label class="form-label">Partager le modèle avec tous les départements ?</label>
                         <div class="radio-group-inline">
                             <div class="radio-option">
                                 <input type="radio" id="share_yes" name="is_shareable" value="1" checked>
-                                <label for="share_yes">Oui, le partager pour tout le département</label>
+                                <label for="share_yes">Oui, le partager pour aux autres départements</label>
                             </div>
                             <div class="radio-option">
                                 <input type="radio" id="share_no" name="is_shareable" value="0">

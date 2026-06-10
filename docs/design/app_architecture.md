@@ -335,10 +335,11 @@ Ce qui se lit directement sur le graphe :
 │   ├── Config/
 │   │   └── config.php
 │   ├── Controllers/             ← le « C » : endpoints HTTP
-│   │   ├── AccueilController.php
+│   │   ├── HomeController.php
 │   │   ├── AuthController.php
 │   │   ├── LLMController.php
-│   │   └── dbController.php
+│   │   ├── ResourceController.php
+│   │   └── SessionController.php
 │   ├── Core/                    ← micro-framework (Router, Controller)
 │   ├── Data/
 │   │   └── Database.php         ← singleton de connexion PDO
@@ -347,7 +348,8 @@ Ce qui se lit directement sur le graphe :
 │   │   ├── Conversation.php
 │   │   ├── LlmAdaptaterInterface.php
 │   │   ├── OllamaAdaptater.php
-│   │   └── TestException.php
+│   │   ├── DocumentException.php
+│   │   └── SessionException.php
 │   ├── Helpers/
 │   ├── Models/                  ← le « M » : repositories (accès données)
 │   │   ├── AiRepository.php
@@ -355,16 +357,11 @@ Ce qui se lit directement sur le graphe :
 │   │   ├── InteractionRepository.php
 │   │   └── UserRepository.php
 │   ├── Services/                ← logique applicative (AuthService, …)
-│   └── Views/                   ← le « V » : Layout/ + Page/
+│   └── Views/                   ← le « V » : layout/ + pages/ + partials/
 └── tests/
     ├── Integration/
     └── Unit/
 ```
-
-> **Normalisation à prévoir** lors du réagencement du code : aligner
-> quelques noms hérités sur les conventions §6 — `dbController.php` →
-> `DbController.php`, et le format `Conversation.repository.php` →
-> `ConversationRepository.php`.
 
 ---
 

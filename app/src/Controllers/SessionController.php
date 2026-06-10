@@ -10,7 +10,7 @@ use Domain\SessionException;
 use Services\CreateSessionForm;
 use Services\DocumentService;
 use Services\SessionService;
-use Services\RessourceService;
+use Services\ResourceService;
 use Models\AiRepository;
 use Throwable;
 
@@ -26,12 +26,12 @@ class SessionController extends Controller
 {
     private SessionService $sessions;
     private DocumentService $documents;
-    private RessourceService $ressources;
+    private ResourceService $resources;
     public function __construct()
     {
         $pdo = Database::getConnection();
         $this->sessions  = new SessionService($pdo);
-        $this->ressources = new RessourceService($pdo);
+        $this->resources = new ResourceService($pdo);
         $this->documents = new DocumentService($pdo);
     }
 
@@ -54,11 +54,11 @@ class SessionController extends Controller
         $this->requireRole('teacher');
         $user = $this->currentUser();
 
-        $this->render('pages/ressources/index', [
+        $this->render('pages/resources/index', [
             'title'      => 'Mes sessions',
             'page'       => 'ressources',
             'navSection' => 'sessions',
-            'ressources' => $this->ressources->listForTeacher((int) ($user['id'] ?? 0)),
+            'ressources' => $this->resources->listForTeacher((int) ($user['id'] ?? 0)),
             'sessions'   => $this->sessions->listForTeacher((int) ($user['id'] ?? 0)),
             'supervised' => $this->sessions->listSupervisedForTeacher((int) ($user['id'] ?? 0)),
             'user'       => $user,

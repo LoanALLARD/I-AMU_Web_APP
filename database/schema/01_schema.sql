@@ -354,6 +354,3 @@ CREATE TABLE documents (
     ),
     CONSTRAINT ck_documents_size CHECK (size_bytes > 0)
 );
-CREATE INDEX idx_documents_session ON documents (session_id);
-CREATE INDEX idx_documents_conversation ON documents (conversation_id);
-CREATE INDEX idx_documents_interaction ON documents (interaction_id);

@@ -6,6 +6,7 @@ namespace Models;
 
 use PDO;
 use Throwable;
+use Models\SuperAdministratorRepository;
 
 /**
  * Data access for the `users` table
@@ -62,18 +63,6 @@ class UserRepository
             'UPDATE users SET first_name = :fn, last_name = :ln WHERE id = :id'
         );
         $stmt->execute(['fn' => $firstName, 'ln' => $lastName, 'id' => $userId]);
-    }
-
-    /**
-     * Replaces the user's password hash. The caller hashes the new password
-     * (the repository only stores what it is given).
-     */
-    public function updatePassword(int $userId, string $passwordHash): void
-    {
-        $stmt = $this->pdo->prepare(
-            'UPDATE users SET password_hash = :hash WHERE id = :id'
-        );
-        $stmt->execute(['hash' => $passwordHash, 'id' => $userId]);
     }
 
     /**
@@ -157,7 +146,7 @@ class UserRepository
                 );
                 $roleStmt->execute(['id' => $userId, 'lab' => $user['laboratory_id'] ?? null]);
             } else if ($role == 'teacher') {
-                $roleStmt = $this->pdo->prepare("INSERT INTO teacher (id) VALUES (:id)");
+                $roleStmt = $this->pdo->prepare("INSERT INTO teachers (id) VALUES (:id)");
                 $roleStmt->execute(['id' => $userId]);
             }else{
                 $roleStmt = $this->pdo->prepare("INSERT INTO students (id,year) VALUES (:id,:year)");
@@ -386,16 +375,6 @@ class UserRepository
         return $stmt->rowCount() > 0;
     }
 
-    public function isEmailVerified(int $userId): bool
-    {
-        $stmt = $this->pdo->prepare(
-            'SELECT email_verified_at FROM users WHERE id = :id'
-        );
-        $stmt->execute(['id' => $userId]);
-        $row = $stmt->fetch();
-        return $row !== false && $row['email_verified_at'] !== null;
-    }
-
     public function isTeacherSpecialized(int $id): bool
     {
         $query = $this->pdo->prepare(
@@ -464,6 +443,38 @@ class UserRepository
         }
     }
 
+    /**
+     * Lists every department administrator with their department and site,
+     * for the super admin management panel. Ordered active first, then by name.
+     *
+     * @return list<array{id:int, email:string, first_name:?string, last_name:?string, is_active:bool, department_name:?string, place_name:?string}>
+     */
+    public function listDepartmentAdmins(): array
+    {
+        $stmt = $this->pdo->query(
+            'SELECT u.id, u.email, u.first_name, u.last_name, u.is_active,
+                    d.name AS department_name, p.name AS place_name
+             FROM department_administrators da
+             JOIN users u ON u.id = da.id
+             LEFT JOIN departments d ON d.id = u.department_id
+             LEFT JOIN places p ON p.id = d.place_id
+             ORDER BY u.is_active DESC, u.last_name, u.first_name'
+        );
+
+        return array_map(
+            static fn (array $row): array => [
+                'id'              => (int) $row['id'],
+                'email'           => (string) $row['email'],
+                'first_name'      => $row['first_name'] !== null ? (string) $row['first_name'] : null,
+                'last_name'       => $row['last_name'] !== null ? (string) $row['last_name'] : null,
+                'is_active'       => (bool) $row['is_active'],
+                'department_name' => $row['department_name'] !== null ? (string) $row['department_name'] : null,
+                'place_name'      => $row['place_name'] !== null ? (string) $row['place_name'] : null,
+            ],
+            $stmt->fetchAll()
+        );
+    }
+
     public function updateResearchOpposition(int $userId, bool $opposed): void
     {
         $stmt = $this->pdo->prepare(
@@ -476,5 +487,78 @@ class UserRepository
         $stmt->bindValue('id', $userId, PDO::PARAM_INT);
 
         $stmt->execute();
+    }
+
+    /**
+     * Hard-deletes a department admin user. The department_administrators row
+     * is removed automatically. Returns the number of deleted users rows
+     */
+    public function deleteAdmin(int $adminId): int
+    {
+        $stmt = $this->pdo->prepare('DELETE FROM users WHERE id = :id');
+        $stmt->execute(['id' => $adminId]);
+
+        return $stmt->rowCount();
+    }
+
+    public function updatePassword(int $id, string $password): bool
+    {
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        
+        $query = $this->pdo->prepare(
+            'UPDATE users SET password_hash = :password WHERE id = :id'
+        );
+
+        return $query->execute([
+            'password' => $hash,
+            'id'       => $id
+        ]);
+    }
+
+    public function updateFirstName(int $id, string $firstName): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE users SET first_name = :first_name WHERE id = :id'
+        );
+
+        return $query->execute([
+            'first_name' => $firstName,
+            'id'         => $id
+        ]);
+    }
+
+    public function updateLastName(int $id, string $lastName): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE users SET last_name = :last_name WHERE id = :id'
+        );
+
+        return $query->execute([
+            'last_name' => $lastName,
+            'id'        => $id
+        ]);
+    }
+
+    public function updateEmail(int $id, string $email): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE users SET email = :email WHERE id = :id'
+        );
+
+        return $query->execute([
+            'email' => $email,
+            'id'    => $id
+        ]);
+    }
+    public function updateTitle(int $id, string $title): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE teachers SET title = :title WHERE id = :id'
+        );
+
+        return $query->execute([
+            'title' => $title,
+            'id'    => $id
+        ]);
     }
 }
