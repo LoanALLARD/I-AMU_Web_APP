@@ -6,6 +6,7 @@ namespace Controllers;
 
 use Core\Controller;
 use Data\Database;
+use Exception;
 use Services\EmailDomainService;
 use Services\PlaceService;
 use Models\SuperAdministratorRepository;
@@ -36,8 +37,8 @@ class SuperAdminController extends Controller
         );
     }
 
-    public function showSetting(){
-
+    public function showSetting(): void
+    {
         $this->renderPanel(
             'pages/superadmin/settings',
             'Administrateurs de departement',
@@ -48,8 +49,8 @@ class SuperAdminController extends Controller
         );
     }
 
-    public function updateInfo(){
-
+    public function updateInfo(): void
+    {
         $admin = $this->currentSuperAdmin();
 
         $first_name          = $this->input('first_name', null);
