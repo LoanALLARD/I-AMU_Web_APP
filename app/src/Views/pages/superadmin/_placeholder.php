@@ -5,5 +5,5 @@
     <span class="page-placeholder-icon"><?= icon($pageIcon ?? 'clock', '', 30) ?></span>
     <h2><?= htmlspecialchars($pageTitle ?? '') ?></h2>
     <p><?= htmlspecialchars($pageLead ?? '') ?></p>
-    <span class="badge-soon"><?= icon('clock', '', 14) ?> A venir</span>
+    <span class="badge-soon"><?= icon('clock', '', 14) ?> À venir</span>
 </div>

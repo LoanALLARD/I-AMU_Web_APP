@@ -192,7 +192,7 @@ $stateLabels = [
                         <th>Code</th>
                         <th>Nom</th>
                         <th>Semestre</th>
-                        <th>Etat</th>
+                        <th>État</th>
                         <th></th>
                     </tr>
                 </thead>

@@ -63,7 +63,7 @@ final class PlaceService
             return ['success' => false, 'error' => 'Le nom du site est requis.'];
         }
         if (mb_strlen($name) > 255) {
-            return ['success' => false, 'error' => 'Le nom du site est trop long (255 caracteres max).'];
+            return ['success' => false, 'error' => 'Le nom du site est trop long (255 caractères max).'];
         }
 
         $this->places->addPlace(
@@ -88,7 +88,7 @@ final class PlaceService
             return ['success' => false, 'error' => 'Site introuvable.'];
         }
         if ($this->places->countDepartmentsOfPlace($id) > 0) {
-            return ['success' => false, 'error' => 'Ce site possede des departements : supprimez-les ou desactivez-les d\'abord.'];
+            return ['success' => false, 'error' => 'Ce site possède des départements : supprimez-les ou désactivez-les d\'abord.'];
         }
 
         $this->places->deletePlace($id);
@@ -109,13 +109,13 @@ final class PlaceService
             return ['success' => false, 'error' => 'Site introuvable.'];
         }
         if ($name === '') {
-            return ['success' => false, 'error' => 'Le nom du departement est requis.'];
+            return ['success' => false, 'error' => 'Le nom du département est requis.'];
         }
         if (mb_strlen($name) > 50) {
-            return ['success' => false, 'error' => 'Le nom du departement est trop long (50 caracteres max).'];
+            return ['success' => false, 'error' => 'Le nom du département est trop long (50 caractères max).'];
         }
         if ($this->places->departmentNameExistsInPlace($placeId, $name)) {
-            return ['success' => false, 'error' => 'Un departement de ce nom existe deja sur ce site.'];
+            return ['success' => false, 'error' => 'Un département de ce nom existe déjà sur ce site.'];
         }
 
         $this->places->addDepartment($placeId, $name, $this->nullIfBlank($description));
@@ -131,7 +131,7 @@ final class PlaceService
     public function setDepartmentActive(int $id, bool $isActive): array
     {
         if (!$this->places->departmentExists($id)) {
-            return ['success' => false, 'error' => 'Departement introuvable.'];
+            return ['success' => false, 'error' => 'Département introuvable.'];
         }
 
         $this->places->setDepartmentActive($id, $isActive);
@@ -159,7 +159,7 @@ final class PlaceService
 
         $displayName = trim($displayName);
         if (mb_strlen($displayName) > 255) {
-            return ['success' => false, 'error' => 'Le nom affiche est trop long (255 caracteres max).'];
+            return ['success' => false, 'error' => 'Le nom affiché est trop long (255 caractères max).'];
         }
 
         $color = $this->normalizeColor($primaryColor);

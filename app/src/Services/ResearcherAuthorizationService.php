@@ -18,10 +18,13 @@ final class ResearcherAuthorizationService
     private ResearcherAuthorizationRepository $repo;
     private PlaceRepository $places;
 
-    public function __construct(PDO $pdo)
-    {
-        $this->repo   = new ResearcherAuthorizationRepository($pdo);
-        $this->places = new PlaceRepository($pdo);
+    public function __construct(
+        PDO $pdo,
+        ?ResearcherAuthorizationRepository $repo = null,
+        ?PlaceRepository $places = null
+    ) {
+        $this->repo   = $repo ?? new ResearcherAuthorizationRepository($pdo);
+        $this->places = $places ?? new PlaceRepository($pdo);
     }
 
     /**

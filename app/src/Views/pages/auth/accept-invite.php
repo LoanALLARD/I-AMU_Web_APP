@@ -5,7 +5,7 @@
     <div class="register-card auth-card-login">
         <div class="card-header">
             <h1>Activer mon compte</h1>
-            <p>Administrateur de departement</p>
+            <p>Administrateur de département</p>
         </div>
         <div class="accent-bar"></div>
         <div class="card-body">
