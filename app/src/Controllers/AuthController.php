@@ -203,7 +203,11 @@ class AuthController extends Controller
         $data    = $service->verifyToken($token);
 
         if ($data === null) {
-            $this->flash('error', 'Lien invalide ou expiré.');
+            $this->flash('success', 'Compte administrateur créé. Vous pouvez vous connecter.');
+
+            if (($data['role'] ?? '') === \Services\AdminInviteService::ROLE_SUPER_ADMIN) {
+                $this->redirect('/super-admin/login');
+            }
             $this->redirect('/login');
         }
 
