@@ -59,8 +59,21 @@ class ResourceRepository
      */
     public function findAllByOwner(int $teacherId): array
     {
-        $stmt = $this->pdo->prepare('SELECT id,department_id, owner_id, code, name, description, semester, state FROM resources r JOIN teacher_resources t ON r.id = t.resource_id WHERE teacher_id = :tid ORDER BY code'); 
-        $stmt->execute(['tid' => $teacherId]);
+        // A teacher can attach a session to a resource they OWN or are a
+        // responsible teacher of (teacher_resources) — same rule as
+        // isAccessibleByTeacher(). The previous query only matched the shared
+        // ones (the JOIN), so owners with no teacher_resources row got nothing.
+        $stmt = $this->pdo->prepare(
+            'SELECT r.id, r.department_id, r.owner_id, r.code, r.name, r.description, r.semester, r.state
+               FROM resources r
+              WHERE r.owner_id = :tid1
+                 OR EXISTS (
+                     SELECT 1 FROM teacher_resources tr
+                      WHERE tr.resource_id = r.id AND tr.teacher_id = :tid2
+                 )
+              ORDER BY r.code'
+        );
+        $stmt->execute(['tid1' => $teacherId, 'tid2' => $teacherId]);
 
         /** @var list<array<string, mixed>> $rows */
         $rows = $stmt->fetchAll();
