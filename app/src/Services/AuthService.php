@@ -183,7 +183,7 @@ final class AuthService
             $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
             $host   = $_SERVER['HTTP_HOST'] ?? 'localhost:8085';
             $link   = $scheme . '://' . $host
-                . '/admin-invite/accept?token=' . urlencode($token);
+                 . '/verify-email?token=' . urlencode($token);
 
             $mail = new MailService();
             $mail->send(
