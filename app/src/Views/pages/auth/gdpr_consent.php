@@ -1,28 +1,28 @@
-<div class="rgpd-page">
+<div class="gdpr-page">
 
-    <div class="rgpd-header">
+    <div class="gdpr-header">
         <div>
-            <span class="rgpd-label">I-AMU · Protection des données</span>
-            <h1 class="rgpd-title">Mentions d'information<br>sur le traitement des données</h1>
+            <span class="gdpr-label">I-AMU · Protection des données</span>
+            <h1 class="gdpr-title">Mentions d'information<br>sur le traitement des données</h1>
         </div>
-        <div class="rgpd-meta">
+        <div class="gdpr-meta">
             Conformément au RGPD<br>
             Règlement (UE) 2016/679<br>
             <?= date('d/m/Y') ?>
         </div>
     </div>
 
-    <div class="rgpd-intro">
+    <div class="gdpr-intro">
         Les informations recueillies lors de votre inscription sont enregistrées et traitées par
         <strong>Aix-Marseille Université</strong> dans le cadre d'une recherche scientifique
         visant à étudier l'impact de l'intelligence artificielle générative sur les trajectoires
         d'apprentissage des étudiants.
     </div>
 
-    <div class="rgpd-section">
-        <span class="rgpd-section-num">Article 01</span>
+    <div class="gdpr-section">
+        <span class="gdpr-section-num">Article 01</span>
         <h2>Responsable du traitement</h2>
-        <table class="rgpd-table">
+        <table class="gdpr-table">
             <tr>
                 <td>Organisme</td>
                 <td>Aix-Marseille Université (AMU)</td>
@@ -43,11 +43,11 @@
         </table>
     </div>
 
-    <div class="rgpd-section">
-        <span class="rgpd-section-num">Article 02</span>
+    <div class="gdpr-section">
+        <span class="gdpr-section-num">Article 02</span>
         <h2>Finalités et base légale du traitement</h2>
         <p>Vos données sont collectées pour les finalités suivantes :</p>
-        <table class="rgpd-table">
+        <table class="gdpr-table">
             <thead>
             <tr>
                 <th>Finalité</th>
@@ -75,10 +75,10 @@
         </table>
     </div>
 
-    <div class="rgpd-section">
-        <span class="rgpd-section-num">Article 03</span>
+    <div class="gdpr-section">
+        <span class="gdpr-section-num">Article 03</span>
         <h2>Données collectées</h2>
-        <table class="rgpd-table">
+        <table class="gdpr-table">
             <thead>
             <tr>
                 <th>Catégorie</th>
@@ -105,7 +105,7 @@
             </tbody>
         </table>
 
-        <div class="rgpd-warning" style="margin-top:1rem;">
+        <div class="gdpr-warning" style="margin-top:1rem;">
             <span class="warn-icon">⚠</span>
             <div>
                 <strong>Absence d'anonymisation</strong> — La plateforme I-AMU ne procède à aucune
@@ -115,10 +115,10 @@
         </div>
     </div>
 
-    <div class="rgpd-section">
-        <span class="rgpd-section-num">Article 04</span>
+    <div class="gdpr-section">
+        <span class="gdpr-section-num">Article 04</span>
         <h2>Destinataires des données</h2>
-        <table class="rgpd-table">
+        <table class="gdpr-table">
             <tr>
                 <td>Enseignants</td>
                 <td>Accès aux prompts de leurs étudiants dans le cadre de leurs cours et examens uniquement</td>
@@ -128,7 +128,7 @@
                 <td>Accès à l'ensemble des données à des fins d'analyse scientifique, après autorisation d'un administrateur</td>
             </tr>
             <tr>
-                <td>Administrateurs</td>
+                <td>Administrateur de département</td>
                 <td>Accès technique à des fins de maintenance et de gestion des rôles</td>
             </tr>
             <tr>
@@ -138,66 +138,58 @@
         </table>
     </div>
 
-    <div class="rgpd-section">
-        <span class="rgpd-section-num">Article 05</span>
+    <div class="gdpr-section">
+        <span class="gdpr-section-num">Article 05</span>
         <h2>Durée de conservation</h2>
-        <table class="rgpd-table">
+        <table class="gdpr-table">
             <tr>
                 <td>Données de compte</td>
                 <td>Durée du cursus universitaire + 1 an, ou jusqu'à suppression du compte</td>
             </tr>
             <tr>
-                <td>Historique des conversations</td>
-                <td>Paramétrable par l'utilisateur dans son espace personnel (par défaut : 3 ans)</td>
-            </tr>
-            <tr>
                 <td>Données de recherche</td>
                 <td>Jusqu'à la dernière publication scientifique associée au projet (date projetée communiquée par le responsable de traitement)</td>
-            </tr>
-            <tr>
-                <td>Journaux techniques</td>
-                <td>6 mois glissants</td>
             </tr>
         </table>
     </div>
 
-    <div class="rgpd-section">
-        <span class="rgpd-section-num">Article 06</span>
+    <div class="gdpr-section">
+        <span class="gdpr-section-num">Article 06</span>
         <h2>Vos droits</h2>
         <p>Conformément au RGPD, vous disposez des droits suivants sur vos données personnelles :</p>
 
-        <div class="rgpd-rights">
-            <div class="rgpd-right-card">
+        <div class="gdpr-rights">
+            <div class="gdpr-right-card">
                 <strong>Droit d'accès</strong>
                 <p>Obtenir une copie des données vous concernant détenues par la plateforme.</p>
             </div>
-            <div class="rgpd-right-card">
+            <div class="gdpr-right-card">
                 <strong>Droit de rectification</strong>
                 <p>Faire corriger des données inexactes ou incomplètes vous concernant.</p>
             </div>
-            <div class="rgpd-right-card">
+            <div class="gdpr-right-card">
                 <strong>Droit à l'effacement</strong>
                 <p>Demander la suppression de vos données (sous réserve des finalités de recherche).</p>
             </div>
-            <div class="rgpd-right-card">
+            <div class="gdpr-right-card">
                 <strong>Droit à la limitation</strong>
                 <p>Geler temporairement l'utilisation de certaines de vos données.</p>
             </div>
-            <div class="rgpd-right-card">
+            <div class="gdpr-right-card">
                 <strong>Droit d'opposition</strong>
                 <p>Vous opposer à l'utilisation de vos données pour un traitement précis.</p>
             </div>
-            <div class="rgpd-right-card">
+            <div class="gdpr-right-card">
                 <strong>Retrait du consentement</strong>
                 <p>Retirer votre consentement à tout moment depuis les paramètres de votre compte.</p>
             </div>
-            <div class="rgpd-right-card">
+            <div class="gdpr-right-card">
                 <strong>Portabilité</strong>
                 <p>Recevoir vos données dans un format structuré et lisible par machine.</p>
             </div>
         </div>
 
-        <div class="rgpd-warning" style="margin-top:1.25rem;">
+        <div class="gdpr-warning" style="margin-top:1.25rem;">
             <span class="warn-icon">ℹ</span>
             <div>
                 Certains de ces droits peuvent faire l'objet de restrictions si leur exercice risque
@@ -207,11 +199,11 @@
         </div>
     </div>
 
-    <div class="rgpd-section">
-        <span class="rgpd-section-num">Article 07</span>
+    <div class="gdpr-section">
+        <span class="gdpr-section-num">Article 07</span>
         <h2>Exercer vos droits &amp; réclamation</h2>
 
-        <div class="rgpd-contact">
+        <div class="gdpr-contact">
             <strong>Délégué à la Protection des Données (DPO)</strong>
             Aix-Marseille Université<br>
             58 Boulevard Charles Livon — 13284 Marseille Cedex 07<br>
@@ -222,7 +214,7 @@
             Si vous estimez, après nous avoir contactés, que vos droits ne sont pas respectés,
             vous pouvez déposer une <strong>réclamation auprès de la CNIL</strong> :
         </p>
-        <div class="rgpd-contact">
+        <div class="gdpr-contact">
             <strong>Commission Nationale de l'Informatique et des Libertés</strong>
             3 Place de Fontenoy — TSA 80715 — 75334 Paris Cedex 07<br>
             <a href="https://www.cnil.fr" target="_blank" rel="noopener">www.cnil.fr</a>
@@ -231,10 +223,10 @@
         </div>
     </div>
 
-    <div class="rgpd-footer">
+    <div class="gdpr-footer">
         <p>I-AMU · IUT Informatique · Aix-Marseille Université<br>
             Document établi conformément au RGPD (UE) 2016/679 et à la loi Informatique et Libertés</p>
-        <a href="/register">← Retour à l'inscription</a>
+        <a href="/chat">← Retour à l'accueil</a>
     </div>
 
 </div>

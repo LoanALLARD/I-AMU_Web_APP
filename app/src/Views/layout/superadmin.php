@@ -15,11 +15,16 @@
     <link rel="stylesheet" href="/assets/css/style.css?v=<?= $cssVer('style.css') ?>">
     <link rel="stylesheet" href="/assets/css/auth.css?v=<?= $cssVer('auth.css') ?>">
     <link rel="stylesheet" href="/assets/css/superadmin.css?v=<?= $cssVer('superadmin.css') ?>">
+    <link rel="stylesheet" href="/assets/css/setting.css?v=<?= $cssVer('setting.css') ?>">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
-<body class="auth-body superadmin-body<?= !empty($bodyClass) ? ' ' . htmlspecialchars($bodyClass) : '' ?>">
+<body class="superadmin-body<?= !empty($bodyClass) ? ' ' . htmlspecialchars($bodyClass) : '' ?>">
+<?php if (($bodyClass ?? '') === 'superadmin-body--full'): ?>
+    <?= $content ?>
+<?php else: ?>
     <main>
         <?= $content ?>
     </main>
+<?php endif; ?>
 </body>
 </html>

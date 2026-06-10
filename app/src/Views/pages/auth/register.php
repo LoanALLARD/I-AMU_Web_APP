@@ -36,10 +36,15 @@
             </div>
 
             <div class="form-group">
-                <label for="email">Adresse e-mail</label>
+                <label for="email">Adresse e-mail *</label>
                 <input type="email" id="email" name="email"
                        value="<?= htmlspecialchars($data['email'] ?? '') ?>"
-                       placeholder="prenom.nom@exemple.fr" required>
+                       placeholder="prenom.nom@etu.univ-amu.fr" required>
+            </div>
+
+            <div class="form-group promo-collapse" id="promo-container">
+                <label for="promo_year" class="form-label">Année de promotion *</label>
+                <input type="number" id="promo_year" name="promo_year" placeholder="YYYY" min="2022">
             </div>
 
             <div class="form-group">
@@ -54,11 +59,11 @@
                        placeholder="Répétez votre mot de passe" required>
             </div>
 
-            <div class="rgpd-group">
+            <div class="gdpr-group promo-collapse" id="research-container">
                 <input type="checkbox" id="is_researcher" name="is_researcher" value="1"
                        <?= !empty($data['is_researcher']) ? 'checked' : '' ?>>
-                <label for="is_researcher" class="rgpd-label">
-                    Je suis un chercheur (mon laboratoire est déduit de mon adresse e-mail).
+                <label for="is_researcher" class="gdpr-label">
+                    Je suis un chercheur.
                 </label>
             </div>
 
@@ -84,12 +89,19 @@
                 </div>
             </div>
 
-            <div class="rgpd-group">
-                <input type="checkbox" id="rgpd_consent" name="rgpd_consent" value="1" required>
-                <label for="rgpd_consent" class="rgpd-label">
-                    J'accepte le traitement de mes données personnelles dans le cadre
-                    de la recherche scientifique sur l'usage de l'IA.
-                    <a href="/rgpd_consent" target="_blank">En savoir plus</a>
+            <div class="gdpr-group">
+                <input type="checkbox" id="gdpr_consent" name="gdpr_consent" value="1" required>
+                <label for="gdpr_consent" class="gdpr-label">
+                    <span id="consent-text-member">
+                        J'accepte le traitement de mes données personnelles dans le cadre
+                        de la recherche scientifique sur l'usage de l'IA.
+                        <a href="/gdpr_consent" target="_blank">En savoir plus</a>
+                    </span>
+                    <span id="consent-text-researcher" hidden>
+                        En tant que chercheur, je m'engage à respecter les conditions d'accès
+                        et de traitement des données de la plateforme I-AMU.
+                        <a href="/gdpr_consent_researcher" target="_blank">En savoir plus</a>
+                    </span>
                 </label>
             </div>
 

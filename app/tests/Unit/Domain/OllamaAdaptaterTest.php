@@ -49,7 +49,7 @@ final class OllamaAdaptaterTest extends TestCase
     {
         // @runInSeparateProcess est obligatoire ici pour éviter l'erreur "headers already sent"
         // causée par la fonction header() dans formatMetadata.
-        
+
         $response = new \stdClass();
         $response->context = [1, 2, 3];
         $response->total_duration = 50000;
@@ -63,7 +63,7 @@ final class OllamaAdaptaterTest extends TestCase
             'total_duration' => 50000,
             'done_reason' => 'stop'
         ]);
-        
+
         $expectedResult = json_encode($expectedContext);
 
         self::assertSame($expectedResult, $result);
@@ -88,7 +88,7 @@ final class OllamaAdaptaterTest extends TestCase
         self::assertSame([128006, 9125], $payloadData['context']);
         self::assertSame('Tu es un assistant utile.', $payloadData['system']);
         self::assertFalse($payloadData['stream']);
-        
+
         // Vérification de la concaténation du message avec le posprompt
         self::assertSame("Bonjour, comment ça va ? (Réponds en français)", $payloadData['prompt']);
     }

@@ -8,6 +8,8 @@ use Core\Controller;
 use Data\Database;
 use Models\UserRepository;
 use Services\AuthService;
+use Services\TeacherSpecialisationService;
+use Services\UserStatsService;
 
 /**
  * Profile page (account info). Routed from `/profile`, renders inside the
@@ -28,12 +30,49 @@ class ProfileController extends Controller
     {
         $this->requireAuth();
 
+        $user = $this->currentUser();
+        $roles = $user['roles'] ?? [];
+        $isTeacher = in_array('teacher', $roles, true);
+        // Only teachers and students use the LLM, so only they get usage stats.
+        $usesLlm = $isTeacher || in_array('student', $roles, true);
+
         $this->render('pages/profile/index', [
-            'user'      => $this->currentUser(),
-            'page'      => 'profile',
-            'pageTitle' => 'Mon profil',
-            'title'     => 'Mon profil',
+            'user'              => $user,
+            'page'              => 'profile',
+            'pageTitle'         => 'Mon profil',
+            'title'             => 'Mon profil',
+            'specRequestStatus' => $isTeacher
+                ? (new TeacherSpecialisationService(Database::getConnection()))
+                    ->requestStatus((int) $user['id'])
+                : 'none',
+            'stats'             => $usesLlm
+                ? (new UserStatsService(Database::getConnection()))
+                    ->personal((int) $user['id'])
+                : null,
         ], 'chat');
+    }
+
+    /**
+     * POST /profile/request-specialisation — a teacher asks to be habilitated.
+     */
+    public function requestSpecialisation(): void
+    {
+        $this->requireAuth();
+        $this->verifyCsrf();
+        $user = $this->currentUser();
+
+        if (!in_array('teacher', $user['roles'] ?? [], true)) {
+            $this->renderForbidden();
+        }
+
+        $result = (new TeacherSpecialisationService(Database::getConnection()))
+            ->requestSpecialisation((int) $user['id'], (string) $this->input('request', ''));
+
+        $this->flash(
+            $result['success'] ? 'success' : 'error',
+            $result['success'] ? 'Demande d\'habilitation envoyée.' : $result['error']
+        );
+        $this->redirect('/profile');
     }
     public function deactivate(): void
     {
@@ -126,6 +165,21 @@ class ProfileController extends Controller
         $_SESSION['user_theme'] = $theme;
 
         $this->flash('success', 'Thème mis à jour.');
+        $this->redirect('/profile');
+    }
+
+    public function updateResearchOpposition(): void
+    {
+        $this->requireAuth();
+        $this->verifyCsrf();
+
+        $user = $this->currentUser();
+
+        $opposed = true;
+
+        (new UserRepository(Database::getConnection()))->updateResearchOpposition((int) $user['id'], $opposed);
+
+        $this->flash('success', 'Préférence de recherche mise à jour.');
         $this->redirect('/profile');
     }
 }

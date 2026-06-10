@@ -360,6 +360,7 @@ label {
 /* Sub-navigation tabs (local to a role space, under the page header) */
 .tabs {
     display: flex;
+    justify-content: center;
     gap: 4px;
     margin: 0 0 1.5rem;
     border-bottom: 1px solid var(--gray-200);

@@ -34,6 +34,7 @@ class Session
         private ?string $instructions,
         private ?int $maxInputSize,
         private ?int $maxTokens = null,
+        private ?int $documentsMaxBytes = null,
     ) {
     }
 
@@ -66,6 +67,7 @@ class Session
             instructions:       isset($row['instructions']) && $row['instructions'] !== null ? (string) $row['instructions'] : null,
             maxInputSize:       isset($row['max_input_size']) && $row['max_input_size'] !== null ? (int) $row['max_input_size'] : null,
             maxTokens:          isset($row['max_tokens']) && $row['max_tokens'] !== null ? (int) $row['max_tokens'] : null,
+            documentsMaxBytes:  isset($row['documents_max_bytes']) && $row['documents_max_bytes'] !== null ? (int) $row['documents_max_bytes'] : null,
         );
     }
 
@@ -90,6 +92,7 @@ class Session
             'instructions'         => $this->instructions,
             'max_input_size'       => $this->maxInputSize,
             'max_tokens'           => $this->maxTokens,
+            'documents_max_bytes'      => $this->documentsMaxBytes,
         ];
     }
 
@@ -113,6 +116,7 @@ class Session
     public function instructions(): ?string { return $this->instructions; }
     public function maxInputSize(): ?int { return $this->maxInputSize; }
     public function maxTokens(): ?int { return $this->maxTokens; }
+    public function documentsMaxBytes(): ?int { return $this->documentsMaxBytes; }
 
     public function assignId(int $id): void
     {
@@ -153,8 +157,15 @@ class Session
         $this->status   = $startsAt === null ? SessionStatus::Draft : SessionStatus::Scheduled;
     }
 
-    public function reconfigure(?string $prePrompt, ?string $postPrompt, ?string $instructions, ?int $maxTokens, ?int $maxInputSize, DateTimeImmutable $now): void
-    {
+    public function reconfigure(
+        ?string $prePrompt,
+        ?string $postPrompt,
+        ?string $instructions,
+        ?int $maxTokens,
+        ?int $maxInputSize,
+        DateTimeImmutable $now,
+        ?int $documentsMaxBytes = null
+    ): void {
         $this->guardEditable($now);
         if ($maxInputSize !== null && $maxInputSize <= 0) {
             throw new InvalidArgumentException('La limite par prompt doit être positive.');
@@ -162,11 +173,15 @@ class Session
         if ($maxTokens !== null && $maxTokens <= 0) {
             throw new InvalidArgumentException('La limite de requêtes doit être positive.');
         }
-        $this->prePromptOverride  = $prePrompt;
-        $this->postPromptOverride = $postPrompt;
-        $this->instructions       = $instructions;
-        $this->maxInputSize       = $maxInputSize;
-        $this->maxTokens          = $maxTokens;
+        if ($documentsMaxBytes !== null && ($documentsMaxBytes <= 0 || $documentsMaxBytes > 10 * 1024 * 1024)) {
+            throw new InvalidArgumentException('La taille max des documents doit être comprise entre 1 octet et 10 Mo.');
+        }
+        $this->prePromptOverride     = $prePrompt;
+        $this->postPromptOverride    = $postPrompt;
+        $this->instructions          = $instructions;
+        $this->maxInputSize          = $maxInputSize;
+        $this->maxTokens             = $maxTokens;
+        $this->documentsMaxBytes     = $documentsMaxBytes;
     }
 
     // ----------------------------------------------------------------

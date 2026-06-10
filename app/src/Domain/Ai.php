@@ -121,4 +121,12 @@ class Ai {
     public function setFormatRequest(string $formatRequest): void
     {
     }
+    /**
+     * @param array<int, int> $context
+     * @param callable(string): void $onChunk
+     * @return array{response: string, context: list<int>, prompt_eval_count: ?int, eval_count: ?int}
+     */
+    public function askStream(string $message, array $context, ?string $postprompt, ?string $preprompt, callable $onChunk): array {
+        return $this->adaptater->generateStream($message, $context, $postprompt, $preprompt, $onChunk);
+    }
 }

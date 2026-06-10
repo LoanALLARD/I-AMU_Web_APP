@@ -17,7 +17,8 @@ class SessionRepository
     private const SELECT =
         'SELECT s.id, s.resource_id, r.owner_id AS teacher_id, s.name, s.type, s.status,
                 s.access_code, s.starts_at, s.ends_at, s.closed_at, s.pre_prompt_override,
-                s.post_prompt_override, s.instructions, s.max_input_size, s.max_tokens 
+                s.post_prompt_override, s.instructions, s.max_input_size, s.max_tokens,
+                s.documents_max_bytes
            FROM sessions s
            JOIN resources r ON r.id = s.resource_id';
 
@@ -100,10 +101,12 @@ class SessionRepository
         $stmt = $this->pdo->prepare(
             'INSERT INTO sessions
                 (resource_id, name, type, status, starts_at, ends_at, closed_at,
-                 pre_prompt_override, post_prompt_override, instructions, max_input_size, max_tokens)
+                 pre_prompt_override, post_prompt_override, instructions, max_input_size, max_tokens,
+                 documents_max_bytes)
              VALUES
                 (:resource_id, :name, :type, :status, :starts_at, :ends_at, :closed_at,
-                 :pre_prompt_override, :post_prompt_override, :instructions, :max_input_size,:max_tokens)
+                 :pre_prompt_override, :post_prompt_override, :instructions, :max_input_size, :max_tokens,
+                 :documents_max_bytes)
              RETURNING id, access_code'
         );
         $stmt->execute([
@@ -119,6 +122,7 @@ class SessionRepository
             'instructions'         => $data['instructions'],
             'max_input_size'       => $data['max_input_size'],
             'max_tokens'          => $data['max_tokens'],
+            'documents_max_bytes'     => $data['documents_max_bytes'],
         ]);
 
         /** @var array{id: int|string, access_code: ?string} $row */
@@ -142,7 +146,8 @@ class SessionRepository
                 name = :name, status = :status, starts_at = :starts_at, ends_at = :ends_at,
                 closed_at = :closed_at, pre_prompt_override = :pre_prompt_override,
                 post_prompt_override = :post_prompt_override, instructions = :instructions,
-                max_input_size = :max_input_size, max_tokens = :max_tokens
+                max_input_size = :max_input_size, max_tokens = :max_tokens,
+                documents_max_bytes = :documents_max_bytes
              WHERE id = :id'
         );
         $stmt->execute([
@@ -157,6 +162,7 @@ class SessionRepository
             'instructions'         => $data['instructions'],
             'max_input_size'       => $data['max_input_size'],
             'max_tokens'           => $data['max_tokens'],
+            'documents_max_bytes'     => $data['documents_max_bytes'],
         ]);
     }
 
@@ -195,6 +201,72 @@ class SessionRepository
             $this->pdo->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Names of the file formats a session authorises for student document
+     * imports. An empty list means imports are disabled for that session.
+     *
+     * @return list<string>
+     */
+    public function authorizedFormatsOf(int $sessionId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT ff.name
+               FROM session_file_formats sff
+               JOIN file_formats ff ON ff.id = sff.file_format_id
+              WHERE sff.session_id = :sid
+              ORDER BY ff.id'
+        );
+        $stmt->execute(['sid' => $sessionId]);
+
+        /** @var list<string> $names */
+        $names = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        return $names;
+    }
+
+    /**
+     * Replaces the whole authorised-format set in one transaction. Unknown
+     * names are ignored; an empty set disables imports for the session.
+     *
+     * @param list<string> $formatNames
+     */
+    public function setAuthorizedFormats(int $sessionId, array $formatNames): void
+    {
+        $unique = array_values(array_unique(array_map('strval', $formatNames)));
+
+        $this->pdo->beginTransaction();
+        try {
+            $delete = $this->pdo->prepare('DELETE FROM session_file_formats WHERE session_id = :sid');
+            $delete->execute(['sid' => $sessionId]);
+
+            $insert = $this->pdo->prepare(
+                'INSERT INTO session_file_formats (session_id, file_format_id)
+                 SELECT :sid, id FROM file_formats WHERE name = :name'
+            );
+            foreach ($unique as $name) {
+                $insert->execute(['sid' => $sessionId, 'name' => $name]);
+            }
+
+            $this->pdo->commit();
+        } catch (Throwable $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Every file format name the platform knows, for the session form.
+     *
+     * @return list<string>
+     */
+    public function listAllFileFormats(): array
+    {
+        /** @var list<string> $names */
+        $names = $this->pdo->query('SELECT name FROM file_formats ORDER BY id')->fetchAll(PDO::FETCH_COLUMN);
+
+        return $names;
     }
 
     /**
@@ -280,7 +352,7 @@ class SessionRepository
      * with no interaction, still appear (LEFT JOINs). The caller nests the rows
      * into students -> conversations -> interactions.
      *
-     * No anonymisation (per the project's RGPD stance) — identity is included.
+     * No anonymisation (per the project's GDPR stance) — identity is included.
      *
      * @return list<array<string, mixed>>
      */
@@ -372,7 +444,7 @@ class SessionRepository
     }
 
     /**
-     * Retrun the value of preprompt in the table Session in the DB.
+     * Return the value of preprompt in the table Session in the DB.
      * 
      * @return array<string, mixed>
      */
@@ -400,5 +472,108 @@ class SessionRepository
         );
         $stmt->execute(['uid' => $studentId, 'sid' => $sessionId]);
         return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Aggregate statistics for a session: overview KPIs, per-student activity
+     * (enrolled students with no activity included), prompts-per-hour, feedback
+     * distribution and per-model usage. Raw numbers — the Service derives rates,
+     * percentages and chart scales.
+     *
+     * @return array{
+     *   overview: array<string, mixed>,
+     *   perStudent: list<array<string, mixed>>,
+     *   activityByHour: list<array<string, mixed>>,
+     *   feedback: list<array<string, mixed>>,
+     *   byModel: list<array<string, mixed>>
+     * }
+     */
+    public function statsForSession(int $sessionId): array
+    {
+        $overviewStmt = $this->pdo->prepare(
+            'SELECT
+                (SELECT COUNT(*) FROM enrollments WHERE session_id = :sid) AS enrolled,
+                COUNT(DISTINCT c.user_id) FILTER (WHERE i.id IS NOT NULL) AS active_participants,
+                COUNT(i.id) AS prompts,
+                COALESCE(SUM(i.input_tokens), 0)  AS input_tokens,
+                COALESCE(SUM(i.output_tokens), 0) AS output_tokens,
+                COALESCE(ROUND(AVG(i.latency)), 0) AS avg_latency,
+                COALESCE(ROUND(percentile_cont(0.5) WITHIN GROUP (ORDER BY i.latency)), 0) AS median_latency,
+                COALESCE(ROUND(AVG(char_length(i.prompt))), 0)   AS avg_prompt_len,
+                COALESCE(ROUND(AVG(char_length(i.response))), 0) AS avg_response_len
+             FROM conversations c
+             LEFT JOIN interactions i ON i.conversation_id = c.id
+             WHERE c.session_id = :sid'
+        );
+        $overviewStmt->execute(['sid' => $sessionId]);
+        /** @var array<string, mixed> $overview */
+        $overview = $overviewStmt->fetch() ?: [];
+
+        $perStudentStmt = $this->pdo->prepare(
+            'SELECT u.id, u.first_name, u.last_name, st.student_number,
+                    COUNT(DISTINCT c.id) AS conversations,
+                    COUNT(i.id) AS prompts,
+                    COALESCE(SUM(i.input_tokens + i.output_tokens), 0) AS tokens,
+                    MAX(i.sent_at) AS last_activity,
+                    COUNT(i.id) FILTER (WHERE i.user_feedback = 1)  AS feedback_up,
+                    COUNT(i.id) FILTER (WHERE i.user_feedback = -1) AS feedback_down
+               FROM enrollments e
+               JOIN users u ON u.id = e.student_id
+               LEFT JOIN students st ON st.id = u.id
+               LEFT JOIN conversations c ON c.user_id = e.student_id AND c.session_id = e.session_id
+               LEFT JOIN interactions i ON i.conversation_id = c.id
+              WHERE e.session_id = :sid
+              GROUP BY u.id, u.first_name, u.last_name, st.student_number
+              ORDER BY prompts DESC, u.last_name, u.first_name'
+        );
+        $perStudentStmt->execute(['sid' => $sessionId]);
+        /** @var list<array<string, mixed>> $perStudent */
+        $perStudent = $perStudentStmt->fetchAll();
+
+        $activityStmt = $this->pdo->prepare(
+            'SELECT date_trunc(\'hour\', i.sent_at) AS bucket, COUNT(*) AS prompts
+               FROM interactions i
+               JOIN conversations c ON c.id = i.conversation_id
+              WHERE c.session_id = :sid
+              GROUP BY bucket
+              ORDER BY bucket'
+        );
+        $activityStmt->execute(['sid' => $sessionId]);
+        /** @var list<array<string, mixed>> $activityByHour */
+        $activityByHour = $activityStmt->fetchAll();
+
+        $feedbackStmt = $this->pdo->prepare(
+            'SELECT i.user_feedback AS feedback, COUNT(*) AS n
+               FROM interactions i
+               JOIN conversations c ON c.id = i.conversation_id
+              WHERE c.session_id = :sid
+              GROUP BY i.user_feedback'
+        );
+        $feedbackStmt->execute(['sid' => $sessionId]);
+        /** @var list<array<string, mixed>> $feedback */
+        $feedback = $feedbackStmt->fetchAll();
+
+        $byModelStmt = $this->pdo->prepare(
+            'SELECT m.name AS model_name,
+                    COUNT(i.id) AS prompts,
+                    COALESCE(SUM(i.input_tokens + i.output_tokens), 0) AS tokens
+               FROM conversations c
+               JOIN models m ON m.id = c.model_id
+               LEFT JOIN interactions i ON i.conversation_id = c.id
+              WHERE c.session_id = :sid
+              GROUP BY m.name
+              ORDER BY prompts DESC'
+        );
+        $byModelStmt->execute(['sid' => $sessionId]);
+        /** @var list<array<string, mixed>> $byModel */
+        $byModel = $byModelStmt->fetchAll();
+
+        return [
+            'overview'       => $overview,
+            'perStudent'     => $perStudent,
+            'activityByHour' => $activityByHour,
+            'feedback'       => $feedback,
+            'byModel'        => $byModel,
+        ];
     }
 }

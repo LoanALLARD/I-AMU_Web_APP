@@ -1,19 +1,3 @@
-/**
- * AJAX submission for admin dashboard actions, so changing a user/researcher
- * state does not reload the page and the current sort is preserved.
- *
- * Any <form data-ajax-action="..."> is intercepted and posted with fetch. The
- * server replies in JSON (success/message + payload). Actions:
- *   - "set-active" : replace the member row with the server-rendered one (new
- *                    status badge + toggled button), then re-apply the sort.
- *   - "move-row"   : move a request/researcher between lists (pending ->
- *                    authorized, authorized <-> revoked); the source element is
- *                    dropped and the server-rendered target element inserted.
- *
- * The server always renders the row markup (icons, CSRF, escaping), so the
- * front never rebuilds it by hand. Without JS the same forms still work: they
- * post normally and the server falls back to a flash + redirect.
- */
 (function () {
     'use strict';
 
@@ -61,26 +45,53 @@
         }
     }
 
+    /** The sortable table holding a key's rows (researcher or generic list), if any. */
+    function listTable(key) {
+        return document.querySelector('[data-researcher-table="' + key + '"]')
+            || document.querySelector('[data-list-table="' + key + '"]');
+    }
+
     /**
-     * Each movable list is one "key". A table key (authorized/revoked) holds
-     * <tr> rows in a sortable table; the "pending" key holds <details> blocks
-     * in a plain container. Returns the container element rows live in.
+     * Each movable list is one "key". A table key holds <tr> rows in a sortable
+     * table; a "pending" key holds <details> blocks in a plain container.
+     * Returns the container element rows live in.
      */
     function listBody(key) {
-        var table = document.querySelector('[data-researcher-table="' + key + '"]');
+        var table = listTable(key);
         if (table) {
             return table.tBodies[0];
         }
-        return document.querySelector('[data-pending-list]'); // the pending key
+        return document.querySelector('[data-pending-list="' + key + '"]'); // a pending key
     }
 
     function countRows(key) {
-        var table = document.querySelector('[data-researcher-table="' + key + '"]');
+        var table = listTable(key);
         if (table) {
             return table.tBodies[0].rows.length;
         }
-        var list = document.querySelector('[data-pending-list]');
+        var list = document.querySelector('[data-pending-list="' + key + '"]');
         return list ? list.querySelectorAll('.admin-pending-row').length : 0;
+    }
+
+    /** Hides a [data-hide-when-empty] block when its list has no rows. */
+    function toggleSectionVisibility(key) {
+        var section = document.querySelector('[data-hide-when-empty="' + key + '"]');
+        if (section) {
+            section.hidden = countRows(key) === 0;
+        }
+    }
+
+    /**
+     * Shows a [data-empty-any="k1 k2"] message only when every listed key is
+     * empty (e.g. the "no requests at all" line spanning both pending lists).
+     */
+    function refreshEmptyAny(key) {
+        var msgs = document.querySelectorAll('[data-empty-any~="' + key + '"]');
+        msgs.forEach(function (msg) {
+            var keys = msg.getAttribute('data-empty-any').split(/\s+/);
+            var allEmpty = keys.every(function (k) { return countRows(k) === 0; });
+            msg.hidden = !allEmpty;
+        });
     }
 
     /** Refreshes the "(n)" count and the empty-state message for a list key. */
@@ -97,8 +108,9 @@
         if (empty) {
             empty.hidden = n !== 0;
         }
-        var table = document.querySelector('[data-researcher-table="' + key + '"]');
-        resortTable(table);
+        toggleSectionVisibility(key);
+        refreshEmptyAny(key);
+        resortTable(listTable(key));
     }
 
     /**
@@ -133,11 +145,39 @@
     function sourceOf(form) {
         var details = form.closest('.admin-pending-row');
         if (details) {
-            return { el: details, key: 'pending' };
+            var list = details.closest('[data-pending-list]');
+            return { el: details, key: list ? list.getAttribute('data-pending-list') : 'pending' };
         }
         var tr = form.closest('tr');
-        var table = tr ? tr.closest('[data-researcher-table]') : null;
-        return { el: tr, key: table ? table.getAttribute('data-researcher-table') : null };
+        var table = tr ? tr.closest('[data-researcher-table], [data-list-table]') : null;
+        var key = table
+            ? (table.getAttribute('data-researcher-table') || table.getAttribute('data-list-table'))
+            : null;
+        return { el: tr, key: key };
+    }
+
+    /** Opens the shared modal filled with a member row's info template. */
+    function openMemberModal(trigger) {
+        var modal = document.getElementById('member-modal');
+        var body = document.getElementById('member-modal-body');
+        var title = document.getElementById('member-modal-title');
+        var tpl = trigger.parentNode.querySelector('[data-member-info-panel]');
+        if (!modal || !body || !tpl) {
+            return;
+        }
+        body.innerHTML = '';
+        body.appendChild(tpl.content.cloneNode(true));
+        if (title) {
+            title.textContent = trigger.getAttribute('data-member-name') || 'Informations';
+        }
+        modal.style.display = 'flex';
+    }
+
+    function closeMemberModal() {
+        var modal = document.getElementById('member-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
 
     function handle(form, e) {
@@ -149,7 +189,13 @@
         }
 
         var action = form.getAttribute('data-ajax-action');
+        // The set-active form may live in the shared modal (cloned out of the
+        // row), so fall back to locating the original <tr> by user id.
         var row = form.closest('tr');
+        if (!row && action === 'set-active') {
+            var uid = form.querySelector('[name="user_id"]');
+            row = uid ? document.querySelector('tr[data-user-id="' + uid.value + '"]') : null;
+        }
         var source = sourceOf(form);
         var button = form.querySelector('button');
         if (button) {
@@ -169,6 +215,7 @@
                     return;
                 }
                 if (action === 'set-active') {
+                    closeMemberModal();
                     replaceMemberRow(row, r.data.row);
                 } else if (action === 'move-row') {
                     applyMoveRow(source.el, source.key, r.data.target, r.data.row);
@@ -187,6 +234,144 @@
                 handle(form, e);
             }
         });
+
+        document.addEventListener('click', function (e) {
+            var trigger = e.target.closest('[data-member-info]');
+            if (trigger) {
+                openMemberModal(trigger);
+                return;
+            }
+            // Close on the close button or a click on the backdrop itself.
+            if (e.target.closest('#member-modal-close') || e.target.id === 'member-modal') {
+                closeMemberModal();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeMemberModal();
+            }
+        });
+
+        var loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', function () {
+                var btn = this;
+                var id = btn.getAttribute('data-next-id');
+                var lastName = btn.getAttribute('data-next-lastname');
+                var firstName = btn.getAttribute('data-next-firstname');
+
+                if (!id) return;
+
+                btn.disabled = true;
+                btn.textContent = 'Chargement...';
+
+                var url = '/department-admin/users?' + new URLSearchParams({
+                    'c_id': id,
+                    'c_last_name': lastName,
+                    'c_first_name': firstName
+                });
+
+                fetch(url, {
+                    method: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(function (res) { 
+                    if (!res.ok) throw new Error();
+                    return res.json(); 
+                })
+                .then(function (res) {
+                    if (res.success) {
+                        if (res.html && res.html.trim() !== '') {
+                            var tbody = document.getElementById('users-table-body');
+                            var tmp = document.createElement('tbody');
+                            tmp.innerHTML = res.html;
+                            while (tmp.firstChild) {
+                                tbody.appendChild(tmp.firstChild);
+                            }
+
+                            var table = tbody.closest('table.sortable');
+                            if (table && typeof table._reapplySort === 'function') {
+                                table._reapplySort();
+                            }
+                        }
+
+                        if (res.nextCursor) {
+                            btn.setAttribute('data-next-id', res.nextCursor.id);
+                            btn.setAttribute('data-next-lastname', res.nextCursor.last_name);
+                            btn.setAttribute('data-next-firstname', res.nextCursor.first_name);
+                            btn.disabled = false;
+                            btn.textContent = "Charger plus d'utilisateurs";
+                        } else {
+                            btn.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(function () {
+                    toast('Impossible de charger les utilisateurs suivants.', false);
+                    btn.disabled = false;
+                    btn.textContent = "Charger plus d'utilisateurs";
+                });
+            });
+        }
+        var searchInput = document.getElementById('user-search-input');
+        var searchTimer = null;
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                var val = this.value;
+                if (val.length > 0) {
+                    this.value = val.charAt(0).toUpperCase() + val.slice(1);
+                }
+
+                var query = this.value.trim();
+                
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(function () {
+                    var tbody = document.getElementById('users-table-body');
+                    if (!tbody) return;
+
+                    var url = query === '' 
+                        ? '/department-admin/users' 
+                        : '/department-admin/search?q=' + encodeURIComponent(query);
+
+                    fetch(url, {
+                        method: 'GET',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(function (res) {
+                        if (!res.ok) throw new Error();
+                        return res.json();
+                    })
+                    .then(function (res) {
+                        console.log(res);
+                        if (res.success) {
+                            tbody.innerHTML = res.html;
+
+                            if (loadMoreBtn) {
+                                if (res.nextCursor) {
+                                    loadMoreBtn.setAttribute('data-next-id', res.nextCursor.id);
+                                    loadMoreBtn.setAttribute('data-next-lastname', res.nextCursor.last_name);
+                                    loadMoreBtn.setAttribute('data-next-firstname', res.nextCursor.first_name);
+                                    loadMoreBtn.style.display = 'inline-block';
+                                    loadMoreBtn.disabled = false;
+                                } else {
+                                    loadMoreBtn.style.display = 'none';
+                                }
+                            }
+
+                            var table = tbody.closest('table.sortable');
+                            if (table && typeof table._reapplySort === 'function') {
+                                table._reapplySort();
+                            }
+                        }
+                    })
+                    .catch(function () {
+                        toast('Erreur lors de la recherche.', false);
+                    });
+                }, 300);
+            });
+        }
     }
 
     if (document.readyState === 'loading') {

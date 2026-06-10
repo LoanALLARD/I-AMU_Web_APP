@@ -35,20 +35,20 @@ final class SessionTest extends TestCase
     private function session(array $overrides = []): Session
     {
         return Session::fromRow(array_merge([
-            'id'                   => 1,
-            'resource_id'          => 7,
-            'teacher_id'           => 3,
-            'name'                 => 'Algo TD',
-            'type'                 => 'TUTORIAL',
-            'status'               => 'SCHEDULED',
-            'access_code'          => 'ABC123',
-            'starts_at'            => '2026-06-03T10:00:00+02:00',
-            'ends_at'              => '2026-06-03T12:00:00+02:00',
-            'closed_at'            => null,
-            'pre_prompt_override'  => null,
+            'id' => 1,
+            'resource_id' => 7,
+            'teacher_id' => 3,
+            'name' => 'Algo TD',
+            'type' => 'TUTORIAL',
+            'status' => 'SCHEDULED',
+            'access_code' => 'ABC123',
+            'starts_at' => '2026-06-03T10:00:00+02:00',
+            'ends_at' => '2026-06-03T12:00:00+02:00',
+            'closed_at'=> null,
+            'pre_prompt_override' => null,
             'post_prompt_override' => null,
-            'instructions'         => null,
-            'max_input_size'       => null,
+            'instructions' => null,
+            'max_input_size' => null,
         ], $overrides));
     }
 
@@ -59,8 +59,8 @@ final class SessionTest extends TestCase
     public function testFromRowMapsScalarsAndEnums(): void
     {
         $session = $this->session([
-            'type'           => 'EXAM',
-            'status'         => 'DRAFT',
+            'type' => 'EXAM',
+            'status' => 'DRAFT',
             'max_input_size' => 2000,
         ]);
 
@@ -76,12 +76,12 @@ final class SessionTest extends TestCase
     public function testFromRowTreatsEmptyOptionalsAsNull(): void
     {
         $session = $this->session([
-            'id'          => null,
-            'teacher_id'  => null,
+            'id' => null,
+            'teacher_id' => null,
             'access_code' => '',
-            'starts_at'   => null,
-            'ends_at'     => '',
-            'closed_at'   => null,
+            'starts_at' => null,
+            'ends_at' => '',
+            'closed_at' => null,
         ]);
 
         self::assertNull($session->id());
@@ -137,7 +137,7 @@ final class SessionTest extends TestCase
     public function testStartActivatesAndAnchorsFutureStart(): void
     {
         $session = $this->session([
-            'status'    => 'SCHEDULED',
+            'status'  => 'SCHEDULED',
             'starts_at' => '2026-06-03T15:00:00+02:00',
         ]);
 
@@ -150,7 +150,7 @@ final class SessionTest extends TestCase
 
     public function testStartKeepsPastStart(): void
     {
-        $past    = '2026-06-03T09:00:00+02:00';
+        $past = '2026-06-03T09:00:00+02:00';
         $session = $this->session(['status' => 'SCHEDULED', 'starts_at' => $past]);
 
         $session->start($this->now());
@@ -193,9 +193,9 @@ final class SessionTest extends TestCase
     public function testEndClosesActiveSession(): void
     {
         $session = $this->session([
-            'status'    => 'ACTIVE',
+            'status' => 'ACTIVE',
             'starts_at' => '2026-06-03T09:00:00+02:00',
-            'ends_at'   => null,
+            'ends_at' => null,
         ]);
 
         $session->end($this->now());
@@ -208,9 +208,9 @@ final class SessionTest extends TestCase
     public function testEndOnNeverStartedAnchorsStartAndBumpsEnd(): void
     {
         $session = $this->session([
-            'status'    => 'DRAFT',
+            'status' => 'DRAFT',
             'starts_at' => null,
-            'ends_at'   => null,
+            'ends_at' => null,
         ]);
 
         $session->end($this->now());
@@ -277,9 +277,9 @@ final class SessionTest extends TestCase
     public function testComputedStatusScheduledBeforeStartStaysScheduled(): void
     {
         $session = $this->session([
-            'status'    => 'SCHEDULED',
+            'status' => 'SCHEDULED',
             'starts_at' => '2026-06-03T15:00:00+02:00',
-            'ends_at'   => '2026-06-03T17:00:00+02:00',
+            'ends_at' => '2026-06-03T17:00:00+02:00',
         ]);
 
         self::assertSame(SessionStatus::Scheduled, $session->computedStatus($this->now()));
@@ -288,9 +288,9 @@ final class SessionTest extends TestCase
     public function testComputedStatusScheduledSpanningNowIsActive(): void
     {
         $session = $this->session([
-            'status'    => 'SCHEDULED',
+            'status'  => 'SCHEDULED',
             'starts_at' => '2026-06-03T10:00:00+02:00',
-            'ends_at'   => '2026-06-03T12:00:00+02:00',
+            'ends_at'=> '2026-06-03T12:00:00+02:00',
         ]);
 
         self::assertSame(SessionStatus::Active, $session->computedStatus($this->now()));
@@ -300,9 +300,9 @@ final class SessionTest extends TestCase
     public function testComputedStatusScheduledPastEndIsEnded(): void
     {
         $session = $this->session([
-            'status'    => 'SCHEDULED',
+            'status' => 'SCHEDULED',
             'starts_at' => '2026-06-03T08:00:00+02:00',
-            'ends_at'   => '2026-06-03T09:00:00+02:00',
+            'ends_at' => '2026-06-03T09:00:00+02:00',
         ]);
 
         self::assertSame(SessionStatus::Ended, $session->computedStatus($this->now()));
@@ -314,9 +314,9 @@ final class SessionTest extends TestCase
         // A DRAFT with elapsed dates must not auto-promote: only SCHEDULED
         // sessions are time-derived.
         $session = $this->session([
-            'status'    => 'DRAFT',
+            'status' => 'DRAFT',
             'starts_at' => '2026-06-03T08:00:00+02:00',
-            'ends_at'   => '2026-06-03T09:00:00+02:00',
+            'ends_at' => '2026-06-03T09:00:00+02:00',
         ]);
 
         self::assertSame(SessionStatus::Draft, $session->computedStatus($this->now()));
@@ -336,7 +336,7 @@ final class SessionTest extends TestCase
     public function testScheduledAfterStartIsNotModifiable(): void
     {
         $session = $this->session([
-            'status'    => 'SCHEDULED',
+            'status'  => 'SCHEDULED',
             'starts_at' => '2026-06-03T09:00:00+02:00',
         ]);
 
@@ -356,9 +356,9 @@ final class SessionTest extends TestCase
     public function testAvailableActionsForActive(): void
     {
         $session = $this->session([
-            'status'    => 'SCHEDULED',
+            'status' => 'SCHEDULED',
             'starts_at' => '2026-06-03T10:00:00+02:00',
-            'ends_at'   => '2026-06-03T12:00:00+02:00',
+            'ends_at' => '2026-06-03T12:00:00+02:00',
         ]);
 
         self::assertSame(
@@ -393,7 +393,7 @@ final class SessionTest extends TestCase
     public function testRenameOnActiveThrowsNotEditable(): void
     {
         $session = $this->session([
-            'status'    => 'SCHEDULED',
+            'status'  => 'SCHEDULED',
             'starts_at' => '2026-06-03T09:00:00+02:00',
         ]);
 
@@ -407,7 +407,7 @@ final class SessionTest extends TestCase
         $session = $this->session(['status' => 'DRAFT', 'starts_at' => null, 'ends_at' => null]);
 
         $start = new DateTimeImmutable('2026-06-04T10:00:00+02:00');
-        $end   = new DateTimeImmutable('2026-06-04T12:00:00+02:00');
+        $end  = new DateTimeImmutable('2026-06-04T12:00:00+02:00');
         $session->reschedule($start, $end, $this->now());
 
         self::assertSame(SessionStatus::Scheduled, $session->status());
@@ -429,7 +429,7 @@ final class SessionTest extends TestCase
         $session = $this->session(['status' => 'DRAFT', 'starts_at' => null, 'ends_at' => null]);
 
         $start = new DateTimeImmutable('2026-06-04T12:00:00+02:00');
-        $end   = new DateTimeImmutable('2026-06-04T10:00:00+02:00');
+        $end = new DateTimeImmutable('2026-06-04T10:00:00+02:00');
 
         $this->expectException(InvalidArgumentException::class);
         $session->reschedule($start, $end, $this->now());
@@ -440,14 +440,14 @@ final class SessionTest extends TestCase
         $session = $this->session(['status' => 'DRAFT', 'starts_at' => null]);
 
         $this->expectException(InvalidArgumentException::class);
-        $session->reconfigure(null, null, null, null,0, $this->now());
+        $session->reconfigure(null, null, null, null, 0, $this->now());
     }
 
     public function testReconfigureStoresOverrides(): void
     {
         $session = $this->session(['status' => 'DRAFT', 'starts_at' => null]);
 
-        $session->reconfigure('pre', 'post', 'do this', null,1500, $this->now());
+        $session->reconfigure('pre', 'post', 'do this',null, 1500, $this->now());
 
         self::assertSame('pre', $session->prePromptOverride());
         self::assertSame('post', $session->postPromptOverride());

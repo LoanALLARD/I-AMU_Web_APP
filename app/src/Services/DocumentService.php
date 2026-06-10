@@ -7,6 +7,7 @@ namespace Services;
 use Domain\Document;
 use Domain\DocumentException;
 use Domain\DocumentStatus;
+use Domain\Session;
 use Domain\PdfTextExtractor;
 use Domain\PlainTextExtractor;
 use Domain\TextExtractorInterface;
@@ -83,13 +84,30 @@ class DocumentService
      */
     public function attachToConversation(int $conversationId, int $userId, array $file): Document
     {
-        $this->assertCanImportToConversation($conversationId, $userId);
-        $size = $this->assertUploadOk($file);
+        $session = $this->assertCanImportToConversation($conversationId, $userId);
+
+        // Per-session limits override the global ones for a session-bound chat.
+        // The authorised file formats live in a M:N table; an empty set means
+        // imports are disabled for the session.
+        $maxBytes    = self::MAX_BYTES;
+        $allowedExts = null; // null = every globally-supported type
+        if ($session !== null) {
+            $formats = $this->sessions->authorizedFormatsOf((int) $session->id());
+            if ($formats === []) {
+                throw DocumentException::documentsDisabled();
+            }
+            if ($session->documentsMaxBytes() !== null) {
+                $maxBytes = min($session->documentsMaxBytes(), self::MAX_BYTES);
+            }
+            $allowedExts = $formats;
+        }
+
+        $size = $this->assertUploadOk($file, $maxBytes);
         if ($this->documents->countByConversation($conversationId) >= self::MAX_PER_CONVERSATION) {
             throw DocumentException::quotaReachedConversation(self::MAX_PER_CONVERSATION);
         }
 
-        return $this->moveAndRecord($file, $size, $userId, null, $conversationId);
+        return $this->moveAndRecord($file, $size, $userId, null, $conversationId, $allowedExts);
     }
 
     /**
@@ -298,6 +316,32 @@ class DocumentService
         return "Documents fournis par l'utilisateur (extraits) :\n" . implode("\n\n", $parts);
     }
 
+    /**
+     * Document settings for a conversation's chat UI: whether the paperclip is
+     * available, and which extensions the file picker should accept. Free chats
+     * (no session) and any non-restricting session fall back to the global set.
+     *
+     * @return array{enabled: bool, acceptExts: list<string>}
+     */
+    public function sessionDocumentsUiConfig(?int $sessionId): array
+    {
+        $default = ['enabled' => true, 'acceptExts' => ['pdf', 'md', 'txt']];
+        if ($sessionId === null) {
+            return $default;
+        }
+        $row = $this->sessions->findById($sessionId);
+        if ($row === null) {
+            return $default;
+        }
+        $session = Session::fromRow($row);
+        $formats = $this->sessions->authorizedFormatsOf($sessionId);
+
+        return [
+            'enabled'    => $formats !== [] && $session->type()->value !== 'EXAM',
+            'acceptExts' => $formats !== [] ? $formats : ['pdf', 'md', 'txt'],
+        ];
+    }
+
     // ----------------------------------------------------------------
     // internals
     // ----------------------------------------------------------------
@@ -308,7 +352,7 @@ class DocumentService
      *
      * @param array<string, mixed> $file
      */
-    private function assertUploadOk(array $file): int
+    private function assertUploadOk(array $file, int $maxBytes = self::MAX_BYTES): int
     {
         $error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
         if ($error === UPLOAD_ERR_NO_FILE || ($file['tmp_name'] ?? '') === '') {
@@ -328,8 +372,8 @@ class DocumentService
         if ($size <= 0) {
             throw DocumentException::noFile();
         }
-        if ($size > self::MAX_BYTES) {
-            throw DocumentException::tooLarge((int) (self::MAX_BYTES / 1024 / 1024));
+        if ($size > $maxBytes) {
+            throw DocumentException::tooLarge((int) ($maxBytes / 1024 / 1024));
         }
 
         return $size;
@@ -341,14 +385,15 @@ class DocumentService
      * Exactly one of $sessionId / $conversationId is non-null (DB scope check).
      *
      * @param array<string, mixed> $file
+     * @param list<string>|null $allowedExts per-session type restriction (stored extensions)
      */
-    private function moveAndRecord(array $file, int $size, int $userId, ?int $sessionId, ?int $conversationId): Document
+    private function moveAndRecord(array $file, int $size, int $userId, ?int $sessionId, ?int $conversationId, ?array $allowedExts = null): Document
     {
         $tmp   = (string) $file['tmp_name'];
         $scope = $sessionId !== null ? 'session_' . $sessionId : 'conversation_' . $conversationId;
 
         $originalName = $this->sanitizeName((string) ($file['name'] ?? 'document'));
-        [$mime, $ext] = $this->resolveMimeAndExtension($tmp, $originalName);
+        [$mime, $ext] = $this->resolveMimeAndExtension($tmp, $originalName, $allowedExts);
 
         $dir = $this->storageDir . '/' . $scope;
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
@@ -388,19 +433,26 @@ class DocumentService
      * The caller may import into the conversation only if they own it; and the
      * import is refused when the conversation belongs to an EXAM session.
      */
-    private function assertCanImportToConversation(int $conversationId, int $userId): void
+    private function assertCanImportToConversation(int $conversationId, int $userId): ?Session
     {
         $conv = $this->conversations->getConversationByUserIdAndConversationId($userId, $conversationId);
         if ($conv === null) {
             throw DocumentException::forbidden();
         }
         $sessionId = isset($conv['session_id']) && $conv['session_id'] !== null ? (int) $conv['session_id'] : null;
-        if ($sessionId !== null) {
-            $session = $this->sessions->findById($sessionId);
-            if ($session !== null && ($session['type'] ?? null) === 'EXAM') {
-                throw DocumentException::examImportDisabled();
-            }
+        if ($sessionId === null) {
+            return null;
         }
+        $row = $this->sessions->findById($sessionId);
+        if ($row === null) {
+            return null;
+        }
+        $session = Session::fromRow($row);
+        if ($session->type()->value === 'EXAM') {
+            throw DocumentException::examImportDisabled();
+        }
+
+        return $session;
     }
 
     private function loadOr404(int $documentId): Document
@@ -444,9 +496,13 @@ class DocumentService
      * Markdown is reported as text/plain by finfo, so it is recovered by
      * extension.
      *
+     * When $allowedExts is given (per-session restriction), the resolved
+     * extension must also belong to it — a subset of the global allowed types.
+     *
+     * @param list<string>|null $allowedExts
      * @return array{0: string, 1: string} [mimeType, storedExtension]
      */
-    private function resolveMimeAndExtension(string $tmp, string $originalName): array
+    private function resolveMimeAndExtension(string $tmp, string $originalName, ?array $allowedExts = null): array
     {
         $finfo    = finfo_open(FILEINFO_MIME_TYPE);
         $detected = $finfo !== false ? (finfo_file($finfo, $tmp) ?: '') : '';
@@ -456,13 +512,18 @@ class DocumentService
         $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 
         if ($detected === 'text/plain' && in_array($ext, ['md', 'markdown'], true)) {
-            return ['text/markdown', 'md'];
-        }
-        if (isset(self::ALLOWED[$detected])) {
-            return [$detected, self::ALLOWED[$detected]];
+            $resolved = ['text/markdown', 'md'];
+        } elseif (isset(self::ALLOWED[$detected])) {
+            $resolved = [$detected, self::ALLOWED[$detected]];
+        } else {
+            throw DocumentException::unsupportedType();
         }
 
-        throw DocumentException::unsupportedType();
+        if ($allowedExts !== null && !in_array($resolved[1], $allowedExts, true)) {
+            throw DocumentException::typeNotAllowed();
+        }
+
+        return $resolved;
     }
 
     private function sanitizeName(string $name): string

@@ -41,24 +41,26 @@ INSERT INTO super_administrators (email, password_hash, first_name, last_name) V
     ('admin@univ-amu.fr', crypt('password', gen_salt('bf')), 'Admin', 'Principal');
 
 
-INSERT INTO users (department_id, email, password_hash, first_name, last_name, is_active, theme, email_verified_at) VALUES
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'jean.martin@univ-amu.fr',       crypt('password', gen_salt('bf')), 'Jean',     'Martin',    TRUE, 'LIGHT', NOW()),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'marie.dupont@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Marie',    'Dupont',    TRUE, 'DARK',  NOW()),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'paul.bernard@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Paul',     'Bernard',   TRUE, 'LIGHT', NOW()),
-    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'sophie.leroy@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Sophie',   'Leroy',     TRUE, 'LIGHT', NOW()),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'luc.moreau@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Luc',      'Moreau',    TRUE, 'DARK',  NOW()),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'claire.petit@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Claire',   'Petit',     TRUE, 'LIGHT', NOW()),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'alice.durand@etu.univ-amu.fr',  crypt('password', gen_salt('bf')), 'Alice',    'Durand',    TRUE, 'LIGHT', NOW()),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'thomas.roux@etu.univ-amu.fr',   crypt('password', gen_salt('bf')), 'Thomas',   'Roux',      TRUE, 'DARK',  NOW()),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'emma.blanc@etu.univ-amu.fr',    crypt('password', gen_salt('bf')), 'Emma',     'Blanc',     TRUE, 'LIGHT', NOW()),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'hugo.noir@etu.univ-amu.fr',     crypt('password', gen_salt('bf')), 'Hugo',     'Noir',      TRUE, 'LIGHT', NOW()),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'lea.vert@etu.univ-amu.fr',      crypt('password', gen_salt('bf')), 'Lea',      'Vert',      TRUE, 'DARK',  NOW()),
-    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'nathan.gris@etu.univ-amu.fr',   crypt('password', gen_salt('bf')), 'Nathan',   'Gris',      TRUE, 'LIGHT', NOW()),
-    (NULL,                                                       'chercheur1@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Pierre',   'Curie',     TRUE, 'LIGHT', NOW()),
-    (NULL,                                                       'chercheur2@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Henri',    'Poincare',  TRUE, 'DARK',  NOW()),
-    (NULL,                                                       'orphan@univ-amu.fr',            crypt('password', gen_salt('bf')), 'Sans',     'Role',      TRUE, 'LIGHT', NOW()),
-    ((SELECT id FROM departments WHERE name = 'Informatique'),   'admin.info@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Admin',    'Info',      TRUE, 'LIGHT', NOW()),
-    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'admin.maths@univ-amu.fr',       crypt('password', gen_salt('bf')), 'Admin',    'Maths',     TRUE, 'LIGHT', NOW());
+-- last_login_at is staggered for the dashboard column; a few accounts are left
+-- NULL (never connected) on purpose.
+INSERT INTO users (department_id, email, password_hash, first_name, last_name, is_active, theme, email_verified_at, last_login_at) VALUES
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'jean.martin@univ-amu.fr',       crypt('password', gen_salt('bf')), 'Jean',     'Martin',    TRUE, 'LIGHT', NOW(), NOW() - INTERVAL '2 hours'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'marie.dupont@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Marie',    'Dupont',    TRUE, 'DARK',  NOW(), NOW() - INTERVAL '1 day'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'paul.bernard@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Paul',     'Bernard',   TRUE, 'LIGHT', NOW(), NULL),
+    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'sophie.leroy@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Sophie',   'Leroy',     TRUE, 'LIGHT', NOW(), NOW() - INTERVAL '12 hours'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'luc.moreau@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Luc',      'Moreau',    TRUE, 'DARK',  NOW(), NOW() - INTERVAL '5 days'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'claire.petit@univ-amu.fr',      crypt('password', gen_salt('bf')), 'Claire',   'Petit',     TRUE, 'LIGHT', NOW(), NOW() - INTERVAL '32 days'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'alice.durand@etu.univ-amu.fr',  crypt('password', gen_salt('bf')), 'Alice',    'Durand',    TRUE, 'LIGHT', NOW(), NOW() - INTERVAL '3 hours'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'thomas.roux@etu.univ-amu.fr',   crypt('password', gen_salt('bf')), 'Thomas',   'Roux',      TRUE, 'DARK',  NOW(), NOW() - INTERVAL '8 days'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'emma.blanc@etu.univ-amu.fr',    crypt('password', gen_salt('bf')), 'Emma',     'Blanc',     TRUE, 'LIGHT', NOW(), NOW() - INTERVAL '90 days'),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'hugo.noir@etu.univ-amu.fr',     crypt('password', gen_salt('bf')), 'Hugo',     'Noir',      TRUE, 'LIGHT', NOW(), NULL),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'lea.vert@etu.univ-amu.fr',      crypt('password', gen_salt('bf')), 'Lea',      'Vert',      TRUE, 'DARK',  NOW(), NOW() - INTERVAL '20 minutes'),
+    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'nathan.gris@etu.univ-amu.fr',   crypt('password', gen_salt('bf')), 'Nathan',   'Gris',      TRUE, 'LIGHT', NOW(), NOW() - INTERVAL '15 days'),
+    (NULL,                                                       'chercheur1@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Pierre',   'Curie',     TRUE, 'LIGHT', NOW(), NOW() - INTERVAL '4 days'),
+    (NULL,                                                       'chercheur2@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Henri',    'Poincare',  TRUE, 'DARK',  NOW(), NULL),
+    (NULL,                                                       'orphan@univ-amu.fr',            crypt('password', gen_salt('bf')), 'Sans',     'Role',      TRUE, 'LIGHT', NOW(), NULL),
+    ((SELECT id FROM departments WHERE name = 'Informatique'),   'admin.info@univ-amu.fr',        crypt('password', gen_salt('bf')), 'Admin',    'Info',      TRUE, 'LIGHT', NOW(), NOW() - INTERVAL '1 hour'),
+    ((SELECT id FROM departments WHERE name = 'Mathematiques'),  'admin.maths@univ-amu.fr',       crypt('password', gen_salt('bf')), 'Admin',    'Maths',     TRUE, 'LIGHT', NOW(), NOW() - INTERVAL '6 hours');
 
 INSERT INTO teachers (id, is_specialised, title) VALUES
     ((SELECT id FROM users WHERE email = 'jean.martin@univ-amu.fr'),  TRUE,  'Professeur'),
@@ -108,6 +110,8 @@ INSERT INTO teacher_resources (teacher_id, resource_id) VALUES
     ((SELECT id FROM users WHERE email = 'luc.moreau@univ-amu.fr'),
      (SELECT id FROM resources WHERE code = 'INF101')),
     ((SELECT id FROM users WHERE email = 'claire.petit@univ-amu.fr'),
+     (SELECT id FROM resources WHERE code = 'INF202')),
+    ((SELECT id FROM users WHERE email = 'marie.dupont@univ-amu.fr'),
      (SELECT id FROM resources WHERE code = 'INF202'));
 
 INSERT INTO student_resources (student_id, resource_id) VALUES
@@ -219,6 +223,22 @@ INSERT INTO researcher_authorizations (researcher_id, department_id, authorized_
      (SELECT id FROM users WHERE email = 'admin.maths@univ-amu.fr'),
      NOW() - INTERVAL '1 day',
      NOW());
+
+-- A pending habilitation request with a message.
+INSERT INTO teacher_specialisation_requests (teacher_id, request) VALUES
+    ((SELECT id FROM users WHERE email = 'paul.bernard@univ-amu.fr'),
+     'Je souhaite importer mes propres modeles fine-tunes pour mes TP de Java.');
+
+-- A pending habilitation request without a message.
+INSERT INTO teacher_specialisation_requests (teacher_id) VALUES
+    ((SELECT id FROM users WHERE email = 'luc.moreau@univ-amu.fr'));
+
+-- A rejected habilitation request.
+INSERT INTO teacher_specialisation_requests (teacher_id, decided_by_id, request, rejected_at) VALUES
+    ((SELECT id FROM users WHERE email = 'claire.petit@univ-amu.fr'),
+     (SELECT id FROM users WHERE email = 'admin.info@univ-amu.fr'),
+     'Demande d''habilitation pour le module de cryptographie.',
+     NOW() - INTERVAL '2 days');
 
 INSERT INTO conversations (user_id, session_id, model_id, name) VALUES
     ((SELECT id FROM users WHERE email = 'emma.blanc@etu.univ-amu.fr'),
@@ -336,7 +356,7 @@ INSERT INTO interactions (conversation_id, prompt, response,
      'Avec plaisir.',
      150, 3, 15, NULL);
 
--- RGPD: some users object to having their data used for research.
+-- GDPR: some users object to having their data used for research.
 UPDATE users SET research_opposed = TRUE
  WHERE email IN ('lea.vert@etu.univ-amu.fr', 'orphan@univ-amu.fr');
 

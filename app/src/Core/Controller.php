@@ -35,7 +35,7 @@ abstract class Controller
     protected function render(
         string $template,
         array $data = [],
-        string $layout = 'main'
+        string $layout = 'chat'
     ): void {
 
         $viewFile = self::$viewsPath . '/' . $template . '.php';
@@ -208,7 +208,7 @@ abstract class Controller
     /**
      * Returns the currently logged-in user as a flat array, or null.
      *
-     * @return array{id:int, email:string, first_name:string, last_name:string, roles:list<string>, department_id:int|null}|null
+     * @return array{id:int, email:string, first_name:string, last_name:string, roles:list<string>, isSpecialized:bool, theme:string|null, department_id:int|null}|null
      */
     protected function currentUser(): ?array
     {
@@ -278,10 +278,13 @@ abstract class Controller
     {
         http_response_code(403);
         $this->render('pages/error', [
-            'title' => 'Accès refusé',
-            'code' => 403,
-            'message' => "Vous n'avez pas les permissions nécessaires pour accéder à cette page.",
-        ]);
+            'title'     => 'Accès refusé',
+            'code'      => 403,
+            'message'   => "Vous n'avez pas les permissions nécessaires pour accéder à cette page.",
+            'user'      => $this->currentUser(),
+            'page'      => 'error',
+            'pageTitle' => 'Accès refusé',
+        ], 'chat');
         exit;
     }
 }

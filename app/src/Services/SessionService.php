@@ -45,11 +45,13 @@ class SessionService
         return $row === null ? null : Session::fromRow($row);
     }
 
-    public function resourceBelongsTo(int $resourceId, int $teacherId): bool
+    /**
+     * Returns true if the teacher owns the resource OR has shared access via
+     * teacher_resources. Used to gate session creation.
+     */
+    public function resourceAccessibleByTeacher(int $resourceId, int $teacherId): bool
     {
-        $resource = $this->resources->findById($resourceId);
-
-        return $resource !== null && (int) $resource['owner_id'] === $teacherId;
+        return $this->resources->isAccessibleByTeacher($resourceId, $teacherId);
     }
 
     /**
@@ -222,7 +224,7 @@ class SessionService
     }
 
     /**
-     * @return array{models: list<array<string, mixed>>, resources: list<array<string, mixed>>, previewCode: string, previewCodeFormatted: string}
+     * @return array{models: list<array<string, mixed>>, resources: list<array<string, mixed>>, previewCode: string, previewCodeFormatted: string, availableFormats: list<string>, authorizedFormats: list<string>}
      */
     public function createFormData(int $teacherId): array
     {
@@ -238,11 +240,14 @@ class SessionService
             'resources'            => $resourceData,
             'previewCode'          => '',
             'previewCodeFormatted' => '',
+            'availableFormats'     => $this->sessions->listAllFileFormats(),
+            // New sessions default to every format authorised (imports enabled).
+            'authorizedFormats'    => $this->sessions->listAllFileFormats(),
         ];
     }
 
     /**
-     * @return array{session: Session, models: list<array<string, mixed>>, resources: list<array<string, mixed>>, authorizedModelIds: list<int>, previewCode: string, previewCodeFormatted: string}
+     * @return array{session: Session, models: list<array<string, mixed>>, resources: list<array<string, mixed>>, authorizedModelIds: list<int>, previewCode: string, previewCodeFormatted: string, availableFormats: list<string>, authorizedFormats: list<string>}
      */
     public function editFormData(Session $session, int $teacherId): array
     {
@@ -258,6 +263,8 @@ class SessionService
             'authorizedModelIds'   => $this->sessions->authorizedModelIdsOf((int) $session->id()),
             'previewCode'          => $session->accessCode() ?? '',
             'previewCodeFormatted' => $session->accessCodeFormatted() ?? '',
+            'availableFormats'     => $this->sessions->listAllFileFormats(),
+            'authorizedFormats'    => $this->sessions->authorizedFormatsOf((int) $session->id()),
         ];
     }
 
@@ -279,6 +286,25 @@ class SessionService
         $computed = $session->computedStatus($now);
         $actions  = $session->availableActions($now);
 
+        $docTypeMap = ['pdf' => 'PDF', 'md' => 'Markdown', 'txt' => 'TXT'];
+        $authorizedFormats = $this->sessions->authorizedFormatsOf((int) $session->id());
+        $documentsTypesLabel = implode(', ', array_map(
+            static fn (string $t): string => $docTypeMap[$t] ?? strtoupper($t),
+            $authorizedFormats
+        ));
+        $documentsMaxMb = $session->documentsMaxBytes() !== null
+            ? (int) ($session->documentsMaxBytes() / 1024 / 1024)
+            : 10;
+        // What students can import: an exam forces it off; otherwise imports are
+        // enabled iff at least one file format is authorised for the session.
+        if ($session->type()->value === 'EXAM') {
+            $documentsImportLabel = 'Désactivé (examen)';
+        } elseif ($authorizedFormats !== []) {
+            $documentsImportLabel = 'Autorisé — ' . $documentsTypesLabel . ' · ' . $documentsMaxMb . ' Mo max';
+        } else {
+            $documentsImportLabel = 'Désactivé';
+        }
+
         return [
             'id'                 => (int) $session->id(),
             'name'               => $session->name(),
@@ -295,12 +321,132 @@ class SessionService
             'instructions'       => $session->instructions(),
             'maxInputSize'       => $session->maxInputSize(),
             'maxTokens'          => $session->maxTokens(),
+            'documentsImportLabel' => $documentsImportLabel,
             'authorizedModels'   => $models,
             'canEdit'            => $actions['can_edit'],
             'canStart'           => $actions['can_start'],
             'canEnd'             => $actions['can_end'],
             'canCancel'          => $actions['can_cancel'],
             'canMonitor'         => $computed === SessionStatus::Active || $computed === SessionStatus::Ended,
+        ];
+    }
+
+    /**
+     * Aggregate statistics for a session — available once it is running or
+     * ended. Returns null otherwise (nothing meaningful to show yet).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function statistics(Session $session): ?array
+    {
+        $now      = $this->now();
+        $computed = $session->computedStatus($now);
+        if ($computed !== SessionStatus::Active && $computed !== SessionStatus::Ended) {
+            return null;
+        }
+
+        $sessionId = (int) $session->id();
+        $stats     = $this->sessions->statsForSession($sessionId);
+        $o         = $stats['overview'];
+
+        $enrolled  = (int) ($o['enrolled'] ?? 0);
+        $active    = (int) ($o['active_participants'] ?? 0);
+        $input     = (int) ($o['input_tokens'] ?? 0);
+        $output    = (int) ($o['output_tokens'] ?? 0);
+        $maxTokens = $session->maxTokens();
+
+        // Per-student rows (enrolled-but-inactive students are included).
+        $students = [];
+        $inactive = 0;
+        foreach ($stats['perStudent'] as $r) {
+            $prompts = (int) $r['prompts'];
+            $tokens  = (int) $r['tokens'];
+            if ($prompts === 0) {
+                $inactive++;
+            }
+            $students[] = [
+                'name'          => trim(((string) $r['first_name']) . ' ' . ((string) $r['last_name'])),
+                'studentNumber' => $r['student_number'] !== null ? (string) $r['student_number'] : null,
+                'conversations' => (int) $r['conversations'],
+                'prompts'       => $prompts,
+                'tokens'        => $tokens,
+                'tokensPct'     => $maxTokens !== null && $maxTokens > 0
+                    ? min(100, (int) round($tokens / $maxTokens * 100))
+                    : null,
+                'lastActivity'  => $r['last_activity'] !== null
+                    ? (new DateTimeImmutable((string) $r['last_activity']))->format('d/m/Y H:i')
+                    : null,
+                'feedbackUp'    => (int) $r['feedback_up'],
+                'feedbackDown'  => (int) $r['feedback_down'],
+                'active'        => $prompts > 0,
+            ];
+        }
+
+        // Prompts-per-hour bars, scaled to the busiest hour.
+        $peak = 0;
+        foreach ($stats['activityByHour'] as $b) {
+            $peak = max($peak, (int) $b['prompts']);
+        }
+        $activity = array_map(
+            static function (array $b) use ($peak): array {
+                $n = (int) $b['prompts'];
+                return [
+                    'label'     => (new DateTimeImmutable((string) $b['bucket']))->format('d/m H\\h'),
+                    'prompts'   => $n,
+                    'heightPct' => $peak > 0 ? max(4, (int) round($n / $peak * 100)) : 0,
+                ];
+            },
+            $stats['activityByHour']
+        );
+
+        // Satisfaction: 1 = up, -1 = down, 0 = neutral; NULL = not rated (ignored).
+        $up = $down = $neutral = 0;
+        foreach ($stats['feedback'] as $f) {
+            if ($f['feedback'] === null) {
+                continue;
+            }
+            $n = (int) $f['n'];
+            match ((int) $f['feedback']) {
+                1       => $up = $n,
+                -1      => $down = $n,
+                default => $neutral = $n,
+            };
+        }
+
+        $byModel = array_map(
+            static fn (array $m): array => [
+                'name'    => (string) $m['model_name'],
+                'prompts' => (int) $m['prompts'],
+                'tokens'  => (int) $m['tokens'],
+            ],
+            $stats['byModel']
+        );
+
+        return [
+            'id'            => $sessionId,
+            'name'          => $session->name(),
+            'statusLabel'   => $computed->label(),
+            'statusClass'   => $computed->badgeClass(),
+            'isOngoing'     => $computed === SessionStatus::Active,
+            'kpi'           => [
+                'enrolled'          => $enrolled,
+                'active'            => $active,
+                'participationRate' => $enrolled > 0 ? (int) round($active / $enrolled * 100) : 0,
+                'prompts'           => (int) ($o['prompts'] ?? 0),
+                'inputTokens'       => $input,
+                'outputTokens'      => $output,
+                'totalTokens'       => $input + $output,
+                'avgLatency'        => (int) ($o['avg_latency'] ?? 0),
+                'medianLatency'     => (int) ($o['median_latency'] ?? 0),
+                'avgPromptLen'      => (int) ($o['avg_prompt_len'] ?? 0),
+                'avgResponseLen'    => (int) ($o['avg_response_len'] ?? 0),
+            ],
+            'students'      => $students,
+            'inactiveCount' => $inactive,
+            'activity'      => $activity,
+            'feedback'      => ['up' => $up, 'down' => $down, 'neutral' => $neutral, 'rated' => $up + $down + $neutral],
+            'byModel'       => $byModel,
+            'maxTokens'     => $maxTokens,
         ];
     }
 
@@ -428,12 +574,14 @@ class SessionService
             $data['instructions'],
             $data['maxInputSize'] ?? null,
             $data['maxTokens'] ?? null,
+            $data['documentsMaxBytes'] ?? null,
         );
 
         $result = $this->sessions->insert($session->toRow());
         $session->assignId($result['id']);
         $session->assignAccessCode($result['access_code']);
         $this->sessions->setAuthorizedModels($result['id'], $data['modelIds']);
+        $this->sessions->setAuthorizedFormats($result['id'], $data['documentsFormats'] ?? []);
 
         return $session;
     }
@@ -456,10 +604,19 @@ class SessionService
 
         $session->rename((string) $data['name'], $now);
         $session->reschedule($startsAt, $endsAt, $now);
-        $session->reconfigure($data['prePrompt'], $data['postPrompt'], $data['instructions'], $data['maxTokens'] ?? null, $data['maxInputSize'] ?? null, $now);
+        $session->reconfigure(
+            $data['prePrompt'],
+            $data['postPrompt'],
+            $data['instructions'],
+            $data['maxTokens'] ?? null,
+            $data['maxInputSize'] ?? null,
+            $now,
+            $data['documentsMaxBytes'] ?? null
+        );
 
         $this->sessions->update($id, $session->toRow());
         $this->sessions->setAuthorizedModels($id, $data['modelIds']);
+        $this->sessions->setAuthorizedFormats($id, $data['documentsFormats'] ?? []);
     }
 
     public function start(int $id): void
@@ -599,6 +756,7 @@ class SessionService
     {
         $computed = $session->computedStatus($now);
         $actions  = $session->availableActions($now);
+        $resource = $this->resources->findById($session->resourceId());
 
         return [
             'id'                => (int) $session->id(),
@@ -614,6 +772,7 @@ class SessionService
             'canStart'          => $actions['can_start'],
             'canEnd'            => $actions['can_end'],
             'canCancel'         => $actions['can_cancel'],
+            'resourceName'     => $resource !== null ? (string) $resource['name'] : '—',
         ];
     }
 }

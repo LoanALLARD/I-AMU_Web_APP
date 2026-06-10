@@ -20,8 +20,8 @@ $canManage = $canManage ?? false;
                 class="badge <?= htmlspecialchars($view['statusClass']) ?>"><?= htmlspecialchars($view['statusLabel']) ?></span>
             <?php if ($view['accessCode'] !== ''): ?>
                 <code class="access-code-cell" style="font-size:13px;color:var(--gray-600);">
-                        <?= htmlspecialchars($view['accessCode']) ?>
-                    </code>
+                                <?= htmlspecialchars($view['accessCode']) ?>
+                            </code>
             <?php endif; ?>
         </div>
     </div>
@@ -30,42 +30,45 @@ $canManage = $canManage ?? false;
             <a href="/sessions/<?= (int) $view['id'] ?>/monitor" class="btn primary">
                 <?= icon('user', '', 12) ?> Suivi
             </a>
+            <a href="/sessions/<?= (int) $view['id'] ?>/stats" class="btn">
+                <?= icon('chart-line', '', 12) ?> Statistiques
+            </a>
             <button type="button" class="btn" id="btn-open-export">
                 <?= icon('archive', '', 12) ?> Exporter (JSON)
             </button>
         <?php endif; ?>
         <?php if ($canManage): ?>
-        <?php if ($view['canEdit']): ?>
-            <a href="/sessions/<?= (int) $view['id'] ?>/edit" class="btn">
-                <?= icon('edit', '', 12) ?> Modifier
-            </a>
-        <?php endif; ?>
-        <?php if ($view['canStart']): ?>
-            <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/start" style="margin:0;">
-                <?= csrf_field() ?>
-                <button type="submit" class="btn success">
-                    <?= icon('play', '', 12) ?> Démarrer
-                </button>
-            </form>
-        <?php endif; ?>
-        <?php if ($view['canEnd']): ?>
-            <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/end" style="margin:0;"
-                onsubmit="return confirm('Terminer cette session maintenant ?')">
-                <?= csrf_field() ?>
-                <button type="submit" class="btn">
-                    <?= icon('square', '', 12) ?> Terminer
-                </button>
-            </form>
-        <?php endif; ?>
-        <?php if ($view['canCancel']): ?>
-            <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/cancel" style="margin:0;"
-                onsubmit="return confirm('Annuler cette session ?')">
-                <?= csrf_field() ?>
-                <button type="submit" class="btn danger">
-                    <?= icon('x-circle', '', 12) ?> Annuler
-                </button>
-            </form>
-        <?php endif; ?>
+            <?php if ($view['canEdit']): ?>
+                <a href="/sessions/<?= (int) $view['id'] ?>/edit" class="btn">
+                    <?= icon('edit', '', 12) ?> Modifier
+                </a>
+            <?php endif; ?>
+            <?php if ($view['canStart']): ?>
+                <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/start" style="margin:0;">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn success">
+                        <?= icon('play', '', 12) ?> Démarrer
+                    </button>
+                </form>
+            <?php endif; ?>
+            <?php if ($view['canEnd']): ?>
+                <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/end" style="margin:0;"
+                    onsubmit="return confirm('Terminer cette session maintenant ?')">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn">
+                        <?= icon('square', '', 12) ?> Terminer
+                    </button>
+                </form>
+            <?php endif; ?>
+            <?php if ($view['canCancel']): ?>
+                <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/cancel" style="margin:0;"
+                    onsubmit="return confirm('Annuler cette session ?')">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn danger">
+                        <?= icon('x-circle', '', 12) ?> Annuler
+                    </button>
+                </form>
+            <?php endif; ?>
         <?php endif; /* canManage */ ?>
     </div>
 </div>
@@ -88,20 +91,23 @@ $canManage = $canManage ?? false;
 
         <div class="dashboard-card">
             <h2>Limites</h2>
-            <div class="kv-grid">
-                <span class="kv-key">prompt max</span>
-                <span class="kv-val mono">
-                    <?= $view['maxInputSize'] !== null
-                        ? number_format((float) $view['maxInputSize'], 0, ',', ' ') . ' caractères'
-                        : 'sans limite' ?>
-                </span>
-                </span>
-                <span class="kv-key">tokens session</span>
-                <span class="kv-val mono">
-                    <?= $view['maxTokens'] !== null
-                    ? number_format((float) $view['maxTokens'], 0, ',', ' ') . ' tok'
-                    : 'sans limite' ?>
-                </span>
+            <div style="display:flex;gap:2.5rem;flex-wrap:wrap;">
+                <div>
+                    <div class="kv-key">prompt max</div>
+                    <div class="kv-val mono">
+                        <?= $view['maxInputSize'] !== null
+                            ? number_format((float) $view['maxInputSize'], 0, ',', ' ') . ' caractères'
+                            : 'sans limite' ?>
+                    </div>
+                </div>
+                <div>
+                    <div class="kv-key">tokens session</div>
+                    <div class="kv-val mono">
+                        <?= $view['maxTokens'] !== null
+                            ? number_format((float) $view['maxTokens'], 0, ',', ' ') . ' tok'
+                            : 'sans limite' ?>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -125,39 +131,51 @@ $canManage = $canManage ?? false;
 
         <div class="dashboard-card">
             <h2>Documents</h2>
-            <p class="kv-key" style="margin:2px 0 12px;line-height:1.5;">
-                Joints à la session et consultables par les étudiants inscrits.
-                PDF, Markdown ou TXT — 10 Mo max.
+            <p class="doc-card-hint">
+                Joints à la session, consultables par les étudiants inscrits (PDF, Markdown ou TXT — 10 Mo max).
             </p>
 
-            <?php if ($canManage): ?>
-                <button type="button" class="btn primary" id="btn-open-doc-modal">
-                    <?= icon('upload', '', 12) ?> Ajouter
-                </button>
-            <?php endif; ?>
+            <?php
+            $importLabel = (string) $view['documentsImportLabel'];
+            $importEnabled = str_starts_with($importLabel, 'Autorisé');
+            ?>
+            <div class="doc-setting">
+                <span class="kv-key">Import étudiant</span>
+                <span
+                    class="doc-setting-state <?= $importEnabled ? 'is-on' : 'is-off' ?>"><?= htmlspecialchars($importLabel) ?></span>
+            </div>
+
+            <div class="doc-list-head">
+                <span class="kv-key">Documents joints<?= $documents !== [] ? ' · ' . count($documents) : '' ?></span>
+                <?php if ($canManage): ?>
+                    <button type="button" class="btn primary sm" id="btn-open-doc-modal">
+                        <?= icon('upload', '', 12) ?> Ajouter
+                    </button>
+                <?php endif; ?>
+            </div>
 
             <?php if ($documents === []): ?>
-                <p style="color:var(--gray-400);font-size:12px;margin-top:12px;">Aucun document pour l'instant.</p>
+                <p class="doc-empty">Aucun document pour l'instant.</p>
             <?php else: ?>
-                <div style="display:flex;flex-direction:column;gap:6px;margin-top:14px;">
+                <div class="doc-list">
                     <?php foreach ($documents as $doc): ?>
-                        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--gray-200);border-radius:8px;">
-                            <div style="min-width:0;">
-                                <a href="/documents/session_<?= (int) $doc->sessionId() ?>/<?= (int) $doc->id() ?>" target="_blank" rel="noopener"
-                                   style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-800);text-decoration:none;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                                    <?= icon('book', '', 13) ?> <?= htmlspecialchars($doc->originalName()) ?>
+                        <div class="doc-item">
+                            <div class="doc-item-main">
+                                <a href="/documents/session_<?= (int) $doc->sessionId() ?>/<?= (int) $doc->id() ?>"
+                                    target="_blank" rel="noopener" class="doc-item-link">
+                                    <?= icon('book', '', 13) ?>         <?= htmlspecialchars($doc->originalName()) ?>
                                 </a>
-                                <span style="font-size:11px;color:var(--gray-400);">
-                                    <?= htmlspecialchars($doc->kindLabel()) ?> · <?= htmlspecialchars($doc->humanSize()) ?> · <?= htmlspecialchars($doc->status()->label()) ?>
+                                <span class="doc-item-meta">
+                                    <?= htmlspecialchars($doc->kindLabel()) ?> · <?= htmlspecialchars($doc->humanSize()) ?> ·
+                                    <?= htmlspecialchars($doc->status()->label()) ?>
                                 </span>
                             </div>
                             <?php if ($canManage): ?>
-                                <form method="POST" action="/documents/<?= (int) $doc->id() ?>/delete"
-                                      style="margin:0;flex-shrink:0;"
-                                      onsubmit="return confirm('Supprimer ce document ?')">
+                                <form method="POST" action="/documents/<?= (int) $doc->id() ?>/delete" class="doc-item-delete"
+                                    onsubmit="return confirm('Supprimer ce document ?')">
                                     <?= csrf_field() ?>
-                                    <button type="submit" class="btn bordered" title="Supprimer"
-                                            style="padding:4px 8px;"><?= icon('x-circle', '', 13) ?></button>
+                                    <button type="submit" class="btn bordered sm"
+                                        title="Supprimer"><?= icon('x-circle', '', 13) ?></button>
                                 </form>
                             <?php endif; ?>
                         </div>
@@ -175,8 +193,8 @@ $canManage = $canManage ?? false;
                     <?= htmlspecialchars($view['accessCode']) ?>
                 </div>
                 <div class="access-card-actions">
-                    <button type="button" class="btn bordered"
-                            data-copy="<?= htmlspecialchars($view['accessCode']) ?>" data-copy-feedback="text">
+                    <button type="button" class="btn bordered" data-copy="<?= htmlspecialchars($view['accessCode']) ?>"
+                        data-copy-feedback="text">
                         <?= icon('copy', '', 11) ?> Copier
                     </button>
                     <button type="button" class="btn bordered" id="btn-fullscreen-code">
@@ -221,10 +239,12 @@ $canManage = $canManage ?? false;
 
             <fieldset style="border:1px solid var(--gray-200);border-radius:8px;padding:10px 14px;margin:0 0 14px;">
                 <legend style="font-size:12px;font-weight:600;color:var(--gray-600);padding:0 6px;">Contenu</legend>
-                <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-800);padding:4px 0;">
+                <label
+                    style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-800);padding:4px 0;">
                     <input type="checkbox" name="include_prompts" checked> Prompts des étudiants
                 </label>
-                <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-800);padding:4px 0;">
+                <label
+                    style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-800);padding:4px 0;">
                     <input type="checkbox" name="include_responses" checked> Réponses du LLM
                 </label>
             </fieldset>
@@ -234,7 +254,8 @@ $canManage = $canManage ?? false;
                 <?php if ($students === []): ?>
                     <p style="font-size:12px;color:var(--gray-400);margin:0;">Aucun étudiant inscrit.</p>
                 <?php else: ?>
-                    <p style="font-size:11px;color:var(--gray-400);margin:0 0 8px;">Cochez ceux à <strong>exclure</strong> de
+                    <p style="font-size:11px;color:var(--gray-400);margin:0 0 8px;">Cochez ceux à <strong>exclure</strong>
+                        de
                         l'export.</p>
                     <div style="display:flex;flex-direction:column;gap:2px;max-height:200px;overflow-y:auto;">
                         <?php foreach ($students as $st): ?>
@@ -285,41 +306,41 @@ $canManage = $canManage ?? false;
 
 <!-- Add-documents modal: multi-select + drag & drop (owner only) -->
 <?php if ($canManage): ?>
-<div id="modal-documents" class="doc-modal-overlay" style="display:none;">
-    <div class="doc-modal-box">
-        <h2>Ajouter des documents</h2>
-        <p class="doc-modal-sub">PDF, Markdown ou TXT — 10 Mo max. Plusieurs fichiers à la fois.</p>
-        <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/documents"
-              enctype="multipart/form-data" id="doc-upload-form">
-            <?= csrf_field() ?>
-            <label class="doc-dropzone" id="doc-dropzone">
-                <input type="file" name="document[]" id="doc-input" multiple
-                       accept=".pdf,.md,.markdown,.txt,application/pdf,text/plain,text/markdown">
-                <span class="doc-dropzone-icon"><?= icon('upload', '', 26) ?></span>
-                <span class="doc-dropzone-title">Glissez-déposez vos fichiers ici</span>
-                <span class="doc-dropzone-hint">ou cliquez pour parcourir</span>
-            </label>
-            <ul class="doc-selected" id="doc-selected"></ul>
-            <div class="doc-modal-actions">
-                <button type="button" class="btn" id="btn-cancel-doc">Annuler</button>
-                <button type="submit" class="btn primary" id="btn-submit-doc" disabled>
-                    <?= icon('upload', '', 12) ?> Importer
-                </button>
-            </div>
-        </form>
+    <div id="modal-documents" class="doc-modal-overlay" style="display:none;">
+        <div class="doc-modal-box">
+            <h2>Ajouter des documents</h2>
+            <p class="doc-modal-sub">PDF, Markdown ou TXT — 10 Mo max. Plusieurs fichiers à la fois.</p>
+            <form method="POST" action="/sessions/<?= (int) $view['id'] ?>/documents" enctype="multipart/form-data"
+                id="doc-upload-form">
+                <?= csrf_field() ?>
+                <label class="doc-dropzone" id="doc-dropzone">
+                    <input type="file" name="document[]" id="doc-input" multiple
+                        accept=".pdf,.md,.markdown,.txt,application/pdf,text/plain,text/markdown">
+                    <span class="doc-dropzone-icon"><?= icon('upload', '', 26) ?></span>
+                    <span class="doc-dropzone-title">Glissez-déposez vos fichiers ici</span>
+                    <span class="doc-dropzone-hint">ou cliquez pour parcourir</span>
+                </label>
+                <ul class="doc-selected" id="doc-selected"></ul>
+                <div class="doc-modal-actions">
+                    <button type="button" class="btn" id="btn-cancel-doc">Annuler</button>
+                    <button type="submit" class="btn primary" id="btn-submit-doc" disabled>
+                        <?= icon('upload', '', 12) ?> Importer
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 <?php endif; /* canManage — add-documents modal */ ?>
 
 <script>
     (function () {
-        const openBtn  = document.getElementById('btn-open-doc-modal');
-        const modal    = document.getElementById('modal-documents');
-        const cancel   = document.getElementById('btn-cancel-doc');
+        const openBtn = document.getElementById('btn-open-doc-modal');
+        const modal = document.getElementById('modal-documents');
+        const cancel = document.getElementById('btn-cancel-doc');
         const dropzone = document.getElementById('doc-dropzone');
-        const input    = document.getElementById('doc-input');
-        const list     = document.getElementById('doc-selected');
-        const submit   = document.getElementById('btn-submit-doc');
+        const input = document.getElementById('doc-input');
+        const list = document.getElementById('doc-selected');
+        const submit = document.getElementById('btn-submit-doc');
         if (!openBtn || !modal) return;
 
         // Source of truth: survives the browser replacing input.files on each

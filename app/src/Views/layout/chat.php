@@ -15,13 +15,21 @@
  *   $content    — view output, injected by Core\Controller::render()
  */
 $user = $user ?? null;
-$page = $page ?? 'other';
-$pageTitle = $pageTitle ?? '';
+// Accept the session/legacy pages' `navSection` and `title` keys as fallbacks
+// so they can reuse this layout without renaming their render() payload.
+$page = $page ?? $navSection ?? 'other';
+// Per-place branding (logo / display name / primary colour) for this user.
+$brand = placeBranding();
+$pageTitle = $pageTitle ?? $title ?? '';
 $conversation = $conversation ?? null;
 $conversations = $conversations ?? [];
 $env = $env ?? null;
 $archivedView = $archivedView ?? false;
-// Exam lockdown view-model (set by AccueilController for a locked student),
+// Pages that display AI markdown opt in via needsMarkdown (chat replies and
+// the teacher monitor transcript). Drives loading marked/DOMPurify/highlight
+// + the shared renderer. Chat always needs it.
+$needsMarkdown = $needsMarkdown ?? ($page === 'chat');
+// Exam lockdown view-model (set by HomeController for a locked student),
 // or null when free. Drives the stripped-down, navigation-free shell.
 $examLock = $examLock ?? null;
 // "Chat" nav target: stay inside the open session conversation instead of
@@ -71,7 +79,7 @@ $themePref = match ($user['theme'] ?? null) {
         })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I-AMU<?= $pageTitle !== '' ? ' · ' . htmlspecialchars($pageTitle) : '' ?></title>
+    <title><?= htmlspecialchars($brand['name']) ?><?= $pageTitle !== '' ? ' · ' . htmlspecialchars($pageTitle) : '' ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -91,6 +99,26 @@ $themePref = match ($user['theme'] ?? null) {
     <link rel="stylesheet" href="/assets/css/shell.css<?= $v('shell.css') ?>">
     <link rel="stylesheet" href="/assets/css/sessions.css<?= $v('sessions.css') ?>">
     <link rel="stylesheet" href="/assets/css/profile.css<?= $v('profile.css') ?>">
+    <?php if ($brand['color'] !== null): ?>
+    <?php
+        /* Per-place primary colour: override the brand accent and derive its
+           shades. Light mode uses the colour as-is; dark mode lightens it so it
+           stays legible on a dark surface. */
+        $c = htmlspecialchars($brand['color']);
+    ?>
+    <style>
+        :root:not([data-theme="dark"]) {
+            --blue: <?= $c ?>;
+            --blue-dark: color-mix(in srgb, <?= $c ?> 82%, #000);
+            --blue-light: color-mix(in srgb, <?= $c ?> 12%, #fff);
+        }
+        [data-theme="dark"] {
+            --blue: color-mix(in srgb, <?= $c ?> 68%, #fff);
+            --blue-dark: color-mix(in srgb, <?= $c ?> 50%, #fff);
+            --blue-light: color-mix(in srgb, <?= $c ?> 22%, #12141d);
+        }
+    </style>
+    <?php endif; ?>
     <?php /* Admin and researcher pages reuse the .admin-section / .admin-table
        styles, both defined in department_admin.css. */ ?>
     <?php if ($page === 'admin' || $page === 'researcher'): ?>
@@ -99,29 +127,39 @@ $themePref = match ($user['theme'] ?? null) {
     <?php if ($page === 'admin'): ?>
         <link rel="stylesheet" href="/assets/css/formAddModel.css<?= $v('formAddModel.css') ?>">
     <?php endif; ?>
+    <?php if ($page === 'error'): ?>
+        <link rel="stylesheet" href="/assets/css/error.css<?= $v('error.css') ?>">
+    <?php endif; ?>
+    <?php if ($page === 'gdpr'): ?>
+        <link rel="stylesheet" href="/assets/css/gdpr.css<?= $v('gdpr.css') ?>">
+    <?php endif; ?>
 
 
     <?php $jsDir = dirname(__DIR__, 3) . '/public/assets/js'; ?>
     <script src="/assets/js/clipboard.js<?= '?v=' . (@filemtime("$jsDir/clipboard.js") ?: 0) ?>" defer></script>
-    <?php if ($page === 'chat'): ?>
-        <?php /* Markdown rendering for AI replies (live + history). Loaded
-         synchronously in <head> so the chat view's inline script can use
-         marked / DOMPurify / hljs immediately. Vendored under
+    <?php /* Easter egg: Konami code -> retro CRT mode. Self-contained. */ ?>
+    <script src="/assets/js/konami.js<?= '?v=' . (@filemtime("$jsDir/konami.js") ?: 0) ?>" defer></script>
+    <?php if ($needsMarkdown): ?>
+        <?php /* Markdown rendering for AI replies (chat live + history, and the
+         teacher monitor transcript). Loaded synchronously in <head> so the
+         page's inline script can use marked / DOMPurify / hljs and the shared
+         window.renderMarkdown immediately. Vendored under
          public/assets/vendor (no CDN dependency). */ ?>
         <link rel="stylesheet"
             href="/assets/vendor/highlight/styles/github-dark.min.css<?= $vv('highlight/styles/github-dark.min.css') ?>">
         <script src="/assets/vendor/marked.min.js<?= $vv('marked.min.js') ?>"></script>
         <script src="/assets/vendor/purify.min.js<?= $vv('purify.min.js') ?>"></script>
         <script src="/assets/vendor/highlight/highlight.min.js<?= $vv('highlight/highlight.min.js') ?>"></script>
+        <script src="/assets/js/markdown.js<?= '?v=' . (@filemtime("$jsDir/markdown.js") ?: 0) ?>"></script>
     <?php endif; ?>
-    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <link rel="icon" href="<?= htmlspecialchars($brand['favicon']) ?>">
 </head>
 
 <body class="app-body page-<?= htmlspecialchars($page) ?>">
 
     <header class="app-topbar">
         <a href="<?= $isDeptAdmin ? '/department-admin' : ($isResearcher ? '/researcher' : '/chat') ?>" class="topbar-brand" aria-label="Accueil I-AMU">
-            <img src="/assets/img/logo.png" alt="">
+            <img src="<?= htmlspecialchars($brand['logo']) ?>" alt="<?= htmlspecialchars($brand['name']) ?>">
             <div class="topbar-brand-text">
                 <span><?= htmlspecialchars($roleLabel) ?></span>
             </div>
@@ -177,13 +215,13 @@ $themePref = match ($user['theme'] ?? null) {
             </a>
             <?php endif; ?>
             <?php if ($isTeacher): ?>
-                <a href="/sessions" class="topbar-tab<?= $page === 'sessions' ? ' active' : '' ?>">
+                <a href="/ressources" class="topbar-tab<?= $page === 'ressources' ? ' active' : '' ?>">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
                         <path d="M6 12v5c3 3 9 3 12 0v-5" />
                     </svg>
-                    Mes sessions
+                    Mes Ressources
                 </a>
             <?php endif; ?>
             <?php if ($isDeptAdmin): ?>
@@ -244,7 +282,7 @@ $themePref = match ($user['theme'] ?? null) {
 lives in the topbar; inside the drawer it gives the slide-out menu
 its own identity above the navigation. */ ?>
             <div class="sidebar-brand">
-                <img src="/assets/img/logo.png" alt="">
+                <img src="<?= htmlspecialchars($brand['logo']) ?>" alt="<?= htmlspecialchars($brand['name']) ?>">
                 <div class="sidebar-brand-text">
                     <span><?= htmlspecialchars($roleLabel) ?></span>
                 </div>

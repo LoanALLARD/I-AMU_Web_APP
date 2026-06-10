@@ -68,8 +68,8 @@ $roleLabel = static fn (string $role): string => $roleLabels[$role] ?? $role;
                     <tbody>
                         <?php foreach ($domains as $d): ?>
                             <tr class="<?= $d['is_active'] ? '' : 'is-inactive' ?>">
-                                <td class="cell-domain"><?= htmlspecialchars($d['domain']) ?></td>
-                                <td class="cell-role" data-sort-value="<?= htmlspecialchars($roleLabel($d['role'])) ?>">
+                                <td class="cell-domain" data-label="Domaine"><?= htmlspecialchars($d['domain']) ?></td>
+                                <td class="cell-role" data-label="Rôle" data-sort-value="<?= htmlspecialchars($roleLabel($d['role'])) ?>">
                                     <span class="role-view">
                                         <span class="role-label"><?= htmlspecialchars($roleLabel($d['role'])) ?></span>
                                         <button type="button" class="btn-icon role-edit-toggle" title="Modifier le rôle" aria-label="Modifier le rôle">
@@ -94,14 +94,14 @@ $roleLabel = static fn (string $role): string => $roleLabels[$role] ?? $role;
                                         </button>
                                     </form>
                                 </td>
-                                <td data-sort-value="<?= $d['is_active'] ? '1' : '0' ?>">
+                                <td data-label="État" data-sort-value="<?= $d['is_active'] ? '1' : '0' ?>">
                                     <?php if ($d['is_active']): ?>
                                         <span class="badge-state badge-active">Actif</span>
                                     <?php else: ?>
                                         <span class="badge-state badge-inactive">Inactif</span>
                                     <?php endif; ?>
                                 </td>
-                                <td class="col-action">
+                                <td class="col-action" data-label="Action">
                                     <form method="POST" action="/super-admin/email-domains/toggle">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="id" value="<?= (int) $d['id'] ?>">

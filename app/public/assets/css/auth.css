@@ -38,6 +38,7 @@ body.auth-body > main {
     from { opacity: 0; transform: translateY(24px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+
 .deactivate-account-msg{
     background: #eff6ff;
     border:1px solid #bfdbfe;
@@ -176,8 +177,10 @@ body.auth-body > main {
 .auth-body input[type="text"],
 .auth-body input[type="email"],
 .auth-body input[type="password"],
+.auth-body input[type="number"],
 .auth-body select[id="place_id"],
 .auth-body select[id="department_id"],
+
 .auth-body select {
     width: 100%;
     border: 1.5px solid var(--gray-200);
@@ -190,20 +193,59 @@ body.auth-body > main {
     transition: border-color .18s, box-shadow .18s;
     outline: none;
 }
+
 .auth-body input:focus,
 .auth-body select:focus {
     border-color: var(--blue);
 }
+
 .auth-body input::placeholder { color: var(--gray-400); font-size: .87rem; }
 
 .field-hint {
     font-size: .75rem;
     color: var(--gray-400);
-    margin-top: -.15rem;
 }
 
-/* RGPD consent checkbox */
-.rgpd-group {
+/* ── Classes utilitaires (Global) ── */
+.d-none {
+    display: none !important;
+}
+
+/* ── Animation d'apparition fluide ── */
+.promo-collapse {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    border-width: 0 !important;
+    transition: max-height 0.4s ease, opacity 0.4s ease, margin 0.4s ease, padding 0.4s ease, border-width 0.4s ease;
+}
+
+/* Quand on affiche le champ générique */
+.promo-collapse.show {
+    max-height: 150px; 
+    opacity: 1;
+    overflow: visible; 
+}
+
+/* On restaure les marges spécifiques selon le type de conteneur */
+.form-group.promo-collapse.show {
+    margin-bottom: 1.1rem !important;
+}
+
+.gdpr-group.promo-collapse.show {
+    margin-top: 1.25rem !important;
+    margin-bottom: 1.25rem !important;
+    padding-top: .85rem !important;
+    padding-bottom: .85rem !important;
+    border-width: 1.5px !important;
+}
+
+/* GDPR consent checkbox */
+.gdpr-group {
     background: var(--blue-light);
     border: 1.5px solid rgba(26,115,200,.2);
     border-radius: 8px;
@@ -213,7 +255,7 @@ body.auth-body > main {
     align-items: flex-start;
     gap: .75rem;
 }
-.rgpd-group input[type="checkbox"] {
+.gdpr-group input[type="checkbox"] {
     width: 17px;
     height: 17px;
     accent-color: var(--blue);
@@ -221,7 +263,7 @@ body.auth-body > main {
     margin-top: 2px;
     cursor: pointer;
 }
-.rgpd-group .rgpd-label {
+.gdpr-group .gdpr-label {
     font-size: .84rem;
     color: var(--gray-800);
     line-height: 1.55;
@@ -229,13 +271,13 @@ body.auth-body > main {
     letter-spacing: 0;
     font-weight: 400;
 }
-.rgpd-group .rgpd-label a {
+.gdpr-group .gdpr-label a {
     color: var(--blue);
     font-weight: 700;
     text-decoration: none;
     border-bottom: 1px dashed var(--blue);
 }
-.rgpd-group .rgpd-label a:hover { border-bottom-style: solid; }
+.gdpr-group .gdpr-label a:hover { border-bottom-style: solid; }
 
 /* Submit button */
 .btn-submit {
