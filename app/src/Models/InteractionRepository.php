@@ -7,7 +7,7 @@ use PDO;
 class InteractionRepository {
 
     private PDO $pdo;
-    
+
     public function __construct(PDO $pdo){
         $this->pdo = $pdo;
     }
@@ -49,10 +49,10 @@ class InteractionRepository {
 
         $querySelect = $this->pdo->prepare('SELECT * FROM interactions WHERE id = :id');
         $querySelect->execute(['id' => $idGenere]);
-        
+
         $result = $querySelect->fetch();
 
-        return $result ?: null; 
+        return $result ?: null;
     }
     /**
      * Full prompt/response history of a conversation, oldest first, with the
@@ -84,7 +84,7 @@ class InteractionRepository {
         $query = $this->pdo->prepare('
             UPDATE interactions set api_metadata = :metadata where id = :id
         ');
-        
+
         $query->execute([
             'metadata' => $metadata,
             'id'       => $interaction_id
@@ -92,12 +92,12 @@ class InteractionRepository {
 
         $idGenere = $this->pdo->lastInsertId();
 
-            if (!$idGenere) {
-                return null;
-            }
-            
+        if (!$idGenere) {
+            return null;
+        }
+
         return TRUE;
-    }   
+    }
 
     /**
      * @return array<array<string, mixed>>

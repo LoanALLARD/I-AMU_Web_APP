@@ -18,4 +18,13 @@ interface LlmAdaptaterInterface {
      * @return list<int>
      */
     public function readContextFromMetadata(array $metaDataRaw): array;
+    /**
+     * Same as generate() but streams the answer. Each response token is
+     * passed to $onChunk as soon as it arrives. Returns the final aggregate so the caller can persist it.
+     *
+     * @param array<int, int> $context conversation context (provider token ids)
+     * @param callable(string): void $onChunk
+     * @return array{response: string, context: list<int>, prompt_eval_count: ?int, eval_count: ?int}
+     */
+    public function generateStream(string $message, array $context, ?string $preprompt, ?string $posprompt, callable $onChunk): array;
 }

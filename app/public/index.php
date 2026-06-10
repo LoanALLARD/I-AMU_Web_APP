@@ -45,6 +45,7 @@
     $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
     $router->add('POST', '/reactivate',  function() { (new AuthController())->reactivate();});
     $router->add('GET',  '/rgpd_consent', function() { (new AuthController())->showRGPD(); });
+    $router->add('GET',  '/rgpd_consent_researcher', function() { (new AuthController())->showRGPDResearcher(); });
     $router->add('GET',  '/verify-email',function() { (new AuthController())->verifyEmail(); });
 
     // AJAX: departments of a place, for the registration form's dependent select.
@@ -97,6 +98,12 @@
     $router->add('POST', '/super-admin/email-domains',     function() { (new SuperAdminController())->addEmailDomain(); });
     $router->add('POST', '/super-admin/email-domains/role',   function() { (new SuperAdminController())->changeEmailDomainRole(); });
     $router->add('POST', '/super-admin/email-domains/toggle', function() { (new SuperAdminController())->toggleEmailDomain(); });
+    $router->add('POST', '/super-admin/department-admins/invite', function () { (new SuperAdminController())->inviteDepartmentAdmin(); });
+
+    //Admin invitation
+    $router->add('GET',  '/admin-invite/accept', function () { (new AuthController())->showAcceptInvite(); });
+    $router->add('POST', '/admin-invite/accept', function () { (new AuthController())->acceptInvite(); });
+
 
     // --- Researcher space (researcher role) ---------------------------
     $router->add('GET',  '/researcher',                 function() { (new ResearcherController())->index(); });

@@ -92,9 +92,16 @@
             <div class="rgpd-group">
                 <input type="checkbox" id="rgpd_consent" name="rgpd_consent" value="1" required>
                 <label for="rgpd_consent" class="rgpd-label">
-                    J'accepte le traitement de mes données personnelles dans le cadre
-                    de la recherche scientifique sur l'usage de l'IA.
-                    <a href="/rgpd_consent" target="_blank">En savoir plus</a>
+                    <span id="consent-text-member">
+                        J'accepte le traitement de mes données personnelles dans le cadre
+                        de la recherche scientifique sur l'usage de l'IA.
+                        <a href="/rgpd_consent" target="_blank">En savoir plus</a>
+                    </span>
+                    <span id="consent-text-researcher" hidden>
+                        En tant que chercheur, je m'engage à respecter les conditions d'accès
+                        et de traitement des données de la plateforme I-AMU.
+                        <a href="/rgpd_consent_researcher" target="_blank">En savoir plus</a>
+                    </span>
                 </label>
             </div>
 

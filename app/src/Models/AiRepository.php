@@ -58,11 +58,11 @@ class AiRepository
                 FROM models 
                 where resource_id is NULL
                 and is_shareable = true'
-                );
+            );
             $query->execute([
                 "a"    => true,
                 "dep_id"  => $dep_id
-                ]);
+            ]);
         }
         else{
             $query = $this->pdo->prepare(
@@ -75,7 +75,7 @@ class AiRepository
             $query->execute([
                 "a"    => true,
                 "session_id"  => $sessionID
-                ]);
+            ]);
         }
         /** @var list<array<string, mixed>> $rows */
         $rows = $query->fetchAll();
