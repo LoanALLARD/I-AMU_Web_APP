@@ -45,8 +45,8 @@
     $router->add('POST', '/register',    function() { (new AuthController())->register(); });
     $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
     $router->add('POST', '/reactivate',  function() { (new AuthController())->reactivate();});
-    $router->add('GET',  '/rgpd_consent', function() { (new AuthController())->showRGPD(); });
-    $router->add('GET',  '/rgpd_consent_researcher', function() { (new AuthController())->showRGPDResearcher(); });
+    $router->add('GET',  '/gdpr_consent', function() { (new AuthController())->showGDPR(); });
+    $router->add('GET',  '/gdpr_consent_researcher', function() { (new AuthController())->showGDPRResearcher(); });
     $router->add('GET',  '/verify-email',function() { (new AuthController())->verifyEmail(); });
 
     // AJAX: departments of a place, for the registration form's dependent select.
@@ -111,6 +111,7 @@
     $router->add('GET',  '/researcher/data',            function() { (new ResearcherController())->data(); });
     $router->add('GET',  '/researcher/data/stats',      function() { (new ResearcherController())->stats(); });
     $router->add('GET',  '/researcher/export',          function() { (new ResearcherController())->export(); });
+    $router->add('GET',  '/researcher/export/download', function() { (new ResearcherController())->exportDownload(); });
     $router->add('POST', '/researcher/requests',        function() { (new ResearcherController())->requestAccess(); });
     $router->add('POST', '/researcher/requests/cancel', function() { (new ResearcherController())->cancelRequest(); });
 

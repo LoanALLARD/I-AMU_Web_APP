@@ -11,6 +11,8 @@ $initials = strtoupper(
 );
 $roles = $user['roles'] ?? [];
 $isTeacher = in_array('teacher', $roles, true);
+$isAdmin = in_array('admin', $roles, true) || in_array('department_admin', $roles, true);
+$isResearcher = in_array('researcher', $roles, true);
 $isSpecialized = !empty($user['isSpecialized']);
 // Only teachers and students use the LLM, so only they get usage stats.
 $usesLlm = $isTeacher || in_array('student', $roles, true);
@@ -289,7 +291,7 @@ CO₂ (g)      = énergie ÷ 1000 × <?= htmlspecialchars(rtrim(rtrim(number_for
                 </details>
             </div>
             <?php endif; ?>
-
+            <?php if (!$isAdmin): ?>
             <!-- Zone à risque -->
             <div class="danger-zone">
                 <div class="danger-zone-header">
@@ -314,7 +316,7 @@ CO₂ (g)      = énergie ÷ 1000 × <?= htmlspecialchars(rtrim(rtrim(number_for
                     </div>
 
                     <div class="danger-zone-sep"></div>
-
+                    <?php if (!$isAdmin && !$isResearcher): ?>
                     <!-- Retirer le consentement à la recherche -->
                     <div class="danger-row">
                         <div class="danger-row-info">
@@ -329,15 +331,17 @@ CO₂ (g)      = énergie ÷ 1000 × <?= htmlspecialchars(rtrim(rtrim(number_for
                             <?= icon('shield-off', '', 13) ?> Retirer le consentement
                         </button>
                     </div>
+                    <?php endif; ?>
 
                 </div>
 
                 <div class="danger-zone-footer">
-                    <a href="/rgpd_consent" class="rgpd-link">
+                    <a href="/gdpr_consent" class="gdpr-link">
                         <?= icon('plus', '', 12) ?> Consulter les mentions d'information RGPD
                     </a>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
 
         <aside>

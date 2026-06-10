@@ -13,7 +13,7 @@
     ?>
     <link rel="stylesheet" href="/assets/css/style.css<?= $v('style.css') ?>">
     <link rel="stylesheet" href="/assets/css/auth.css<?= $v('auth.css') ?>">
-    <link rel="stylesheet" href="/assets/css/rgpd.css<?= $v('rgpd.css') ?>">
+    <link rel="stylesheet" href="/assets/css/gdpr.css<?= $v('gdpr.css') ?>">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
 <body class="auth-body">
