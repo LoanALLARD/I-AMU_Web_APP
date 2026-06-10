@@ -595,6 +595,110 @@
 }
 
 
+/* Consumption stats */
+
+.stats-card h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: none;
+    letter-spacing: normal;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--gray-800);
+    margin: 0 0 4px;
+}
+
+.stats-card .page-sub {
+    margin: 0 0 18px;
+}
+
+.stats-metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+}
+
+.stats-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 14px 16px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--r-2, var(--r-1));
+    background: var(--gray-50, var(--gray-100));
+}
+
+.stats-metric-icon {
+    color: var(--blue);
+    margin-bottom: 2px;
+}
+
+.stats-metric-value {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    line-height: 1.1;
+}
+
+.stats-metric-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gray-400);
+}
+
+.stats-activity {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--gray-200);
+}
+
+.stats-activity-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin: 0 0 14px;
+}
+
+.stats-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 88px;
+    padding: 4px 0;
+}
+
+.stats-bar {
+    flex: 1;
+    min-width: 0;
+    border-radius: 2px 2px 0 0;
+    background: var(--blue);
+    transition: background 0.15s;
+}
+
+.stats-bar:hover {
+    background: var(--gold, var(--blue));
+}
+
+.stats-bar.is-empty {
+    background: var(--gray-200);
+}
+
+.stats-bars-foot {
+    margin: 8px 0 0;
+    font-size: 0.75rem;
+    color: var(--gray-400);
+}
+
 /* Responsive */
 
 @media (max-width: 768px) {

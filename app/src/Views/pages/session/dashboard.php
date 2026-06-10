@@ -30,6 +30,9 @@ $canManage = $canManage ?? false;
             <a href="/sessions/<?= (int) $view['id'] ?>/monitor" class="btn primary">
                 <?= icon('user', '', 12) ?> Suivi
             </a>
+            <a href="/sessions/<?= (int) $view['id'] ?>/stats" class="btn">
+                <?= icon('chart-line', '', 12) ?> Statistiques
+            </a>
             <button type="button" class="btn" id="btn-open-export">
                 <?= icon('archive', '', 12) ?> Exporter (JSON)
             </button>

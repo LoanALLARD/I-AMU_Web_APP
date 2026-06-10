@@ -16,7 +16,9 @@ $activeTab   = $activeTab ?? 'access';
         <h1>Espace chercheur</h1>
         <span class="badge badge-draft"><?= icon('flask-conical', '', 13) ?> chercheur</span>
     </div>
-    <p class="page-sub">Connecté en tant que <strong><?= htmlspecialchars($displayName !== '' ? $displayName : 'chercheur') ?></strong> &middot; <?= htmlspecialchars($user['email'] ?? '') ?></p>
+    <div class="admin-identity-meta">
+        Connecté en tant que <strong><?= htmlspecialchars($displayName !== '' ? $displayName : 'chercheur') ?></strong>
+    </div>
 </div>
 
 <nav class="tabs" aria-label="Espace chercheur">
