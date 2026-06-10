@@ -66,18 +66,6 @@ class UserRepository
     }
 
     /**
-     * Replaces the user's password hash. The caller hashes the new password
-     * (the repository only stores what it is given).
-     */
-    public function updatePassword(int $userId, string $passwordHash): void
-    {
-        $stmt = $this->pdo->prepare(
-            'UPDATE users SET password_hash = :hash WHERE id = :id'
-        );
-        $stmt->execute(['hash' => $passwordHash, 'id' => $userId]);
-    }
-
-    /**
      * Tells whether an account already exists for the given email.
      */
     public function emailExists(string $email): bool
@@ -511,5 +499,66 @@ class UserRepository
         $stmt->execute(['id' => $adminId]);
 
         return $stmt->rowCount();
+    }
+
+    public function updatePassword(int $id, string $password): bool
+    {
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        
+        $query = $this->pdo->prepare(
+            'UPDATE users SET password_hash = :password WHERE id = :id'
+        );
+
+        return $query->execute([
+            'password' => $hash,
+            'id'       => $id
+        ]);
+    }
+
+    public function updateFirstName(int $id, string $firstName): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE users SET first_name = :first_name WHERE id = :id'
+        );
+
+        return $query->execute([
+            'first_name' => $firstName,
+            'id'         => $id
+        ]);
+    }
+
+    public function updateLastName(int $id, string $lastName): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE users SET last_name = :last_name WHERE id = :id'
+        );
+
+        return $query->execute([
+            'last_name' => $lastName,
+            'id'        => $id
+        ]);
+    }
+
+    public function updateEmail(int $id, string $email): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE users SET email = :email WHERE id = :id'
+        );
+
+        return $query->execute([
+            'email' => $email,
+            'id'    => $id
+        ]);
+    }
+    public function updateTitle(int $id, string $title): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE teachers SET title = :title WHERE id = :id'
+        );
+
+        return $query->execute([
+            'title' => $title,
+            'id'    => $id
+        ]);
     }
 }

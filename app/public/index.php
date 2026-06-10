@@ -4,6 +4,15 @@
 
     require dirname(__DIR__) . '/src/bootstrap.php';
 
+    // Harden the session cookie before the session starts.
+    session_set_cookie_params([
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'secure'   => (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off'),
+        'path'     => '/',
+    ]);
+    ini_set('session.use_strict_mode', '1');
+    
     session_start();
     use Core\Router;
     use Controllers\HomeController;
@@ -44,8 +53,8 @@
     $router->add('POST', '/register',    function() { (new AuthController())->register(); });
     $router->add('GET',  '/logout',      function() { (new AuthController())->logout(); });
     $router->add('POST', '/reactivate',  function() { (new AuthController())->reactivate();});
-    $router->add('GET',  '/rgpd_consent', function() { (new AuthController())->showRGPD(); });
-    $router->add('GET',  '/rgpd_consent_researcher', function() { (new AuthController())->showRGPDResearcher(); });
+    $router->add('GET',  '/gdpr_consent', function() { (new AuthController())->showGDPR(); });
+    $router->add('GET',  '/gdpr_consent_researcher', function() { (new AuthController())->showRGPDResearcher(); });
     $router->add('GET',  '/verify-email',function() { (new AuthController())->verifyEmail(); });
 
     // AJAX: departments of a place, for the registration form's dependent select.
@@ -146,6 +155,7 @@
     $router->add('POST', '/ressources/{id}/update',  function($id) { (new ResourceController())->update($id); });
     $router->add('POST', '/ressources/{id}/archive',  function($id) { (new ResourceController())->archive($id); });
     $router->add('POST', '/ressources/{id}/restore',  function($id) { (new ResourceController())->restore($id); });
+    $router->add('POST', '/ressources/{id}/publish', function($id) { (new ResourceController())->publish($id); });
 
     $router->add('POST', '/documents/{id}/delete', function($id) { (new DocumentController())->delete($id); });
     $router->add('GET',  '/documents/session_{sessionId}/{docId}', function($sessionId, $docId) { (new DocumentController())->download($sessionId, $docId); });

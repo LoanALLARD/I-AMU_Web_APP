@@ -100,6 +100,11 @@ $relativeDay = static function (?string $ts): string {
                             <?php endif; ?>
                         </span>
                     <?php endif; ?>
+                    <div class="card-actions">
+                        <button type="button" class="btn" id="btn-toggle-edit">
+                            <?= icon('edit', '', 14) ?> Modifier mes informations
+                        </button>
+                    </div>
                 </div>
 
                 <?php if ($isTeacher && !$isSpecialized && in_array($specRequestStatus, ['none', 'rejected'], true)): ?>
@@ -123,7 +128,41 @@ $relativeDay = static function (?string $ts): string {
                         </form>
                     </div>
                 <?php endif; ?>
-            </div>
+            <div class="dashboard-card edit-form-card" id="edit-form-card">
+                    <h2>Modifier mes informations</h2>
+                    <form method="POST" action="/profile/update" class="edit-profile-form">
+                        <?= csrf_field() ?>
+                        <? if ($user['roles'][0] == "teacher"): ?>
+                        <div class="form-group full-width">
+                            <label for="title">Votre titre<span class="hint" ></span></label>
+                            <input type="text" id="title" name="title">
+                        </div>
+                        <? endif ?>
+
+
+                        <div class="form-group full-width">
+                            <label for="password">Nouveau mot de passe <span class="hint">(laisser vide pour ne pas modifier)</span></label>
+                            <input type="password" id="password" name="password">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="password_confirm">Confirmer le mot de passe</label>
+                            <input type="password" id="password_confirm" name="password_confirm">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>
+                                <input type="checkbox" id="toggle-password-visibility"> Afficher les mots de passe
+                            </label>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn ghost" id="btn-cancel-edit">Annuler</button>
+                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        </div>
+                    </form>
+                </div>
+                </div>
 
             <!-- Statistiques de consommation (profs et eleves uniquement) -->
             <?php if ($usesLlm): ?>
@@ -459,4 +498,34 @@ CO₂ (g)      = énergie ÷ 1000 × <?= htmlspecialchars(rtrim(rtrim(number_for
         });
     });
 })();
+document.addEventListener('DOMContentLoaded', () => {
+    const btnToggleEdit = document.getElementById('btn-toggle-edit');
+    const btnCancelEdit = document.getElementById('btn-cancel-edit');
+    const editFormCard = document.getElementById('edit-form-card');
+
+    btnToggleEdit?.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        editFormCard.classList.toggle('is-open');
+        
+        if (editFormCard.classList.contains('is-open')) {
+            setTimeout(() => {
+                editFormCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+        }
+    });
+
+    btnCancelEdit?.addEventListener('click', () => {
+        editFormCard.classList.remove('is-open');
+    });
+});
+const togglePasswordVisibility = document.getElementById('toggle-password-visibility');
+const passwordInput = document.getElementById('password');
+const passwordConfirmInput = document.getElementById('password_confirm');
+
+togglePasswordVisibility?.addEventListener('change', () => {
+    const isChecked = togglePasswordVisibility.checked;
+    passwordInput.type = isChecked ? 'text' : 'password';
+    passwordConfirmInput.type = isChecked ? 'text' : 'password';
+});
 </script>

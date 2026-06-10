@@ -26,7 +26,7 @@
 ### 🟡 Partiel / divergent
 - **Page compte** : sous `/profile` (et non `/account`), MVP — pas d'agrégat stats (`GetAccountOverviewService` non implémenté).
 - **Rattachement département** : via selects **lieu + département** dépendants (et non « code département » du §2bis, jamais implémenté). Le `department_id` est écrit et validé serveur ; un AJAX `GET /places/{id}/departments` peuple le second select.
-- **Mention RGPD** : checkbox bloquante à l'inscription + page `/rgpd_consent` ; pas de page publique `/privacy` (cf. [spec 06](./06-rgpd.md)).
+- **Mention RGPD** : checkbox bloquante à l'inscription + page `/gdpr_consent` ; pas de page publique `/privacy` (cf. [spec 06](./06-rgpd.md)).
 
 ### ❌ Pas fait
 - **Réinitialisation du mot de passe oublié** (`/password/forgot`, `/password/reset`, table `password_reset`, mail de reset) — *must-have non couvert*. (La table `password_reset` n'existe pas au schéma.)
@@ -35,7 +35,7 @@
 - **Préférences densité / langue**.
 
 ### Routes réelles (vs §6 planifié)
-Présentes : `GET /login`, `POST /login`, `GET /register`, `POST /register`, `GET /logout`, `POST /reactivate`, `GET /rgpd_consent`, `GET /verify-email`, `GET /places/{id}/departments`, `GET /profile`, `POST /profile/update`, `POST /profile/password`, `POST /profile/theme`, `POST /profile/deactivate`. Les routes `/account/*` et `/password/*` du §6 ne sont **pas** en place (le compte vit sous `/profile`).
+Présentes : `GET /login`, `POST /login`, `GET /register`, `POST /register`, `GET /logout`, `POST /reactivate`, `GET /gdrp_consent`, `GET /verify-email`, `GET /places/{id}/departments`, `GET /profile`, `POST /profile/update`, `POST /profile/password`, `POST /profile/theme`, `POST /profile/deactivate`. Les routes `/account/*` et `/password/*` du §6 ne sont **pas** en place (le compte vit sous `/profile`).
 
 ## 1. Objectifs
 

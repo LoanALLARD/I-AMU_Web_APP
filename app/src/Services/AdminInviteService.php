@@ -84,7 +84,6 @@ final class AdminInviteService
         } else {
             return null;
         }
-        [$email, $departmentId, $expiresAt] = $fields;
 
         if ((int) $expiresAt < time()) {
             return null;
