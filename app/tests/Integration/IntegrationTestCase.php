@@ -37,15 +37,27 @@ abstract class IntegrationTestCase extends TestCase
 
     protected PDO $pdo;
 
+    /**
+     * Wrap each test in a transaction rolled back in tearDown — the default,
+     * and the safest isolation (nothing is ever committed, so even a populated
+     * database is left untouched). Set to false in a subclass whose repository
+     * manages its OWN transaction (e.g. UserRepository::createUserWithRole),
+     * since PDO/pgsql cannot nest beginTransaction(); such a class is then
+     * responsible for cleaning up the rows it creates.
+     */
+    protected bool $useTransaction = true;
+
     protected function setUp(): void
     {
         $this->pdo = self::connectOrSkip();
-        $this->pdo->beginTransaction();
+        if ($this->useTransaction) {
+            $this->pdo->beginTransaction();
+        }
     }
 
     protected function tearDown(): void
     {
-        if (isset($this->pdo) && $this->pdo->inTransaction()) {
+        if ($this->useTransaction && isset($this->pdo) && $this->pdo->inTransaction()) {
             $this->pdo->rollBack();
         }
     }

@@ -157,7 +157,7 @@ class UserRepository
                 );
                 $roleStmt->execute(['id' => $userId, 'lab' => $user['laboratory_id'] ?? null]);
             } else if ($role == 'teacher') {
-                $roleStmt = $this->pdo->prepare("INSERT INTO teacher (id) VALUES (:id)");
+                $roleStmt = $this->pdo->prepare("INSERT INTO teachers (id) VALUES (:id)");
                 $roleStmt->execute(['id' => $userId]);
             }else{
                 $roleStmt = $this->pdo->prepare("INSERT INTO students (id,year) VALUES (:id,:year)");
