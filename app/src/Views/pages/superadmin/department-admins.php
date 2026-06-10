@@ -17,13 +17,13 @@
                 <?= icon('user', '', 16) ?>
                 Inviter un admin de departement
             </button>
-            <button type="button" class="admin-tab" data-tab="invite-super" role="tab" aria-selected="false">
-                <?= icon('key-round', '', 16) ?>
-                Inviter un super admin
-            </button>
             <button type="button" class="admin-tab" data-tab="manage" role="tab" aria-selected="false">
                 <?= icon('users', '', 16) ?>
                 Gerer les admins
+            </button>
+            <button type="button" class="admin-tab" data-tab="invite-super" role="tab" aria-selected="false">
+                <?= icon('key-round', '', 16) ?>
+                Inviter un super admin
             </button>
         </nav>
 
