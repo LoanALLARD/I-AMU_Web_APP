@@ -277,7 +277,7 @@ class LLMController{
             $result = $ai->askStream($userMessage, $context, $preprompt, $postprompt, $onChunk);
         } catch (\Throwable $e) {
             echo "event: error\n";
-            echo 'data: ' . json_encode(['error' => 'Le modele est indisponible.']) . "\n\n";
+            echo 'data: ' . json_encode(['error' => 'Le modèle est indisponible.']) . "\n\n";
             flush();
             return;
         }

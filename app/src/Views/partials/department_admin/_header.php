@@ -21,7 +21,7 @@ $nav = [
             <span class="badge badge-teacher"><?= icon('building', '', 13) ?> <?= htmlspecialchars($department['name']) ?></span>
         <?php endif; ?>
         <a href="/department-admin/addModel" class="btn sm page-header-cta">
-            <?= icon('plus', '', 13) ?> ajouter un model
+            <?= icon('plus', '', 13) ?> ajouter un modèle
         </a>
     </div>
     <div class="admin-identity-meta">

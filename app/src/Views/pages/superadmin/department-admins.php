@@ -7,10 +7,10 @@
         <?php require __DIR__ . '/_flash.php'; ?>
 
         <section class="panel-section">
-            <h2>Inviter un administrateur de departement</h2>
+            <h2>Inviter un administrateur de département</h2>
             <p class="section-lead">
-                Un lien d'activation valable 7 jours est envoye a l'adresse indiquee.
-                Le destinataire choisit son mot de passe pour creer son compte.
+                Un lien d'activation valable 7 jours est envoyé à l'adresse indiquée.
+                Le destinataire choisit son mot de passe pour créer son compte.
             </p>
 
             <form method="POST" action="/super-admin/department-admins/invite" class="domain-form">
@@ -22,9 +22,9 @@
                                placeholder="prenom.nom@univ-amu.fr" required>
                     </div>
                     <div class="form-group">
-                        <label for="department_id">Departement</label>
+                        <label for="department_id">Département</label>
                         <select id="department_id" name="department_id" required>
-                            <option value="">Choisir un departement...</option>
+                            <option value="">Choisir un département...</option>
                             <?php foreach ($departments as $d): ?>
                                 <option value="<?= (int) $d['id'] ?>"><?= htmlspecialchars($d['label']) ?></option>
                             <?php endforeach; ?>

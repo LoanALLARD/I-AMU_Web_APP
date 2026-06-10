@@ -42,14 +42,14 @@ final class ResearcherAnalyticsService
             static fn (int $id): bool => $id > 0
         )));
         if ($requested === []) {
-            return ['success' => false, 'error' => 'Aucun departement selectionne.'];
+            return ['success' => false, 'error' => 'Aucun département sélectionné.'];
         }
 
         // Anti-IDOR: refuse if any requested id is not an active grant.
         $allowed = $this->authorizedDepartmentIds($researcherId);
         $scoped = array_values(array_intersect($requested, $allowed));
         if (count($scoped) !== count($requested)) {
-            return ['success' => false, 'error' => 'Acces non autorise a ce perimetre.'];
+            return ['success' => false, 'error' => 'Accès non autorisé à ce périmètre.'];
         }
 
         $agg = $this->analytics->aggregate($scoped);

@@ -29,7 +29,7 @@ class SuperAdminController extends Controller
 
         $this->renderPanel(
             'pages/superadmin/department-admins',
-            'Administrateurs de departement',
+            'Administrateurs de département',
             'department-admins',
             ['departments' => $this->allDepartments()]
         );
@@ -41,7 +41,7 @@ class SuperAdminController extends Controller
 
         $this->renderPanel(
             'pages/superadmin/places',
-            'Sites et departements',
+            'Sites et départements',
             'places',
             [
                 'places'      => $service->listPlaces(),
@@ -278,18 +278,18 @@ class SuperAdminController extends Controller
         $mail = new \Services\MailService();
         $sent = $mail->send(
             $email,
-            'Invitation administrateur de departement — I-AMU',
-            '<h2>Invitation administrateur de departement</h2>'
-            . '<p>Vous avez ete invite a administrer un departement sur I-AMU.</p>'
-            . '<p>Cliquez sur le lien ci-dessous pour creer votre compte (valable 7 jours) :</p>'
+            'Invitation administrateur de département — I-AMU',
+            '<h2>Invitation administrateur de département</h2>'
+            . '<p>Vous avez été invité à administrer un département sur I-AMU.</p>'
+            . '<p>Cliquez sur le lien ci-dessous pour créer votre compte (valable 7 jours) :</p>'
             . '<p><a href="' . htmlspecialchars($link) . '">Activer mon compte administrateur</a></p>'
             . '<p>Si vous n\'attendiez pas cette invitation, ignorez cet email.</p>'
         );
 
         $this->flash(
             $sent ? 'success' : 'error',
-            $sent ? 'Invitation envoyee a ' . htmlspecialchars($email) . '.'
-                  : "L'envoi de l'email a echoue."
+            $sent ? 'Invitation envoyée à ' . htmlspecialchars($email) . '.'
+                  : "L'envoi de l'email a échoué."
         );
         $this->redirect('/super-admin/department-admins');
     }
