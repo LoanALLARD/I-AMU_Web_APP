@@ -62,6 +62,7 @@
     $router->add('POST', '/profile/update',      function()     { (new ProfileController())->updateProfile(); });
     $router->add('POST', '/profile/password',    function()     { (new ProfileController())->changePassword(); });
     $router->add('POST', '/profile/request-specialisation', function() { (new ProfileController())->requestSpecialisation(); });
+    $router->add('POST', '/profile/withdraw-consent', function() { (new ProfileController())->updateResearchOpposition(); });
 
     // --- Department-admin console (department_admin role) --------------
     $router->add('GET',  '/department-admin',                         function() { (new DepartmentAdminController())->index(); });

@@ -455,4 +455,18 @@ class UserRepository
             throw $e;
         }
     }
+
+    public function updateResearchOpposition(int $userId, bool $opposed): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE users
+            SET research_opposed = :opposed
+            WHERE id = :id'
+        );
+
+        $stmt->bindValue('opposed', $opposed, PDO::PARAM_BOOL);
+        $stmt->bindValue('id', $userId, PDO::PARAM_INT);
+
+        $stmt->execute();
+    }
 }
