@@ -105,6 +105,7 @@ require __DIR__ . '/_header.php';
                                 <span class="metric-icon"><?= icon('messages-square', '', 18) ?></span>
                                 <span class="metric-value" data-metric="conversations">0</span>
                                 <span class="metric-label">Conversations</span>
+                                <span class="metric-sub" data-metric="conversations_split"></span>
                             </article>
                             <article class="metric-card">
                                 <span class="metric-icon"><?= icon('message-circle', '', 18) ?></span>
@@ -158,6 +159,46 @@ require __DIR__ . '/_header.php';
                             </div>
                             <p class="sparkline-foot"><span data-metric="activity_total">0</span> interactions sur la période</p>
                         </section>
+
+                        <section class="dashboard-block">
+                            <h4 class="block-title"><?= icon('ruler', '', 15) ?> Longueur &amp; profondeur</h4>
+                            <div class="shape-grid">
+                                <article class="shape-card">
+                                    <span class="shape-value" data-metric="avg_prompt_words">-</span>
+                                    <span class="shape-label">mots / prompt (moy.)</span>
+                                </article>
+                                <article class="shape-card">
+                                    <span class="shape-value" data-metric="avg_prompt_chars">-</span>
+                                    <span class="shape-label">caractères / prompt (moy.)</span>
+                                </article>
+                                <article class="shape-card">
+                                    <span class="shape-value" data-metric="avg_conversation_depth">-</span>
+                                    <span class="shape-label">interactions / conversation (moy.)</span>
+                                </article>
+                            </div>
+                        </section>
+
+                        <section class="dashboard-block">
+                            <h4 class="block-title"><?= icon('message-square-text', '', 15) ?> Mots les plus utilisés</h4>
+                            <div class="keyword-table-wrap" data-keyword-table-wrap>
+                                <table class="keyword-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="kw-rank" scope="col">#</th>
+                                            <th class="kw-word" scope="col">Mot</th>
+                                            <th class="kw-num" scope="col" title="Nombre total d'occurrences dans les prompts">Occurrences</th>
+                                            <th class="kw-num" scope="col" title="Nombre d'étudiants distincts ayant employé ce mot">Étudiants</th>
+                                            <th class="kw-share" scope="col" title="Part de ce mot sur l'ensemble des mots significatifs affichés">Part</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody data-keyword-body></tbody>
+                                </table>
+                            </div>
+                            <p class="no-message" data-keyword-empty hidden>
+                                Pas assez de données pour dégager des mots-clés (un mot n'apparaît que s'il est utilisé par au moins <span data-metric="keyword_min_students">2</span> étudiants distincts).
+                            </p>
+                        </section>
+
                     </div>
                 </section>
 
