@@ -32,7 +32,9 @@ require __DIR__ . '/_header.php';
         <?php else: ?>
             <p class="section-lead">
                 Sélectionnez les campus et départements à inclure, puis exportez le corpus.
-                Seules les interactions des utilisateurs n'ayant pas refusé l'usage recherche sont incluses.
+                Les données sont anonymisées à l'export (aucun nom, email ou n° étudiant ;
+                chaque étudiant est représenté par un identifiant opaque stable), et seules
+                les interactions des utilisateurs n'ayant pas refusé l'usage recherche sont incluses.
             </p>
 
             <form id="export-form" class="export-scope">

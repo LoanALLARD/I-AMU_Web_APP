@@ -123,7 +123,7 @@ class ResearcherController extends Controller
             fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, [
                 'campus', 'departement', 'session_id', 'session', 'code_session',
-                'etudiant_id', 'prenom', 'nom', 'email', 'numero_etudiant',
+                'etudiant',
                 'conversation_id', 'conversation', 'conversation_creee_le', 'archivee',
                 'interaction_id', 'prompt', 'reponse', 'modele',
                 'tokens_entree', 'tokens_sortie', 'latence_ms', 'feedback', 'envoye_le',
@@ -131,7 +131,7 @@ class ResearcherController extends Controller
             foreach ($result['rows'] as $r) {
                 fputcsv($out, [
                     $r['campus'], $r['department'], $r['session_id'], $r['session_name'], $r['session_code'],
-                    $r['student_id'], $r['first_name'], $r['last_name'], $r['email'], $r['student_number'],
+                    $r['student'],
                     $r['conversation_id'], $r['conversation_name'], $r['conversation_created_at'], $r['is_archived'] ? '1' : '0',
                     $r['interaction_id'], $r['prompt'], $r['response'], $r['model'],
                     $r['input_tokens'], $r['output_tokens'], $r['latency_ms'], $r['user_feedback'], $r['sent_at'],
@@ -145,6 +145,7 @@ class ResearcherController extends Controller
         header('Content-Disposition: attachment; filename="' . $base . '.json"');
         echo json_encode([
             'exported_at'       => date('c'),
+            'anonymised'        => true,
             'scope'             => $result['scope'],
             'interaction_count' => count($result['rows']),
             'interactions'      => $result['rows'],

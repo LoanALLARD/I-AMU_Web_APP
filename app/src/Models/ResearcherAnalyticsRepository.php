@@ -119,10 +119,10 @@ class ResearcherAnalyticsRepository
 
     /**
      * Flat research corpus: one row per interaction over the given departments,
-     * restricted to consenting users (research_opposed = FALSE). Identity is
-     * included on purpose (no platform-side anonymisation, per the RGPD stance);
-     * the consent filter is the researcher-side safeguard. Feeds both the JSON
-     * and the CSV researcher exports.
+     * restricted to consenting users (research_opposed = FALSE). No direct
+     * identifier (name, email, student number) ever leaves the database here;
+     * only the user id is read, so the service can pseudonymise it at export
+     * time. Feeds both the JSON and the CSV researcher exports.
      *
      * @param list<int> $departmentIds
      * @return list<array<string, mixed>>
@@ -141,11 +141,7 @@ class ResearcherAnalyticsRepository
                     s.id          AS session_id,
                     s.name        AS session_name,
                     s.access_code AS session_access_code,
-                    u.id          AS student_id,
-                    u.first_name,
-                    u.last_name,
-                    u.email,
-                    st.student_number,
+                    c.user_id     AS student_id,
                     c.id          AS conversation_id,
                     c.name        AS conversation_name,
                     c.created_at  AS conversation_created,
@@ -162,7 +158,6 @@ class ResearcherAnalyticsRepository
              FROM interactions i
              JOIN conversations c ON c.id = i.conversation_id
              JOIN users u ON u.id = c.user_id
-             LEFT JOIN students st ON st.id = u.id
              JOIN sessions s ON s.id = c.session_id
              JOIN resources r ON r.id = s.resource_id
              JOIN departments d ON d.id = r.department_id
@@ -170,7 +165,7 @@ class ResearcherAnalyticsRepository
              LEFT JOIN models m ON m.id = c.model_id
              WHERE r.department_id IN ' . $in . '
                AND u.research_opposed = FALSE
-             ORDER BY p.name, d.name, s.id, u.last_name, u.first_name, c.id, i.sent_at, i.id'
+             ORDER BY p.name, d.name, s.id, c.user_id, c.id, i.sent_at, i.id'
         );
         $stmt->execute($params);
 
