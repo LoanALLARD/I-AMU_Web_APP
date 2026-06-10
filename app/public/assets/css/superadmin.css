@@ -144,12 +144,21 @@ body.superadmin-body--full > main {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 2rem;
+    /* Let the sub-tabs scroll horizontally instead of overflowing/clipping
+       on narrow screens. Scrollbar hidden — the cut-off edge hints scroll. */
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;              /* Firefox */
+    -webkit-overflow-scrolling: touch;  /* momentum on iOS */
 }
+.dashboard-nav-inner::-webkit-scrollbar { display: none; } /* Chrome/Safari */
 .nav-link {
     display: inline-flex;
     align-items: center;
     gap: .45rem;
     padding: .85rem 1rem;
+    flex: 0 0 auto;       /* keep tabs at natural width — don't squeeze */
+    white-space: nowrap;
     color: rgba(255, 255, 255, .65);
     font-size: .88rem;
     font-weight: 600;
