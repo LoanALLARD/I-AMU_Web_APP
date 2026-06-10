@@ -116,4 +116,62 @@ class ResearcherAnalyticsRepository
 
         return $rows;
     }
+
+    /**
+     * Flat research corpus: one row per interaction over the given departments,
+     * restricted to consenting users (research_opposed = FALSE). No direct
+     * identifier (name, email, student number) ever leaves the database here;
+     * only the user id is read, so the service can pseudonymise it at export
+     * time. Feeds both the JSON and the CSV researcher exports.
+     *
+     * @param list<int> $departmentIds
+     * @return list<array<string, mixed>>
+     */
+    public function exportRows(array $departmentIds): array
+    {
+        if ($departmentIds === []) {
+            return [];
+        }
+
+        [$in, $params] = $this->inClause($departmentIds);
+
+        $stmt = $this->pdo->prepare(
+            'SELECT p.name        AS place_name,
+                    d.name        AS department_name,
+                    s.id          AS session_id,
+                    s.name        AS session_name,
+                    s.access_code AS session_access_code,
+                    c.user_id     AS student_id,
+                    c.id          AS conversation_id,
+                    c.name        AS conversation_name,
+                    c.created_at  AS conversation_created,
+                    c.is_archived,
+                    i.id          AS interaction_id,
+                    i.prompt,
+                    i.response,
+                    m.name        AS model_name,
+                    i.input_tokens,
+                    i.output_tokens,
+                    i.latency,
+                    i.user_feedback,
+                    i.sent_at
+             FROM interactions i
+             JOIN conversations c ON c.id = i.conversation_id
+             JOIN users u ON u.id = c.user_id
+             JOIN sessions s ON s.id = c.session_id
+             JOIN resources r ON r.id = s.resource_id
+             JOIN departments d ON d.id = r.department_id
+             JOIN places p ON p.id = d.place_id
+             LEFT JOIN models m ON m.id = c.model_id
+             WHERE r.department_id IN ' . $in . '
+               AND u.research_opposed = FALSE
+             ORDER BY p.name, d.name, s.id, c.user_id, c.id, i.sent_at, i.id'
+        );
+        $stmt->execute($params);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
 }

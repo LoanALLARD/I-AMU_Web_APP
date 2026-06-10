@@ -137,6 +137,8 @@ $themePref = match ($user['theme'] ?? null) {
 
     <?php $jsDir = dirname(__DIR__, 3) . '/public/assets/js'; ?>
     <script src="/assets/js/clipboard.js<?= '?v=' . (@filemtime("$jsDir/clipboard.js") ?: 0) ?>" defer></script>
+    <?php /* Easter egg: Konami code -> retro CRT mode. Self-contained. */ ?>
+    <script src="/assets/js/konami.js<?= '?v=' . (@filemtime("$jsDir/konami.js") ?: 0) ?>" defer></script>
     <?php if ($needsMarkdown): ?>
         <?php /* Markdown rendering for AI replies (chat live + history, and the
          teacher monitor transcript). Loaded synchronously in <head> so the
