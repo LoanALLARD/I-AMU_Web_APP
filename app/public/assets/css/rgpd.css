@@ -2,6 +2,7 @@
     font-family: 'Nunito Sans', sans-serif;
     width: 100%;
     max-width: 800px;
+    margin: 0 auto;
     color: var(--gray-800);
     line-height: 1.75;
     animation: slideUp .45s cubic-bezier(.22,.9,.32,1) both;

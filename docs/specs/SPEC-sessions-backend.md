@@ -1,6 +1,34 @@
 # SPEC: sessions-backend — Vertical slice Sessions (cours + examen)
 
-> Créée: 2026-05-29 | MàJ: 2026-06-02 | Branche: `Sessions` | Statut: **MVP enseignant livré — côté étudiant + temps réel à faire**
+> Créée: 2026-05-29 | MàJ: 2026-06-02 | Branche: `Sessions` | Statut: **livré**
+
+> ⚠️ **Recadrage 2026-06-09 (lire avant le journal ci-dessous).** Ce document
+> est un **journal d'implémentation historique** (mai–juin 2026). Deux choses
+> ont changé depuis et **font foi dans le code** :
+> 1. **L'architecture n'est plus « Clean Archi ».** Le projet a basculé en
+>    **MVC + Domain** (cf. [`app_architecture.md`](../design/app_architecture.md)).
+>    Les noms cités plus bas (`App\Domain\…`, `App\Application\…`,
+>    `PdoSessionRepository`, `PdoModelRepository`, `PdoConnection`,
+>    `ClockInterface`/`SystemClock`, `AccessCode` VO, `App\Http\…`) **n'existent
+>    pas** tels quels. Équivalents réels :
+>    `Domain\Session` (+ enums `SessionType`/`SessionStatus`),
+>    `Services\SessionService`, `Models\SessionRepository` /
+>    `Models\AiRepository` / `Models\ResourceRepository`,
+>    `Controllers\SessionController`, `Data\Database::getConnection()`,
+>    `Services\CreateSessionForm`. Le temps n'est pas un port : on passe
+>    `new DateTimeImmutable('now')`. Le code d'accès est un `?string` +
+>    helpers `Session::formatAccessCode()` / `normalizeAccessCode()`.
+> 2. **Plusieurs « Pas fait » sont désormais faits** : flux `join` complet
+>    (enrôlement + conversation liée, [SPEC-session-chat-join](./SPEC-session-chat-join.md)),
+>    table **`enrollments`** utilisée, **verrouillage examen**
+>    (`ExamLockService`), **suivi** ([SPEC-session-monitor](./SPEC-session-monitor.md)),
+>    **co-supervision** ([SPEC-session-supervisors](./SPEC-session-supervisors.md)),
+>    **export** ([SPEC-session-export](./SPEC-session-export.md)), **documents de
+>    session** ([SPEC-documents-rag](./SPEC-documents-rag.md)), **seed dev** figé
+>    ([`02_dev_fixtures.sql`](../../database/seeds/02_dev_fixtures.sql)).
+>    Restent ouverts : compteur temps réel et preflight Ollama réel.
+>
+> Le reste du fichier est conservé tel quel comme **trace de conception**.
 
 ## État d'avancement (2026-06-02)
 

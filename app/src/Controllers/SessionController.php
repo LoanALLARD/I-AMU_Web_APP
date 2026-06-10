@@ -10,6 +10,7 @@ use Domain\SessionException;
 use Services\CreateSessionForm;
 use Services\DocumentService;
 use Services\SessionService;
+use Services\RessourceService;
 use Models\AiRepository;
 use Throwable;
 
@@ -25,11 +26,12 @@ class SessionController extends Controller
 {
     private SessionService $sessions;
     private DocumentService $documents;
-
+    private RessourceService $ressources;
     public function __construct()
     {
         $pdo = Database::getConnection();
         $this->sessions  = new SessionService($pdo);
+        $this->ressources = new RessourceService($pdo);
         $this->documents = new DocumentService($pdo);
     }
 
@@ -52,13 +54,15 @@ class SessionController extends Controller
         $this->requireRole('teacher');
         $user = $this->currentUser();
 
-        $this->render('pages/session/index', [
+        $this->render('pages/ressources/index', [
             'title'      => 'Mes sessions',
+            'page'       => 'ressources',
             'navSection' => 'sessions',
+            'ressources' => $this->ressources->listForTeacher((int) ($user['id'] ?? 0)),
             'sessions'   => $this->sessions->listForTeacher((int) ($user['id'] ?? 0)),
             'supervised' => $this->sessions->listSupervisedForTeacher((int) ($user['id'] ?? 0)),
             'user'       => $user,
-        ]);
+        ], 'chat');
     }
 
     /** GET /sessions/create — create form. */
@@ -66,7 +70,12 @@ class SessionController extends Controller
     {
         $this->requireRole('teacher');
         $user = $this->currentUser();
-        $data = $this->sessions->createFormData((int) ($user['id'] ?? 0));
+        try {
+            $data = $this->sessions->createFormData((int) ($user['id'] ?? 0));
+        } catch (Throwable $e) {
+            $this->flash('error', $e->getMessage());
+            $this->redirect('/sessions');
+        }
 
         $this->render('pages/session/create', [
             'title'                => 'Nouvelle session',
@@ -76,11 +85,13 @@ class SessionController extends Controller
             'models'               => $data['models'],
             'resources'            => $data['resources'],
             'authorizedModelIds'   => [],
+            'availableFormats'     => $data['availableFormats'],
+            'authorizedFormats'    => $data['authorizedFormats'],
             'previewCode'          => $data['previewCode'],
             'previewCodeFormatted' => $data['previewCodeFormatted'],
             'user'                 => $user,
             'oldInput'             => $this->popOldInput(),
-        ]);
+        ], 'chat');
     }
 
     /** POST /sessions/store — create handler. */
@@ -99,7 +110,7 @@ class SessionController extends Controller
             $this->redirect('/sessions/create');
         }
 
-        if (!$this->sessions->resourceBelongsTo((int) $form['data']['resourceId'], (int) ($user['id'] ?? 0))) {
+        if (!$this->sessions->resourceAccessibleByTeacher((int) $form['data']['resourceId'], (int) ($user['id'] ?? 0))) {
             $this->flash('error', 'Ressource introuvable ou inaccessible.');
             $this->keepOldInput($_POST);
             $this->redirect('/sessions/create');
@@ -137,11 +148,13 @@ class SessionController extends Controller
             'models'               => $data['models'],
             'resources'            => $data['resources'],
             'authorizedModelIds'   => $data['authorizedModelIds'],
+            'availableFormats'     => $data['availableFormats'],
+            'authorizedFormats'    => $data['authorizedFormats'],
             'previewCode'          => $data['previewCode'],
             'previewCodeFormatted' => $data['previewCodeFormatted'],
             'user'                 => $user,
             'oldInput'             => $this->popOldInput(),
-        ]);
+        ], 'chat');
     }
 
     /** POST /sessions/{id}/update — edit handler. */
@@ -239,7 +252,7 @@ class SessionController extends Controller
             'students'   => $this->sessions->enrolledStudents((int) $id),
             'documents'  => $this->documents->listForSession((int) $id),
             'user'       => $this->currentUser(),
-        ]);
+        ], 'chat');
     }
 
     /** GET /sessions/{id}/monitor — read-only supervision of enrolled students. */
@@ -257,12 +270,14 @@ class SessionController extends Controller
         }
 
         $this->render('pages/session/monitor', [
-            'title'      => 'Suivi · ' . $session->name(),
-            'navSection' => 'sessions',
-            'view'       => $view,
-            'canManage'  => $this->canManage($session),
-            'user'       => $this->currentUser(),
-        ]);
+            'title'         => 'Suivi · ' . $session->name(),
+            'navSection'    => 'sessions',
+            'view'          => $view,
+            'canManage'     => $this->canManage($session),
+            'user'          => $this->currentUser(),
+            // AI replies in the transcript are markdown — load the renderer.
+            'needsMarkdown' => true,
+        ], 'chat');
     }
 
     /**
@@ -350,7 +365,8 @@ class SessionController extends Controller
         }
         $this->render('pages/session/join', [
             'title' => 'Rejoindre une session',
-        ]);
+            'user'  => $this->currentUser(),
+        ], 'chat');
     }
 
     /** POST /sessions/join — student joins and lands in the conversation. */
@@ -458,10 +474,13 @@ class SessionController extends Controller
     {
         http_response_code(403);
         $this->render('pages/error', [
-            'title'   => 'Accès refusé',
-            'code'    => 403,
-            'message' => 'Cette session ne vous appartient pas.',
-        ]);
+            'title'     => 'Accès refusé',
+            'code'      => 403,
+            'message'   => 'Cette session ne vous appartient pas.',
+            'user'      => $this->currentUser(),
+            'page'      => 'error',
+            'pageTitle' => 'Accès refusé',
+        ], 'chat');
         exit;
     }
 

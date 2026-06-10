@@ -16,9 +16,10 @@ final class EmailDomainService
 {
     private EmailDomainRepository $domains;
 
-    public function __construct(PDO $pdo)
+    /** `$domains` is injectable for testing; production passes only the PDO. */
+    public function __construct(PDO $pdo, ?EmailDomainRepository $domains = null)
     {
-        $this->domains = new EmailDomainRepository($pdo);
+        $this->domains = $domains ?? new EmailDomainRepository($pdo);
     }
 
     /**

@@ -37,6 +37,26 @@ final class DocumentException extends RuntimeException
         return new self("Cette session a atteint la limite de {$max} documents.");
     }
 
+    public static function quotaReachedConversation(int $max): self
+    {
+        return new self("Cette conversation a atteint la limite de {$max} documents.");
+    }
+
+    public static function examImportDisabled(): self
+    {
+        return new self("L'import de documents est désactivé pendant un examen.");
+    }
+
+    public static function documentsDisabled(): self
+    {
+        return new self("L'import de documents est désactivé pour cette session.");
+    }
+
+    public static function typeNotAllowed(): self
+    {
+        return new self("Ce type de fichier n'est pas autorisé pour cette session.");
+    }
+
     public static function notFound(): self
     {
         return new self('Document introuvable.');

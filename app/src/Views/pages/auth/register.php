@@ -1,9 +1,4 @@
-<?php if (!empty($_SESSION['_flash'])): ?>
-    <?php foreach ($_SESSION['_flash'] as $flash): ?>
-        <div class="alert alert-<?= $flash['type'] ?>"><?= htmlspecialchars($flash['message']) ?></div>
-    <?php endforeach; ?>
-    <?php unset($_SESSION['_flash']); ?>
-<?php endif; ?>
+<?php require __DIR__ . '/../../partials/_flash.php'; ?>
 
 <?php if (!empty($error)): ?>
     <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
@@ -41,10 +36,15 @@
             </div>
 
             <div class="form-group">
-                <label for="email">Adresse e-mail</label>
+                <label for="email">Adresse e-mail *</label>
                 <input type="email" id="email" name="email"
                        value="<?= htmlspecialchars($data['email'] ?? '') ?>"
-                       placeholder="prenom.nom@exemple.fr" required>
+                       placeholder="prenom.nom@etu.univ-amu.fr" required>
+            </div>
+
+            <div class="form-group promo-collapse" id="promo-container">
+                <label for="promo_year" class="form-label">Année de promotion *</label>
+                <input type="number" id="promo_year" name="promo_year" placeholder="YYYY" min="2022">
             </div>
 
             <div class="form-group">
@@ -59,11 +59,11 @@
                        placeholder="Répétez votre mot de passe" required>
             </div>
 
-            <div class="rgpd-group">
+            <div class="rgpd-group promo-collapse" id="research-container">
                 <input type="checkbox" id="is_researcher" name="is_researcher" value="1"
                        <?= !empty($data['is_researcher']) ? 'checked' : '' ?>>
                 <label for="is_researcher" class="rgpd-label">
-                    Je suis un chercheur (mon laboratoire est déduit de mon adresse e-mail).
+                    Je suis un chercheur.
                 </label>
             </div>
 

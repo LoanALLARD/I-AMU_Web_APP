@@ -25,3 +25,4 @@ date_default_timezone_set($_ENV['APP_TIMEZONE'] ?? 'Europe/Paris');
 // loaded here so views never have to import the underlying namespaces.
 require_once __DIR__ . '/Helpers/icons.php';
 require_once __DIR__ . '/Helpers/csrf.php';
+require_once __DIR__ . '/Helpers/branding.php';

@@ -7,6 +7,7 @@ namespace Controllers;
 use Core\Controller;
 use Data\Database;
 use Services\EmailDomainService;
+use Services\PlaceService;
 
 /**
  * Super administrator panel (see docs/specs/05-admin-research.md A.0.1 / A.2).
@@ -36,7 +37,100 @@ class SuperAdminController extends Controller
 
     public function places(): void
     {
-        $this->renderPanel('pages/superadmin/places', 'Sites et departements', 'places');
+        $service = new PlaceService(Database::getConnection());
+
+        $this->renderPanel(
+            'pages/superadmin/places',
+            'Sites et departements',
+            'places',
+            [
+                'places'      => $service->listPlaces(),
+                'departments' => $service->listDepartments(),
+            ]
+        );
+    }
+
+    /** Adds a site (POST). */
+    public function addPlace(): void
+    {
+        $this->requireSuperAdmin();
+        $this->verifyCsrf();
+
+        $service = new PlaceService(Database::getConnection());
+        $result  = $service->addPlace(
+            (string) $this->input('name', ''),
+            (string) $this->input('address', ''),
+            (string) $this->input('city', ''),
+            (string) $this->input('zip_code', '')
+        );
+
+        $this->flashResult($result, 'Site ajouté avec succès.');
+        $this->redirect('/super-admin/places');
+    }
+
+    /** Deletes a site (POST). */
+    public function deletePlace(): void
+    {
+        $this->requireSuperAdmin();
+        $this->verifyCsrf();
+
+        $service = new PlaceService(Database::getConnection());
+        $result  = $service->deletePlace((int) $this->input('id', 0));
+
+        $this->flashResult($result, 'Site supprimé.');
+        $this->redirect('/super-admin/places');
+    }
+
+    /** Adds a department to a site (POST). */
+    public function addDepartment(): void
+    {
+        $this->requireSuperAdmin();
+        $this->verifyCsrf();
+
+        $service = new PlaceService(Database::getConnection());
+        $result  = $service->addDepartment(
+            (int) $this->input('place_id', 0),
+            (string) $this->input('name', ''),
+            (string) $this->input('description', '')
+        );
+
+        $this->flashResult($result, 'Département ajouté avec succès.');
+        $this->redirect('/super-admin/places');
+    }
+
+    /** Updates a site's branding: display name, logo, primary color (POST). */
+    public function updateBranding(): void
+    {
+        $this->requireSuperAdmin();
+        $this->verifyCsrf();
+
+        $service = new PlaceService(Database::getConnection());
+        $result  = $service->updateBranding(
+            (int) $this->input('id', 0),
+            (string) $this->input('display_name', ''),
+            (string) $this->input('primary_color', ''),
+            $_FILES['logo'] ?? null,
+            $_FILES['favicon'] ?? null,
+            (bool) $this->input('remove_logo', false),
+            (bool) $this->input('remove_favicon', false)
+        );
+
+        $this->flashResult($result, 'Personnalisation enregistrée.');
+        $this->redirect('/super-admin/places');
+    }
+
+    /** Enables or disables a department (POST). */
+    public function toggleDepartment(): void
+    {
+        $this->requireSuperAdmin();
+        $this->verifyCsrf();
+
+        $service  = new PlaceService(Database::getConnection());
+        $isActive = (string) $this->input('is_active', '') === '1';
+        $result   = $service->setDepartmentActive((int) $this->input('id', 0), $isActive);
+
+        $this->flashResult($result, $isActive ? 'Département réactivé.' : 'Département désactivé.');
+        $this->redirect('/super-admin/places');
     }
 
     public function emailDomains(): void
@@ -116,6 +210,20 @@ class SuperAdminController extends Controller
         }
 
         $this->redirect('/super-admin/email-domains');
+    }
+
+    /**
+     * Flashes a success message or the service error, from a service result.
+     *
+     * @param array{success: true}|array{success: false, error: string} $result
+     */
+    private function flashResult(array $result, string $successMessage): void
+    {
+        if ($result['success']) {
+            $this->flash('success', $successMessage);
+        } else {
+            $this->flash('error', $result['error']);
+        }
     }
 
     /**

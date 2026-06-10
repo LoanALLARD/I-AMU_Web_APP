@@ -15,12 +15,20 @@
  *   $content    — view output, injected by Core\Controller::render()
  */
 $user = $user ?? null;
-$page = $page ?? 'other';
-$pageTitle = $pageTitle ?? '';
+// Accept the session/legacy pages' `navSection` and `title` keys as fallbacks
+// so they can reuse this layout without renaming their render() payload.
+$page = $page ?? $navSection ?? 'other';
+// Per-place branding (logo / display name / primary colour) for this user.
+$brand = placeBranding();
+$pageTitle = $pageTitle ?? $title ?? '';
 $conversation = $conversation ?? null;
 $conversations = $conversations ?? [];
 $env = $env ?? null;
 $archivedView = $archivedView ?? false;
+// Pages that display AI markdown opt in via needsMarkdown (chat replies and
+// the teacher monitor transcript). Drives loading marked/DOMPurify/highlight
+// + the shared renderer. Chat always needs it.
+$needsMarkdown = $needsMarkdown ?? ($page === 'chat');
 // Exam lockdown view-model (set by AccueilController for a locked student),
 // or null when free. Drives the stripped-down, navigation-free shell.
 $examLock = $examLock ?? null;
@@ -33,12 +41,19 @@ $roles = $user['roles'] ?? [];
 $isTeacher = in_array('teacher', $roles, true);
 $isStudent = in_array('student', $roles, true);
 $isDeptAdmin = in_array('department_admin', $roles, true);
+$isResearcher = in_array('researcher', $roles, true);
 $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
 $initials = strtoupper(
     mb_substr($user['first_name'] ?? '·', 0, 1)
     . mb_substr($user['last_name'] ?? '·', 0, 1)
 );
-$roleLabel = $isTeacher ? 'enseignant' : ($isStudent ? 'étudiant' : 'compte');
+$roleLabel = match (true) {
+    $isTeacher    => 'enseignant',
+    $isStudent    => 'étudiant',
+    $isDeptAdmin  => 'administration',
+    $isResearcher => 'chercheur',
+    default       => 'compte',
+};
 
 // Theme preference, stored on the user as LIGHT / DARK (NULL = follow the
 // OS). The inline script in <head> resolves it to a concrete data-theme
@@ -64,7 +79,7 @@ $themePref = match ($user['theme'] ?? null) {
         })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I-AMU<?= $pageTitle !== '' ? ' · ' . htmlspecialchars($pageTitle) : '' ?></title>
+    <title><?= htmlspecialchars($brand['name']) ?><?= $pageTitle !== '' ? ' · ' . htmlspecialchars($pageTitle) : '' ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -84,29 +99,65 @@ $themePref = match ($user['theme'] ?? null) {
     <link rel="stylesheet" href="/assets/css/shell.css<?= $v('shell.css') ?>">
     <link rel="stylesheet" href="/assets/css/sessions.css<?= $v('sessions.css') ?>">
     <link rel="stylesheet" href="/assets/css/profile.css<?= $v('profile.css') ?>">
+    <?php if ($brand['color'] !== null): ?>
+    <?php
+        /* Per-place primary colour: override the brand accent and derive its
+           shades. Light mode uses the colour as-is; dark mode lightens it so it
+           stays legible on a dark surface. */
+        $c = htmlspecialchars($brand['color']);
+    ?>
+    <style>
+        :root:not([data-theme="dark"]) {
+            --blue: <?= $c ?>;
+            --blue-dark: color-mix(in srgb, <?= $c ?> 82%, #000);
+            --blue-light: color-mix(in srgb, <?= $c ?> 12%, #fff);
+        }
+        [data-theme="dark"] {
+            --blue: color-mix(in srgb, <?= $c ?> 68%, #fff);
+            --blue-dark: color-mix(in srgb, <?= $c ?> 50%, #fff);
+            --blue-light: color-mix(in srgb, <?= $c ?> 22%, #12141d);
+        }
+    </style>
+    <?php endif; ?>
+    <?php /* Admin and researcher pages reuse the .admin-section / .admin-table
+       styles, both defined in department_admin.css. */ ?>
+    <?php if ($page === 'admin' || $page === 'researcher'): ?>
+        <link rel="stylesheet" href="/assets/css/department_admin.css<?= $v('department_admin.css') ?>">
+    <?php endif; ?>
+    <?php if ($page === 'admin'): ?>
+        <link rel="stylesheet" href="/assets/css/formAddModel.css<?= $v('formAddModel.css') ?>">
+    <?php endif; ?>
+    <?php if ($page === 'error'): ?>
+        <link rel="stylesheet" href="/assets/css/error.css<?= $v('error.css') ?>">
+    <?php endif; ?>
+    <?php if ($page === 'rgpd'): ?>
+        <link rel="stylesheet" href="/assets/css/rgpd.css<?= $v('rgpd.css') ?>">
+    <?php endif; ?>
 
 
     <?php $jsDir = dirname(__DIR__, 3) . '/public/assets/js'; ?>
     <script src="/assets/js/clipboard.js<?= '?v=' . (@filemtime("$jsDir/clipboard.js") ?: 0) ?>" defer></script>
-    <?php if ($page === 'chat'): ?>
-        <?php /* Markdown rendering for AI replies (live + history). Loaded
-         synchronously in <head> so the chat view's inline script can use
-         marked / DOMPurify / hljs immediately. Vendored under
+    <?php if ($needsMarkdown): ?>
+        <?php /* Markdown rendering for AI replies (chat live + history, and the
+         teacher monitor transcript). Loaded synchronously in <head> so the
+         page's inline script can use marked / DOMPurify / hljs and the shared
+         window.renderMarkdown immediately. Vendored under
          public/assets/vendor (no CDN dependency). */ ?>
         <link rel="stylesheet"
             href="/assets/vendor/highlight/styles/github-dark.min.css<?= $vv('highlight/styles/github-dark.min.css') ?>">
         <script src="/assets/vendor/marked.min.js<?= $vv('marked.min.js') ?>"></script>
         <script src="/assets/vendor/purify.min.js<?= $vv('purify.min.js') ?>"></script>
         <script src="/assets/vendor/highlight/highlight.min.js<?= $vv('highlight/highlight.min.js') ?>"></script>
+        <script src="/assets/js/markdown.js<?= '?v=' . (@filemtime("$jsDir/markdown.js") ?: 0) ?>"></script>
     <?php endif; ?>
-    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <link rel="icon" href="<?= htmlspecialchars($brand['favicon']) ?>">
 </head>
 
 <body class="app-body page-<?= htmlspecialchars($page) ?>">
 
     <header class="app-topbar">
-        <a href="<?= $isDeptAdmin ? '/department-admin' : '/chat' ?>" class="topbar-brand" aria-label="Accueil I-AMU">
-            <img src="/assets/img/logo.png" alt="">
+        <a href="<?= $isDeptAdmin ? '/department-admin' : ($isResearcher ? '/researcher' : '/chat') ?>" class="topbar-brand" aria-label="Accueil I-AMU">
+            <img src="<?= htmlspecialchars($brand['logo']) ?>" alt="<?= htmlspecialchars($brand['name']) ?>">
             <div class="topbar-brand-text">
                 <span><?= htmlspecialchars($roleLabel) ?></span>
             </div>
@@ -152,7 +203,7 @@ $themePref = match ($user['theme'] ?? null) {
         <?php endif; ?>
 
         <div class="topbar-tabs">
-            <?php if (!$isDeptAdmin): ?>
+            <?php if (!$isDeptAdmin && !$isResearcher): ?>
             <a href="<?= htmlspecialchars($chatHref) ?>" class="topbar-tab<?= $page === 'chat' ? ' active' : '' ?>">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -162,13 +213,33 @@ $themePref = match ($user['theme'] ?? null) {
             </a>
             <?php endif; ?>
             <?php if ($isTeacher): ?>
-                <a href="/sessions" class="topbar-tab<?= $page === 'sessions' ? ' active' : '' ?>">
+                <a href="/ressources" class="topbar-tab<?= $page === 'ressources' ? ' active' : '' ?>">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
                         <path d="M6 12v5c3 3 9 3 12 0v-5" />
                     </svg>
-                    Mes sessions
+                    Mes Ressources
+                </a>
+            <?php endif; ?>
+            <?php if ($isDeptAdmin): ?>
+                <a href="/department-admin" class="topbar-tab<?= $page === 'admin' ? ' active' : '' ?>">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    Administration
+                </a>
+            <?php endif; ?>
+            <?php if ($isResearcher): ?>
+                <a href="/researcher" class="topbar-tab<?= $page === 'researcher' ? ' active' : '' ?>">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                    </svg>
+                    Espace chercheur
                 </a>
             <?php endif; ?>
         </div>
@@ -209,7 +280,7 @@ $themePref = match ($user['theme'] ?? null) {
 lives in the topbar; inside the drawer it gives the slide-out menu
 its own identity above the navigation. */ ?>
             <div class="sidebar-brand">
-                <img src="/assets/img/logo.png" alt="">
+                <img src="<?= htmlspecialchars($brand['logo']) ?>" alt="<?= htmlspecialchars($brand['name']) ?>">
                 <div class="sidebar-brand-text">
                     <span><?= htmlspecialchars($roleLabel) ?></span>
                 </div>
@@ -219,7 +290,7 @@ its own identity above the navigation. */ ?>
 On desktop these live as pills in the topbar (.topbar-tabs), so
 .sidebar-nav stays display:none there to avoid duplication. */ ?>
             <nav class="sidebar-nav" aria-label="Navigation principale">
-                <?php if (!$isDeptAdmin): ?>
+                <?php if (!$isDeptAdmin && !$isResearcher): ?>
                 <a href="<?= htmlspecialchars($chatHref) ?>"
                     class="sidebar-nav-link<?= $page === 'chat' ? ' is-active' : '' ?>">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -239,6 +310,26 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                         Mes sessions
                     </a>
                 <?php endif; ?>
+                <?php if ($isDeptAdmin): ?>
+                    <a href="/department-admin" class="sidebar-nav-link<?= $page === 'admin' ? ' is-active' : '' ?>">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                        Administration
+                    </a>
+                <?php endif; ?>
+                <?php if ($isResearcher): ?>
+                    <a href="/researcher" class="sidebar-nav-link<?= $page === 'researcher' ? ' is-active' : '' ?>">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <ellipse cx="12" cy="5" rx="9" ry="3" />
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                        </svg>
+                        Espace chercheur
+                    </a>
+                <?php endif; ?>
             </nav>
 
             <?php if ($page === 'chat' && !$examLock): ?>
@@ -250,12 +341,12 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                     </span>
                 </div>
 
-                <form method="POST" action="/chat/new" class="new-chat-form">
-                    <?= csrf_field() ?>
-                    <?php if (!empty($env['sessionId'])): ?>
-                        <input type="hidden" name="session_id" value="<?= (int) $env['sessionId'] ?>">
-                    <?php endif; ?>
-                    <button type="submit" class="btn-new-chat" id="btnNewChat"
+                <?php /* "Nouvelle conversation" opens a blank chat client-side
+                   (startBlankChat in pages/home.php) instead of creating a
+                   conversation up front. The row is persisted only when the
+                   first message is sent (POST /chat). */ ?>
+                <div class="new-chat-form">
+                    <button type="button" class="btn-new-chat" id="btnNewChat"
                         <?= !empty($sessionClosed)
                             ? 'disabled style="opacity:.45;cursor:not-allowed;" title="Vous ne pouvez plus créer de conversation dans cette session."'
                             : '' ?>>
@@ -266,7 +357,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                         </svg>
                         Nouvelle conversation
                     </button>
-                </form>
+                </div>
 
                 <?php if (($env['mode'] ?? '') === 'session'): ?>
                     <a href="/chat" class="btn-leave-session"
@@ -486,16 +577,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
 
         <div class="app-main">
             <div class="app-content">
-                <?php if (!empty($_SESSION['_flash'])): ?>
-                    <div class="flash-stack">
-                        <?php foreach ($_SESSION['_flash'] as $flash): ?>
-                            <div class="alert alert-<?= htmlspecialchars($flash['type']) ?>">
-                                <?= htmlspecialchars($flash['message']) ?>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php unset($_SESSION['_flash']); ?>
-                <?php endif; ?>
+                <?php require __DIR__ . '/../partials/_flash.php'; ?>
                 <?= $content ?>
             </div>
         </div>

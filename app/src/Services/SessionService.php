@@ -45,11 +45,13 @@ class SessionService
         return $row === null ? null : Session::fromRow($row);
     }
 
-    public function resourceBelongsTo(int $resourceId, int $teacherId): bool
+    /**
+     * Returns true if the teacher owns the resource OR has shared access via
+     * teacher_resources. Used to gate session creation.
+     */
+    public function resourceAccessibleByTeacher(int $resourceId, int $teacherId): bool
     {
-        $resource = $this->resources->findById($resourceId);
-
-        return $resource !== null && (int) $resource['owner_id'] === $teacherId;
+        return $this->resources->isAccessibleByTeacher($resourceId, $teacherId);
     }
 
     /**
@@ -222,28 +224,37 @@ class SessionService
     }
 
     /**
-     * @return array{models: list<array<string, mixed>>, resources: list<array<string, mixed>>, previewCode: string, previewCodeFormatted: string}
+     * @return array{models: list<array<string, mixed>>, resources: list<array<string, mixed>>, previewCode: string, previewCodeFormatted: string, availableFormats: list<string>, authorizedFormats: list<string>}
      */
     public function createFormData(int $teacherId): array
     {
         // No code to preview: the database trigger assigns one only when
         // the session becomes scheduled/active.
         $resourceData = $this->resources->findAllByOwner($teacherId);
+        if ($resourceData == null){
+            throw new InvalidArgumentException("L'enseignent doit être associé à au minimum une ressource, \n veuillez contacter un administrateur");
+        }
         $depId = $resourceData[0]['department_id'];
         return [
             'models'               => $this->modelOptions($depId),
             'resources'            => $resourceData,
             'previewCode'          => '',
             'previewCodeFormatted' => '',
+            'availableFormats'     => $this->sessions->listAllFileFormats(),
+            // New sessions default to every format authorised (imports enabled).
+            'authorizedFormats'    => $this->sessions->listAllFileFormats(),
         ];
     }
 
     /**
-     * @return array{session: Session, models: list<array<string, mixed>>, resources: list<array<string, mixed>>, authorizedModelIds: list<int>, previewCode: string, previewCodeFormatted: string}
+     * @return array{session: Session, models: list<array<string, mixed>>, resources: list<array<string, mixed>>, authorizedModelIds: list<int>, previewCode: string, previewCodeFormatted: string, availableFormats: list<string>, authorizedFormats: list<string>}
      */
     public function editFormData(Session $session, int $teacherId): array
     {
         $resourceData = $this->resources->findAllByOwner($teacherId);
+        if ($resourceData == null){
+            throw new InvalidArgumentException("L'enseignent doit être associé à au minimum une ressource, \n veuillez contacter un administrateur");
+        }
         $depId = $resourceData[0]['department_id'];
         return [
             'session'              => $session,
@@ -252,6 +263,8 @@ class SessionService
             'authorizedModelIds'   => $this->sessions->authorizedModelIdsOf((int) $session->id()),
             'previewCode'          => $session->accessCode() ?? '',
             'previewCodeFormatted' => $session->accessCodeFormatted() ?? '',
+            'availableFormats'     => $this->sessions->listAllFileFormats(),
+            'authorizedFormats'    => $this->sessions->authorizedFormatsOf((int) $session->id()),
         ];
     }
 
@@ -273,6 +286,25 @@ class SessionService
         $computed = $session->computedStatus($now);
         $actions  = $session->availableActions($now);
 
+        $docTypeMap = ['pdf' => 'PDF', 'md' => 'Markdown', 'txt' => 'TXT'];
+        $authorizedFormats = $this->sessions->authorizedFormatsOf((int) $session->id());
+        $documentsTypesLabel = implode(', ', array_map(
+            static fn (string $t): string => $docTypeMap[$t] ?? strtoupper($t),
+            $authorizedFormats
+        ));
+        $documentsMaxMb = $session->documentsMaxBytes() !== null
+            ? (int) ($session->documentsMaxBytes() / 1024 / 1024)
+            : 10;
+        // What students can import: an exam forces it off; otherwise imports are
+        // enabled iff at least one file format is authorised for the session.
+        if ($session->type()->value === 'EXAM') {
+            $documentsImportLabel = 'Désactivé (examen)';
+        } elseif ($authorizedFormats !== []) {
+            $documentsImportLabel = 'Autorisé — ' . $documentsTypesLabel . ' · ' . $documentsMaxMb . ' Mo max';
+        } else {
+            $documentsImportLabel = 'Désactivé';
+        }
+
         return [
             'id'                 => (int) $session->id(),
             'name'               => $session->name(),
@@ -289,6 +321,7 @@ class SessionService
             'instructions'       => $session->instructions(),
             'maxInputSize'       => $session->maxInputSize(),
             'maxTokens'          => $session->maxTokens(),
+            'documentsImportLabel' => $documentsImportLabel,
             'authorizedModels'   => $models,
             'canEdit'            => $actions['can_edit'],
             'canStart'           => $actions['can_start'],
@@ -422,12 +455,14 @@ class SessionService
             $data['instructions'],
             $data['maxInputSize'] ?? null,
             $data['maxTokens'] ?? null,
+            $data['documentsMaxBytes'] ?? null,
         );
 
         $result = $this->sessions->insert($session->toRow());
         $session->assignId($result['id']);
         $session->assignAccessCode($result['access_code']);
         $this->sessions->setAuthorizedModels($result['id'], $data['modelIds']);
+        $this->sessions->setAuthorizedFormats($result['id'], $data['documentsFormats'] ?? []);
 
         return $session;
     }
@@ -450,10 +485,19 @@ class SessionService
 
         $session->rename((string) $data['name'], $now);
         $session->reschedule($startsAt, $endsAt, $now);
-        $session->reconfigure($data['prePrompt'], $data['postPrompt'], $data['instructions'], $data['maxTokens'] ?? null, $data['maxInputSize'] ?? null, $now);
+        $session->reconfigure(
+            $data['prePrompt'],
+            $data['postPrompt'],
+            $data['instructions'],
+            $data['maxTokens'] ?? null,
+            $data['maxInputSize'] ?? null,
+            $now,
+            $data['documentsMaxBytes'] ?? null
+        );
 
         $this->sessions->update($id, $session->toRow());
         $this->sessions->setAuthorizedModels($id, $data['modelIds']);
+        $this->sessions->setAuthorizedFormats($id, $data['documentsFormats'] ?? []);
     }
 
     public function start(int $id): void
@@ -593,6 +637,7 @@ class SessionService
     {
         $computed = $session->computedStatus($now);
         $actions  = $session->availableActions($now);
+        $resource = $this->resources->findById($session->resourceId());
 
         return [
             'id'                => (int) $session->id(),
@@ -608,6 +653,7 @@ class SessionService
             'canStart'          => $actions['can_start'],
             'canEnd'            => $actions['can_end'],
             'canCancel'         => $actions['can_cancel'],
+            'resourceName'     => $resource !== null ? (string) $resource['name'] : '—',
         ];
     }
 }

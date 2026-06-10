@@ -11,12 +11,12 @@ namespace Services;
  */
 final class MailService
 {
-    private string  $host;
-    private int     $port;
-    private string  $from;
+    private string $host;
+    private int $port;
+    private string $from;
     private ?string $username;
     private ?string $password;
-    private string  $encryption; // 'tls' (STARTTLS), 'ssl' (implicit), or 'none' for AlwaysData
+    private string $encryption; // 'tls' (STARTTLS), 'ssl' (implicit), or 'none' for AlwaysData
 
     public function __construct()
     {

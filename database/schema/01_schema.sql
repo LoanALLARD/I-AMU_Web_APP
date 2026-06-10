@@ -11,7 +11,12 @@ CREATE TABLE places (
     address VARCHAR(100),
     city VARCHAR(50),
     zip_code VARCHAR(10),
-    CONSTRAINT pk_places PRIMARY KEY (id)
+    display_name VARCHAR(255),
+    logo_path VARCHAR(255),
+    favicon_path VARCHAR(255),
+    primary_color VARCHAR(7),
+    CONSTRAINT pk_places PRIMARY KEY (id),
+    CONSTRAINT ck_places_primary_color CHECK (primary_color IS NULL OR primary_color ~ '^#[0-9a-fA-F]{6}$')
 );
 
 CREATE TABLE departments (
@@ -171,6 +176,7 @@ CREATE TABLE sessions (
     max_tokens INTEGER,
     instructions TEXT,
     type session_type,
+    documents_max_bytes INTEGER,
     CONSTRAINT pk_sessions PRIMARY KEY (id),
     CONSTRAINT fk_sessions_resource FOREIGN KEY (resource_id) REFERENCES resources (id) ON DELETE RESTRICT,
     CONSTRAINT uq_sessions_access_code UNIQUE (access_code),
@@ -178,7 +184,28 @@ CREATE TABLE sessions (
     CONSTRAINT ck_sessions_dates CHECK (ends_at IS NULL OR starts_at IS NULL OR ends_at > starts_at),
     CONSTRAINT ck_sessions_closed_at CHECK (closed_at IS NULL OR starts_at IS NULL OR closed_at >= starts_at),
     CONSTRAINT ck_sessions_max_input_size CHECK (max_input_size IS NULL OR max_input_size > 0),
-    CONSTRAINT ck_sessions_max_tokens CHECK (max_tokens IS NULL OR max_tokens > 0)
+    CONSTRAINT ck_sessions_max_tokens CHECK (max_tokens IS NULL OR max_tokens > 0),
+    CONSTRAINT ck_sessions_documents_max_bytes CHECK (documents_max_bytes IS NULL OR (documents_max_bytes > 0 AND documents_max_bytes <= 10485760))
+);
+
+-- Reference list of file formats a session may authorise for student imports.
+CREATE TABLE file_formats (
+    id BIGSERIAL,
+    name VARCHAR(50) NOT NULL,
+    CONSTRAINT pk_file_formats PRIMARY KEY (id),
+    CONSTRAINT uq_file_formats_name UNIQUE (name)
+);
+
+INSERT INTO file_formats (name) VALUES ('pdf'), ('md'), ('txt');
+
+-- Which file formats a session authorises for student document imports
+-- (M:N). No row for a session means imports are disabled for it.
+CREATE TABLE session_file_formats (
+    session_id BIGINT NOT NULL,
+    file_format_id BIGINT NOT NULL,
+    CONSTRAINT pk_session_file_formats PRIMARY KEY (session_id, file_format_id),
+    CONSTRAINT fk_session_file_formats_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE,
+    CONSTRAINT fk_session_file_formats_format FOREIGN KEY (file_format_id) REFERENCES file_formats (id) ON DELETE CASCADE
 );
 
 CREATE TABLE conversations (
@@ -272,6 +299,20 @@ CREATE TABLE researcher_authorizations (
     CONSTRAINT fk_researcher_authorizations_authorized_by FOREIGN KEY (authorized_by_id) REFERENCES department_administrators (id) ON DELETE SET NULL
 );
 
+-- A teacher's request to be habilitated (teachers.is_specialised), scoped to
+-- the teacher's own department via users.department_id.
+CREATE TABLE teacher_specialisation_requests (
+    teacher_id BIGINT,
+    decided_by_id BIGINT,
+    request TEXT,
+    requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    approved_at TIMESTAMPTZ,
+    rejected_at TIMESTAMPTZ,
+    CONSTRAINT pk_teacher_specialisation_requests PRIMARY KEY (teacher_id),
+    CONSTRAINT fk_teacher_specialisation_requests_teacher FOREIGN KEY (teacher_id) REFERENCES teachers (id) ON DELETE CASCADE,
+    CONSTRAINT fk_teacher_specialisation_requests_decided_by FOREIGN KEY (decided_by_id) REFERENCES department_administrators (id) ON DELETE SET NULL
+);
+
 CREATE TABLE model_department_accesses (
     model_id BIGINT,
     department_id BIGINT,
@@ -293,6 +334,7 @@ CREATE TABLE documents (
     id BIGSERIAL,
     session_id BIGINT,
     conversation_id BIGINT,
+    interaction_id BIGINT,
     uploaded_by_id BIGINT NOT NULL,
     original_name VARCHAR(255) NOT NULL,
     stored_path VARCHAR(255) NOT NULL,
@@ -304,6 +346,7 @@ CREATE TABLE documents (
     CONSTRAINT pk_documents PRIMARY KEY (id),
     CONSTRAINT fk_documents_session FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE,
     CONSTRAINT fk_documents_conversation FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
+    CONSTRAINT fk_documents_interaction FOREIGN KEY (interaction_id) REFERENCES interactions (id) ON DELETE SET NULL,
     CONSTRAINT fk_documents_uploaded_by FOREIGN KEY (uploaded_by_id) REFERENCES users (id) ON DELETE RESTRICT,
     CONSTRAINT ck_documents_scope CHECK (
         (session_id IS NOT NULL AND conversation_id IS NULL) OR
@@ -313,3 +356,4 @@ CREATE TABLE documents (
 );
 CREATE INDEX idx_documents_session ON documents (session_id);
 CREATE INDEX idx_documents_conversation ON documents (conversation_id);
+CREATE INDEX idx_documents_interaction ON documents (interaction_id);

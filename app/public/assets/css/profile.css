@@ -221,6 +221,115 @@
     margin: 8px 0 0;
 }
 
+/* Danger zone */
+.danger-zone {
+    border: 1.5px solid var(--refuse);
+    border-radius: var(--r-3);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+ 
+.danger-zone-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--refuse-bg);
+    color: var(--refuse);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--refuse);
+}
+ 
+.danger-zone-body {
+    background: var(--white);
+}
+ 
+.danger-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 20px;
+}
+ 
+.danger-row-info { flex: 1; min-width: 0; }
+ 
+.danger-row-title {
+    margin: 0 0 3px;
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--gray-800);
+}
+ 
+.danger-row-desc {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--gray-600);
+    line-height: 1.55;
+}
+ 
+.danger-link {
+    color: var(--refuse);
+    text-decoration: underline;
+}
+.danger-link:hover { opacity: .8; }
+ 
+.danger-zone-sep {
+    height: 1px;
+    background: var(--gray-200);
+    margin: 0 20px;
+}
+ 
+.danger-zone-footer {
+    padding: 11px 20px;
+    border-top: 1px solid var(--gray-200);
+    background: var(--gray-100);
+}
+ 
+.danger-zone-footer .rgpd-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    text-decoration: none;
+}
+.danger-zone-footer .rgpd-link:hover { 
+    color: var(--blue); 
+    text-decoration: underline;
+}
+
+.danger-zone .btn.danger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--r-1);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    background: var(--refuse);
+    color: #ffffff;
+    transition: background 0.18s, transform 0.12s;
+    text-decoration: none;
+}
+.danger-zone .btn.danger:hover {
+    background: #991b1b;
+    transform: translateY(-1px);
+}
+
+ 
+
 /* RGPD link */
 
 .profile-card .rgpd-link {
@@ -235,6 +344,8 @@
 .profile-card .rgpd-link:hover {
     text-decoration: underline;
 }
+
+
 
 /* Aside card */
 
@@ -336,6 +447,49 @@
     color: var(--accept);
 }
 
+.badge-habilitated {
+    background: var(--accept-bg);
+    color: var(--accept);
+}
+
+.badge-not-habilitated {
+    background: var(--gray-100);
+    color: var(--gray-400);
+}
+
+.badge-rejected {
+    background: var(--refuse-bg);
+    color: var(--refuse);
+}
+
+/* Teacher habilitation request */
+.spec-request {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--gray-200);
+}
+.spec-request .section-desc {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: var(--gray-400);
+}
+.spec-request textarea {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 9px 12px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-1);
+    background: var(--white);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    resize: vertical;
+    box-sizing: border-box;
+}
+.spec-request textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+}
+
 /* Modal */
 
 .modal-overlay {
@@ -415,6 +569,29 @@
 .modal-actions .btn.danger:hover {
     background: #991b1b;
 }
+
+.modal-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+.modal-icon--danger {
+    background: var(--refuse-bg);
+    color: var(--refuse);
+}
+
+.modal-list {
+    font-size: 0.78rem;
+    color: var(--gray-600);
+    line-height: 1.7;
+    margin: 0 0 4px;
+    padding-left: 18px;
+}
+
 
 /* Responsive */
 

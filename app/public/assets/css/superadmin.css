@@ -63,8 +63,10 @@ body.superadmin-body--full {
     min-height: 100vh;
 }
 
-.superadmin-body--full main {
+/* Lift the 480px cap auth.css sets on `auth-body > main` (login/register). */
+body.superadmin-body--full > main {
     width: 100%;
+    max-width: none;
     min-height: 100vh;
 }
 
@@ -142,12 +144,21 @@ body.superadmin-body--full {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 2rem;
+    /* Let the sub-tabs scroll horizontally instead of overflowing/clipping
+       on narrow screens. Scrollbar hidden — the cut-off edge hints scroll. */
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;              /* Firefox */
+    -webkit-overflow-scrolling: touch;  /* momentum on iOS */
 }
+.dashboard-nav-inner::-webkit-scrollbar { display: none; } /* Chrome/Safari */
 .nav-link {
     display: inline-flex;
     align-items: center;
     gap: .45rem;
     padding: .85rem 1rem;
+    flex: 0 0 auto;       /* keep tabs at natural width — don't squeeze */
+    white-space: nowrap;
     color: rgba(255, 255, 255, .65);
     font-size: .88rem;
     font-weight: 600;
@@ -260,10 +271,11 @@ body.superadmin-body--full {
 .domain-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
     font-size: .9rem;
 }
-.domain-table .col-role  { width: auto; }
-.domain-table .col-state { width: 6rem; }
+.domain-table .col-role  { width: 14rem; }
+.domain-table .col-state { width: 14%; }
 .domain-table .col-action { width: 9.5rem; }
 .domain-table th {
     text-align: left;
@@ -283,10 +295,6 @@ body.superadmin-body--full {
 .domain-table .col-action {
     text-align: right;
     white-space: nowrap;
-}
-.domain-table .cell-domain,
-.domain-table th:first-child {
-    min-width: 10rem;
 }
 .domain-table .cell-domain {
     font-weight: 600;
@@ -440,10 +448,271 @@ body.superadmin-body--full {
     border-color: #ef4444;
     color: #b91c1c;
 }
-body.superadmin-body--full,
-body.superadmin-body--full > main {
-    display: block;
-    max-width: none;
+
+/* Textareas mirror the auth.css input styling (which only targets input/select). */
+.superadmin-body textarea {
     width: 100%;
+    border: 1.5px solid var(--gray-200, #e5e7eb);
+    border-radius: 8px;
+    padding: .6rem .85rem;
+    font-size: .92rem;
+    font-family: inherit;
+    color: var(--gray-800, #1f2937);
+    background: #fff;
+    resize: vertical;
+    transition: border-color .18s;
+    outline: none;
+}
+.superadmin-body textarea:focus { border-color: var(--blue); }
+.superadmin-body textarea::placeholder { color: var(--gray-400, #9ca3af); font-size: .87rem; }
+
+.form-group--narrow { flex: 0 0 9rem; min-width: 0; }
+
+/* Secondary line under a primary table cell (e.g. department description). */
+.cell-subtitle {
+    display: block;
+    margin-top: .15rem;
+    font-size: .78rem;
+    font-weight: 400;
+    color: var(--gray-600, #4b5563);
+}
+
+/* Places master-detail: list on the left, selected place's detail on the right. */
+.places-layout {
+    display: grid;
+    grid-template-columns: 22rem 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+.places-master { margin-bottom: 0; }
+.places-master h3,
+.places-detail h3 {
+    font-size: .9rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 1.5rem 0 .85rem;
+}
+
+/* The place list */
+.place-list {
+    list-style: none;
+    margin: 0 0 1rem;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+}
+.place-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    width: 100%;
+    padding: .7rem .85rem;
+    border: 1px solid var(--gray-200, #e5e7eb);
+    border-radius: 9px;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.place-item:hover {
+    border-color: #cbd5e1;
+    background: var(--gray-100, #f3f4f6);
+}
+.place-item.is-active {
+    border-color: #0f172a;
+    background: #0f172a;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .18);
+}
+.place-item-main { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.place-item-name {
+    font-size: .92rem;
+    font-weight: 600;
+    color: #0f172a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.place-item-sub {
+    font-size: .76rem;
+    color: var(--gray-600, #4b5563);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.place-item.is-active .place-item-name,
+.place-item.is-active .place-item-sub { color: #fff; }
+.place-item.is-active .place-item-sub { color: rgba(255, 255, 255, .7); }
+
+/* Department count + chevron on the right of each list item */
+.place-item-count {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    flex: 0 0 auto;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--gray-600, #4b5563);
+}
+.place-item.is-active .place-item-count { color: rgba(255, 255, 255, .85); }
+.place-item-chevron { transition: transform .15s; }
+.place-item.is-active .place-item-chevron { transform: translateX(2px); }
+
+.place-add-form { border-top: 1px solid var(--gray-100, #f3f4f6); padding-top: .25rem; }
+.place-add-form .form-group { margin-bottom: 1rem; }
+.place-add-row { display: flex; gap: 1rem; }
+.place-add-row .form-group { flex: 1; }
+.place-add-form .btn-submit { width: 100%; }
+
+/* The detail column */
+.places-detail { margin-bottom: 0; min-height: 18rem; }
+.places-detail-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: .85rem;
+    min-height: 16rem;
+    color: var(--gray-600, #4b5563);
+}
+.places-detail-empty[hidden] { display: none; }
+.places-detail-empty p { max-width: 22rem; font-size: .9rem; margin: 0; }
+.place-detail-panel[hidden] { display: none; }
+.place-detail-panel .domain-table { margin-bottom: .5rem; }
+.place-detail-panel .department-form { margin-top: 1.5rem; }
+.place-delete-form { margin-top: 1rem; }
+
+/* Per-place branding block (between the address and the departments table) */
+.place-branding {
+    margin: 1.25rem 0 1.5rem;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--gray-200, #e5e7eb);
+    border-radius: 10px;
+    background: var(--gray-100, #f8fafc);
+}
+.place-branding h3 { margin-top: 0; }
+.branding-hint {
+    font-size: .8rem;
+    color: var(--gray-600, #4b5563);
+    margin: -.5rem 0 1rem;
+}
+/* Logo | Favicon | Name | Colour. Flex-wrap (not a fixed grid) so each field
+   keeps its natural width and wraps cleanly instead of overlapping — the old
+   3-column grid broke once the Favicon field was added as a 4th item. */
+.branding-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    gap: 1.25rem 2rem;
+    margin-bottom: 1.25rem;
+}
+.branding-row .form-group { margin-bottom: 0; }
+/* Labels are inline by default (auth.css only uppercases them) — force block so
+   every field's label sits on top, including the narrow colour swatch. */
+.branding-row label { display: block; margin-bottom: .4rem; }
+.branding-name { flex: 1 1 14rem; min-width: 12rem; }
+.branding-name input[type="text"] { width: 100%; }
+.branding-color { flex: 0 0 auto; }
+
+/* Logo: preview swatch + file button on one row, under the shared label. */
+.branding-logo-field { display: flex; align-items: center; gap: .65rem; }
+.branding-logo-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border: 1px solid var(--gray-200, #e5e7eb);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--gray-400, #9ca3af);
+    overflow: hidden;
+}
+.branding-logo-preview img { width: 100%; height: 100%; object-fit: contain; }
+.branding-logo input[type="file"],
+.branding-favicon input[type="file"] { font-size: .82rem; color: var(--gray-600, #4b5563); max-width: 11rem; }
+
+/* Color: native input trimmed to read as a 44px swatch, matching input height. */
+.branding-color input[type="color"] {
+    width: 4rem;
+    height: 44px;
+    padding: .2rem;
+    border: 1.5px solid var(--gray-200, #e5e7eb);
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.btn-branding-save { margin-top: 0; }
+
+@media (max-width: 980px) {
+    .branding-row { gap: 1rem 1.5rem; }
+    .branding-name { flex-basis: 100%; }
+}
+@media (max-width: 860px) {
+    .places-layout { grid-template-columns: 1fr; }
+}
+
+/* ── "Domaines configurés" — table collapses into stacked cards on mobile ──
+   One markup (the table keeps working with its sort/role-edit JS); CSS only
+   restacks the cells and pulls each field label from its data-label. */
+@media (max-width: 720px) {
+    /* Reclaim horizontal space — the desktop 2rem/1.75rem gutters are wasteful
+       on a phone and contribute to the table overflowing. */
+    .dashboard-content { padding: 1.1rem; }
+    .panel-section { padding: 1.2rem 1.1rem; }
+
+    /* The <table> itself must become a block so it fills the card width
+       instead of shrink-wrapping to the old fixed column widths. */
+    .domain-table,
+    .domain-table tbody,
+    .domain-table tr,
+    .domain-table td { display: block; width: auto; }
+    .domain-table { font-size: .92rem; }
+    .domain-table thead { display: none; }
+    .domain-table .col-role,
+    .domain-table .col-state,
+    .domain-table .col-action { width: auto; }
+
+    .domain-table tr {
+        border: 1px solid var(--gray-200, #e5e7eb);
+        border-radius: 12px;
+        padding: .25rem .95rem;
+        margin-bottom: .8rem;
+        background: var(--white, #fff);
+    }
+
+    .domain-table td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-width: 0;
+        padding: .6rem 0;
+        border-bottom: 1px solid var(--gray-100, #f3f4f6);
+        text-align: left;
+        white-space: normal;
+    }
+    .domain-table tr td:last-child { border-bottom: none; }
+
+    /* Field label, taken from the header cell we hid */
+    .domain-table td::before {
+        content: attr(data-label);
+        flex: none;
+        font-size: .68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: var(--gray-500);
+    }
+
+    /* Long domain value shrinks with an ellipsis rather than forcing width */
+    .domain-table .cell-domain { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .domain-table .col-action { text-align: left; white-space: normal; }
+
+    /* No hover on touch → keep the role-edit pencil visible so it stays usable */
+    .domain-table .role-edit-toggle { opacity: 1; }
 }

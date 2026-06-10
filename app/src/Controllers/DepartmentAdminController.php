@@ -12,6 +12,7 @@ use Models\AiRepository;
 use Models\DepartmentRepository;
 use Models\ResourceRepository;
 use Services\ResearcherAuthorizationService;
+use Services\TeacherSpecialisationService;
 
 /**
  * Department-administrator console.
@@ -22,6 +23,7 @@ use Services\ResearcherAuthorizationService;
  */
 class DepartmentAdminController extends Controller
 {
+    /** "Requests" tab (default): pending requests + habilitated/authorized lists. */
     public function index(): void
     {
         $this->requireRole('department_admin');
@@ -30,16 +32,121 @@ class DepartmentAdminController extends Controller
         $departmentId = $this->currentDepartmentId();
         $userRepository = new UserRepository($pdo);
         $authorizations = new ResearcherAuthorizationService($pdo);
+        $specialisations = new TeacherSpecialisationService($pdo);
 
-        $this->render('pages/department_admin/dashboard', [
-            'titrePage'          => 'Administration',
-            'user'               => $this->currentUser(),
-            'department'         => (new PlaceRepository($pdo))->departmentWithPlace($departmentId),
-            'pendingResearchers' => $authorizations->listPending($departmentId),
-            'departmentMembers'  => $userRepository->listDepartmentMembers($departmentId),
-            'researchers'        => $userRepository->listAuthorizedResearchers($departmentId),
-            'revokedResearchers' => $authorizations->listRevoked($departmentId),
+        $this->render('pages/department_admin/requests', [
+            'titrePage'              => 'Administration',
+            'page'                   => 'admin',
+            'user'                   => $this->currentUser(),
+            'department'             => (new PlaceRepository($pdo))->departmentWithPlace($departmentId),
+            'pendingResearchers'     => $authorizations->listPending($departmentId),
+            'pendingSpecialisations' => $specialisations->listPending($departmentId),
+            'habilitatedTeachers'    => $specialisations->listHabilitated($departmentId),
+            'revokedTeachers'        => $specialisations->listRevoked($departmentId),
+            'researchers'            => $userRepository->listAuthorizedResearchers($departmentId),
+            'revokedResearchers'     => $authorizations->listRevoked($departmentId),
+        ], 'chat');
+    }
+
+    /** "Users" tab: department members only. */
+    public function users(): void
+    {
+        $this->requireRole('department_admin');
+
+        $pdo = Database::getConnection();
+        $departmentId = $this->currentDepartmentId();
+        $userRepo = new UserRepository($pdo);
+
+        $cursor = null;
+        if (isset($_GET['c_id'], $_GET['c_last_name'], $_GET['c_first_name'])) {
+            $cursor = [
+                'id'         => (int)$_GET['c_id'],
+                'last_name'  => (string)$_GET['c_last_name'],
+                'first_name' => (string)$_GET['c_first_name'],
+            ];
+        }
+
+        $limit = 10;
+        $members = $userRepo->listDepartmentMembers($departmentId, $cursor, $limit);
+        $numberOfMembers = $userRepo->CountDepartmentMembers($departmentId);
+
+        $nextCursor = null;
+        if (count($members) === $limit) {
+            $lastMember = end($members);
+            $nextCursor = [
+                'id'         => $lastMember['id'],
+                'last_name'  => $lastMember['last_name'],
+                'first_name' => $lastMember['first_name'],
+            ];
+        }
+
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            header('Content-Type: application/json');
+            
+            $rowsHtml = '';
+            $currentUserId = (int) ($this->currentUser()['id'] ?? 0);
+            foreach ($members as $m) {
+                ob_start();
+                $this->renderPartial('partials/department_admin/member_row', [
+                    'member' => $m, 
+                    'currentUserId' => $currentUserId
+                ]);
+                $rowsHtml .= ob_get_clean();
+            }
+
+            echo json_encode([
+                'success' => true,
+                'html' => $rowsHtml,
+                'nextCursor' => $nextCursor
+            ]);
+            exit;
+        }
+
+        $this->render('pages/department_admin/users', [
+            'titrePage'         => 'Administration',
+            'page'              => 'admin',
+            'user'              => $this->currentUser(),
+            'department'        => (new PlaceRepository($pdo))->departmentWithPlace($departmentId),
+            'departmentMembers' => $members,
+            'numberOfMembers'   => $numberOfMembers,
+            'nextCursor'        => $nextCursor, 
+        ], 'chat');
+    }
+    
+    public function GetUsersByName(): void
+    {
+        $this->requireRole('department_admin');
+
+        $pdo = Database::getConnection();
+        $departmentId = $this->currentDepartmentId();
+        $userRepo = new UserRepository($pdo);
+
+        $searchTerm = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
+
+        if ($searchTerm === '') {
+            $result = $userRepo->listDepartmentMembers($departmentId, null, 2);
+        } else {
+            $result = $userRepo->findUsers($searchTerm, $departmentId);
+        }
+        
+        $rowsHtml = '';
+        $currentUserId = (int) ($this->currentUser()['id'] ?? 0);
+        foreach ($result as $m) {
+            ob_start();
+            $this->renderPartial('partials/department_admin/member_row', [
+                'member' => $m, 
+                'currentUserId' => $currentUserId
+            ]);
+            $rowsHtml .= ob_get_clean();
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'html'    => $rowsHtml,
+            'nextCursor' => null 
         ]);
+        exit;
     }
 
     public function approveResearcher(): void
@@ -52,7 +159,6 @@ class DepartmentAdminController extends Controller
         $service = new ResearcherAuthorizationService(Database::getConnection());
         $result = $service->approve($researcherId, $departmentId, (int) $this->currentUser()['id']);
 
-        // Approving moves the request into the "authorized researchers" table.
         $this->respond($result['success'],
             $result['success'] ? 'Demande chercheur validée.' : $result['error'],
             $result['success']
@@ -69,9 +175,98 @@ class DepartmentAdminController extends Controller
         $result = (new ResearcherAuthorizationService(Database::getConnection()))
             ->reject($researcherId, $this->currentDepartmentId(), (int) $this->currentUser()['id']);
 
-        // Rejecting just drops the request: no target list (target stays null).
         $this->respond($result['success'],
             $result['success'] ? 'Demande chercheur refusée.' : $result['error']);
+    }
+
+    public function approveSpecialisation(): void
+    {
+        $this->requireRole('department_admin');
+        $this->verifyCsrf();
+
+        $teacherId = (int) $this->input('teacher_id');
+        $departmentId = $this->currentDepartmentId();
+        $service = new TeacherSpecialisationService(Database::getConnection());
+        $result = $service->approve($teacherId, $departmentId, (int) $this->currentUser()['id']);
+
+        // Approving moves the request into the "habilitated teachers" table.
+        $this->respond($result['success'],
+            $result['success'] ? 'Enseignant habilité.' : $result['error'],
+            $result['success']
+                ? $this->specialisedTeacherRowPayload($service, $teacherId, $departmentId, 'spec-habilitated', 'habilitated')
+                : []);
+    }
+
+    public function rejectSpecialisation(): void
+    {
+        $this->requireRole('department_admin');
+        $this->verifyCsrf();
+
+        $teacherId = (int) $this->input('teacher_id');
+        $result = (new TeacherSpecialisationService(Database::getConnection()))
+            ->reject($teacherId, $this->currentDepartmentId(), (int) $this->currentUser()['id']);
+
+        // Rejecting just drops the request: no target list.
+        $this->respond($result['success'],
+            $result['success'] ? 'Demande d\'habilitation refusée.' : $result['error']);
+    }
+
+    public function revokeSpecialisation(): void
+    {
+        $this->requireRole('department_admin');
+        $this->verifyCsrf();
+
+        $teacherId = (int) $this->input('teacher_id');
+        $departmentId = $this->currentDepartmentId();
+        $service = new TeacherSpecialisationService(Database::getConnection());
+        $result = $service->revoke($teacherId, $departmentId, (int) $this->currentUser()['id']);
+
+        $this->respond($result['success'],
+            $result['success'] ? 'Habilitation révoquée.' : $result['error'],
+            $result['success']
+                ? $this->specialisedTeacherRowPayload($service, $teacherId, $departmentId, 'spec-revoked', 'revoked')
+                : []);
+    }
+
+    public function reauthorizeSpecialisation(): void
+    {
+        $this->requireRole('department_admin');
+        $this->verifyCsrf();
+
+        $teacherId = (int) $this->input('teacher_id');
+        $departmentId = $this->currentDepartmentId();
+        $service = new TeacherSpecialisationService(Database::getConnection());
+        $result = $service->reauthorize($teacherId, $departmentId, (int) $this->currentUser()['id']);
+
+        $this->respond($result['success'],
+            $result['success'] ? 'Habilitation rétablie.' : $result['error'],
+            $result['success']
+                ? $this->specialisedTeacherRowPayload($service, $teacherId, $departmentId, 'spec-habilitated', 'habilitated')
+                : []);
+    }
+
+    /**
+     * Builds the AJAX payload for a specialisation action: the target list key
+     * and the server-rendered <tr> for that mode.
+     *
+     * @return array{teacher_id:int, target:string, row:string}
+     */
+    private function specialisedTeacherRowPayload(
+        TeacherSpecialisationService $service,
+        int $teacherId,
+        int $departmentId,
+        string $target,
+        string $mode
+    ): array {
+        $row = $service->findRow($teacherId, $departmentId);
+
+        return [
+            'teacher_id' => $teacherId,
+            'target'     => $target,
+            'row'        => $row === null
+                ? ''
+                : $this->capturePartial('partials/department_admin/specialised_teacher_row', ['teacher' => $row, 'mode' => $mode]),
+        ];
     }
 
     /**
@@ -235,10 +430,11 @@ class DepartmentAdminController extends Controller
 
         $this->render('pages/admin/formAddModel', [
             'user'         => $user,
+            'page'         => 'admin',
             'adapters'     => $adapters,
             'departments'  => $departments,
             'resources'    => $resources
-        ]);
+        ], 'chat');
     }
 
     public function addModel(): void {
