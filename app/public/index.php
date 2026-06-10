@@ -28,6 +28,7 @@
     $router->add('GET',  '/accueil',     function() { (new AccueilController())->index(); });
 
     $router->add('POST', '/chat',         function() { (new LLMController())->handleChat(); });
+    $router->add('POST', '/chat/feedback',function() { (new LLMController())->recordFeedback(); });
     $router->add('POST', '/chat/documents',             function()    { (new DocumentController())->uploadToConversation(); });
     $router->add('POST', '/chat/documents/{id}/delete', function($id) { (new DocumentController())->deleteFromConversation($id); });
     $router->add('POST', '/chat/rename',    function() { (new AccueilController())->renameChat(); });
@@ -128,6 +129,7 @@
     $router->add('POST', '/sessions/{id}/end',    function($id) { (new SessionController())->end($id); });
     $router->add('POST', '/sessions/{id}/cancel', function($id) { (new SessionController())->cancel($id); });
     $router->add('GET',  '/sessions/{id}/monitor', function($id) { (new SessionController())->monitor($id); });
+    $router->add('GET',  '/sessions/{id}/stats',   function($id) { (new SessionController())->stats($id); });
     $router->add('GET',  '/sessions/{id}/export',  function($id) { (new SessionController())->export($id); });
     $router->add('POST', '/sessions/{id}/documents', function($id) { (new DocumentController())->uploadToSession($id); });
     $router->add('POST', '/sessions/{id}/student-status', function($id) { (new SessionController())->setStudentActive($id); });

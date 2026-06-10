@@ -83,7 +83,11 @@ final class ResearcherAnalyticsService
         ];
     }
 
-    /** The department ids the researcher currently has an active grant on. */
+    /**
+     * The department ids the researcher currently has an active grant on.
+     *
+     * @return list<int>
+     */
     private function authorizedDepartmentIds(int $researcherId): array
     {
         return array_map(

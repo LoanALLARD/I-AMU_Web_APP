@@ -18,6 +18,7 @@ $usesLlm = $isTeacher || in_array('student', $roles, true);
 $roleLabels = [
     'student'          => 'étudiant',
     'teacher'          => 'enseignant',
+    'researcher'       => 'chercheur',
     'department_admin' => 'admin de département',
     'admin'            => 'administrateur',
 ];
