@@ -12,6 +12,8 @@ $initials = strtoupper(
 $roles = $user['roles'] ?? [];
 $isTeacher = in_array('teacher', $roles, true);
 $isSpecialized = !empty($user['isSpecialized']);
+// Only teachers and students use the LLM, so only they get usage stats.
+$usesLlm = $isTeacher || in_array('student', $roles, true);
 
 $roleLabels = [
     'student'          => 'étudiant',
@@ -26,6 +28,12 @@ $themeCur = match ($user['theme'] ?? null) {
     'DARK'  => 'dark',
     default => 'auto',
 };
+
+/** @var array<string,mixed> $stats */
+$stats   = $stats ?? [];
+$fmtInt  = static fn (int $n): string => number_format($n, 0, ',', ' ');
+$points  = $stats['activity'] ?? [];
+$maxDay  = $points !== [] ? max(array_column($points, 'total')) : 0;
 ?>
 <div class="page-header">
     <div class="page-header-row">
@@ -87,6 +95,70 @@ $themeCur = match ($user['theme'] ?? null) {
                     </div>
                 <?php endif; ?>
             </div>
+
+            <!-- Statistiques de consommation (profs et eleves uniquement) -->
+            <?php if ($usesLlm): ?>
+            <div class="dashboard-card stats-card">
+                <h2><?= icon('chart-line', '', 16) ?> Ma consommation</h2>
+                <p class="page-sub">Un aperçu de votre utilisation de l'assistant IA.</p>
+
+                <div class="stats-metric-grid">
+                    <article class="stats-metric">
+                        <span class="stats-metric-icon"><?= icon('messages-square', '', 18) ?></span>
+                        <span class="stats-metric-value"><?= $fmtInt((int) ($stats['conversations'] ?? 0)) ?></span>
+                        <span class="stats-metric-label">Conversations</span>
+                    </article>
+                    <article class="stats-metric">
+                        <span class="stats-metric-icon"><?= icon('message-circle', '', 18) ?></span>
+                        <span class="stats-metric-value"><?= $fmtInt((int) ($stats['interactions'] ?? 0)) ?></span>
+                        <span class="stats-metric-label">Messages envoyés</span>
+                    </article>
+                    <article class="stats-metric">
+                        <span class="stats-metric-icon"><?= icon('arrow-down', '', 18) ?></span>
+                        <span class="stats-metric-value"><?= $fmtInt((int) ($stats['input_tokens'] ?? 0)) ?></span>
+                        <span class="stats-metric-label">Tokens entrée</span>
+                    </article>
+                    <article class="stats-metric">
+                        <span class="stats-metric-icon"><?= icon('arrow-up', '', 18) ?></span>
+                        <span class="stats-metric-value"><?= $fmtInt((int) ($stats['output_tokens'] ?? 0)) ?></span>
+                        <span class="stats-metric-label">Tokens sortie</span>
+                    </article>
+                    <article class="stats-metric">
+                        <span class="stats-metric-icon"><?= icon('timer', '', 18) ?></span>
+                        <span class="stats-metric-value">
+                            <?= $stats['avg_latency'] !== null ? $fmtInt((int) $stats['avg_latency']) . ' ms' : '—' ?>
+                        </span>
+                        <span class="stats-metric-label">Latence moyenne</span>
+                    </article>
+                </div>
+
+                <div class="stats-activity">
+                    <h3 class="stats-activity-title">
+                        <?= icon('chart-line', '', 14) ?>
+                        Activité (<?= (int) ($stats['activity_days'] ?? 30) ?> derniers jours)
+                    </h3>
+                    <?php if (($stats['activity_total'] ?? 0) > 0): ?>
+                        <div class="stats-bars" role="img"
+                             aria-label="Messages envoyés par jour sur les <?= (int) ($stats['activity_days'] ?? 30) ?> derniers jours">
+                            <?php foreach ($points as $p): ?>
+                                <?php
+                                $total = (int) $p['total'];
+                                $h = $maxDay > 0 ? max(3, (int) round($total / $maxDay * 100)) : 3;
+                                $label = $total . ' le ' . $p['day'];
+                                ?>
+                                <span class="stats-bar<?= $total === 0 ? ' is-empty' : '' ?>"
+                                      style="height: <?= $h ?>%" title="<?= htmlspecialchars($label) ?>"></span>
+                            <?php endforeach; ?>
+                        </div>
+                        <p class="stats-bars-foot">
+                            <?= $fmtInt((int) $stats['activity_total']) ?> message<?= (int) $stats['activity_total'] > 1 ? 's' : '' ?> sur la période
+                        </p>
+                    <?php else: ?>
+                        <p class="no-message">Aucune activité sur la période.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <!-- Zone à risque -->
             <div class="danger-zone">
