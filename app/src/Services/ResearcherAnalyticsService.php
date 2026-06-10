@@ -76,9 +76,11 @@ final class ResearcherAnalyticsService
             'success' => true,
             'data'    => [
                 'volume' => [
-                    'conversations' => $agg['conversations'],
-                    'interactions'  => $agg['interactions'],
-                    'students'      => $agg['students'],
+                    'conversations'         => $agg['conversations'],
+                    'conversations_session' => $agg['conversations_session'],
+                    'conversations_free'    => $agg['conversations_free'],
+                    'interactions'          => $agg['interactions'],
+                    'students'              => $agg['students'],
                 ],
                 'usage' => [
                     'input_tokens'  => $agg['input_tokens'],

@@ -339,6 +339,8 @@
 .metric-icon { color: var(--blue, #2563eb); }
 .metric-value { font-size: 1.45rem; font-weight: 700; color: var(--gray-800, #1f2937); line-height: 1.1; }
 .metric-label { font-size: .78rem; color: var(--gray-500, #6b7280); }
+.metric-sub { font-size: .72rem; color: var(--gray-400, #9ca3af); }
+.metric-sub:empty { display: none; }
 
 /* Sub-blocks (satisfaction, activity). */
 .dashboard-block { margin-top: 1.5rem; }

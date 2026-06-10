@@ -43,8 +43,17 @@
             return Number(n || 0).toLocaleString('fr-FR');
         }
 
+        // Session/free breakdown shown under the conversations total.
+        function conversationSplit(volume) {
+            var session = Number(volume.conversations_session || 0);
+            var free = Number(volume.conversations_free || 0);
+            var freeLabel = free > 1 ? 'libres' : 'libre';
+            return formatInt(session) + ' en session · ' + formatInt(free) + ' ' + freeLabel;
+        }
+
         function render(data) {
             setText('conversations', formatInt(data.volume.conversations));
+            setText('conversations_split', conversationSplit(data.volume));
             setText('interactions', formatInt(data.volume.interactions));
             setText('students', formatInt(data.volume.students));
             setText('input_tokens', formatInt(data.usage.input_tokens));

@@ -35,9 +35,12 @@ class ResearcherAnalyticsRepository
     /**
      * Volume + token + satisfaction aggregates over the given departments.
      *
+     * The session/free split is data-driven; free is structurally 0 here (sessions JOIN).
+     *
      * @param list<int> $departmentIds
      * @return array{
-     *     conversations:int, interactions:int, students:int,
+     *     conversations:int, conversations_session:int, conversations_free:int,
+     *     interactions:int, students:int,
      *     input_tokens:int, output_tokens:int, avg_latency:?float,
      *     feedback_positive:int, feedback_negative:int, feedback_neutral:int
      * }
@@ -48,6 +51,8 @@ class ResearcherAnalyticsRepository
 
         $stmt = $this->pdo->prepare(
             'SELECT COUNT(DISTINCT c.id)                                       AS conversations,
+                    COUNT(DISTINCT c.id) FILTER (WHERE c.session_id IS NOT NULL) AS conversations_session,
+                    COUNT(DISTINCT c.id) FILTER (WHERE c.session_id IS NULL)     AS conversations_free,
                     COUNT(i.id)                                                AS interactions,
                     COUNT(DISTINCT c.user_id)                                  AS students,
                     COALESCE(SUM(i.input_tokens), 0)                           AS input_tokens,
@@ -69,7 +74,9 @@ class ResearcherAnalyticsRepository
         $row = $stmt->fetch();
 
         return [
-            'conversations'     => (int) ($row['conversations'] ?? 0),
+            'conversations'         => (int) ($row['conversations'] ?? 0),
+            'conversations_session' => (int) ($row['conversations_session'] ?? 0),
+            'conversations_free'    => (int) ($row['conversations_free'] ?? 0),
             'interactions'      => (int) ($row['interactions'] ?? 0),
             'students'          => (int) ($row['students'] ?? 0),
             'input_tokens'      => (int) ($row['input_tokens'] ?? 0),

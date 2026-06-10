@@ -105,6 +105,7 @@ require __DIR__ . '/_header.php';
                                 <span class="metric-icon"><?= icon('messages-square', '', 18) ?></span>
                                 <span class="metric-value" data-metric="conversations">0</span>
                                 <span class="metric-label">Conversations</span>
+                                <span class="metric-sub" data-metric="conversations_split"></span>
                             </article>
                             <article class="metric-card">
                                 <span class="metric-icon"><?= icon('message-circle', '', 18) ?></span>
