@@ -4,6 +4,14 @@ namespace Models;
 
 use PDO;
 
+/**
+ * Data access for the `conversations` table.
+ *
+ * A conversation groups a user's interactions, either inside a session or in
+ * free mode (`session_id` is null). Holds the SQL for creating, listing
+ * (active / archived), renaming and (un)archiving conversations, all scoped to
+ * their owner so a forged id cannot reach another user's rows.
+ */
 class ConversationRepository {
 
     private PDO $pdo;
@@ -99,6 +107,10 @@ class ConversationRepository {
         return $rows;
     }
 
+    /**
+     * Number of conversations a user owns in a session. Used to cap how many
+     * conversations a student may open in a given session.
+     */
     public function countByUserAndSession(int $userId, int $sessionId): int
     {
         $stmt = $this->pdo->prepare(

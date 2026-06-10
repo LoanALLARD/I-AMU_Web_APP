@@ -143,6 +143,7 @@ class PlaceRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /** Whether a place exists, to guard routes against forged ids. */
     public function placeExists(int $id): bool
     {
         $stmt = $this->pdo->prepare('SELECT 1 FROM places WHERE id = :id');
@@ -243,6 +244,7 @@ class PlaceRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /** Hard-deletes a place by id. */
     public function deletePlace(int $id): void
     {
         $stmt = $this->pdo->prepare('DELETE FROM places WHERE id = :id');
@@ -304,6 +306,7 @@ class PlaceRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /** Whether a department exists, to guard routes against forged ids. */
     public function departmentExists(int $id): bool
     {
         $stmt = $this->pdo->prepare('SELECT 1 FROM departments WHERE id = :id');

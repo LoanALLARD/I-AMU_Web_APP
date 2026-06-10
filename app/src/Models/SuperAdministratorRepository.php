@@ -118,6 +118,7 @@ class SuperAdministratorRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /** Hashes and stores a new password for the super admin. Returns the statement success. */
     public function updatePassword(int $id, string $password): bool
     {
         $hash = password_hash($password, PASSWORD_DEFAULT);
@@ -132,6 +133,7 @@ class SuperAdministratorRepository
         ]);
     }
 
+    /** Updates the super admin's first name. Returns the statement success. */
     public function updateFirstName(int $id, string $firstName): bool
     {
         $query = $this->pdo->prepare(
@@ -144,6 +146,7 @@ class SuperAdministratorRepository
         ]);
     }
 
+    /** Updates the super admin's last name. Returns the statement success. */
     public function updateLastName(int $id, string $lastName): bool
     {
         $query = $this->pdo->prepare(
@@ -156,6 +159,7 @@ class SuperAdministratorRepository
         ]);
     }
 
+    /** Updates the super admin's email. Returns the statement success. */
     public function updateEmail(int $id, string $email): bool
     {
         $query = $this->pdo->prepare(

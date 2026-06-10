@@ -4,6 +4,13 @@ namespace Models;
 
 use PDO;
 
+/**
+ * Data access for the `interactions` table.
+ *
+ * An interaction is one prompt/response turn inside a conversation. Holds the
+ * SQL for recording a turn, listing a conversation's history, storing the
+ * LLM context metadata, and saving the student's feedback on a response.
+ */
 class InteractionRepository {
 
     private PDO $pdo;
@@ -80,6 +87,10 @@ class InteractionRepository {
         return $rows;
     }
 
+    /**
+     * Stores the serialised LLM context metadata on an existing interaction,
+     * so the next prompt in the conversation can resume from it.
+     */
     public function setContext(string $metadata, int $interaction_id): ?bool {
         $query = $this->pdo->prepare('
             UPDATE interactions set api_metadata = :metadata where id = :id
