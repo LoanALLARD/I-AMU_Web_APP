@@ -1,11 +1,10 @@
 <?php
-/** @var string $token @var string $email */
-?>
+/** @var string $token @var string $email @var string $roleLabel */?>
 <main>
     <div class="register-card auth-card-login">
         <div class="card-header">
             <h1>Activer mon compte</h1>
-            <p>Administrateur de département</p>
+            <p><?= htmlspecialchars($roleLabel ?? 'Administrateur de departement') ?></p>
         </div>
         <div class="accent-bar"></div>
         <div class="card-body">

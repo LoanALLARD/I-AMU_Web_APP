@@ -409,7 +409,7 @@ class DepartmentAdminController extends Controller
         }
         return $departmentId;
     }
-    public function fromModel(): void {
+    public function formModel(): void {
         $this->requireAuth();
 
         $userId = $_SESSION["user_id"];

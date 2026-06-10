@@ -5,34 +5,41 @@ declare(strict_types=1);
 namespace Services;
 
 use Models\UserRepository;
+use Models\SuperAdministratorRepository;
 use PDO;
 
 /**
- * Department-admin invitation by signed link (stateless, no DB row).
- * The token carries email + department + expiry, signed with the app secret.
- * The role is granted only when the invitee submits the acceptance form.
+ * Admin invitation by signed link (stateless, no DB row).
+ * The token carries email + department + role + expiry, signed with the app
+ * secret. The role is granted only when the invitee submits the acceptance
+ * form. Two roles are supported: a department administrator (scoped to a
+ * department) and a super administrator (no department).
  */
 final class AdminInviteService
 {
     private const TTL_SECONDS = 7 * 24 * 3600;
 
+    public const ROLE_DEPARTMENT_ADMIN = 'DEPT_ADMIN';
+    public const ROLE_SUPER_ADMIN      = 'SUPER_ADMIN';
+
     private UserRepository $users;
+    private SuperAdministratorRepository $superAdmins;
     private string $secret;
 
     public function __construct(PDO $pdo)
     {
-        $config       = require __DIR__ . '/../Config/config.php';
-        $this->users  = new UserRepository($pdo);
+        $config = require __DIR__ . '/../Config/config.php';
+        $this->users = new UserRepository($pdo);
+        $this->superAdmins = new SuperAdministratorRepository($pdo);
         $this->secret = (string) ($config['app']['secret'] ?? '');
     }
 
     /**
-     * Builds a signed token: base64url(email|deptId|expiresAt).signature
+     * Builds a signed token: base64url(email|deptId|role|expiresAt).signature
      */
-    public function makeToken(string $email, int $departmentId): string
-    {
+    public function makeToken(string $email, int $departmentId, string $role = self::ROLE_DEPARTMENT_ADMIN): string {
         $expiresAt = time() + self::TTL_SECONDS;
-        $payload   = $email . '|' . $departmentId . '|' . $expiresAt;
+        $payload   = $email . '|' . $departmentId . '|' . $role . '|' . $expiresAt;
         $encoded   = $this->base64UrlEncode($payload);
         $signature = $this->sign($encoded);
 
@@ -40,9 +47,18 @@ final class AdminInviteService
     }
 
     /**
-     * Validates a token and returns its data, or null if invalid/expired.
+     * Convenience builder for a super admin invitation (no department).
+     */
+    public function makeSuperAdminToken(string $email): string
+    {
+        return $this->makeToken($email, 0, self::ROLE_SUPER_ADMIN);
+    }
+
+    /**
+     * Validates a token and returns its data, or null if invalid/expired. Older 3-field tokens
+     * (without an explicit role) are read as department admin invitations for backward compatibility.
      *
-     * @return array{email:string, department_id:int}|null
+     * @return array{email:string, department_id:int, role:string}|null
      */
     public function verifyToken(string $token): ?array
     {
@@ -59,7 +75,13 @@ final class AdminInviteService
 
         $payload = $this->base64UrlDecode($encoded);
         $fields  = explode('|', $payload);
-        if (count($fields) !== 3) {
+
+        if (count($fields) === 4) {
+            [$email, $departmentId, $role, $expiresAt] = $fields;
+        } elseif (count($fields) === 3) {
+            [$email, $departmentId, $expiresAt] = $fields;
+            $role = self::ROLE_DEPARTMENT_ADMIN;
+        } else {
             return null;
         }
         [$email, $departmentId, $expiresAt] = $fields;
@@ -68,7 +90,7 @@ final class AdminInviteService
             return null;
         }
 
-        return ['email' => $email, 'department_id' => (int) $departmentId];
+        return ['email' => $email, 'department_id' => (int) $departmentId, 'role' => $role,];
     }
 
     /**
@@ -122,6 +144,50 @@ final class AdminInviteService
         }
 
         return ['success' => true, 'user_id' => $userId];
+    }
+
+    /**
+     * Creates a super admin account from a verified super admin token plus the
+     * form fields. Super admins live in their own table, not in `users`.
+     *
+     * @return array{success:true, super_admin_id:int}|array{success:false, error:string}
+     */
+    public function acceptSuperAdmin(string $token, string $password, string $passwordConfirm, string $firstName, string $lastName):
+        array {
+        $data = $this->verifyToken($token);
+        if ($data === null || $data['role'] !== self::ROLE_SUPER_ADMIN) {
+            return ['success' => false, 'error' => 'Lien invalide ou expiré.'];
+        }
+
+        $firstName = trim($firstName);
+        $lastName  = trim($lastName);
+
+        if ($firstName === '' || $lastName === '' || $password === '') {
+            return ['success' => false, 'error' => 'Tous les champs sont obligatoires.'];
+        }
+        if (strlen($password) < 8) {
+            return ['success' => false, 'error' => 'Le mot de passe doit faire au moins 8 caractères.'];
+        }
+        if ($password !== $passwordConfirm) {
+            return ['success' => false, 'error' => 'Les mots de passe ne correspondent pas.'];
+        }
+        if ($this->superAdmins->emailExists($data['email']) || $this->users->emailExists($data['email'])) {
+            return ['success' => false, 'error' => 'Un compte existe déjà pour cette adresse.'];
+        }
+
+        try {
+            $superAdminId = $this->superAdmins->create(
+                $data['email'],
+                password_hash($password, PASSWORD_DEFAULT),
+                $firstName,
+                $lastName
+            );
+        } catch (\Throwable $e) {
+            error_log('SUPER ADMIN INVITE ACCEPT ERROR: ' . $e->getMessage());
+            return ['success' => false, 'error' => 'Erreur lors de la création du compte.'];
+        }
+
+        return ['success' => true, 'super_admin_id' => $superAdminId];
     }
 
     private function sign(string $data): string
