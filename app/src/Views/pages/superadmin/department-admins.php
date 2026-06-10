@@ -65,29 +65,6 @@
             </form>
         </section>
 
-        <section class="panel-section admin-tab-panel" data-panel="invite-super" hidden>
-            <h2>Inviter un super administrateur</h2>
-            <p class="section-lead">
-                Le super administrateur dispose de tous les droits sur la plateforme.
-                Un lien d'activation valable 7 jours est envoye a l'adresse indiquee.
-            </p>
-
-            <form method="POST" action="/super-admin/super-admins/invite" class="domain-form">
-                <?= csrf_field() ?>
-                <div class="domain-form-row">
-                    <div class="form-group">
-                        <label for="invite-super-email">Adresse email</label>
-                        <input type="email" id="invite-super-email" name="email"
-                               placeholder="prenom.nom@univ-amu.fr" required>
-                    </div>
-                    <button type="submit" class="btn-submit">
-                        <?= icon('send', '', 16) ?>
-                        Envoyer l'invitation
-                    </button>
-                </div>
-            </form>
-        </section>
-
         <section class="panel-section admin-tab-panel" data-panel="manage" hidden>
             <h2>Administrateurs de departement</h2>
             <p class="section-lead">
@@ -154,6 +131,29 @@
                     </tbody>
                 </table>
             <?php endif; ?>
+        </section>
+
+        <section class="panel-section admin-tab-panel" data-panel="invite-super" hidden>
+            <h2>Inviter un super administrateur</h2>
+            <p class="section-lead">
+                Le super administrateur dispose de tous les droits sur la plateforme.
+                Un lien d'activation valable 7 jours est envoye a l'adresse indiquee.
+            </p>
+
+            <form method="POST" action="/super-admin/super-admins/invite" class="domain-form">
+                <?= csrf_field() ?>
+                <div class="domain-form-row">
+                    <div class="form-group">
+                        <label for="invite-super-email">Adresse email</label>
+                        <input type="email" id="invite-super-email" name="email"
+                               placeholder="prenom.nom@univ-amu.fr" required>
+                    </div>
+                    <button type="submit" class="btn-submit">
+                        <?= icon('send', '', 16) ?>
+                        Envoyer l'invitation
+                    </button>
+                </div>
+            </form>
         </section>
     </main>
 </div>
