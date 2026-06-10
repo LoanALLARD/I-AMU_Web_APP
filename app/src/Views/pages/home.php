@@ -138,7 +138,7 @@ $canAddModel = $canAddModel ?? false;
                         </div>
                     <?php endif; ?>
                 </div>
-                <div class="msg msg-ai">
+                <div class="msg msg-ai" data-interaction="<?= (int) $m['id'] ?>" data-feedback="<?= $m['feedback'] === null ? '' : (int) $m['feedback'] ?>">
                     <div class="msg-meta">
                         <span class="msg-model"><?= htmlspecialchars($m['model']) ?></span>
                     </div>
@@ -354,11 +354,17 @@ $canAddModel = $canAddModel ?? false;
     // assets/js/markdown.js module, loaded synchronously in <head> by the
     // layout — available here at parse time and for live streaming below.
 
-    // On load: render persisted AI bubbles (raw markdown -> HTML), then jump to
-    // the latest message so a reopened thread starts at the bottom.
+    // On load: render persisted AI bubbles (raw markdown -> HTML), attach the
+    // satisfaction thumbs (restoring the student's previous rating), then jump
+    // to the latest message so a reopened thread starts at the bottom.
     (function () {
         document.querySelectorAll('.msg-ai .msg-content[data-markdown]').forEach((el) => {
             renderMarkdown(el.getAttribute('data-markdown') ?? '', el);
+        });
+        document.querySelectorAll('.msg-ai[data-interaction]').forEach((el) => {
+            const id = parseInt(el.getAttribute('data-interaction') ?? '0', 10);
+            const raw = el.getAttribute('data-feedback');
+            attachFeedback(el, id, raw ? parseInt(raw, 10) : 0);
         });
         const m = document.getElementById('messages');
         if (m) m.scrollTop = m.scrollHeight;
@@ -622,6 +628,7 @@ $canAddModel = $canAddModel ?? false;
                     </span>
             `;
             aiMsg.appendChild(actions);
+            attachFeedback(aiMsg, meta.interaction_id ?? null, 0);
         } catch (err) {
             aiMsg.querySelector('.msg-content').innerHTML = err.name === 'AbortError'
                 ? '<p class="msg-error">Génération interrompue.</p>'
@@ -648,6 +655,56 @@ $canAddModel = $canAddModel ?? false;
         btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> copié`;
         setTimeout(() => btn.innerHTML = original, 1500);
     }
+
+    // Appends the satisfaction thumbs (👍/👎) to an AI bubble, reusing the
+    // bubble's actions bar when it already has one (sent message) or creating a
+    // feedback-only bar (reloaded history). `current` is the stored rating
+    // (1 / -1 / 0) so the active button is highlighted on load.
+    function attachFeedback(aiMsg, interactionId, current) {
+        if (!aiMsg || !interactionId) return;
+        let bar = aiMsg.querySelector('.msg-actions');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.className = 'msg-actions';
+            aiMsg.appendChild(bar);
+        }
+        const span = document.createElement('span');
+        span.className = 'msg-feedback';
+        span.dataset.interaction = String(interactionId);
+        span.innerHTML = `
+            <button type="button" class="msg-action fb-btn fb-up${current === 1 ? ' is-active' : ''}" data-val="1" title="Réponse utile" aria-label="Réponse utile">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>
+            </button>
+            <button type="button" class="msg-action fb-btn fb-down${current === -1 ? ' is-active' : ''}" data-val="-1" title="Réponse peu utile" aria-label="Réponse peu utile">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg>
+            </button>`;
+        bar.appendChild(span);
+    }
+
+    // One delegated handler for every thumb (history + freshly sent). Clicking
+    // the active rating clears it (sends 0 / neutral); otherwise it sets the
+    // clicked value. The UI only commits once the server confirms.
+    document.getElementById('messages')?.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.fb-btn');
+        if (!btn) return;
+        const span = btn.closest('.msg-feedback');
+        if (!span) return;
+        const interactionId = parseInt(span.dataset.interaction ?? '0', 10);
+        if (!interactionId) return;
+        const value = btn.classList.contains('is-active') ? 0 : parseInt(btn.dataset.val ?? '0', 10);
+        try {
+            const res = await fetch('/chat/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ interaction_id: interactionId, value })
+            });
+            if (!res.ok) return;
+            span.querySelectorAll('.fb-btn').forEach((b) => b.classList.remove('is-active'));
+            if (value !== 0) btn.classList.add('is-active');
+        } catch (err) {
+            /* network hiccup: leave the UI unchanged */
+        }
+    });
 
     // Renders, under a user message bubble, the documents that were sent with
     // it (download links). Assigned by the attachments module below.

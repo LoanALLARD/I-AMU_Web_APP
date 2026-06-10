@@ -16,6 +16,7 @@ $isSpecialized = !empty($user['isSpecialized']);
 $roleLabels = [
     'student'          => 'étudiant',
     'teacher'          => 'enseignant',
+    'researcher'       => 'chercheur',
     'department_admin' => 'admin de département',
     'admin'            => 'administrateur',
 ];

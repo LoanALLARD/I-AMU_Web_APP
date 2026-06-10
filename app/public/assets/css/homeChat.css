@@ -997,6 +997,39 @@
     stroke-width: 2px;
 }
 
+/* Satisfaction feedback (thumbs) on AI answers. */
+.msg-feedback {
+    display: inline-flex;
+    align-items: center;
+    gap: .15rem;
+    margin-left: -.25rem;
+}
+
+.msg-feedback .fb-btn {
+    padding: .25rem .35rem;
+    margin: 0;
+}
+
+.msg-feedback .fb-up.is-active {
+    color: var(--accept);
+    background: var(--accept-bg);
+}
+
+.msg-feedback .fb-down.is-active {
+    color: var(--refuse);
+    background: var(--refuse-bg);
+}
+
+.msg-feedback .fb-up:hover {
+    color: var(--accept);
+    background: var(--accept-bg);
+}
+
+.msg-feedback .fb-down:hover {
+    color: var(--refuse);
+    background: var(--refuse-bg);
+}
+
 
 .typing-indicator {
     display: inline-flex;

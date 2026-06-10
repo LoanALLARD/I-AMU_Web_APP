@@ -280,6 +280,26 @@ class SessionController extends Controller
         ], 'chat');
     }
 
+    /** GET /sessions/{id}/stats — aggregate statistics (running or ended). */
+    public function stats(string $id): void
+    {
+        $this->requireRole('teacher');
+        $session = $this->loadViewable((int) $id);
+
+        $stats = $this->sessions->statistics($session);
+        if ($stats === null) {
+            $this->flash('error', "Les statistiques ne sont disponibles que pour une session en cours ou terminée.");
+            $this->redirect('/sessions/' . (int) $id);
+        }
+
+        $this->render('pages/session/stats', [
+            'title'      => 'Statistiques · ' . $session->name(),
+            'navSection' => 'sessions',
+            'stats'      => $stats,
+            'user'       => $this->currentUser(),
+        ], 'chat');
+    }
+
     /**
      * POST /sessions/{id}/student-status — the owner (de)activates a student's
      * enrollment from the monitor view. Deactivating removes the student from
