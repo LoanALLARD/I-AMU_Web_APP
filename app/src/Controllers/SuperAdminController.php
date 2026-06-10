@@ -32,7 +32,7 @@ class SuperAdminController extends Controller
             'pages/superadmin/department-admins',
             'Administrateurs de département',
             'department-admins',
-            ['departments' => $this->allDepartments()]
+            ['places'           => $places->all(), 'departmentAdmins' => $users->listDepartmentAdmins()]
         );
     }
 
