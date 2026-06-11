@@ -44,15 +44,13 @@ CREATE TABLE users (
     consent_at TIMESTAMPTZ,
     consent_version VARCHAR(50),
     theme theme_type NOT NULL DEFAULT 'AUTO',
-    archive_duration_days SMALLINT,
     email_verified_at TIMESTAMPTZ,
     email_verify_token VARCHAR(255),
     research_opposed BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT pk_users PRIMARY KEY (id),
     CONSTRAINT fk_users_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE SET NULL,
     CONSTRAINT uq_users_email UNIQUE (email),
-    CONSTRAINT uq_users_email_verify_token UNIQUE (email_verify_token),
-    CONSTRAINT ck_users_archive_duration_days CHECK (archive_duration_days IS NULL OR archive_duration_days > 0)
+    CONSTRAINT uq_users_email_verify_token UNIQUE (email_verify_token)
 );
 
 CREATE TABLE super_administrators (

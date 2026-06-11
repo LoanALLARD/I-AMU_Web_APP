@@ -5,7 +5,7 @@
 
 BEGIN;
 
-SELECT plan(16);
+SELECT plan(14);
 
 -- ============================================================
 -- Fixtures
@@ -17,24 +17,6 @@ INSERT INTO users (id, email, password_hash) VALUES (1, 'teacher@univ-amu.fr', '
 INSERT INTO teachers (id) VALUES (1);
 INSERT INTO resources (id, owner_id, department_id, code, name)
     VALUES (1, 1, 1, 'RES01', 'Algorithmique');
-
--- ============================================================
--- users: archive_duration_days must be > 0
--- ============================================================
-
-SELECT throws_ok(
-    $$INSERT INTO users (email, password_hash, archive_duration_days)
-      VALUES ('a@test.fr', 'h', 0)$$,
-    '23514',
-    NULL,
-    'users.archive_duration_days = 0 is rejected'
-);
-
-SELECT lives_ok(
-    $$INSERT INTO users (email, password_hash, archive_duration_days)
-      VALUES ('c@test.fr', 'h', 30)$$,
-    'users.archive_duration_days = 30 is accepted'
-);
 
 -- ============================================================
 -- sessions: ends_at must be strictly greater than starts_at

@@ -30,7 +30,6 @@
 
 ### ❌ Pas fait
 - **Réinitialisation du mot de passe oublié** (`/password/forgot`, `/password/reset`, table `password_reset`, mail de reset) — *must-have non couvert*. (La table `password_reset` n'existe pas au schéma.)
-- **Réglage de la durée d'archivage** : la colonne `users.archive_duration_days` existe, mais aucune UI ni service.
 - **Suppression de compte automatisée** (soft-delete + anonymisation) — remplacée par désactivation + demande à `dpo@univ-amu.fr`.
 - **Préférences densité / langue**.
 
@@ -58,9 +57,6 @@ Gérer l'identité de l'utilisateur :
   retirer mon consentement RGPD, supprimer mon compte.
 - En tant qu'**utilisateur**, je veux choisir mon thème / ma densité /
   ma langue (stocké localement).
-- En tant qu'**utilisateur**, je veux régler la **durée d'archivage**
-  de mes conversations, exprimée **en jours** (colonne
-  `users.archive_duration_days`, stockée en DB, propre à mon compte).
 - En tant qu'**étudiant / enseignant**, je veux **rejoindre mon
   département** en saisissant un **code département** au moment de
   l'inscription (cf. §2bis).
@@ -273,17 +269,13 @@ Tables existantes (source de vérité :
 `students`, `teachers`, `researchers`, `department_administrators`,
 `super_administrators`.
 
-> La durée d'archivage des conversations existe déjà au schéma sous le nom
-> `users.archive_duration_days` (SMALLINT, **en jours**, `> 0`). Ne pas
-> recréer une colonne `conversation_archive_days`.
-
 ### Nouvelles colonnes / tables
 
 > **État dev (2026-06-09)** — la **vérification d'email** est intégrée
 > **directement dans [`01_schema.sql`](../../database/schema/01_schema.sql)**
 > (il n'y a **pas** de dossier `database/migrations/`) : `users` porte
 > `email_verified_at TIMESTAMPTZ`, `email_verify_token VARCHAR(255)`
-> (unique `uq_users_email_verify_token`), `theme`, `archive_duration_days`,
+> (unique `uq_users_email_verify_token`), `theme`,
 > et **`research_opposed BOOLEAN NOT NULL DEFAULT FALSE`** (déjà au schéma —
 > cf. [spec 06](./06-rgpd.md) ; aucun endpoint ne l'écrit encore). La table
 > `password_reset` ci-dessous **n'est pas** créée (reset non implémenté).
