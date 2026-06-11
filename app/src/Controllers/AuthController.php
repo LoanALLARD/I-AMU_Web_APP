@@ -276,6 +276,73 @@ class AuthController extends Controller
         $this->redirect('/login');
     }
 
+    /** Displays the "forgot password" request form. */
+    public function showForgotPassword(): void
+    {
+        if (isset($_SESSION['user_id'])) {
+            $this->redirect('/chat');
+        }
+        $this->render('pages/auth/forgot-password', ['titrePage' => 'Mot de passe oublié'], 'auth');
+    }
+
+    /**
+     * Processes the reset request. Always shows the same generic message so an
+     * attacker cannot tell whether an account exists for the submitted email.
+     */
+    public function forgotPassword(): void
+    {
+        $this->verifyCsrf();
+
+        $email   = trim((string) $this->input('email', ''));
+        $service = new \Services\PasswordResetService(Database::getConnection());
+        $service->requestReset($email);
+
+        $this->flash('success', 'Si un compte existe pour cette adresse, un email de réinitialisation a été envoyé.');
+        $this->redirect('/login');
+    }
+
+    /** Shows the new-password form for a valid reset link. */
+    public function showResetPassword(): void
+    {
+        $token   = (string) $this->query('token', '');
+        $service = new \Services\PasswordResetService(Database::getConnection());
+
+        if ($service->verifyToken($token) === null) {
+            $this->flash('error', 'Lien invalide ou expiré.');
+            $this->redirect('/login');
+        }
+
+        $this->render('pages/auth/reset-password', [
+            'titrePage' => 'Nouveau mot de passe',
+            'token'     => $token,
+        ], 'auth');
+    }
+
+    /** Applies the new password from the reset link. */
+    public function resetPassword(): void
+    {
+        $this->verifyCsrf();
+
+        $token           = (string) $this->input('token', '');
+        $password        = (string) $this->input('password', '');
+        $passwordConfirm = (string) $this->input('password_confirm', '');
+
+        $service = new \Services\PasswordResetService(Database::getConnection());
+        $result  = $service->reset($token, $password, $passwordConfirm);
+
+        if (!$result['success']) {
+            $this->render('pages/auth/reset-password', [
+                'titrePage' => 'Nouveau mot de passe',
+                'token'     => $token,
+                'error'     => $result['error'],
+            ], 'auth');
+            return;
+        }
+
+        $this->flash('success', 'Votre mot de passe a été réinitialisé. Vous pouvez vous connecter.');
+        $this->redirect('/login');
+    }
+
     /**
      * POST /domain_name
      * Vérifie le domaine en base de données et renvoie le rôle associé.

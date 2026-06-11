@@ -322,6 +322,19 @@ body.auth-body > main {
 }
 .card-footer a:hover { text-decoration: underline; }
 
+/* "Forgot password?" link on the login form */
+.forgot-password-link {
+    text-align: right;
+    margin: -.35rem 0 1rem;
+    font-size: .85rem;
+}
+.forgot-password-link a {
+    color: var(--blue);
+    font-weight: 600;
+    text-decoration: none;
+}
+.forgot-password-link a:hover { text-decoration: underline; }
+
 /* Reactivation info box (login) */
 .reactivate-box {
     background: var(--blue-light);

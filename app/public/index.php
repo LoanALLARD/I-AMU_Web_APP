@@ -95,6 +95,18 @@ $router->add('GET', '/gdpr_consent_researcher', function () {
 $router->add('GET', '/verify-email', function () {
     (new AuthController())->verifyEmail();
 });
+$router->add('GET', '/forgot-password', function () {
+    (new AuthController())->showForgotPassword();
+});
+$router->add('POST', '/forgot-password', function () {
+    (new AuthController())->forgotPassword();
+});
+$router->add('GET', '/reset-password', function () {
+    (new AuthController())->showResetPassword();
+});
+$router->add('POST', '/reset-password', function () {
+    (new AuthController())->resetPassword();
+});
 
 // AJAX: departments of a place, for the registration form's dependent select.
 $router->add('GET', '/places/{id}/departments', function ($id) {
