@@ -4,6 +4,7 @@ CREATE TYPE domain_role_type AS ENUM ('STUDENT', 'TEACHER', 'RESEARCHER');
 CREATE TYPE session_type AS ENUM ('EXAM', 'TUTORIAL', 'LAB', 'FREE_STUDY');
 CREATE TYPE session_status_type AS ENUM ('DRAFT', 'SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED');
 CREATE TYPE document_status_type AS ENUM ('PENDING', 'READY', 'FAILED');
+CREATE TYPE adapter AS ENUM ('ollama');
 
 CREATE TABLE places (
     id BIGSERIAL,
@@ -149,7 +150,7 @@ CREATE TABLE models (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     api_url VARCHAR(255) NOT NULL,
-    adapter VARCHAR(50) NOT NULL,
+    adapter adapter NOT NULL,
     is_shareable BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT pk_models PRIMARY KEY (id),
     CONSTRAINT fk_models_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE SET NULL,
