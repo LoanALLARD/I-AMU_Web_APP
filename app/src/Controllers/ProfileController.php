@@ -41,6 +41,9 @@ class ProfileController extends Controller
             'page'              => 'profile',
             'pageTitle'         => 'Mon profil',
             'title'             => 'Mon profil',
+            'teacherTitle'      => $isTeacher
+                ? (new UserRepository(Database::getConnection()))->getTitle((int) $user['id'])
+                : null,
             'specRequestStatus' => $isTeacher
                 ? (new TeacherSpecialisationService(Database::getConnection()))
                     ->requestStatus((int) $user['id'])

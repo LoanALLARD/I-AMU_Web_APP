@@ -88,6 +88,8 @@ $relativeDay = static function (?string $ts): string {
                     <span class="kv-key">email</span>
                     <span class="kv-val mono"><?= htmlspecialchars($user['email'] ?? '—') ?></span>
                     <?php if ($isTeacher): ?>
+                        <span class="kv-key">titre</span>
+                        <span class="kv-val"><?= htmlspecialchars(($teacherTitle ?? '') !== '' ? $teacherTitle : '—') ?></span>
                         <span class="kv-key">habilitation</span>
                         <span class="kv-val">
                             <?php if ($isSpecialized): ?>
