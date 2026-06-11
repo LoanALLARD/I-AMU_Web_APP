@@ -1,10 +1,17 @@
-/* Container principal - Élargi à 900px pour plus de confort */
+/* ==========================================================================
+   Layout Principal (Grille 2 colonnes)
+   ========================================================================== */
+
 .admin-container {
-    max-width: 900px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    max-width: 1200px; /* Largeur confortable pour deux colonnes */
     margin: 2rem auto;
     padding: 0 1.5rem;
     font-family: 'Nunito', sans-serif;
     width: 100%;
+    align-items: start; /* Empêche les cartes de s'étirer verticalement */
 }
 
 /* Structure de la carte */
@@ -15,6 +22,8 @@
     box-shadow: var(--shadow-sm);
     overflow: hidden;
     transition: background 0.2s, border-color 0.2s;
+    display: flex;
+    flex-direction: column;
 }
 
 .admin-card-header {
@@ -23,7 +32,6 @@
     background: var(--white);
 }
 
-/* Forçage d'une couleur explicite basée sur le conteneur pour éviter les conflits */
 .admin-card-title {
     font-size: 1.35rem;
     font-weight: 700;
@@ -32,10 +40,14 @@
 }
 
 .admin-card-body {
-    padding: 2.5rem 2rem;
+    padding: 2rem;
+    flex: 1;
 }
 
-/* Grille Responsive */
+/* ==========================================================================
+   Formulaire (Colonne Gauche)
+   ========================================================================== */
+
 .form-grid-2 {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -43,17 +55,14 @@
     margin-bottom: 1.5rem;
 }
 
-@media (max-width: 768px) {
-    .form-grid-2 {
-        grid-template-columns: 1fr;
-    }
-}
-
 .form-group {
     margin-bottom: 1.5rem;
 }
 
-/* Éléments de champs */
+.form-group.mb-0 {
+    margin-bottom: 0;
+}
+
 .form-label {
     display: block;
     font-size: 0.875rem;
@@ -64,7 +73,7 @@
     letter-spacing: 0.03em;
 }
 
-.form-control {
+.form-control, .form-select {
     width: 100%;
     padding: 0.75rem 1rem;
     font-family: 'Nunito', sans-serif;
@@ -74,16 +83,25 @@
     background-color: var(--white);
     border: 1.5px solid var(--gray-300);
     border-radius: 8px;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background-color 0.15s;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-.form-control:focus {
+.form-control:focus, .form-select:focus {
     border-color: var(--blue);
     outline: 0;
     box-shadow: 0 0 0 3px var(--blue-light);
 }
 
-/* Choix de partage (Boutons Radio horizontaux) */
+.form-section-box {
+    margin-top: 1.5rem; 
+    padding: 1.25rem; 
+    border-radius: 8px; 
+    background: var(--gray-100); 
+    border: 1px solid var(--gray-200);
+}
+
+/* Boutons Radio */
 .radio-group-inline {
     display: flex;
     gap: 2rem;
@@ -112,7 +130,7 @@
     cursor: pointer;
 }
 
-/* Pied du formulaire et Actions */
+/* Actions du formulaire */
 .form-actions {
     display: flex;
     justify-content: flex-end;
@@ -137,83 +155,296 @@
     justify-content: center;
 }
 
-.btn-admin.btn-secondary {
-    background: var(--gray-200);
-    color: var(--gray-700);
+.btn-admin.btn-secondary { background: var(--gray-200); color: var(--gray-700); }
+.btn-admin.btn-secondary:hover { background: var(--gray-300); }
+.btn-admin.btn-primary { background: var(--blue); color: var(--white); box-shadow: 0 2px 8px rgba(26, 115, 200, .25); }
+.btn-admin.btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); }
+
+
+/* ==========================================================================
+   Liste des Modèles (Colonne Droite)
+   ========================================================================== */
+
+.models-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-.btn-admin.btn-secondary:hover {
-    background: var(--gray-300);
+.model-row {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s, border-color 0.15s;
 }
 
-.btn-admin.btn-primary {
-    background: var(--blue);
-    color: var(--white);
-    box-shadow: 0 2px 8px rgba(26, 115, 200, .25);
+.model-row:hover {
+    border-color: var(--gray-300);
+    transform: translateY(-1px);
 }
 
-.btn-admin.btn-primary:hover {
-    background: var(--blue-dark);
+.model-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0; 
 }
 
-/* ── Correction et forçage pour le Thème Sombre ── */
-[data-theme="dark"] .admin-card {
-    background: #151b2c; /* Couleur sombre du fond de la sidebar / éléments */
-    border-color: #222e4a;
+.model-name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-[data-theme="dark"] .admin-card-header {
-    background: #1a2336;
-    border-bottom-color: #222e4a;
+.model-name {
+    font-size: 1.05rem;
+    color: var(--gray-800);
+    font-weight: 700;
 }
 
-[data-theme="dark"] .admin-card-title {
-    color: #ffffff !important; /* Texte du titre en blanc pur */
+.model-size-badge {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: var(--gray-100);
+    color: var(--gray-600);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--gray-200);
 }
+
+.model-sub-info {
+    font-size: 0.82rem;
+    color: var(--gray-500);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.model-sub-info .sep { color: var(--gray-300); }
+
+.model-url {
+    font-size: 0.78rem;
+    color: var(--gray-400);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
+.mono-text { font-family: var(--font-mono), monospace; }
+
+/* Badges */
+.model-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
+.model-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: center;
+    min-width: 65px;
+}
+
+.badge-active { background: var(--accept-bg, #ecfdf5); color: var(--accept, #10b981); }
+.badge-inactive { background: var(--gray-100); color: var(--gray-400); }
+.badge-shared { background: var(--blue-light, #eff6ff); color: var(--blue, #3b82f6); }
+.badge-private { background: #fef3c7; color: #d97706; }
+
+.models-empty {
+    text-align: center;
+    padding: 3rem;
+    border: 1px dashed var(--gray-300);
+    border-radius: 12px;
+    color: var(--gray-500);
+}
+
+/* ==========================================================================
+   Classes Utilitaires
+   ========================================================================== */
+
+.d-none { display: none !important; }
+.is-invalid { border-color: #dc3545 !important; }
+.is-invalid:focus { box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15) !important; }
+.text-danger { color: #dc3545; font-size: 0.8rem; margin-top: 0.4rem; }
+
+/* ==========================================================================
+   Responsive (Passage en 1 colonne sur petit écran)
+   ========================================================================== */
+
+@media (max-width: 992px) {
+    .admin-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .form-grid-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .model-badges {
+        flex-direction: row;
+    }
+}
+
+/* ==========================================================================
+   Compatibilité Thème Sombre
+   ========================================================================== */
+
+[data-theme="dark"] .admin-card { background: #151b2c; border-color: #222e4a; }
+[data-theme="dark"] .admin-card-header { background: #1a2336; border-bottom-color: #222e4a; }
+[data-theme="dark"] .admin-card-title { color: #ffffff !important; }
 
 [data-theme="dark"] .form-label,
-[data-theme="dark"] .radio-option label {
-    color: #e2e8f0; /* Gris très clair pour une excellente lisibilité */
-}
+[data-theme="dark"] .radio-option label { color: #e2e8f0; }
 
-[data-theme="dark"] .form-control {
-    background-color: #1e293b; /* Inputs foncés */
-    border-color: #334155;
-    color: #f8fafc; /* Texte saisi en blanc/gris clair */
-}
-
-[data-theme="dark"] .form-control:focus {
-    border-color: var(--blue);
+[data-theme="dark"] .form-control, [data-theme="dark"] .form-select {
     background-color: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+[data-theme="dark"] .form-control:focus, [data-theme="dark"] .form-select:focus { border-color: var(--blue); }
+[data-theme="dark"] .form-section-box { background: #1e293b; border-color: #334155; }
+[data-theme="dark"] .form-actions { border-top-color: #222e4a; }
+
+[data-theme="dark"] .btn-admin.btn-secondary { background: #222e4a; color: #f1f5f9; }
+[data-theme="dark"] .btn-admin.btn-secondary:hover { background: #2c3b5e; }
+
+[data-theme="dark"] .model-row, [data-theme="dark"] .models-empty { background: #1a2336; border-color: #222e4a; }
+[data-theme="dark"] .model-row:hover { border-color: #2c3b5e; }
+[data-theme="dark"] .model-name { color: #ffffff; }
+[data-theme="dark"] .model-size-badge { background: #1e293b; border-color: #334155; color: #94a3b8; }
+[data-theme="dark"] .model-sub-info { color: #94a3b8; }
+[data-theme="dark"] .model-badge.badge-inactive { background: #1e293b; color: #64748b; }
+[data-theme="dark"] .model-badge.badge-private { background: rgba(217, 119, 6, 0.15); color: #fbbf24; }
+
+/* ==========================================================================
+   Bouton de suppression (Modèles)
+   ========================================================================== */
+
+.model-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    padding-left: 16px;
+    border-left: 1px solid var(--gray-200); /* Séparateur visuel */
 }
 
-[data-theme="dark"] .form-control::placeholder {
-    color: #64748b; /* Placeholder discret mais lisible */
+.delete-model-form {
+    margin: 0;
+    display: flex;
 }
 
-[data-theme="dark"] .form-actions {
-    border-top-color: #222e4a;
+.btn-delete-model {
+    background: transparent;
+    border: none;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
 }
 
-/* Correction du bouton annuler en mode sombre pour éviter le texte sombre/fond sombre */
-[data-theme="dark"] .btn-admin.btn-secondary {
-    background: #222e4a;
-    color: #f1f5f9;
+.btn-delete-model:hover {
+    background: var(--refuse-bg, #fef2f2);
+    color: var(--refuse, #ef4444);
+    transform: scale(1.05);
 }
 
-[data-theme="dark"] .btn-admin.btn-secondary:hover {
-    background: #2c3b5e;
+.btn-delete-model:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
 }
 
-/* ── Classes utilitaires pour le JavaScript ── */
-.d-none {
-    display: none !important;
+/* Compatibilité Mode Sombre */
+[data-theme="dark"] .model-actions {
+    border-left-color: #222e4a;
 }
 
-.is-invalid {
-    border-color: #dc3545 !important;
+[data-theme="dark"] .btn-delete-model {
+    color: #64748b;
 }
 
-.is-invalid:focus {
-    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15) !important;
+[data-theme="dark"] .btn-delete-model:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
 }
+/* ==========================================================================
+   Boutons d'action sur les Modèles (Archiver / Réactiver)
+   ========================================================================== */
+
+.model-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    padding-left: 16px;
+    border-left: 1px solid var(--gray-200);
+}
+
+.action-model-form {
+    margin: 0;
+    display: flex;
+}
+
+.btn-action-model {
+    background: transparent;
+    border: none;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-action-model:focus {
+    outline: none;
+}
+
+/* Style spécifique au bouton Archiver (Corbeille) */
+.btn-archive:hover {
+    background: var(--refuse-bg, #fef2f2);
+    color: var(--refuse, #ef4444);
+    transform: scale(1.05);
+}
+.btn-archive:focus {
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+/* Style spécifique au bouton Réactiver (Flèche Refresh) */
+.btn-reactivate:hover {
+    background: var(--accept-bg, #ecfdf5);
+    color: var(--accept, #10b981);
+    transform: scale(1.05);
+}
+.btn-reactivate:focus {
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+/* Mode Sombre */
+[data-theme="dark"] .model-actions { border-left-color: #222e4a; }
+[data-theme="dark"] .btn-action-model { color: #64748b; }
+[data-theme="dark"] .btn-archive:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+[data-theme="dark"] .btn-reactivate:hover { background: rgba(16, 185, 129, 0.15); color: #10b981; }

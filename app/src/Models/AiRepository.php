@@ -20,6 +20,41 @@ class AiRepository
         $this->pdo = $pdo;
     }
 
+    public function findAll(){
+        $query = $this->pdo->prepare(
+            'SELECT * FROM models'
+        );
+        
+        $query->execute();
+
+        $result = $query->fetchAll();
+
+        return $result;
+    }
+
+    public function archive(int $id){
+        $query = $this->pdo->prepare(
+            'UPDATE models
+            SET is_active = FALSE
+            WHERE id = :id'
+        );
+
+        $success = $query->execute([ ':id' => $id]);
+
+        return $success && $query->rowCount() > 0;
+    }
+    public function reactivate(int $id): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE models
+            SET is_active = TRUE
+            WHERE id = :id'
+        );
+
+        $success = $query->execute([':id' => $id]);
+
+        return $success && $query->rowCount() > 0;
+    }
     /**
      * @return array<string, mixed>|null
      */
@@ -58,7 +93,8 @@ class AiRepository
                 SELECT name,id 
                 FROM models 
                 where resource_id is NULL
-                and is_shareable = true'
+                and is_shareable = true
+                and is_active = :a'
             );
             $query->execute([
                 "a"    => true,

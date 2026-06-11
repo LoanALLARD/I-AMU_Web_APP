@@ -76,6 +76,9 @@
     // --- Department-admin console (department_admin role) --------------
     $router->add('GET',  '/department-admin',                         function() { (new DepartmentAdminController())->index(); });
     $router->add('GET',  '/department-admin/users',                   function() { (new DepartmentAdminController())->users(); });
+    $router->add('GET',  '/department-admin/models',                  function() { (new DepartmentAdminController())->models();});
+    $router->add('POST', '/department-admin/models/archive',          function() { (new DepartmentAdminController())->archiveModel();});
+    $router->add('POST', '/department-admin/models/reactivate',       function() { (new DepartmentAdminController())->reactivateModel();});
     $router->add('GET',  '/department-admin/search',                  function() { (new DepartmentAdminController())->GetUsersByName(); });
     $router->add('GET',  '/department-admin/addModel',                function() { (new DepartmentAdminController())->formModel(); });
     $router->add('POST', '/department-admin/addModel',                function() { (new DepartmentAdminController())->addModel(); });
