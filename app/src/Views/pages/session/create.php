@@ -144,12 +144,12 @@ $typeCards = [
             </div>
             <div class="row-2">
                 <div>
-                    <label class="flabel" for="f-starts">démarrage</label>
+                    <label class="flabel" for="f-starts">Date de début</label>
                     <input type="datetime-local" id="f-starts" name="starts_at"
                            value="<?= htmlspecialchars((string) $val('starts_at')) ?>">
                 </div>
                 <div>
-                    <label class="flabel" for="f-duration">durée</label>
+                    <label class="flabel" for="f-duration">Durée</label>
                     <div class="field-suffix">
                         <input type="number" id="f-duration" name="duration_min" min="5" max="480"
                                value="<?= htmlspecialchars((string) $val('duration_min', 90)) ?>">

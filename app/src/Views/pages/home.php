@@ -9,7 +9,7 @@
  * @var string $closedReason   why the session is closed (ended / cancelled)
  */
 $firstModel = $models[0] ?? null;
-$defaultModelName = $firstModel ? $firstModel['name'] : 'llama3.2:1b';
+$defaultModelName = $firstModel ? $firstModel['name'] : 'Aucun(s) modèle(s) disponible(s)';
 $sessionClosed = $sessionClosed ?? false;
 $closedReason = $closedReason ?? '';
 $conversation = $conversation ?? null;

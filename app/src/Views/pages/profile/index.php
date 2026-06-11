@@ -135,7 +135,7 @@ $relativeDay = static function (?string $ts): string {
                         <?= csrf_field() ?>
                         <?php if ($user['roles'][0] == "teacher"): ?>
                         <div class="form-group full-width">
-                            <label for="title">Votre titre<span class="hint" ></span></label>
+                            <label for="title" placeholder="ex : Maitre de conférences">Votre titre<span class="hint" ></span></label>
                             <input type="text" id="title" name="title">
                         </div>
                         <?php endif ?>
