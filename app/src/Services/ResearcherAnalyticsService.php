@@ -123,7 +123,7 @@ final class ResearcherAnalyticsService
      * serialise it to JSON or CSV without touching the database shape.
      *
      * @param list<int> $requestedDepartmentIds
-     * @return array{success:false, error:string}|array{success:true, scope:list<array{place:string, department:string}>, rows:list<array<string, mixed>>}
+     * @return array{success:false, error:string}|array{success:true, scope:list<array{place:string, department:string}>, rows:iterable<int, array<string, mixed>>}
      */
     public function export(int $researcherId, array $requestedDepartmentIds): array
     {
@@ -145,8 +145,25 @@ final class ResearcherAnalyticsService
             return ['success' => false, 'error' => 'Accès non autorisé à ce périmètre.'];
         }
 
-        $rows = array_map(
-            static fn (array $r): array => [
+        return [
+            'success' => true,
+            'scope'   => $this->scopeLabels($researcherId, $scope),
+            'rows'    => $this->mapRows($scope),
+        ];
+    }
+
+    /**
+     * Lazily maps each raw export row to its public, pseudonymised shape. A
+     * Generator, so the controller streams the download row by row instead of
+     * materialising the whole corpus in memory (the export memory ceiling).
+     *
+     * @param list<int> $scope
+     * @return \Generator<int, array<string, mixed>>
+     */
+    private function mapRows(array $scope): \Generator
+    {
+        foreach ($this->analytics->exportRows($scope) as $r) {
+            yield [
                 'campus'                  => (string) $r['place_name'],
                 'department'              => (string) $r['department_name'],
                 'session_id'              => (int) $r['session_id'],
@@ -169,15 +186,8 @@ final class ResearcherAnalyticsService
                 'latency_ms'              => $r['latency']       !== null ? (int) $r['latency']       : null,
                 'user_feedback'           => $r['user_feedback'] !== null ? (int) $r['user_feedback'] : null,
                 'sent_at'                 => $r['sent_at'] !== null ? (string) $r['sent_at'] : null,
-            ],
-            $this->analytics->exportRows($scope)
-        );
-
-        return [
-            'success' => true,
-            'scope'   => $this->scopeLabels($researcherId, $scope),
-            'rows'    => $rows,
-        ];
+            ];
+        }
     }
 
     /**

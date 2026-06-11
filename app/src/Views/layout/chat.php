@@ -342,8 +342,8 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                 <?php /* Current environment: session (filtered to one session's
                conversations) or free. */ ?>
                 <div class="sidebar-env">
-                    <span class="sidebar-env-label<?= ($env['mode'] ?? '') === 'session' ? ' is-session' : '' ?>">
-                        <?= htmlspecialchars($env['label'] ?? 'Chat libre') ?>
+                    <span class="sidebar-env-label<?= (!$endedView && ($env['mode'] ?? '') === 'session') ? ' is-session' : '' ?>">
+                        <?= htmlspecialchars($endedView ? 'Sessions terminées' : ($env['label'] ?? 'Chat libre')) ?>
                     </span>
                 </div>
 
@@ -365,7 +365,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                     </button>
                 </div>
 
-                <?php if (($env['mode'] ?? '') === 'session'): ?>
+                <?php if (($env['mode'] ?? '') === 'session' && !$endedView): ?>
                     <a href="/chat" class="btn-leave-session"
                         onclick="return confirm('Quitter la session et revenir au chat libre ? Vos conversations de session restent accessibles en la rejoignant à nouveau.');">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
@@ -406,6 +406,11 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                        is unaffected. */ ?>
                         <?php $isSessionEnv = ($env['mode'] ?? 'libre') === 'session'; ?>
                         <?php $scopeBase = !empty($conversation['id']) ? '/chat/' . (int) $conversation['id'] : '/chat'; ?>
+                        <?php /* The ended-sessions scope opens a session-bound thread,
+                               so the "free" scope links must drop the conversation
+                               anchor — otherwise switching back keeps the session
+                               thread open instead of returning to free chat. */ ?>
+                        <?php $freeBase = $endedView ? '/chat' : $scopeBase; ?>
                         <?php if ($isSessionEnv && !$endedView): ?>
                             <?php /* Session conversations are driven by the session
                                    lifecycle: no rename, no archive — hence no scope
@@ -424,7 +429,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                                     </svg>
                                 </button>
                                 <div class="conv-scope-menu" id="convScopeMenu" role="menu" hidden>
-                                    <a href="<?= htmlspecialchars($scopeBase) ?>"
+                                    <a href="<?= htmlspecialchars($freeBase) ?>"
                                         class="conv-scope-item<?= !$archivedView && !$endedView ? ' is-current' : '' ?>" role="menuitem">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -432,7 +437,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                                         </svg>
                                         Conversations
                                     </a>
-                                    <a href="<?= htmlspecialchars($scopeBase) ?>?archived=1"
+                                    <a href="<?= htmlspecialchars($freeBase) ?>?archived=1"
                                         class="conv-scope-item<?= $archivedView ? ' is-current' : '' ?>" role="menuitem">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

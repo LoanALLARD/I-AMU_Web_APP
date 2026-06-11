@@ -245,12 +245,13 @@ class ResearcherAnalyticsRepository
      * time. Feeds both the JSON and the CSV researcher exports.
      *
      * @param list<int> $departmentIds
-     * @return list<array<string, mixed>>
+     * @return \Generator<int, array<string, mixed>>  Streamed row by row so a
+     *         large export never materialises the whole result set in memory.
      */
-    public function exportRows(array $departmentIds): array
+    public function exportRows(array $departmentIds): \Generator
     {
         if ($departmentIds === []) {
-            return [];
+            return;
         }
 
         [$in, $params] = $this->inClause($departmentIds);
@@ -289,9 +290,10 @@ class ResearcherAnalyticsRepository
         );
         $stmt->execute($params);
 
-        /** @var list<array<string, mixed>> $rows */
-        $rows = $stmt->fetchAll();
-
-        return $rows;
+        // fetch() one row at a time (not fetchAll()) so PHP holds a single row,
+        // not the entire corpus, while the caller streams the download.
+        while (($row = $stmt->fetch()) !== false) {
+            yield $row;
+        }
     }
 }
