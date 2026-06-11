@@ -9,6 +9,7 @@ $initials = strtoupper(
     substr($user['first_name'] ?? '·', 0, 1)
     . substr($user['last_name']  ?? '·', 0, 1)
 );
+$specRequestStatus = $specRequestStatus ?? 'none';
 $roles = $user['roles'] ?? [];
 $isTeacher = in_array('teacher', $roles, true);
 $isAdmin = in_array('admin', $roles, true) || in_array('department_admin', $roles, true);
@@ -132,17 +133,21 @@ $relativeDay = static function (?string $ts): string {
                     <h2>Modifier mes informations</h2>
                     <form method="POST" action="/profile/update" class="edit-profile-form">
                         <?= csrf_field() ?>
-                        <? if ($user['roles'][0] == "teacher"): ?>
+                        <?php if ($user['roles'][0] == "teacher"): ?>
                         <div class="form-group full-width">
                             <label for="title" placeholder="ex : Maitre de conférences">Votre titre<span class="hint" ></span></label>
                             <input type="text" id="title" name="title">
                         </div>
-                        <? endif ?>
+                        <?php endif ?>
 
 
                         <div class="form-group full-width">
                             <label for="password">Nouveau mot de passe <span class="hint">(laisser vide pour ne pas modifier)</span></label>
-                            <input type="password" id="password" name="password">
+                            <input type="password" id="password" name="password"
+                                   placeholder="Min. 12 caractères, 1 majuscule, 1 chiffre, 1 caractère spécial"
+                                   minlength="12"
+                                   pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{12,}"
+                                   title="Au moins 12 caractères, une majuscule, un chiffre et un caractère spécial.">
                         </div>
 
                         <div class="form-group full-width">

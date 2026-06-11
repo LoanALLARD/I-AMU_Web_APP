@@ -124,7 +124,7 @@ class Ai {
     /**
      * @param array<int, int> $context
      * @param callable(string): void $onChunk
-     * @return array{response: string, context: list<int>, prompt_eval_count: ?int, eval_count: ?int}
+     * @return array{response: string, context: list<int>, prompt_eval_count: ?int, eval_count: ?int, total_duration: ?int}
      */
     public function askStream(string $message, array $context, ?string $postprompt, ?string $preprompt, callable $onChunk): array {
         return $this->adaptater->generateStream($message, $context, $postprompt, $preprompt, $onChunk);

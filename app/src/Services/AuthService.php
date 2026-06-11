@@ -299,8 +299,9 @@ final class AuthService
         if ($current === '' || $new === '' || $confirm === '') {
             return ['success' => false, 'error' => 'Tous les champs sont obligatoires.'];
         }
-        if (strlen($new) < 8) {
-            return ['success' => false, 'error' => 'Le nouveau mot de passe doit faire au moins 8 caractères.'];
+        $passwordError = \Core\PasswordPolicy::validate($new);
+        if ($passwordError !== null) {
+            return ['success' => false, 'error' => $passwordError];
         }
         if ($new !== $confirm) {
             return ['success' => false, 'error' => 'Les nouveaux mots de passe ne correspondent pas.'];
@@ -345,17 +346,9 @@ final class AuthService
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return 'Email invalide.';
         }
-        if (strlen($password) < 8) {
-            return 'Le mot de passe doit faire au moins 8 caractères.';
-        }
-        if (!preg_match('/[A-Z]/', $password)) {
-            return 'Le mot de passe doit contenir au moins une majuscule.';
-        }
-        if (!preg_match('/[0-9]/', $password)) {
-            return 'Le mot de passe doit contenir au moins un chiffre.';
-        }
-        if (!preg_match('/[^A-Za-z0-9]/', $password)) {
-            return 'Le mot de passe doit contenir au moins un caractère spécial.';
+        $passwordError = \Core\PasswordPolicy::validate($password);
+        if ($passwordError !== null) {
+            return $passwordError;
         }
         if ($password !== $passwordConfirm) {
             return 'Les mots de passe ne correspondent pas.';

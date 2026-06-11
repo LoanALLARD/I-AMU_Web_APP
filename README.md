@@ -1,137 +1,134 @@
 # I-AMU_Web_APP
 
-## Détails du projet : 
-Réalisation d'un plugin *Moodle* qui sera ajouté à *Ametice*. Il prendra la forme d'un lien ***hypertext*** dans chaque matiere où il est disponible, ce lien ouvrira un second onglet dans lequel une interface de *chat* sera accessible pour discuter avec le ***models***.
+## Project Details:
+Development of a *Moodle* plugin that will be added to *Ametice*. It will take the form of a ***hypertext*** link in each course where it is available. This link will open a second tab where a *chat* interface will be accessible to discuss with ***AI models***.
 
-Ce plugin permettra : 
--  L'accès à des ***models*** d'IA qui auront connaissance des cours d'une matière.
-- Proposera une environnement d'apprentissage encadré par des **règles sur le models** ainsi que sur les **nombres de tokens disponibles**.
-- Permettra aux professeurs d'avoir accès aux échanges entre le model et ses étudiants de sorte à pouvoir analyser la facon dont les élèves utilisent l'IA.
+This plugin will allow:
+- Access to ***AI models*** that will have knowledge of a course's materials.
+- Provide a structured learning environment with **rules on the models** as well as **available token limits**.
+- Allow teachers to access exchanges between the model and their students so they can analyze how students use AI.
 
---- 
+---
 
-## Tests et qualité du code
+## Tests and Code Quality
 
-Outils installés en `require-dev` dans `app/composer.json` et exécutés
-automatiquement en CI (GitHub Actions) à chaque `push` sur toute
-branche et à chaque pull request.
+Tools installed in `require-dev` in `app/composer.json` and automatically
+executed in CI (GitHub Actions) on every `push` to any branch and on
+each pull request.
 
-> **Note sur Composer** : le runtime utilise un autoloader maison
-> (`app/autoload.php`) chargé par `public/index.php`. Composer n'est
-> utilisé que pour installer les outils de qualité (PHPStan, PHPCS,
-> PHPUnit) — `vendor/autoload.php` ne sert qu'à ces outils lors de
-> l'analyse statique et des tests. Les deux mappings PSR-4 (maison et
-> Composer) sont volontairement identiques pour éviter une dérive
-> entre ce que voient les outils et ce qui tourne en production.
+> **Note on Composer**: the runtime uses a custom autoloader (`app/autoload.php`)
+> loaded by `public/index.php`. Composer is only used to install quality tools
+> (PHPStan, PHPCS, PHPUnit) — `vendor/autoload.php` is only used by these tools
+> during static analysis and testing. The two PSR-4 mappings (custom and Composer)
+> are deliberately identical to avoid drift between what the tools see and what
+> runs in production.
 
-### Installation des dépendances de dev
+### Installing Dev Dependencies
 
 ```bash
 cd app
 composer install
 ```
 
-### Commandes disponibles (à lancer depuis `app/`)
+### Available Commands (run from app/)
 
-| Commande           | Outil                  | Rôle                                                         |
-|--------------------|------------------------|--------------------------------------------------------------|
-| `composer lint`    | `php -l`               | Vérifie la syntaxe PHP de tous les fichiers `src/`, `public/`, `tests/`. |
-| `composer stan`    | PHPStan (niveau 6)     | Analyse statique : types, méthodes inexistantes, code mort. |
-| `composer cs`      | PHP_CodeSniffer        | Vérifie le respect de la norme PSR-12.                       |
-| `composer cbf`     | PHP Code Beautifier    | Corrige automatiquement le style PSR-12 (ce qui est auto-corrigeable). |
-| `composer test`    | PHPUnit 10             | Lance les tests des dossiers `tests/Unit` et `tests/Integration`. |
-| `composer quality` | lint + stan + cs       | Enchaîne les trois validations principales. À lancer avant de pousser. |
+| Command            | Tool                | Purpose                                                      |
+|--------------------|---------------------|--------------------------------------------------------------|
+| `composer lint`    | `php -l`            | Checks PHP syntax for all files in src/, public/, tests/.    |
+| `composer stan`    | PHPStan (level 6)   | Static analysis: types, non-existent methods, dead code.     |
+| `composer cs`      | PHP_CodeSniffer     | Verifies compliance with PSR-12 standard.                    |
+| `composer cbf`     | PHP Code Beautifier | Automatically fixes PSR-12 style (auto-correctable issues).  |
+| `composer test`    | PHPUnit 10          | Runs tests from tests/Unit and tests/Integration folders.    |
+| `composer quality` | lint + stan + cs    | Chains the three main validations. Run before pushing.       |
 
-### Exemples d'utilisation
+### Usage Examples
 
-Vérification complète avant un commit :
+Complete verification before a commit:
 
 ```bash
 cd app
 composer quality
 ```
 
-Correction automatique du style :
+Automatic style correction:
 
 ```bash
 cd app
 composer cbf
 ```
 
-Lancer uniquement les tests :
+Run only tests:
 
 ```bash
 cd app
 composer test
 ```
 
-### Intégration continue (GitHub Actions)
+### Continuous Integration (GitHub Actions)
 
-Le workflow `.github/workflows/ci.yml` exécute à chaque push trois
-jobs en parallèle :
+The `.github/workflows/ci.yml` workflow executes three jobs in
+parallel on each push::
 
-- **PHP quality** : `lint`, `phpstan`, `phpcs` (informationnel
-  pendant la phase de transition), `phpunit`.
-- **Infrastructure** : validation de la syntaxe de
-  `docker-compose.yaml`.
-- **Schéma SQL** : rejoue `database/schema.sql` puis
-  `database/seed.sql` sur un PostgreSQL 17 fraîchement instancié,
-  pour détecter toute régression SQL.
+- **PHP quality** : `lint`, `phpstan`, `phpcs` (informational
+  during transition phase), `phpunit`.
+- **Infrastructure** : validation of
+  `docker-compose.yaml` syntax.
+- **SQL Schema** : replays `database/schema.sql`  on a freshly
+  instantiated PostgreSQL 17 to detect any SQL regressions.
 
-Les erreurs PHPStan déjà présentes lors de l'introduction de l'outil
-sont consignées dans `app/phpstan-baseline.neon` : le CI ne bloque
-que sur les **nouvelles** erreurs. Après avoir corrigé des erreurs,
-on peut rétrécir cette baseline :
+PHPStan errors already present when the tool was introduced are
+listed in `app/phpstan-baseline.neon` : CI only blocks on
+**new** errors. After fixing errors, you can shrink this baseline:
 
 ```bash
 cd app
 composer stan -- --generate-baseline phpstan-baseline.neon
 ```
 
-# Fonctionnalité : Intégration et Gestion des Modèles LLM
+# Feature: LLM Model Integration and Management
 
-Cette fonctionnalité permet de communiquer de manière agnostique avec différents modèles d'Intelligence Artificielle (comme Ollama, OpenAI, etc.). L'architecture repose sur le **Design Pattern Adapter**, permettant d'ajouter de nouveaux modèles ou fournisseurs d'API simplement en base de données, sans modifier le cœur de l'application.
-
----
-
-## Présentation et Données
-
-Actuellement, seul le modèle `llama3.2:1b` est disponible et configuré. 
-
-Les informations de chaque modèle sont entièrement pilotées par la base de données. On y stocke notamment :
-* Le nom du modèle (`name`)
-* La fenêtre de contexte (`infoContextWindow`)
-* La taille du modèle (`infoSizeOfModel`)
-* L'entreprise émettrice (`infoCompany`)
-* L'URL de l'API cible (`url`)
-* Le type d'adaptateur à utiliser (`adapter_type`)
+This feature enables agnostic communication with various Artificial Intelligence models (such as Ollama, OpenAI, etc.). The architecture is based on the **Adapter Design Pattern**, allowing new models or API providers to be added directly through the database, without modifying the application core.
 
 ---
 
-## Architecture et Flux d'Exécution
+## Overview and Data
 
-Lorsqu'une demande de chat est émise, le flux suit les étapes suivantes :
+Currently, only the `llama3.2:1b` model is available and configured.
 
-1. **Routage :** La requête HTTP `POST` arrive sur le `LLMController`.
-2. **Vérification (Repository) :** Le contrôleur appelle `AiRepository` pour vérifier si le modèle demandé existe en base de données et récupère ses configurations.
-3. **Instanciation (Métier) :** Le contrôleur instancie l'entité `ModelAi` (ou `AI`) avec ses données spécifiques.
-4. **Adaptation (Pattern Adapter) :** En fonction de la colonne `adapter_type` récupérée en BDD, l'application utilise une classe spécifique implémentant l'interface `LlmAdapterInterface`. Cet adaptateur se charge de traduire fidèlement la requête au format attendu par l'API cible (ex: format spécifique pour Ollama).
-5. **Exécution :** La requête formatée est transmise via cURL au conteneur ou serveur respectif, et la réponse brute est retournée.
+Each model's information is entirely driven by the database. Specifically, we store:
+* The model name (`name`)
+* The context window (`infoContextWindow`)
+* The model size (`infoSizeOfModel`)
+* The issuing company (`infoCompany`)
+* The target API URL (`url`)
+* The adapter type to use (`adapter_type`)
 
 ---
 
-## Utilisation (Exemple de Requête)
+## Architecture and Execution Flow
 
-Connexion a l'application depuis le terminal.
-Il faut une session, pour ce faire créez un fichier `cookies.txt` puis faite la commande suivante pour vous connecter.
+When a chat request is made, the flow follows these steps:
+
+1. **Routing:** The HTTP `POST` request arrives at the `LLMController`.
+2. **Verification (Repository):** The controller calls `AiRepository` to verify if the requested model exists in the database and retrieves its configurations.
+3. **Instantiation (Business Logic):** The controller instantiates the `ModelAi` (or `AI`) entity with its specific data.
+4. **Adaptation (Adapter Pattern):** Based on the `adapter_type` column retrieved from the database, the application uses a specific class implementing the `LlmAdapterInterface`. This adapter is responsible for faithfully translating the request to the format expected by the target API (e.g., specific format for Ollama).
+5. **Execution:** The formatted request is transmitted via cURL to the respective container or server, and the raw response is returned.
+
+---
+
+## Usage (Request Example)
+
+Connecting to the application from the terminal.
+You need a session, to do this create a `cookies.txt` file and then run the following command to log in.
 ```bash
-curl -X POST http://localhost:8085/login   
-     -H "Content-Type: application/json"   
-     -c cookies.txt   
-     -d '{"email": "prenom.nom@etu.univ-amu.fr", "password": "votre_mdp"}'
+curl -X POST http://localhost:8085/login
+     -H "Content-Type: application/json"
+     -c cookies.txt
+     -d '{"email": "prenom.nom@etu.univ-amu.fr", "password": "your_password"}'
 ```
 
-Tester l'endpoint de l'application en envoyant du JSON brut via une commande `curl` dans ton terminal :
+Test the application endpoint by sending raw JSON via a `curl` command in your terminal:
 
 ```bash
 curl -X POST http://localhost:8085/chat \
@@ -139,14 +136,15 @@ curl -X POST http://localhost:8085/chat \
   -b cookies.txt \
   -d '{
     "model" : "llama3.2:1b",
-    "message" : "Présente toi",
-    "conversation_id" : 1 
+    "message" : "Introduce yourself",
+    "conversation_id" : 1
   }'
 ```
-Le champ `conversation_id` est facultatif, l'id renseigner doit etre une id associé à l'utilisateur connecté.
+The `conversation_id` field is optional; the provided ID must be associated with the logged-in user.
 
 
-Si vous avez déjà utilisé l'application, il se peut que vous aillez besoin de racharger les images des conteneur docker. Pour ce faire faite : 
+If you have already used the app, you may need to reload the Docker container images. To do this, follow these steps:
 ```bash
 docker compose up --build -d
 ```
+

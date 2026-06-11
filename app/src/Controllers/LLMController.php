@@ -284,14 +284,18 @@ class LLMController{
         // Persist the interaction (every conversation is persisted).
         $boundDocs = [];
         $interactionId = null;
+        $latencyMs = null;
         if ($conversationData !== null && $result['response'] !== '') {
             $interaction = new InteractionRepository($pdo);
+            $latencyMs = isset($result['total_duration']) && $result['total_duration'] !== null
+                ? (int) round($result['total_duration'] / 1000000) : null;
             $interactionData = $interaction->newInteration(
                 (int) $conversationData['id'],
                 $userMessage,
                 $result['response'],
                 $result['prompt_eval_count'],
-                $result['eval_count']
+                $result['eval_count'],
+                $latencyMs
             );
             // Store the provider context so the next turn keeps the thread.
             $meta_data = json_encode([
@@ -322,6 +326,7 @@ class LLMController{
         echo 'data: ' . json_encode([
                 'prompt_eval_count' => $result['prompt_eval_count'],
                 'eval_count'        => $result['eval_count'],
+                'latency_ms'        => $latencyMs,
                 'conversation_id'   => $conversationData['id'] ?? null,
                 'conversation_name' => $conversationData['name'] ?? null,
                 'interaction_id'    => $interactionId,
