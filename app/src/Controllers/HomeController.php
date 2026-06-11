@@ -39,6 +39,9 @@ class HomeController extends Controller
 
         $conversationId = $id !== null && $id !== '' ? (int) $id : null;
         $archived  = $this->query('archived') === '1';
+        // Read-only "ended sessions" scope: lists the user's conversations from
+        // sessions they joined that are now terminal, across every session.
+        $endedView = $this->query('view') === 'ended';
 
         // Exam lockdown: a student inside a running exam may only see their exam conversation.
         $examLock = $this->examLock();
@@ -121,6 +124,12 @@ class HomeController extends Controller
                 : null
         );
 
+        // The "ended sessions" scope replaces the environment list with the
+        // user's conversations from terminal sessions (read-only history).
+        $sidebarConversations = $endedView
+            ? $this->chat->endedSessionConversations((int) $user['id'])
+            : $env['conversations'];
+
         $canAddModel = $_SESSION['isSpecialized'] ?? false;
         $this->render('pages/home', [
             'user' => $user,
@@ -128,7 +137,8 @@ class HomeController extends Controller
             'page' => 'chat',
             'models' => $models,
             'conversation' => $env['conversation'],
-            'conversations' => $env['conversations'],
+            'conversations' => $sidebarConversations,
+            'endedView' => $endedView,
             'messages' => $env['messages'],
             'messageDocuments' => $messageDocuments,
             'documentsConfig' => $documentsConfig,

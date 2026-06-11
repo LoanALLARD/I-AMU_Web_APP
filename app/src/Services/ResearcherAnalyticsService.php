@@ -12,6 +12,10 @@ use PDO;
 final class ResearcherAnalyticsService
 {
     private const ACTIVITY_DAYS = 30;
+    private const KEYWORD_LIMIT = 30;
+
+    /** Privacy floor: a keyword surfaces only if used by this many distinct consenting students. */
+    private const KEYWORD_MIN_STUDENTS = 2;
 
     /**
      * Fixed salt for the export pseudonyms. Keeps the token stable across
@@ -60,6 +64,8 @@ final class ResearcherAnalyticsService
             $this->analytics->dailyActivity($scoped, self::ACTIVITY_DAYS),
             self::ACTIVITY_DAYS
         );
+        $keywords = $this->analytics->topKeywords($scoped, self::KEYWORD_LIMIT, self::KEYWORD_MIN_STUDENTS);
+        $shape = $this->analytics->promptShape($scoped);
 
         $feedbackTotal = $agg['feedback_positive'] + $agg['feedback_negative'] + $agg['feedback_neutral'];
         $satisfaction = $feedbackTotal > 0
@@ -70,9 +76,11 @@ final class ResearcherAnalyticsService
             'success' => true,
             'data'    => [
                 'volume' => [
-                    'conversations' => $agg['conversations'],
-                    'interactions'  => $agg['interactions'],
-                    'students'      => $agg['students'],
+                    'conversations'         => $agg['conversations'],
+                    'conversations_session' => $agg['conversations_session'],
+                    'conversations_free'    => $agg['conversations_free'],
+                    'interactions'          => $agg['interactions'],
+                    'students'              => $agg['students'],
                 ],
                 'usage' => [
                     'input_tokens'  => $agg['input_tokens'],
@@ -89,6 +97,18 @@ final class ResearcherAnalyticsService
                     'days'   => self::ACTIVITY_DAYS,
                     'points' => $activity,
                 ],
+                'keywords' => [
+                    'min_students' => self::KEYWORD_MIN_STUDENTS,
+                    'total'        => $keywords['total'],
+                    'words'        => $keywords['words'],
+                ],
+                'shape' => [
+                    'avg_prompt_chars'    => $shape['avg_prompt_chars'] !== null ? round($shape['avg_prompt_chars']) : null,
+                    'avg_prompt_words'    => $shape['avg_prompt_words'] !== null ? round($shape['avg_prompt_words'], 1) : null,
+                    'avg_conversation_depth' => $shape['avg_interactions_per_conversation'] !== null
+                        ? round($shape['avg_interactions_per_conversation'], 1)
+                        : null,
+                ],
             ],
         ];
     }
@@ -103,7 +123,7 @@ final class ResearcherAnalyticsService
      * serialise it to JSON or CSV without touching the database shape.
      *
      * @param list<int> $requestedDepartmentIds
-     * @return array{success:false, error:string}|array{success:true, scope:list<array{place:string, department:string}>, rows:list<array<string, mixed>>}
+     * @return array{success:false, error:string}|array{success:true, scope:list<array{place:string, department:string}>, rows:iterable<int, array<string, mixed>>}
      */
     public function export(int $researcherId, array $requestedDepartmentIds): array
     {
@@ -125,8 +145,25 @@ final class ResearcherAnalyticsService
             return ['success' => false, 'error' => 'Accès non autorisé à ce périmètre.'];
         }
 
-        $rows = array_map(
-            static fn (array $r): array => [
+        return [
+            'success' => true,
+            'scope'   => $this->scopeLabels($researcherId, $scope),
+            'rows'    => $this->mapRows($scope),
+        ];
+    }
+
+    /**
+     * Lazily maps each raw export row to its public, pseudonymised shape. A
+     * Generator, so the controller streams the download row by row instead of
+     * materialising the whole corpus in memory (the export memory ceiling).
+     *
+     * @param list<int> $scope
+     * @return \Generator<int, array<string, mixed>>
+     */
+    private function mapRows(array $scope): \Generator
+    {
+        foreach ($this->analytics->exportRows($scope) as $r) {
+            yield [
                 'campus'                  => (string) $r['place_name'],
                 'department'              => (string) $r['department_name'],
                 'session_id'              => (int) $r['session_id'],
@@ -149,15 +186,8 @@ final class ResearcherAnalyticsService
                 'latency_ms'              => $r['latency']       !== null ? (int) $r['latency']       : null,
                 'user_feedback'           => $r['user_feedback'] !== null ? (int) $r['user_feedback'] : null,
                 'sent_at'                 => $r['sent_at'] !== null ? (string) $r['sent_at'] : null,
-            ],
-            $this->analytics->exportRows($scope)
-        );
-
-        return [
-            'success' => true,
-            'scope'   => $this->scopeLabels($researcherId, $scope),
-            'rows'    => $rows,
-        ];
+            ];
+        }
     }
 
     /**

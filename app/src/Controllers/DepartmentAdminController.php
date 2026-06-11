@@ -112,8 +112,39 @@ class DepartmentAdminController extends Controller
             'nextCursor'        => $nextCursor, 
         ], 'chat');
     }
+
+    public function models() :void {
+        $this->requireAuth();
+
+        $userId = $_SESSION["user_id"];
+        $pdo = Database::getConnection();   
+        $user = $this->currentUser();
+
+        // recover all types of api who is available
+        $Ai = new AiRepository($pdo);
+        $adapters = $Ai->getAllTypeOfAdapters();
+
+        $models = $Ai->findAll();
+
+        // recover departements this admin can manage
+        $department = new DepartmentRepository($pdo);
+        $departments = $department->getDepartementFromUserId($userId);
+
+        // recover resources this teacher has
+        $resource = new ResourceRepository($pdo);
+        $resources = $resource->getResourcesFromUserId($userId);
+
+        $this->render('/pages/department_admin/models', [
+            'user'         => $user,
+            'page'         => 'admin',
+            'adapters'     => $adapters,
+            'departments'  => $departments,
+            'resources'    => $resources,
+            'models'       => $models
+        ], 'chat');
+    }
     
-    public function GetUsersByName(): void
+    public function GetUsersByName(): void 
     {
         $this->requireRole('department_admin');
 
@@ -475,7 +506,7 @@ class DepartmentAdminController extends Controller
                 $this->flash('success', "Le modèle a été ajouté avec succès.");
                 $user = $this->CurrentUser();
                 if($user['roles'][0] == "department_admin"){
-                    $this->redirect('/department-admin/addModel');    
+                    $this->redirect('/department-admin/models');    
                 };
                 $this->redirect('/chat');  
             } else {
@@ -484,7 +515,54 @@ class DepartmentAdminController extends Controller
         } catch (\Throwable $e) {
             $this->flash('error', "Impossible d'ajouter le modèle : " . $e->getMessage());
             
-            $this->redirect('/department-admin/addModel');
+            $this->redirect('/department-admin/models');
         }
+    }
+
+    public function archiveModel(): void
+    {
+        $this->requireAuth();
+
+        $researcherId = (int) $this->input('id',null);
+
+        try {
+            $pdo = Database::getConnection();   
+            $Ai = new AiRepository($pdo);
+            $result = $Ai->archive($researcherId);
+
+            if ($result === true) {
+                $this->flash('success', "Le modèle a été archivé avec succès.");
+                $this->redirect('/department-admin/models');  
+            } else {
+                throw new \Exception("Le modèle n'existe pas ou a déjà été archivé.");            
+            }
+        } catch (\Throwable $e) {
+            $this->flash('error', "Impossible de supprimer le modèle : " . $e->getMessage());
+            $this->redirect('/department-admin/models');
+        }
+        
+    }
+    public function reactivateModel(): void 
+    {
+        $this->requireAuth();
+
+        $modelId = (int) $this->input('id', null);
+
+        try {
+            $pdo = Database::getConnection();   
+            $Ai = new AiRepository($pdo);
+            
+            $result = $Ai->reactivate($modelId);
+
+            if ($result === true) {
+                $this->flash('success', "Le modèle a été réactivé avec succès.");
+            } else {
+                throw new \Exception("Le modèle n'existe pas ou est déjà actif.");            
+            }
+        } catch (\Throwable $e) {
+            $this->flash('error', "Impossible de réactiver le modèle : " . $e->getMessage());
+        }
+
+        $this->redirect('/department-admin/models');
     }
 }

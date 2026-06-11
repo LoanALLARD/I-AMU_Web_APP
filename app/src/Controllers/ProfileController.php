@@ -7,6 +7,9 @@ namespace Controllers;
 use Core\Controller;
 use Data\Database;
 use Models\UserRepository;
+use Models\AiRepository;
+use Models\DepartmentRepository;
+use Models\ResourceRepository;
 use Services\AuthService;
 use Services\TeacherSpecialisationService;
 use Services\UserStatsService;
@@ -41,6 +44,9 @@ class ProfileController extends Controller
             'page'              => 'profile',
             'pageTitle'         => 'Mon profil',
             'title'             => 'Mon profil',
+            'teacherTitle'      => $isTeacher
+                ? (new UserRepository(Database::getConnection()))->getTitle((int) $user['id'])
+                : null,
             'specRequestStatus' => $isTeacher
                 ? (new TeacherSpecialisationService(Database::getConnection()))
                     ->requestStatus((int) $user['id'])
@@ -107,16 +113,37 @@ class ProfileController extends Controller
         $this->verifyCsrf();
         $user = $this->currentUser();
 
-        $result = $this->auth->updateProfile(
-            (int) $user['id'],
-            (string) $this->input('first_name', ''),
-            (string) $this->input('last_name', '')
-        );
+        $title = $this->input('title', null);
+        $password = $this->input('password', null);
+        $password_confirm = $this->input('password_confirm', null);
 
-        $this->flash(
-            $result['success'] ? 'success' : 'error',
-            $result['success'] ? 'Profil mis à jour.' : $result['error']
-        );
+        $pdo = Database::getConnection();
+        $userRepository = new UserRepository($pdo);
+
+        try {
+            if ($password) {
+                // Enforce the same strength rule as every other entry point so
+                // this form cannot be used to bypass the policy and set a weak
+                // password (min 12 chars, upper, digit, special).
+                $passwordError = \Core\PasswordPolicy::validate((string) $password);
+                if ($passwordError !== null) {
+                    throw new \Exception($passwordError);
+                }
+                if ($password !== $password_confirm) {
+                    throw new \Exception("Les mots de passe ne correspondent pas.");
+                }
+                $userRepository->updatePassword($user["id"], (string) $password);
+            }
+            if ($title) {
+                $userRepository->updateTitle($user["id"], $title);
+            }
+
+            $this->flash('success', 'Vos informations ont été mises à jour avec succès.');
+
+        } catch (\Exception $e) {
+            $this->flash('error', "Une erreur est survenue : " . $e->getMessage());
+        }
+        
         $this->redirect('/profile');
     }
 
@@ -181,5 +208,36 @@ class ProfileController extends Controller
 
         $this->flash('success', 'Préférence de recherche mise à jour.');
         $this->redirect('/profile');
+    }
+
+    public function formModel(): void {
+        $this->requireRole("teacher");
+        if (!$_SESSION["isSpecialized"]) {
+            $this->redirect('/chat');
+        }
+
+        $userId = $_SESSION["user_id"];
+        $pdo = Database::getConnection();   
+        $user = $this->currentUser();
+
+        // recover all types of api who is available
+        $Ai = new AiRepository($pdo);
+        $adapters = $Ai->getAllTypeOfAdapters();
+
+        // recover departements this admin can manage
+        $department = new DepartmentRepository($pdo);
+        $departments = $department->getDepartementFromUserId($userId);
+
+        // recover resources this teacher has
+        $resource = new ResourceRepository($pdo);
+        $resources = $resource->getResourcesFromUserId($userId);
+
+        $this->render('pages/admin/formAddModel', [
+            'user'         => $user,
+            'page'         => 'specialized',
+            'adapters'     => $adapters,
+            'departments'  => $departments,
+            'resources'    => $resources
+        ], 'chat');
     }
 }

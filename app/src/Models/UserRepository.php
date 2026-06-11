@@ -66,18 +66,6 @@ class UserRepository
     }
 
     /**
-     * Replaces the user's password hash. The caller hashes the new password
-     * (the repository only stores what it is given).
-     */
-    public function updatePassword(int $userId, string $passwordHash): void
-    {
-        $stmt = $this->pdo->prepare(
-            'UPDATE users SET password_hash = :hash WHERE id = :id'
-        );
-        $stmt->execute(['hash' => $passwordHash, 'id' => $userId]);
-    }
-
-    /**
      * Tells whether an account already exists for the given email.
      */
     public function emailExists(string $email): bool
@@ -222,6 +210,7 @@ class UserRepository
         return $rows;
     }
 
+    /** Number of students and teachers attached to a department, for pagination. */
     public function CountDepartmentMembers(int $departmentId): int
     {
         $query = $this->pdo->prepare(
@@ -339,6 +328,10 @@ class UserRepository
         return $stmt->fetch() !== false;
     }
 
+    /**
+     * Deactivates an active user. Returns the number of rows changed (0 when the
+     * user was already inactive), so the caller can tell whether anything happened.
+     */
     public function deactivate(int $userId): int
     {
         $stmt = $this->pdo->prepare(
@@ -348,6 +341,10 @@ class UserRepository
         return $stmt->rowCount();
     }
 
+    /**
+     * Reactivates an inactive user. Returns the number of rows changed (0 when the
+     * user was already active).
+     */
     public function reactivate(int $userId): int
     {
         $stmt = $this->pdo->prepare(
@@ -369,6 +366,7 @@ class UserRepository
         $result = $stmt->fetch();
         return $result === false ? null : $result;
     }
+    /** Stores the email-verification token sent to the user. */
     public function setVerifyToken(int $userId, string $token): void
     {
         $stmt = $this->pdo->prepare(
@@ -377,6 +375,11 @@ class UserRepository
         $stmt->execute(['token' => $token, 'id' => $userId]);
     }
 
+    /**
+     * Marks the email tied to the token as verified and clears the token.
+     * Returns true only when a still-unverified account matched (so a reused
+     * or stale token returns false).
+     */
     public function verifyEmail(string $token): bool
     {
         $stmt = $this->pdo->prepare(
@@ -387,6 +390,7 @@ class UserRepository
         return $stmt->rowCount() > 0;
     }
 
+    /** Whether the teacher has been granted the specialised flag. */
     public function isTeacherSpecialized(int $id): bool
     {
         $query = $this->pdo->prepare(
@@ -399,6 +403,11 @@ class UserRepository
         return (bool) $row;
     }
 
+    /**
+     * Returns the user's department row (`['department_id' => ...]`), or false
+     * when the user does not exist. Note: despite the name this yields the
+     * fetched row, not a bare id — read `['department_id']` from it.
+     */
     public function getDepartmentIdByUserId(int $userId): mixed {
         $query = $this->pdo->prepare(
             'SELECT department_id FROM users WHERE id = :id'
@@ -487,6 +496,10 @@ class UserRepository
         );
     }
 
+    /**
+     * Records whether the user opposes the research use of their data (GDPR),
+     * toggling the `research_opposed` flag.
+     */
     public function updateResearchOpposition(int $userId, bool $opposed): void
     {
         $stmt = $this->pdo->prepare(
@@ -511,5 +524,82 @@ class UserRepository
         $stmt->execute(['id' => $adminId]);
 
         return $stmt->rowCount();
+    }
+
+    /** Hashes and stores a new password for the user. Returns the statement success. */
+    public function updatePassword(int $id, string $password): bool
+    {
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        
+        $query = $this->pdo->prepare(
+            'UPDATE users SET password_hash = :password WHERE id = :id'
+        );
+
+        return $query->execute([
+            'password' => $hash,
+            'id'       => $id
+        ]);
+    }
+
+    /** Updates the user's first name. Returns the statement success. */
+    public function updateFirstName(int $id, string $firstName): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE users SET first_name = :first_name WHERE id = :id'
+        );
+
+        return $query->execute([
+            'first_name' => $firstName,
+            'id'         => $id
+        ]);
+    }
+
+    /** Updates the user's last name. Returns the statement success. */
+    public function updateLastName(int $id, string $lastName): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE users SET last_name = :last_name WHERE id = :id'
+        );
+
+        return $query->execute([
+            'last_name' => $lastName,
+            'id'        => $id
+        ]);
+    }
+
+    /** Updates the user's email. Returns the statement success. */
+    public function updateEmail(int $id, string $email): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE users SET email = :email WHERE id = :id'
+        );
+
+        return $query->execute([
+            'email' => $email,
+            'id'    => $id
+        ]);
+    }
+    /** Returns the teacher's academic title (on the `teachers` row), or null when unset / not a teacher. */
+    public function getTitle(int $id): ?string
+    {
+        $query = $this->pdo->prepare('SELECT title FROM teachers WHERE id = :id');
+        $query->execute(['id' => $id]);
+
+        $title = $query->fetchColumn();
+
+        return $title === false || $title === null ? null : (string) $title;
+    }
+
+    /** Updates the teacher's academic title (on the `teachers` row). Returns the statement success. */
+    public function updateTitle(int $id, string $title): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE teachers SET title = :title WHERE id = :id'
+        );
+
+        return $query->execute([
+            'title' => $title,
+            'id'    => $id
+        ]);
     }
 }

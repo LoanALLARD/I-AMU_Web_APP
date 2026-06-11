@@ -230,7 +230,7 @@ class SessionService
     {
         // No code to preview: the database trigger assigns one only when
         // the session becomes scheduled/active.
-        $resourceData = $this->resources->findAllByOwner($teacherId);
+        $resourceData = $this->resources->findAllAccessibleByTeacher($teacherId);
         if ($resourceData == null){
             throw new InvalidArgumentException("L'enseignent doit être associé à au minimum une ressource, \n veuillez contacter un administrateur");
         }
@@ -251,7 +251,7 @@ class SessionService
      */
     public function editFormData(Session $session, int $teacherId): array
     {
-        $resourceData = $this->resources->findAllByOwner($teacherId);
+        $resourceData = $this->resources->findAllAccessibleByTeacher($teacherId);
         if ($resourceData == null){
             throw new InvalidArgumentException("L'enseignent doit être associé à au minimum une ressource, \n veuillez contacter un administrateur");
         }

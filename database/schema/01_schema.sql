@@ -4,6 +4,7 @@ CREATE TYPE domain_role_type AS ENUM ('STUDENT', 'TEACHER', 'RESEARCHER');
 CREATE TYPE session_type AS ENUM ('EXAM', 'TUTORIAL', 'LAB', 'FREE_STUDY');
 CREATE TYPE session_status_type AS ENUM ('DRAFT', 'SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED');
 CREATE TYPE document_status_type AS ENUM ('PENDING', 'READY', 'FAILED');
+CREATE TYPE adapter AS ENUM ('ollama');
 
 CREATE TABLE places (
     id BIGSERIAL,
@@ -43,15 +44,13 @@ CREATE TABLE users (
     consent_at TIMESTAMPTZ,
     consent_version VARCHAR(50),
     theme theme_type NOT NULL DEFAULT 'AUTO',
-    archive_duration_days SMALLINT,
     email_verified_at TIMESTAMPTZ,
     email_verify_token VARCHAR(255),
     research_opposed BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT pk_users PRIMARY KEY (id),
     CONSTRAINT fk_users_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE SET NULL,
     CONSTRAINT uq_users_email UNIQUE (email),
-    CONSTRAINT uq_users_email_verify_token UNIQUE (email_verify_token),
-    CONSTRAINT ck_users_archive_duration_days CHECK (archive_duration_days IS NULL OR archive_duration_days > 0)
+    CONSTRAINT uq_users_email_verify_token UNIQUE (email_verify_token)
 );
 
 CREATE TABLE super_administrators (
@@ -149,7 +148,7 @@ CREATE TABLE models (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     api_url VARCHAR(255) NOT NULL,
-    adapter VARCHAR(50) NOT NULL,
+    adapter adapter NOT NULL,
     is_shareable BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT pk_models PRIMARY KEY (id),
     CONSTRAINT fk_models_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE SET NULL,

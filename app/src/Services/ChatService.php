@@ -146,11 +146,14 @@ class ChatService
         if ($conversation !== null) {
             $messages = array_map(
                 static fn (array $m): array => [
-                    'id'       => (int) $m['id'],
-                    'prompt'   => (string) $m['prompt'],
-                    'response' => (string) $m['response'],
-                    'model'    => (string) ($m['model_name'] ?? ''),
-                    'feedback' => isset($m['user_feedback']) && $m['user_feedback'] !== null ? (int) $m['user_feedback'] : null,
+                    'id'           => (int) $m['id'],
+                    'prompt'       => (string) $m['prompt'],
+                    'response'     => (string) $m['response'],
+                    'model'        => (string) ($m['model_name'] ?? ''),
+                    'feedback'     => isset($m['user_feedback']) && $m['user_feedback'] !== null ? (int) $m['user_feedback'] : null,
+                    'inputTokens'  => isset($m['input_tokens']) && $m['input_tokens'] !== null ? (int) $m['input_tokens'] : null,
+                    'outputTokens' => isset($m['output_tokens']) && $m['output_tokens'] !== null ? (int) $m['output_tokens'] : null,
+                    'latency'      => isset($m['latency']) && $m['latency'] !== null ? (int) $m['latency'] : null,
                 ],
              $this->interactions->listByConversation((int) $conversation['id'])
             );
@@ -178,6 +181,50 @@ class ChatService
                 'maxTokens'      => $sessionId !== null && $row !== null ? ($row['max_tokens'] ?? null) : null,
             ],
         ];
+    }
+
+    /**
+     * The user's conversations that belong to a now-terminal session (ended or
+     * cancelled) — the read-only "Sessions terminées" sidebar scope. The
+     * terminal test reuses the domain (Session::computedStatus), and each
+     * session is resolved once. Items carry the session label and status so the
+     * view can render them without re-querying.
+     *
+     * @return list<array{id:int, name:string, promptCount:int, sessionLabel:string, statusLabel:string}>
+     */
+    public function endedSessionConversations(int $userId): array
+    {
+        $now     = new DateTimeImmutable('now');
+        $cache   = [];
+        $ended   = [];
+
+        foreach ($this->conversations->listSessionBoundByUser($userId) as $row) {
+            $sessionId = (int) $row['session_id'];
+            if (!array_key_exists($sessionId, $cache)) {
+                $sessionRow       = $this->sessions->findById($sessionId);
+                $cache[$sessionId] = $sessionRow !== null ? Session::fromRow($sessionRow) : null;
+            }
+            $session = $cache[$sessionId];
+            if ($session === null) {
+                continue;
+            }
+
+            $status = $session->computedStatus($now);
+            if (!$status->isTerminal()) {
+                continue; // active/scheduled sessions stay in their own environment
+            }
+
+            $code = $session->accessCodeFormatted();
+            $ended[] = [
+                'id'           => (int) $row['id'],
+                'name'         => (string) $row['name'],
+                'promptCount'  => (int) ($row['prompt_count'] ?? 0),
+                'sessionLabel' => $code !== null ? 'Session ' . $code : 'Session',
+                'statusLabel'  => $status->label(),
+            ];
+        }
+
+        return $ended;
     }
 
     /**

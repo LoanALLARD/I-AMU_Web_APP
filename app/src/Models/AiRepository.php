@@ -4,11 +4,12 @@ namespace Models;
 
 use PDO;
 
-/*
- * This class use PDO to recover 
- * all data about AI in the database
+/**
+ * Data access for the `models` table (the LLM models a department can use).
+ *
+ * Holds the SQL for picking active models when creating or running a session,
+ * resolving a model by name, and registering a new model.
  */
-
 class AiRepository
 {
 
@@ -19,6 +20,47 @@ class AiRepository
         $this->pdo = $pdo;
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function findAll(): array
+    {
+        $query = $this->pdo->prepare(
+            'SELECT * FROM models'
+        );
+
+        $query->execute();
+
+        /** @var list<array<string, mixed>> $result */
+        $result = $query->fetchAll();
+
+        return $result;
+    }
+
+    public function archive(int $id): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE models
+            SET is_active = FALSE
+            WHERE id = :id'
+        );
+
+        $success = $query->execute([ ':id' => $id]);
+
+        return $success && $query->rowCount() > 0;
+    }
+    public function reactivate(int $id): bool
+    {
+        $query = $this->pdo->prepare(
+            'UPDATE models
+            SET is_active = TRUE
+            WHERE id = :id'
+        );
+
+        $success = $query->execute([':id' => $id]);
+
+        return $success && $query->rowCount() > 0;
+    }
     /**
      * @return array<string, mixed>|null
      */
@@ -57,7 +99,8 @@ class AiRepository
                 SELECT name,id 
                 FROM models 
                 where resource_id is NULL
-                and is_shareable = true'
+                and is_shareable = true
+                and is_active = :a'
             );
             $query->execute([
                 "a"    => true,
@@ -148,10 +191,15 @@ class AiRepository
         return $rows;
     }
 
+    /**
+     * Returns the distinct adapter values currently in use across models,
+     * to populate the adapter picker on the add-model form. Returns a single
+     * fetched row (`false` when no model exists).
+     */
     public function getAllTypeOfAdapters(): mixed
     {
         $query = $this->pdo->prepare(
-            'SELECT adapter FROM models GROUP BY adapter'
+            'SELECT unnest(enum_range(NULL::adapter)) AS valeur'
         );
 
         $query->execute();

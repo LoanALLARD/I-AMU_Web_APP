@@ -48,6 +48,7 @@ class AuthController extends Controller
             $password = isset($data['password']) ? $data['password'] : '';
         } else {
             // Lecture Formulaire pour le Web
+            $this->verifyCsrf();
             $email    = trim($this->input('email', ''));
             $password = $this->input('password', '');
         }
@@ -136,6 +137,8 @@ class AuthController extends Controller
      */
     public function register(): void
     {
+        $this->verifyCsrf();
+
         $data = [
             'email'            => trim($this->input('email', '')),
             'password'         => $this->input('password', ''),
@@ -192,7 +195,7 @@ class AuthController extends Controller
 
     public function showRGPDResearcher(): void
     {
-        $this->render('pages/auth/rgpd_consent_researcher', ['titrePage' => 'Engagement chercheur — RGPD']);
+        $this->render('pages/auth/gdpr_consent_researcher', ['titrePage' => 'Engagement chercheur — RGPD', 'page' => 'gdpr']);
     }
 
     /** Shows the acceptance form for a signed invitation link. */
@@ -273,6 +276,73 @@ class AuthController extends Controller
         if (($data['role'] ?? '') === \Services\AdminInviteService::ROLE_SUPER_ADMIN) {
             $this->redirect('/super-admin/login');
         }
+        $this->redirect('/login');
+    }
+
+    /** Displays the "forgot password" request form. */
+    public function showForgotPassword(): void
+    {
+        if (isset($_SESSION['user_id'])) {
+            $this->redirect('/chat');
+        }
+        $this->render('pages/auth/forgot-password', ['titrePage' => 'Mot de passe oublié'], 'auth');
+    }
+
+    /**
+     * Processes the reset request. Always shows the same generic message so an
+     * attacker cannot tell whether an account exists for the submitted email.
+     */
+    public function forgotPassword(): void
+    {
+        $this->verifyCsrf();
+
+        $email   = trim((string) $this->input('email', ''));
+        $service = new \Services\PasswordResetService(Database::getConnection());
+        $service->requestReset($email);
+
+        $this->flash('success', 'Si un compte existe pour cette adresse, un email de réinitialisation a été envoyé.');
+        $this->redirect('/login');
+    }
+
+    /** Shows the new-password form for a valid reset link. */
+    public function showResetPassword(): void
+    {
+        $token   = (string) $this->query('token', '');
+        $service = new \Services\PasswordResetService(Database::getConnection());
+
+        if ($service->verifyToken($token) === null) {
+            $this->flash('error', 'Lien invalide ou expiré.');
+            $this->redirect('/login');
+        }
+
+        $this->render('pages/auth/reset-password', [
+            'titrePage' => 'Nouveau mot de passe',
+            'token'     => $token,
+        ], 'auth');
+    }
+
+    /** Applies the new password from the reset link. */
+    public function resetPassword(): void
+    {
+        $this->verifyCsrf();
+
+        $token           = (string) $this->input('token', '');
+        $password        = (string) $this->input('password', '');
+        $passwordConfirm = (string) $this->input('password_confirm', '');
+
+        $service = new \Services\PasswordResetService(Database::getConnection());
+        $result  = $service->reset($token, $password, $passwordConfirm);
+
+        if (!$result['success']) {
+            $this->render('pages/auth/reset-password', [
+                'titrePage' => 'Nouveau mot de passe',
+                'token'     => $token,
+                'error'     => $result['error'],
+            ], 'auth');
+            return;
+        }
+
+        $this->flash('success', 'Votre mot de passe a été réinitialisé. Vous pouvez vous connecter.');
         $this->redirect('/login');
     }
 

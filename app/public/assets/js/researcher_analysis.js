@@ -43,8 +43,17 @@
             return Number(n || 0).toLocaleString('fr-FR');
         }
 
+        // Session/free breakdown shown under the conversations total.
+        function conversationSplit(volume) {
+            var session = Number(volume.conversations_session || 0);
+            var free = Number(volume.conversations_free || 0);
+            var freeLabel = free > 1 ? 'libres' : 'libre';
+            return formatInt(session) + ' en session · ' + formatInt(free) + ' ' + freeLabel;
+        }
+
         function render(data) {
             setText('conversations', formatInt(data.volume.conversations));
+            setText('conversations_split', conversationSplit(data.volume));
             setText('interactions', formatInt(data.volume.interactions));
             setText('students', formatInt(data.volume.students));
             setText('input_tokens', formatInt(data.usage.input_tokens));
@@ -76,7 +85,84 @@
             drawSparkline(data.activity.points, max);
             drawAxisX(data.activity.points);
             drawAxisY(max);
+
+            renderShape(data.shape);
+            renderKeywords(data.keywords);
         }
+
+        // Prompt length + conversation depth; a null average renders as a dash.
+        function renderShape(shape) {
+            setText('avg_prompt_words', shape.avg_prompt_words === null
+                ? '-' : Number(shape.avg_prompt_words).toLocaleString('fr-FR'));
+            setText('avg_prompt_chars', shape.avg_prompt_chars === null
+                ? '-' : formatInt(shape.avg_prompt_chars));
+            setText('avg_conversation_depth', shape.avg_conversation_depth === null
+                ? '-' : Number(shape.avg_conversation_depth).toLocaleString('fr-FR'));
+        }
+
+        // Ranked keyword table; empty list (all below the privacy floor) shows a note instead.
+        function renderKeywords(keywords) {
+            var wrap = content.querySelector('[data-keyword-table-wrap]');
+            var body = content.querySelector('[data-keyword-body]');
+            var empty = content.querySelector('[data-keyword-empty]');
+            setText('keyword_min_students', String(keywords.min_students));
+            if (!body) { return; }
+            body.innerHTML = '';
+
+            var words = keywords.words || [];
+            if (words.length === 0) {
+                if (wrap) { wrap.hidden = true; }
+                if (empty) { empty.hidden = false; }
+                return;
+            }
+            if (wrap) { wrap.hidden = false; }
+            if (empty) { empty.hidden = true; }
+
+            var top = words[0].occurrences;
+            var total = keywords.total || 0;
+
+            words.forEach(function (w, i) {
+                var share = total > 0 ? (w.occurrences / total) * 100 : 0;
+                var barPct = top > 0 ? Math.round((w.occurrences / top) * 100) : 0;
+
+                var tr = document.createElement('tr');
+
+                var rank = document.createElement('td');
+                rank.className = 'kw-rank';
+                rank.textContent = String(i + 1);
+
+                var word = document.createElement('td');
+                word.className = 'kw-word';
+                var bar = document.createElement('span');
+                bar.className = 'kw-bar';
+                bar.style.width = barPct + '%';
+                var label = document.createElement('span');
+                label.className = 'kw-word-label';
+                label.textContent = w.word;
+                word.appendChild(bar);
+                word.appendChild(label);
+
+                var occ = document.createElement('td');
+                occ.className = 'kw-num';
+                occ.textContent = formatInt(w.occurrences);
+
+                var stu = document.createElement('td');
+                stu.className = 'kw-num';
+                stu.textContent = formatInt(w.students);
+
+                var sh = document.createElement('td');
+                sh.className = 'kw-share';
+                sh.textContent = (share < 1 ? share.toFixed(1) : Math.round(share)) + ' %';
+
+                tr.appendChild(rank);
+                tr.appendChild(word);
+                tr.appendChild(occ);
+                tr.appendChild(stu);
+                tr.appendChild(sh);
+                body.appendChild(tr);
+            });
+        }
+
 
         // Rounds a raw peak up to a clean tick value (1/2/5 x 10^n) so the Y scale reads well.
         function niceMax(raw) {

@@ -123,11 +123,23 @@ $stateLabels = [
                     </td>
                     <td class="cell-actions">
                         <?php if ($isOwner): ?>
-                            <a href="/ressources/<?= (int) $r['id'] ?>/edit" class="btn ghost sm"><?= icon('edit', '', 13) ?> Modifier</a>
+                            <?php if ($r['state'] === 'DRAFT'): ?>
+                                <form method="POST" action="/ressources/<?= (int) $r['id'] ?>/publish" style="display:inline">
+                                    <?= csrf_field() ?>
+                                    <button type="submit" class="btn ghost sm success">
+                                        <?= icon('plus', '', 13) ?> Publier
+                                    </button>
+                                </form>
+                            <?php endif; ?>
+                            <a href="/ressources/<?= (int) $r['id'] ?>/edit" class="btn ghost sm">
+                                <?= icon('edit', '', 13) ?> Modifier
+                            </a>
                             <form method="POST" action="/ressources/<?= (int) $r['id'] ?>/archive" style="display:inline"
-                                  onsubmit="return confirm('Archiver « <?= htmlspecialchars((string) $r['name'], ENT_QUOTES) ?> » ? Elle n\'apparaîtra plus dans la liste active.')">
+                                  onsubmit="return confirm('Archiver « <?= htmlspecialchars((string) $r['name'], ENT_QUOTES) ?> » ?')">
                                 <?= csrf_field() ?>
-                                <button type="submit" class="btn ghost sm"><?= icon('archive', '', 13) ?> Archiver</button>
+                                <button type="submit" class="btn ghost sm">
+                                    <?= icon('archive', '', 13) ?> Archiver
+                                </button>
                             </form>
                         <?php endif; ?>
                     </td>

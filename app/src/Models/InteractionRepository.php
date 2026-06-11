@@ -4,6 +4,13 @@ namespace Models;
 
 use PDO;
 
+/**
+ * Data access for the `interactions` table.
+ *
+ * An interaction is one prompt/response turn inside a conversation. Holds the
+ * SQL for recording a turn, listing a conversation's history, storing the
+ * LLM context metadata, and saving the student's feedback on a response.
+ */
 class InteractionRepository {
 
     private PDO $pdo;
@@ -24,13 +31,13 @@ class InteractionRepository {
         string $prompt,
         string $response,
         int $input_tokens,
-        int $output_tokens
+        int $output_tokens,
+        ?int $latency_ms = null
     ): ?array {
         $query = $this->pdo->prepare(
             'INSERT INTO interactions
-                (conversation_id, prompt, response, input_tokens, output_tokens)
-             VALUES
-                (:conversation_id, :prompt, :response, :input_tokens, :output_tokens)'
+                (conversation_id, prompt, response, input_tokens, output_tokens, latency)
+                VALUES (:conversation_id, :prompt, :response, :input_tokens, :output_tokens, :latency)'
         );
 
         $query->execute([
@@ -39,6 +46,7 @@ class InteractionRepository {
             'response'        => $response,
             'input_tokens'    => $input_tokens > 0 ? $input_tokens : null,
             'output_tokens'   => $output_tokens >= 0 ? $output_tokens : null,
+            'latency'         => ($latency_ms !== null && $latency_ms >= 0) ? $latency_ms : null,
         ]);
 
         $idGenere = $this->pdo->lastInsertId();
@@ -65,7 +73,8 @@ class InteractionRepository {
     public function listByConversation(int $conversationId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT i.id, i.prompt, i.response, i.sent_at, i.user_feedback, m.name AS model_name
+            'SELECT i.id, i.prompt, i.response, i.sent_at, i.user_feedback,
+                    i.input_tokens, i.output_tokens, i.latency, m.name AS model_name
                FROM interactions i
                JOIN conversations c ON c.id = i.conversation_id
                JOIN models m ON m.id = c.model_id
@@ -80,6 +89,10 @@ class InteractionRepository {
         return $rows;
     }
 
+    /**
+     * Stores the serialised LLM context metadata on an existing interaction,
+     * so the next prompt in the conversation can resume from it.
+     */
     public function setContext(string $metadata, int $interaction_id): ?bool {
         $query = $this->pdo->prepare('
             UPDATE interactions set api_metadata = :metadata where id = :id

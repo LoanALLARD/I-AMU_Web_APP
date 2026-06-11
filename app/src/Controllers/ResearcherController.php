@@ -112,6 +112,13 @@ class ResearcherController extends Controller
 
         $base = 'corpus-recherche-' . date('Ymd-His');
 
+        // Streamed download: drop any view output buffer and the time limit so a
+        // large corpus flows out row by row instead of being assembled in memory.
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        set_time_limit(0);
+
         if ($format === 'csv') {
             header('Content-Type: text/csv; charset=utf-8');
             header('Content-Disposition: attachment; filename="' . $base . '.csv"');
@@ -143,13 +150,28 @@ class ResearcherController extends Controller
 
         header('Content-Type: application/json; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $base . '.json"');
-        echo json_encode([
-            'exported_at'       => date('c'),
-            'anonymised'        => true,
-            'scope'             => $result['scope'],
-            'interaction_count' => count($result['rows']),
-            'interactions'      => $result['rows'],
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        $out = fopen('php://output', 'w');
+        if ($out === false) {
+            exit;
+        }
+        $flags = JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE;
+        // Stream the envelope, then one interaction per line — each row encoded on
+        // its own so a single row, never the whole corpus, sits in memory.
+        // interaction_count is emitted last since it is only known once streamed.
+        fwrite($out, "{\n");
+        fwrite($out, '  "exported_at": ' . json_encode(date('c')) . ",\n");
+        fwrite($out, "  \"anonymised\": true,\n");
+        fwrite($out, '  "scope": ' . json_encode($result['scope'], $flags) . ",\n");
+        fwrite($out, '  "interactions": [');
+        $count = 0;
+        foreach ($result['rows'] as $r) {
+            fwrite($out, ($count === 0 ? "\n    " : ",\n    ") . json_encode($r, $flags));
+            $count++;
+        }
+        fwrite($out, ($count > 0 ? "\n  " : '') . "],\n");
+        fwrite($out, '  "interaction_count": ' . $count . "\n");
+        fwrite($out, "}\n");
+        fclose($out);
         exit;
     }
 

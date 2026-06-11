@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Guide utilisateur — I-AMU</title>
+<style>
+  :root{
+    --navy:#1f3a5f; --blue:#2b6cb0; --blue-soft:#eaf1f8;
+    --ink:#23303d; --muted:#5b6b7b; --line:#d7dee6;
+    --tip:#e7f4ec; --tip-b:#2f9e5f;
+    --warn:#fdeeea; --warn-b:#d9663a;
+    --note:#eef2f7; --note-b:#5a7da3;
+    --rgpd:#f3eefb; --rgpd-b:#7a5bbd;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{
+    font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;
+    color:var(--ink); font-size:10.6pt; line-height:1.55; margin:0;
+  }
+  /* ---------- Print / page setup ---------- */
+  @page{ size:A4; margin:18mm 16mm 20mm 16mm; }
+  @page :first{ margin:0; }
+  .page{ page-break-after:always; }
+  .page:last-child{ page-break-after:auto; }
+  h1,h2,h3,h4{ color:var(--navy); line-height:1.25; }
+  h2{ font-size:18pt; border-bottom:3px solid var(--blue); padding-bottom:6px; margin:0 0 14px; }
+  h3{ font-size:13.5pt; margin:20px 0 6px; }
+  h4{ font-size:11pt; margin:14px 0 4px; color:var(--blue); }
+  p{ margin:7px 0; }
+  ul,ol{ margin:7px 0 7px 0; padding-left:20px; }
+  li{ margin:3px 0; }
+  a{ color:var(--blue); text-decoration:none; }
+  code{ background:#f1f4f8; padding:1px 5px; border-radius:4px; font-family:"Consolas","Courier New",monospace; font-size:9.4pt; }
+  .small{ font-size:9pt; color:var(--muted); }
+  strong{ color:var(--navy); }
+
+  /* ---------- Cover (sobre / institutionnelle) ---------- */
+  .cover{ height:297mm; width:100%; background:#ffffff; color:var(--ink); padding:42mm 26mm; position:relative; overflow:hidden; }
+  .cover::before{ content:""; position:absolute; top:0; left:0; width:12mm; height:100%; background:var(--navy); }
+  .cover .kicker{ letter-spacing:4px; font-size:10.5pt; text-transform:uppercase; color:var(--blue); font-weight:600; }
+  .cover h1{ color:var(--navy); font-size:44pt; margin:7mm 0 0; line-height:1.06; }
+  .cover .rule{ width:62mm; height:4px; background:#f4c20d; border-radius:2px; margin:8mm 0 7mm; }
+  .cover .sub{ font-size:14pt; font-weight:400; color:var(--muted); max-width:128mm; line-height:1.5; }
+  .cover .logo{ display:inline-flex; align-items:center; }
+  .cover .logo svg{ display:block; height:58px; width:auto; }
+  .cover .meta{ position:absolute; bottom:32mm; left:26mm; right:26mm; border-top:1px solid var(--line); padding-top:5mm; display:flex; justify-content:space-between; font-size:10pt; color:var(--muted); }
+  .cover .badge{ position:absolute; top:42mm; right:26mm; background:#fff; border:1px solid var(--navy); color:var(--navy); padding:5px 12px; border-radius:20px; font-size:9.5pt; font-weight:600; }
+
+  /* ---------- TOC ---------- */
+  .toc li{ margin:6px 0; }
+  .toc .num{ color:var(--blue); font-weight:700; display:inline-block; width:26px; }
+  .toc .lvl2{ margin-left:26px; font-size:9.7pt; color:var(--muted); }
+
+  /* ---------- Callouts ---------- */
+  .box{ border-left:4px solid; padding:9px 13px; margin:11px 0; border-radius:0 7px 7px 0; font-size:9.9pt; }
+  .box .t{ font-weight:700; display:block; margin-bottom:2px; }
+  .tip{ background:var(--tip); border-color:var(--tip-b); }
+  .tip .t{ color:var(--tip-b); }
+  .warn{ background:var(--warn); border-color:var(--warn-b); }
+  .warn .t{ color:var(--warn-b); }
+  .note{ background:var(--note); border-color:var(--note-b); }
+  .note .t{ color:var(--note-b); }
+  .rgpd{ background:var(--rgpd); border-color:var(--rgpd-b); }
+  .rgpd .t{ color:var(--rgpd-b); }
+
+  /* ---------- Screenshot placeholder ---------- */
+  .shot{ border:2px dashed var(--blue); background:repeating-linear-gradient(45deg,#f7fafd,#f7fafd 12px,#eef3f9 12px,#eef3f9 24px); border-radius:8px; padding:16px; margin:12px 0; text-align:center; color:var(--navy); }
+  .shot .cam{ font-size:18pt; }
+  .shot .lbl{ font-weight:700; margin:4px 0 2px; }
+  .shot .desc{ font-size:9.2pt; color:var(--muted); }
+
+  /* ---------- Figures (captures r&eacute;elles) ---------- */
+  figure.fig{ margin:14px 0; page-break-inside:avoid; }
+  figure.fig img{ width:100%; height:auto; display:block; border:1px solid var(--line); border-radius:8px; box-shadow:0 3px 10px rgba(31,58,95,.12); background:#0e1726; }
+  figure.fig.narrow img{ max-width:78mm; margin:0 auto; }
+  figure.fig figcaption{ font-size:9pt; color:var(--muted); margin-top:6px; text-align:center; }
+  figure.fig figcaption b{ color:var(--navy); }
+
+  /* ---------- Tables ---------- */
+  table{ border-collapse:collapse; width:100%; margin:10px 0; font-size:9.5pt; }
+  th,td{ border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top; }
+  th{ background:var(--navy); color:#fff; font-weight:600; }
+  tr:nth-child(even) td{ background:#f6f9fc; }
+
+  /* ---------- Role header band ---------- */
+  .role{ background:var(--blue-soft); border:1px solid #cfe0f0; border-radius:9px; padding:10px 14px; margin:0 0 12px; }
+  .role .who{ font-size:9pt; text-transform:uppercase; letter-spacing:1px; color:var(--blue); font-weight:700; }
+  .role .one{ font-size:10pt; color:var(--ink); margin-top:2px; }
+
+  .steps{ counter-reset:step; list-style:none; padding-left:0; }
+  .steps>li{ counter-increment:step; position:relative; padding:4px 0 4px 34px; margin:4px 0; }
+  .steps>li::before{ content:counter(step); position:absolute; left:0; top:3px; width:23px;height:23px; background:var(--blue); color:#fff; border-radius:50%; text-align:center; font-weight:700; font-size:9.5pt; line-height:23px; }
+
+  .lead{ font-size:11.5pt; color:var(--muted); }
+  hr{ border:none; border-top:1px solid var(--line); margin:18px 0; }
+  .pill{ display:inline-block; background:var(--navy); color:#fff; font-size:8pt; padding:2px 8px; border-radius:10px; vertical-align:middle; margin-left:6px; }
+</style>
+</head>
+<body>
+
+<!-- ========================= COVER ========================= -->
+<div class="cover">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+    <div class="logo">
+      <svg viewBox="0 0 250 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="I-AMU">
+        <!-- yellow sparkle -->
+        <g stroke="#f4c20d" stroke-width="3.4" stroke-linecap="round">
+          <line x1="18" y1="6" x2="18" y2="26"/>
+          <line x1="9.3" y1="11" x2="26.7" y2="21"/>
+          <line x1="9.3" y1="21" x2="26.7" y2="11"/>
+        </g>
+        <!-- I bar -->
+        <rect x="11" y="32" width="14" height="62" rx="6" fill="#3ba0d8"/>
+        <!-- wordmark -->
+        <text x="33" y="90" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="74" letter-spacing="-1" fill="#1668a8">-AMU</text>
+      </svg>
+    </div>
+  </div>
+  <div class="badge">Version 1.0 &middot; Document utilisateur</div>
+  <div class="kicker">Aix-Marseille Universit&eacute;</div>
+  <h1>Guide utilisateur</h1>
+  <div class="rule"></div>
+  <p class="sub">Manuel d'utilisation de la plateforme p&eacute;dagogique I&#8209;AMU. Prise en main compl&egrave;te, pas &agrave; pas, pour tous les profils&nbsp;: &eacute;tudiants, enseignants, chercheurs et administrateurs.</p>
+  <div class="meta">
+    <span>Plateforme p&eacute;dagogique I&#8209;AMU &middot; Aix-Marseille Universit&eacute;</span>
+    <span>Juin 2026</span>
+  </div>
+</div>
+
+<!-- ========================= TOC ========================= -->
+<div class="page">
+  <h2>Sommaire</h2>
+  <ul class="toc" style="list-style:none;padding-left:0;">
+    <li><span class="num">1.</span> Pr&eacute;sentation de la plateforme</li>
+    <li><span class="num">2.</span> Premiers pas (commun &agrave; tous)</li>
+    <li class="lvl2">2.1 Cr&eacute;er son compte &middot; 2.2 V&eacute;rifier son e&#8209;mail &middot; 2.3 Rejoindre un d&eacute;partement &middot; 2.4 Consentement &middot; 2.5 Connexion &middot; 2.6 R&eacute;glages du profil</li>
+    <li><span class="num">3.</span> R&ocirc;le &mdash; &Eacute;tudiant</li>
+    <li class="lvl2">3.1 Discuter avec l'IA &middot; 3.2 Rejoindre une session &middot; 3.3 Importer un document &middot; 3.4 Limites &middot; 3.5 Historique &amp; feedback</li>
+    <li><span class="num">4.</span> R&ocirc;le &mdash; Enseignant</li>
+    <li class="lvl2">4.1 Ressources &middot; 4.2 Sessions &middot; 4.3 Code d'acc&egrave;s &middot; 4.4 Encadrer l'IA &middot; 4.5 Suivre les &eacute;changes</li>
+    <li><span class="num">5.</span> R&ocirc;le &mdash; Enseignant habilit&eacute;</li>
+    <li><span class="num">6.</span> R&ocirc;le &mdash; Chercheur</li>
+    <li><span class="num">7.</span> R&ocirc;le &mdash; Administrateur de d&eacute;partement</li>
+    <li><span class="num">8.</span> R&ocirc;le &mdash; Super&#8209;administrateur</li>
+    <li><span class="num">9.</span> Donn&eacute;es personnelles &amp; confidentialit&eacute;</li>
+    <li><span class="num">10.</span> FAQ &amp; r&eacute;solution de probl&egrave;mes</li>
+    <li><span class="num">11.</span> Glossaire</li>
+  </ul>
+
+  <div class="note">
+    <span class="t">&Agrave; propos des captures d'&eacute;cran</span>
+    Les figures 1 &agrave; 6 sont d&eacute;j&agrave; ins&eacute;r&eacute;es&nbsp;: placez les fichiers d'image dans un sous&#8209;dossier <code>captures/</code> &agrave; c&ocirc;t&eacute; de ce document, nomm&eacute;s <code>01-inscription.png</code>, <code>02-connexion.png</code>, <code>03-chat-etudiant.png</code>, <code>04-rejoindre-session.png</code>, <code>05-nouvelle-ressource.png</code>, <code>06-creation-session.png</code>. Les autres &eacute;crans restent signal&eacute;s en <strong>pointill&eacute;s bleus</strong> en attendant leur capture.
+  </div>
+</div>
+
+<!-- ========================= 1. PRESENTATION ========================= -->
+<div class="page">
+  <h2>1. Pr&eacute;sentation de la plateforme</h2>
+  <p class="lead">I&#8209;AMU donne aux &eacute;tudiants un acc&egrave;s <strong>supervis&eacute;</strong> &agrave; un mod&egrave;le d'intelligence artificielle, dans un cadre p&eacute;dagogique ma&icirc;tris&eacute; par les enseignants.</p>
+
+  <p>Concr&egrave;tement, I&#8209;AMU est une application web qui se pr&eacute;sente comme une interface de discussion (un &laquo;&nbsp;chat&nbsp;&raquo;) avec un mod&egrave;le d'IA. Contrairement &agrave; un assistant grand public, l'usage est <strong>encadr&eacute;</strong>&nbsp;: l'enseignant choisit le mod&egrave;le, fixe des r&egrave;gles (consignes, nombre de jetons / &laquo;&nbsp;tokens&nbsp;&raquo; disponibles, documents autoris&eacute;s) et peut consulter les &eacute;changes pour analyser la fa&ccedil;on dont les &eacute;tudiants utilisent l'IA.</p>
+
+  <h3>Ce que permet I&#8209;AMU</h3>
+  <ul>
+    <li><strong>Pour l'&eacute;tudiant</strong>&nbsp;: dialoguer avec une IA qui peut conna&icirc;tre le contexte d'une mati&egrave;re, dans un environnement balis&eacute; et &eacute;quitable.</li>
+    <li><strong>Pour l'enseignant</strong>&nbsp;: cr&eacute;er des mati&egrave;res (&laquo;&nbsp;ressources&nbsp;&raquo;) et des <strong>sessions</strong> (TD, TP, examen, &eacute;tude libre), encadrer le comportement de l'IA et observer les usages.</li>
+    <li><strong>Pour le chercheur</strong>&nbsp;: exporter des &eacute;changes &agrave; des fins de recherche, apr&egrave;s autorisation.</li>
+    <li><strong>Pour les administrateurs</strong>&nbsp;: g&eacute;rer les comptes, les r&ocirc;les, les mod&egrave;les et la configuration de l'&eacute;tablissement.</li>
+  </ul>
+
+  <h3>Les profils (r&ocirc;les)</h3>
+  <table>
+    <tr><th>R&ocirc;le</th><th>Pour qui</th><th>En deux mots</th></tr>
+    <tr><td>&Eacute;tudiant</td><td>Adresse <code>@etu.univ-amu.fr</code></td><td>Utilise l'IA, rejoint des sessions de cours.</td></tr>
+    <tr><td>Enseignant</td><td>Adresse <code>@univ-amu.fr</code></td><td>Cr&eacute;e ressources et sessions, suit les &eacute;changes.</td></tr>
+    <tr><td>Enseignant habilit&eacute;</td><td>Enseignant valid&eacute; par l'admin</td><td>Peut importer des mod&egrave;les personnalis&eacute;s.</td></tr>
+    <tr><td>Chercheur</td><td>Rattach&eacute; &agrave; un laboratoire</td><td>Exporte des donn&eacute;es pour la recherche.</td></tr>
+    <tr><td>Admin de d&eacute;partement</td><td>Sur invitation</td><td>G&egrave;re comptes, r&ocirc;les et mod&egrave;les du d&eacute;partement.</td></tr>
+    <tr><td>Super&#8209;administrateur</td><td>&Eacute;quipe centrale</td><td>G&egrave;re sites, d&eacute;partements, domaines e&#8209;mail, admins.</td></tr>
+  </table>
+  <div class="note"><span class="t">Un seul r&ocirc;le &agrave; la fois</span> Chaque compte poss&egrave;de un r&ocirc;le unique et exclusif. Un utilisateur appartient au plus &agrave; un d&eacute;partement (sauf le chercheur et le super&#8209;administrateur).</div>
+</div>
+
+<!-- ========================= 2. PREMIERS PAS ========================= -->
+<div class="page">
+  <h2>2. Premiers pas (commun &agrave; tous)</h2>
+
+  <h3>2.1 Cr&eacute;er son compte</h3>
+  <p>Votre r&ocirc;le est d&eacute;termin&eacute; automatiquement par le <strong>domaine de votre adresse e&#8209;mail</strong>&nbsp;:</p>
+  <table>
+    <tr><th>Domaine de l'e&#8209;mail</th><th>R&ocirc;le attribu&eacute;</th></tr>
+    <tr><td><code>@etu.univ-amu.fr</code></td><td>&Eacute;tudiant (automatique)</td></tr>
+    <tr><td><code>@univ-amu.fr</code></td><td>Enseignant (automatique)</td></tr>
+    <tr><td>Autre domaine reconnu</td><td>Selon configuration (ex. chercheur)</td></tr>
+    <tr><td>Domaine non reconnu</td><td>Aucun r&ocirc;le&nbsp;: il sera attribu&eacute; par un administrateur</td></tr>
+  </table>
+  <ol class="steps">
+    <li>Ouvrez la page d'inscription puis renseignez vos <strong>pr&eacute;nom</strong> et <strong>nom</strong>.</li>
+    <li>Saisissez votre <strong>adresse e&#8209;mail universitaire</strong>.</li>
+    <li>Choisissez un <strong>mot de passe</strong> (au moins 12 caract&egrave;res, 1 majuscule, 1 chiffre, 1 caract&egrave;re sp&eacute;cial) et confirmez&#8209;le.</li>
+    <li>S&eacute;lectionnez votre <strong>lieu</strong>, puis votre <strong>d&eacute;partement</strong> (la liste se remplit apr&egrave;s le choix du lieu).</li>
+    <li>Cochez le <strong>consentement</strong> au traitement des donn&eacute;es, puis validez&nbsp;: un e&#8209;mail de v&eacute;rification vous est envoy&eacute;.</li>
+  </ol>
+  <figure class="fig narrow">
+    <img src="captures/01-inscription.png" alt="Formulaire de cr&eacute;ation de compte I-AMU">
+    <figcaption><b>Figure 1</b> &mdash; &Eacute;cran &laquo; Cr&eacute;er un compte &raquo;&nbsp;: pr&eacute;nom, nom, adresse universitaire, mot de passe, lieu et d&eacute;partement, puis consentement.</figcaption>
+  </figure>
+
+  <h3>2.2 V&eacute;rifier son adresse e&#8209;mail</h3>
+  <p>Cliquez sur le lien re&ccedil;u par e&#8209;mail pour activer votre compte. Tant que l'adresse n'est pas v&eacute;rifi&eacute;e, l'acc&egrave;s reste restreint.</p>
+  <div class="tip"><span class="t">Conseil</span> Si vous ne recevez rien, v&eacute;rifiez vos spams. Le lien de v&eacute;rification est &agrave; usage unique.</div>
+
+  <h3>2.3 Choisir son lieu et son d&eacute;partement</h3>
+  <p>Lors de l'inscription, vous s&eacute;lectionnez d'abord un <strong>lieu</strong> (site), puis le <strong>d&eacute;partement</strong> correspondant&nbsp;: la liste des d&eacute;partements ne se remplit qu'apr&egrave;s le choix du lieu. Ce rattachement vous relie &agrave; votre composante (UFR, d&eacute;partement&hellip;).</p>
+  <div class="note"><span class="t">&Agrave; noter</span> Les chercheurs ne sont pas rattach&eacute;s &agrave; un d&eacute;partement&nbsp;: ils demandent une autorisation d'acc&egrave;s (voir &sect;6).</div>
+
+  <h3>2.4 Donner son consentement</h3>
+  <p>Lors de la premi&egrave;re connexion, vous devez accepter les conditions d'utilisation et la politique de traitement des donn&eacute;es. La version et la date de votre consentement sont enregistr&eacute;es.</p>
+
+  <h3>2.5 Se connecter</h3>
+  <ol class="steps">
+    <li>Ouvrez la page de connexion.</li>
+    <li>Saisissez e&#8209;mail et mot de passe.</li>
+    <li>Vous arrivez sur votre espace (l'interface de chat pour les &eacute;tudiants).</li>
+  </ol>
+  <figure class="fig narrow">
+    <img src="captures/02-connexion.png" alt="&Eacute;cran de connexion I-AMU">
+    <figcaption><b>Figure 2</b> &mdash; &Eacute;cran de connexion&nbsp;: adresse e&#8209;mail et mot de passe, avec le lien &laquo; S'inscrire &raquo;.</figcaption>
+  </figure>
+
+  <h3>2.6 R&eacute;glages du profil</h3>
+  <ul>
+    <li><strong>Th&egrave;me</strong>&nbsp;: clair, sombre ou automatique.</li>
+    <li><strong>Identit&eacute;</strong>&nbsp;: nom, pr&eacute;nom (&eacute;tudiants&nbsp;: num&eacute;ro &eacute;tudiant et ann&eacute;e).</li>
+    <li><strong>Dur&eacute;e d'archivage</strong> de vos conversations (en jours).</li>
+    <li><strong>Opposition &agrave; l'usage recherche</strong> de vos donn&eacute;es (voir &sect;9).</li>
+  </ul>
+  <div class="shot">
+    <div class="cam">&#9974;</div>
+    <div class="lbl">Capture &agrave; ajouter &mdash; Page Profil / Pr&eacute;f&eacute;rences</div>
+    <div class="desc">&Eacute;cran de profil montrant le s&eacute;lecteur de th&egrave;me, les champs d'identit&eacute; et le r&eacute;glage de dur&eacute;e d'archivage.</div>
+  </div>
+</div>
+
+<!-- ========================= 3. ETUDIANT ========================= -->
+<div class="page">
+  <h2>3. R&ocirc;le &mdash; &Eacute;tudiant</h2>
+  <div class="role"><div class="who">Profil &Eacute;tudiant</div><div class="one">Vous dialoguez avec l'IA, librement ou dans le cadre d'une session de cours encadr&eacute;e par un enseignant.</div></div>
+
+  <h3>3.1 Discuter avec l'IA</h3>
+  <ol class="steps">
+    <li>Depuis l'espace de chat, cr&eacute;ez une <strong>nouvelle conversation</strong>.</li>
+    <li>Choisissez le <strong>mod&egrave;le</strong> propos&eacute; (une conversation = un mod&egrave;le).</li>
+    <li>Saisissez votre question dans la zone de message et envoyez.</li>
+    <li>La r&eacute;ponse s'affiche en texte format&eacute; (titres, listes, blocs de code colori&eacute;s).</li>
+  </ol>
+  <figure class="fig">
+    <img src="captures/03-chat-etudiant.png" alt="Interface de chat de l'&eacute;tudiant">
+    <figcaption><b>Figure 3</b> &mdash; Espace de chat&nbsp;: &agrave; gauche les conversations et les boutons &laquo; Nouvelle conversation &raquo; / &laquo; Rejoindre une session &raquo;&nbsp;; au centre le fil et le s&eacute;lecteur de mod&egrave;le&nbsp;; en bas la zone de saisie.</figcaption>
+  </figure>
+  <div class="tip"><span class="t">Conseil</span> Formulez des demandes pr&eacute;cises et donnez du contexte. Une bonne question = une meilleure r&eacute;ponse.</div>
+
+  <h3>3.2 Rejoindre une session</h3>
+  <p>Un enseignant peut ouvrir une <strong>session</strong> (TD, TP, examen, &eacute;tude libre) prot&eacute;g&eacute;e par un <strong>code d'acc&egrave;s &agrave; 6 caract&egrave;res</strong>.</p>
+  <ol class="steps">
+    <li>Cliquez sur &laquo;&nbsp;Rejoindre une session&nbsp;&raquo;.</li>
+    <li>Saisissez le code &agrave; 6 caract&egrave;res (ex. <code>4F7K2B</code>).</li>
+    <li>Vous &ecirc;tes inscrit&nbsp;: la session impose son cadre (mod&egrave;les, consignes, limites).</li>
+  </ol>
+  <figure class="fig narrow">
+    <img src="captures/04-rejoindre-session.png" alt="Bo&icirc;te de dialogue Rejoindre une session">
+    <figcaption><b>Figure 4</b> &mdash; Fen&ecirc;tre &laquo; Rejoindre une session &raquo; avec le champ du code &agrave; 6 caract&egrave;res.</figcaption>
+  </figure>
+
+  <h3>3.3 Importer un document</h3>
+  <p>Si la session l'autorise, vous pouvez joindre un fichier pour que l'IA en tienne compte. Formats possibles&nbsp;: <strong>PDF, Markdown (.md), texte (.txt)</strong>, selon ce qu'a permis l'enseignant. Une taille maximale s'applique (jusqu'&agrave; 10&nbsp;Mo).</p>
+  <div class="warn"><span class="t">Attention</span> Hors session, ou si l'enseignant n'a autoris&eacute; aucun format, l'import de documents est d&eacute;sactiv&eacute;.</div>
+
+  <h3>3.4 Comprendre les limites</h3>
+  <table>
+    <tr><th>Limite</th><th>Signification</th></tr>
+    <tr><td>Jetons (tokens) max</td><td>Volume maximal trait&eacute; par &eacute;change &mdash; au&#8209;del&agrave;, raccourcissez votre message.</td></tr>
+    <tr><td>Taille d'entr&eacute;e max</td><td>Longueur maximale d'un message.</td></tr>
+    <tr><td>Fen&ecirc;tre de contexte</td><td>M&eacute;moire du mod&egrave;le sur la conversation en cours.</td></tr>
+  </table>
+
+  <h3>3.5 Historique &amp; retour (feedback)</h3>
+  <p>Vos conversations sont conserv&eacute;es puis archiv&eacute;es selon la dur&eacute;e r&eacute;gl&eacute;e dans votre profil. Sur chaque r&eacute;ponse, donnez un <strong>retour</strong> (pouce haut / pouce bas) pour signaler ce qui vous a aid&eacute;.</p>
+  <div class="shot">
+    <div class="cam">&#9974;</div>
+    <div class="lbl">Capture &agrave; ajouter &mdash; Boutons de feedback sous une r&eacute;ponse</div>
+    <div class="desc">Gros plan sur une r&eacute;ponse de l'IA avec les ic&ocirc;nes pouce haut / pouce bas.</div>
+  </div>
+</div>
+
+<!-- ========================= 4. ENSEIGNANT ========================= -->
+<div class="page">
+  <h2>4. R&ocirc;le &mdash; Enseignant</h2>
+  <div class="role"><div class="who">Profil Enseignant</div><div class="one">Vous structurez l'usage de l'IA&nbsp;: vous cr&eacute;ez des mati&egrave;res, ouvrez des sessions encadr&eacute;es et analysez les &eacute;changes.</div></div>
+
+  <h3>4.1 G&eacute;rer ses ressources (mati&egrave;res)</h3>
+  <p>Une <strong>ressource</strong> repr&eacute;sente une mati&egrave;re&nbsp;: code, intitul&eacute;, description, semestre. Elle passe par trois &eacute;tats&nbsp;: <strong>Brouillon</strong>, <strong>Publi&eacute;e</strong>, <strong>Archiv&eacute;e</strong>.</p>
+  <ol class="steps">
+    <li>Ouvrez &laquo;&nbsp;Mes ressources&nbsp;&raquo; puis &laquo;&nbsp;Nouvelle ressource&nbsp;&raquo;.</li>
+    <li>Renseignez code, nom, description, semestre.</li>
+    <li>Ajoutez d'&eacute;ventuels co&#8209;enseignants.</li>
+    <li>Publiez la ressource quand elle est pr&ecirc;te.</li>
+  </ol>
+  <figure class="fig">
+    <img src="captures/05-nouvelle-ressource.png" alt="Formulaire de cr&eacute;ation d'une ressource">
+    <figcaption><b>Figure 5</b> &mdash; Cr&eacute;ation d'une ressource&nbsp;: code, intitul&eacute;, enseignants, description et semestre. Le panneau &laquo; &Agrave; savoir &raquo; rappelle les r&egrave;gles (code unique, &eacute;tat Brouillon &agrave; la cr&eacute;ation&hellip;).</figcaption>
+  </figure>
+
+  <h3>4.2 Cr&eacute;er et piloter une session</h3>
+  <p>Une <strong>session</strong> est un cadre d'usage rattach&eacute; &agrave; une ressource. Choisissez son <strong>type</strong>&nbsp;:</p>
+  <table>
+    <tr><th>Type</th><th>Usage typique</th></tr>
+    <tr><td>Examen</td><td>&Eacute;valuation&nbsp;: cadre strict, traçabilit&eacute; renforc&eacute;e.</td></tr>
+    <tr><td>TD</td><td>Travaux dirig&eacute;s accompagn&eacute;s.</td></tr>
+    <tr><td>TP</td><td>Travaux pratiques.</td></tr>
+    <tr><td>&Eacute;tude libre</td><td>R&eacute;vision autonome encadr&eacute;e.</td></tr>
+  </table>
+  <p>Cycle de vie d'une session&nbsp;: <strong>Brouillon &rarr; Programm&eacute;e &rarr; Active &rarr; Termin&eacute;e</strong> (ou Annul&eacute;e).</p>
+  <ol class="steps">
+    <li>Depuis une ressource, cliquez &laquo;&nbsp;Nouvelle session&nbsp;&raquo; et choisissez le type.</li>
+    <li>D&eacute;finissez les dates de d&eacute;but et de fin.</li>
+    <li>Associez le ou les <strong>mod&egrave;les</strong> autoris&eacute;s.</li>
+    <li>R&eacute;glez les limites et consignes (&sect;4.4).</li>
+    <li>Passez la session en &laquo;&nbsp;Programm&eacute;e&nbsp;&raquo; ou &laquo;&nbsp;Active&nbsp;&raquo; pour g&eacute;n&eacute;rer le code d'acc&egrave;s.</li>
+  </ol>
+  <figure class="fig">
+    <img src="captures/06-creation-session.png" alt="Param&eacute;trage d'une session">
+    <figcaption><b>Figure 6</b> &mdash; Param&eacute;trage d'une session&nbsp;: choix du type (TD, TP, &Eacute;tude libre, Examen), ressource, planification, mod&egrave;les autoris&eacute;s et pr&eacute;&#8209;prompt. Le panneau de droite montre l'aper&ccedil;u c&ocirc;t&eacute; &eacute;tudiant.</figcaption>
+  </figure>
+
+  <h3>4.3 Le code d'acc&egrave;s</h3>
+  <div class="note"><span class="t">Important</span> Le code &agrave; 6 caract&egrave;res est <strong>g&eacute;n&eacute;r&eacute; automatiquement</strong> lorsque la session passe en &laquo;&nbsp;Programm&eacute;e&nbsp;&raquo; ou &laquo;&nbsp;Active&nbsp;&raquo;. Tant qu'elle est en brouillon, aucun code n'existe. Communiquez ce code aux &eacute;tudiants au d&eacute;but de la s&eacute;ance.</div>
+
+  <h3>4.4 Encadrer le comportement de l'IA</h3>
+  <ul>
+    <li><strong>Consignes</strong>&nbsp;: instructions visibles donn&eacute;es aux &eacute;tudiants.</li>
+    <li><strong>Pr&eacute;&#8209;prompt / post&#8209;prompt</strong>&nbsp;: texte ajout&eacute; avant/apr&egrave;s le message pour orienter l'IA (ton, p&eacute;rim&egrave;tre, interdits).</li>
+    <li><strong>Jetons (tokens) max</strong> et <strong>taille d'entr&eacute;e</strong>&nbsp;: quotas par &eacute;change.</li>
+    <li><strong>Documents</strong>&nbsp;: formats autoris&eacute;s (PDF/MD/TXT) et taille maximale.</li>
+  </ul>
+  <div class="tip"><span class="t">Conseil</span> Pour un examen, utilisez le pr&eacute;&#8209;prompt pour interdire les r&eacute;ponses toutes faites et privil&eacute;gier l'accompagnement m&eacute;thodologique.</div>
+
+  <h3>4.5 Suivre les &eacute;changes</h3>
+  <p>Pour chaque session, consultez les conversations des &eacute;tudiants&nbsp;: messages, r&eacute;ponses, retours (pouce haut/bas), latence et volume de jetons. Objectif&nbsp;: analyser <strong>comment</strong> les &eacute;tudiants mobilisent l'IA.</p>
+  <div class="shot">
+    <div class="cam">&#9974;</div>
+    <div class="lbl">Capture &agrave; ajouter &mdash; Tableau de suivi d'une session</div>
+    <div class="desc">Liste des &eacute;tudiants inscrits et de leurs conversations, avec indicateurs (nombre d'&eacute;changes, feedback, tokens).</div>
+  </div>
+  <div class="rgpd"><span class="t">Cadre d'usage</span> Le suivi sert un objectif p&eacute;dagogique. Restez dans le p&eacute;rim&egrave;tre de vos enseignements et respectez la confidentialit&eacute; des &eacute;tudiants.</div>
+
+  <h3>Demander l'habilitation</h3>
+  <p>Pour importer vos propres mod&egrave;les, demandez l'<strong>habilitation</strong> &agrave; l'administrateur de votre d&eacute;partement (voir &sect;5)&nbsp;: depuis votre espace, soumettez une demande motiv&eacute;e.</p>
+</div>
+
+<!-- ========================= 5. ENSEIGNANT HABILITE ========================= -->
+<div class="page">
+  <h2>5. R&ocirc;le &mdash; Enseignant habilit&eacute;</h2>
+  <div class="role"><div class="who">Profil Enseignant habilit&eacute;</div><div class="one">Enseignant valid&eacute; par l'administrateur du d&eacute;partement, autoris&eacute; &agrave; importer des mod&egrave;les d'IA personnalis&eacute;s.</div></div>
+
+  <p>L'habilitation est un statut accord&eacute; par l'<strong>administrateur de d&eacute;partement</strong>. Une fois habilit&eacute;, vous conservez toutes les capacit&eacute;s d'un enseignant, plus la gestion de mod&egrave;les.</p>
+
+  <h3>5.1 Obtenir l'habilitation</h3>
+  <ol class="steps">
+    <li>Depuis votre espace, ouvrez &laquo;&nbsp;Demander l'habilitation&nbsp;&raquo;.</li>
+    <li>Expliquez votre besoin (mod&egrave;le sp&eacute;cifique, usage p&eacute;dagogique).</li>
+    <li>L'administrateur approuve ou refuse&nbsp;; vous &ecirc;tes notifi&eacute; de la d&eacute;cision.</li>
+  </ol>
+
+  <h3>5.2 Importer un mod&egrave;le pour une ressource</h3>
+  <ol class="steps">
+    <li>Ouvrez la ressource concern&eacute;e, onglet &laquo;&nbsp;Mod&egrave;les&nbsp;&raquo;.</li>
+    <li>Ajoutez un mod&egrave;le&nbsp;: nom, fournisseur, fen&ecirc;tre de contexte, URL d'API, type d'adaptateur.</li>
+    <li>Enregistrez&nbsp;: le mod&egrave;le devient disponible pour cette ressource.</li>
+  </ol>
+  <div class="shot">
+    <div class="cam">&#9974;</div>
+    <div class="lbl">Capture &agrave; ajouter &mdash; Import d'un mod&egrave;le sur une ressource</div>
+    <div class="desc">Formulaire d'ajout de mod&egrave;le (nom, fournisseur, contexte, URL, adaptateur) au sein d'une ressource.</div>
+  </div>
+
+  <h3>5.3 Partager un mod&egrave;le</h3>
+  <p>Un mod&egrave;le rattach&eacute; &agrave; une ressource peut &ecirc;tre <strong>partag&eacute; avec d'autres ressources du m&ecirc;me d&eacute;partement</strong>, pour mutualiser une configuration.</p>
+  <div class="note"><span class="t">&Agrave; noter</span> Un mod&egrave;le li&eacute; &agrave; une ressource ne peut pas &ecirc;tre rendu &laquo;&nbsp;partageable&nbsp;&raquo; globalement&nbsp;: son partage reste cadr&eacute; au d&eacute;partement.</div>
+</div>
+
+<!-- ========================= 6. CHERCHEUR ========================= -->
+<div class="page">
+  <h2>6. R&ocirc;le &mdash; Chercheur</h2>
+  <div class="role"><div class="who">Profil Chercheur</div><div class="one">Rattach&eacute; &agrave; un laboratoire, vous demandez l'acc&egrave;s aux donn&eacute;es d'un d&eacute;partement et exportez des &eacute;changes pour vos travaux.</div></div>
+
+  <p>Le chercheur n'appartient &agrave; aucun d&eacute;partement. Son compte est valid&eacute; au niveau de l'&eacute;tablissement et rattach&eacute; &agrave; un <strong>laboratoire</strong>.</p>
+
+  <h3>6.1 Demander l'acc&egrave;s &agrave; un d&eacute;partement</h3>
+  <ol class="steps">
+    <li>Ouvrez &laquo;&nbsp;Demandes d'acc&egrave;s&nbsp;&raquo; puis s&eacute;lectionnez le d&eacute;partement vis&eacute;.</li>
+    <li>R&eacute;digez votre demande (objet de la recherche, donn&eacute;es souhait&eacute;es).</li>
+    <li>L'administrateur du d&eacute;partement <strong>autorise</strong> ou <strong>rejette</strong>.</li>
+  </ol>
+  <div class="shot">
+    <div class="cam">&#9974;</div>
+    <div class="lbl">Capture &agrave; ajouter &mdash; Demande d'autorisation</div>
+    <div class="desc">Formulaire de demande d'acc&egrave;s &agrave; un d&eacute;partement, avec le champ de motivation et le statut (en attente / autoris&eacute;e / rejet&eacute;e).</div>
+  </div>
+
+  <h3>6.2 Exporter des conversations</h3>
+  <p>Une fois l'autorisation accord&eacute;e, vous pouvez exporter les conversations du d&eacute;partement concern&eacute;. Chaque export est <strong>trac&eacute;</strong> (chercheur, date, adresse IP).</p>
+  <div class="shot">
+    <div class="cam">&#9974;</div>
+    <div class="lbl">Capture &agrave; ajouter &mdash; &Eacute;cran d'export</div>
+    <div class="desc">Liste des conversations exportables avec filtres et bouton d'export.</div>
+  </div>
+
+  <div class="rgpd"><span class="t">Donn&eacute;es &amp; recherche</span> La plateforme n'anonymise pas les donn&eacute;es&nbsp;: l'anonymisation et le respect du cadre &eacute;thique/RGPD rel&egrave;vent de votre responsabilit&eacute; de chercheur. Les utilisateurs ayant exerc&eacute; leur <strong>droit d'opposition</strong> &agrave; l'usage recherche doivent &ecirc;tre exclus de vos traitements.</div>
+</div>
+
+<!-- ========================= 7. ADMIN DEPARTEMENT ========================= -->
+<div class="page">
+  <h2>7. R&ocirc;le &mdash; Administrateur de d&eacute;partement</h2>
+  <div class="role"><div class="who">Profil Administrateur de d&eacute;partement</div><div class="one">Vous administrez votre d&eacute;partement&nbsp;: comptes, r&ocirc;les, habilitations, autorisations chercheurs et mod&egrave;les en acc&egrave;s libre.</div></div>
+
+  <p>Le compte est cr&eacute;&eacute; <strong>sur invitation d'un super&#8209;administrateur</strong>. Votre p&eacute;rim&egrave;tre est limit&eacute; &agrave; votre d&eacute;partement.</p>
+
+  <h3>7.1 G&eacute;rer les utilisateurs et les r&ocirc;les</h3>
+  <ul>
+    <li>Attribuer un r&ocirc;le aux comptes dont le domaine e&#8209;mail n'a pas de r&ocirc;le automatique.</li>
+    <li>Activer / d&eacute;sactiver des comptes.</li>
+    <li>Consulter la liste des membres du d&eacute;partement.</li>
+  </ul>
+  <div class="shot">
+    <div class="cam">&#9974;</div>
+    <div class="lbl">Capture &agrave; ajouter &mdash; Gestion des utilisateurs</div>
+    <div class="desc">Tableau des utilisateurs du d&eacute;partement avec r&ocirc;le, statut actif/inactif et actions.</div>
+  </div>
+
+  <h3>7.2 Traiter les demandes d'habilitation</h3>
+  <p>Approuvez ou refusez les demandes des enseignants souhaitant importer des mod&egrave;les (voir &sect;5).</p>
+
+  <h3>7.3 Autoriser les chercheurs</h3>
+  <p>Examinez les demandes d'acc&egrave;s des chercheurs &agrave; votre d&eacute;partement&nbsp;: <strong>autoriser</strong> ou <strong>rejeter</strong> (voir &sect;6).</p>
+  <div class="shot">
+    <div class="cam">&#9974;</div>
+    <div class="lbl">Capture &agrave; ajouter &mdash; File des demandes (habilitation / chercheurs)</div>
+    <div class="desc">Liste des demandes en attente avec boutons Approuver / Rejeter.</div>
+  </div>
+
+  <h3>7.4 G&eacute;rer les mod&egrave;les en acc&egrave;s libre</h3>
+  <p>D&eacute;finissez quels mod&egrave;les sont utilisables <strong>hors session</strong> (mode libre) par les membres du d&eacute;partement.</p>
+  <div class="note"><span class="t">&Agrave; noter</span> Les actions sensibles sont trac&eacute;es. Tenez &agrave; jour les acc&egrave;s pour garder un p&eacute;rim&egrave;tre coh&eacute;rent.</div>
+</div>
+
+<!-- ========================= 8. SUPER ADMIN ========================= -->
+<div class="page">
+  <h2>8. R&ocirc;le &mdash; Super&#8209;administrateur</h2>
+  <div class="role"><div class="who">Profil Super&#8209;administrateur</div><div class="one">Niveau le plus &eacute;lev&eacute;&nbsp;: vous configurez l'&eacute;tablissement (sites, d&eacute;partements, domaines e&#8209;mail) et cr&eacute;ez les administrateurs.</div></div>
+
+  <div class="warn"><span class="t">Compte &agrave; privil&egrave;ges</span> Les comptes super&#8209;administrateurs sont en nombre limit&eacute;, isol&eacute;s du reste des comptes, et <strong>toutes leurs actions sont trac&eacute;es</strong>. Le premier compte est cr&eacute;&eacute; par un script d'initialisation unique.</div>
+
+  <h3>8.1 G&eacute;rer les sites et l'identit&eacute; visuelle</h3>
+  <p>Cr&eacute;ez et configurez les <strong>sites</strong> (&eacute;tablissements)&nbsp;: nom, adresse, et personnalisation visuelle (logo, favicon, couleur principale).</p>
+  <div class="shot">
+    <div class="cam">&#9974;</div>
+    <div class="lbl">Capture &agrave; ajouter &mdash; Configuration d'un site</div>
+    <div class="desc">Formulaire de site avec t&eacute;l&eacute;versement du logo / favicon et s&eacute;lecteur de couleur principale.</div>
+  </div>
+
+  <h3>8.2 G&eacute;rer d&eacute;partements et laboratoires</h3>
+  <p>Cr&eacute;ez les d&eacute;partements (rattach&eacute;s &agrave; un site) et les laboratoires utilis&eacute;s pour les chercheurs.</p>
+
+  <h3>8.3 Configurer les domaines e&#8209;mail</h3>
+  <p>D&eacute;finissez la correspondance <strong>domaine &rarr; r&ocirc;le automatique</strong> (ex. <code>@etu.univ-amu.fr</code> &rarr; &Eacute;tudiant). Ces r&egrave;gles ne sont jamais cod&eacute;es en dur&nbsp;: elles se g&egrave;rent ici.</p>
+  <div class="shot">
+    <div class="cam">&#9974;</div>
+    <div class="lbl">Capture &agrave; ajouter &mdash; Domaines e&#8209;mail</div>
+    <div class="desc">Tableau des domaines configur&eacute;s avec leur r&ocirc;le associ&eacute; et l'&eacute;tat actif/inactif.</div>
+  </div>
+
+  <h3>8.4 Cr&eacute;er les administrateurs et valider les chercheurs</h3>
+  <ul>
+    <li><strong>Admins de d&eacute;partement</strong>&nbsp;: cr&eacute;&eacute;s par <strong>invitation e&#8209;mail</strong> uniquement.</li>
+    <li><strong>Comptes chercheurs</strong>&nbsp;: valid&eacute;s &agrave; ce niveau avant qu'ils ne demandent l'acc&egrave;s &agrave; un d&eacute;partement.</li>
+  </ul>
+</div>
+
+<!-- ========================= 9. RGPD ========================= -->
+<div class="page">
+  <h2>9. Donn&eacute;es personnelles &amp; confidentialit&eacute;</h2>
+  <p>I&#8209;AMU traite des donn&eacute;es p&eacute;dagogiques (conversations, retours, m&eacute;triques d'usage). Voici l'essentiel &agrave; conna&icirc;tre&nbsp;:</p>
+  <table>
+    <tr><th>Sujet</th><th>Ce qu'il faut savoir</th></tr>
+    <tr><td>Consentement</td><td>Recueilli &agrave; la premi&egrave;re connexion&nbsp;; version et date enregistr&eacute;es.</td></tr>
+    <tr><td>Archivage</td><td>Vos conversations sont archiv&eacute;es selon la dur&eacute;e (en jours) d&eacute;finie dans votre profil.</td></tr>
+    <tr><td>Droit d'opposition</td><td>Vous pouvez vous opposer &agrave; l'utilisation de vos donn&eacute;es &agrave; des fins de recherche.</td></tr>
+    <tr><td>Usage recherche</td><td>Les exports par les chercheurs sont trac&eacute;s (qui, quand, depuis quelle IP).</td></tr>
+    <tr><td>IA locale</td><td>Le mod&egrave;le est h&eacute;berg&eacute; localement&nbsp;: vos &eacute;changes ne sont pas envoy&eacute;s &agrave; un service tiers grand public.</td></tr>
+  </table>
+  <div class="rgpd"><span class="t">Exercer vos droits</span> Pour acc&eacute;der &agrave; vos donn&eacute;es, les rectifier ou vous opposer &agrave; un traitement, utilisez les r&eacute;glages de votre profil ou contactez l'administration de votre d&eacute;partement.</div>
+</div>
+
+<!-- ========================= 10. FAQ ========================= -->
+<div class="page">
+  <h2>10. FAQ &amp; r&eacute;solution de probl&egrave;mes</h2>
+
+  <h4>Je n'arrive pas &agrave; me connecter</h4>
+  <p>V&eacute;rifiez que votre e&#8209;mail est confirm&eacute; (lien re&ccedil;u &agrave; l'inscription) et que votre compte est actif. En cas d'oubli, utilisez &laquo;&nbsp;mot de passe oubli&eacute;&nbsp;&raquo;.</p>
+
+  <h4>Mon compte n'a aucun r&ocirc;le</h4>
+  <p>Votre domaine e&#8209;mail n'est pas reconnu automatiquement&nbsp;: un administrateur de d&eacute;partement doit vous attribuer un r&ocirc;le.</p>
+
+  <h4>Le code de session ne fonctionne pas</h4>
+  <p>Le code fait 6 caract&egrave;res (lettres majuscules et chiffres). V&eacute;rifiez qu'il n'y a pas de confusion (O/0, I/1) et que la session est bien <strong>programm&eacute;e</strong> ou <strong>active</strong>.</p>
+
+  <h4>Je ne peux pas importer de document</h4>
+  <p>L'import d&eacute;pend de la session&nbsp;: l'enseignant doit avoir autoris&eacute; au moins un format (PDF/MD/TXT). V&eacute;rifiez aussi la taille (max 10&nbsp;Mo).</p>
+
+  <h4>L'IA refuse mon message ou le tronque</h4>
+  <p>Vous d&eacute;passez probablement la limite de jetons ou la taille d'entr&eacute;e fix&eacute;e par l'enseignant. Raccourcissez votre message ou d&eacute;coupez&#8209;le.</p>
+
+  <h4>Je suis enseignant et je veux mon propre mod&egrave;le</h4>
+  <p>Demandez l'<strong>habilitation</strong> &agrave; l'administrateur de votre d&eacute;partement (&sect;5).</p>
+
+  <h4>Je suis chercheur et je ne vois pas de donn&eacute;es</h4>
+  <p>Votre demande d'acc&egrave;s au d&eacute;partement doit d'abord &ecirc;tre <strong>autoris&eacute;e</strong> par son administrateur (&sect;6).</p>
+</div>
+
+<!-- ========================= 11. GLOSSAIRE ========================= -->
+<div class="page">
+  <h2>11. Glossaire</h2>
+  <table>
+    <tr><th>Terme</th><th>D&eacute;finition</th></tr>
+    <tr><td>Mod&egrave;le (LLM)</td><td>Le moteur d'IA avec lequel on discute. Une conversation utilise un seul mod&egrave;le.</td></tr>
+    <tr><td>Ressource</td><td>Une mati&egrave;re g&eacute;r&eacute;e par un enseignant (code, intitul&eacute;, semestre).</td></tr>
+    <tr><td>Session</td><td>Cadre d'usage rattach&eacute; &agrave; une ressource (TD, TP, examen, &eacute;tude libre), prot&eacute;g&eacute; par un code.</td></tr>
+    <tr><td>Code d'acc&egrave;s</td><td>Cl&eacute; &agrave; 6 caract&egrave;res permettant &agrave; un &eacute;tudiant de rejoindre une session.</td></tr>
+    <tr><td>Conversation</td><td>Un fil de discussion entre un utilisateur et un mod&egrave;le.</td></tr>
+    <tr><td>Interaction</td><td>Un &eacute;change&nbsp;: un message envoy&eacute; et la r&eacute;ponse associ&eacute;e.</td></tr>
+    <tr><td>Jeton (token)</td><td>Unit&eacute; de d&eacute;coupage du texte par l'IA&nbsp;; sert &agrave; mesurer et limiter les &eacute;changes.</td></tr>
+    <tr><td>Fen&ecirc;tre de contexte</td><td>Quantit&eacute; de texte que le mod&egrave;le peut &laquo;&nbsp;garder en t&ecirc;te&nbsp;&raquo;.</td></tr>
+    <tr><td>Pr&eacute;&#8209;prompt / post&#8209;prompt</td><td>Texte ajout&eacute; automatiquement avant/apr&egrave;s le message pour orienter l'IA.</td></tr>
+    <tr><td>Habilitation</td><td>Statut accord&eacute; &agrave; un enseignant l'autorisant &agrave; importer des mod&egrave;les.</td></tr>
+    <tr><td>D&eacute;partement</td><td>Composante de rattachement d'un utilisateur, rejointe via un code.</td></tr>
+    <tr><td>Laboratoire</td><td>Structure de rattachement d'un chercheur.</td></tr>
+    <tr><td>Archivage</td><td>Mise de c&ocirc;t&eacute; automatique des conversations apr&egrave;s une dur&eacute;e r&eacute;gl&eacute;e.</td></tr>
+  </table>
+
+  <hr>
+  <p class="small">I&#8209;AMU &mdash; Guide utilisateur &middot; Version 1.0 &middot; Document destin&eacute; aux utilisateurs de la plateforme. Remplacez les emplacements de captures par les copies d'&eacute;cran r&eacute;elles avant diffusion.</p>
+</div>
+
+</body>
+</html>

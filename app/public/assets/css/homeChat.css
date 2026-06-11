@@ -210,6 +210,19 @@
     font-weight: 600;
 }
 
+/* Sub-label under a conversation title — the session code/status in the
+   read-only "Sessions terminées" scope. */
+.conv-sub {
+    display: block;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: .7rem;
+    color: var(--gray-400);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+}
+
 .conv-group {
     display: flex;
     flex-direction: column;

@@ -437,31 +437,37 @@
 .badge-student {
     background: var(--blue-light);
     color: var(--blue);
+    border-color: var(--blue);
 }
 
 .badge-teacher {
     background: var(--gold-light);
     color: var(--gold);
+    border-color: var(--gold);
 }
 
 .badge-admin {
     background: var(--accept-bg);
     color: var(--accept);
+    border-color: var(--accept);
 }
 
 .badge-habilitated {
     background: var(--accept-bg);
     color: var(--accept);
+    border-color: var(--accept);
 }
 
 .badge-not-habilitated {
     background: var(--gray-100);
     color: var(--gray-400);
+    border-color: var(--gray-300);
 }
 
 .badge-rejected {
     background: var(--refuse-bg);
     color: var(--refuse);
+    border-color: var(--refuse);
 }
 
 /* Teacher habilitation request */
@@ -912,6 +918,90 @@
     border-radius: var(--r-1);
     background: var(--gray-50, var(--gray-100));
     color: var(--gray-600);
+}
+
+.edit-form-card {
+    /* Isoler sur une nouvelle ligne en dessous */
+    flex: 1 1 100%; 
+    order: 3; 
+    
+    /* État initial (fermé) pour l'animation */
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    margin-top: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+    
+    /* Animation fluide */
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.edit-form-card.is-open {
+    /* État final (ouvert) */
+    max-height: 800px; /* Valeur suffisamment grande pour contenir le form */
+    opacity: 1;
+    margin-top: 24px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+    border-width: 1px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.form-group .hint {
+    font-weight: 400;
+    color: var(--gray-400);
+    font-size: 0.75rem;
+}
+
+.form-group input {
+    padding: 10px 12px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-1);
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    color: var(--gray-800);
+    transition: border-color 0.15s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--blue, #0070f3);
+}
+
+.form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px solid var(--gray-200);
+}
+
+.btn-primary {
+    background: var(--blue, #0070f3);
+    color: white;
+}
+.btn-primary:hover {
+    background: #005bb5;
+    transform: translateY(-1px);
 }
 
 /* Responsive */

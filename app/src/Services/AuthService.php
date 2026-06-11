@@ -183,7 +183,7 @@ final class AuthService
             $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
             $host   = $_SERVER['HTTP_HOST'] ?? 'localhost:8085';
             $link   = $scheme . '://' . $host
-                . '/admin-invite/accept?token=' . urlencode($token);
+                 . '/verify-email?token=' . urlencode($token);
 
             $mail = new MailService();
             $mail->send(
@@ -299,8 +299,9 @@ final class AuthService
         if ($current === '' || $new === '' || $confirm === '') {
             return ['success' => false, 'error' => 'Tous les champs sont obligatoires.'];
         }
-        if (strlen($new) < 8) {
-            return ['success' => false, 'error' => 'Le nouveau mot de passe doit faire au moins 8 caractères.'];
+        $passwordError = \Core\PasswordPolicy::validate($new);
+        if ($passwordError !== null) {
+            return ['success' => false, 'error' => $passwordError];
         }
         if ($new !== $confirm) {
             return ['success' => false, 'error' => 'Les nouveaux mots de passe ne correspondent pas.'];
@@ -345,8 +346,9 @@ final class AuthService
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return 'Email invalide.';
         }
-        if (strlen($password) < 8) {
-            return 'Le mot de passe doit faire au moins 8 caractères.';
+        $passwordError = \Core\PasswordPolicy::validate($password);
+        if ($passwordError !== null) {
+            return $passwordError;
         }
         if ($password !== $passwordConfirm) {
             return 'Les mots de passe ne correspondent pas.';
