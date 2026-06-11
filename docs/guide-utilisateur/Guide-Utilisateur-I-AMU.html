@@ -70,6 +70,13 @@
   .shot .lbl{ font-weight:700; margin:4px 0 2px; }
   .shot .desc{ font-size:9.2pt; color:var(--muted); }
 
+  /* ---------- Figures (captures r&eacute;elles) ---------- */
+  figure.fig{ margin:14px 0; page-break-inside:avoid; }
+  figure.fig img{ width:100%; height:auto; display:block; border:1px solid var(--line); border-radius:8px; box-shadow:0 3px 10px rgba(31,58,95,.12); background:#0e1726; }
+  figure.fig.narrow img{ max-width:78mm; margin:0 auto; }
+  figure.fig figcaption{ font-size:9pt; color:var(--muted); margin-top:6px; text-align:center; }
+  figure.fig figcaption b{ color:var(--navy); }
+
   /* ---------- Tables ---------- */
   table{ border-collapse:collapse; width:100%; margin:10px 0; font-size:9.5pt; }
   th,td{ border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top; }
@@ -143,7 +150,7 @@
 
   <div class="note">
     <span class="t">&Agrave; propos des captures d'&eacute;cran</span>
-    Ce guide contient des <strong>emplacements de captures</strong> (encadr&eacute;s en pointill&eacute;s). Chacun pr&eacute;cise l'&eacute;cran &agrave; photographier et ce qu'il doit montrer. Remplacez chaque encadr&eacute; par la capture correspondante avant diffusion.
+    Les figures 1 &agrave; 6 sont d&eacute;j&agrave; ins&eacute;r&eacute;es&nbsp;: placez les fichiers d'image dans un sous&#8209;dossier <code>captures/</code> &agrave; c&ocirc;t&eacute; de ce document, nomm&eacute;s <code>01-inscription.png</code>, <code>02-connexion.png</code>, <code>03-chat-etudiant.png</code>, <code>04-rejoindre-session.png</code>, <code>05-nouvelle-ressource.png</code>, <code>06-creation-session.png</code>. Les autres &eacute;crans restent signal&eacute;s en <strong>pointill&eacute;s bleus</strong> en attendant leur capture.
   </div>
 </div>
 
@@ -189,23 +196,23 @@
     <tr><td>Domaine non reconnu</td><td>Aucun r&ocirc;le&nbsp;: il sera attribu&eacute; par un administrateur</td></tr>
   </table>
   <ol class="steps">
-    <li>Ouvrez la page d'inscription de I&#8209;AMU.</li>
-    <li>Saisissez votre adresse e&#8209;mail universitaire et un mot de passe.</li>
-    <li>Renseignez vos nom et pr&eacute;nom.</li>
-    <li>Validez&nbsp;: un e&#8209;mail de v&eacute;rification vous est envoy&eacute;.</li>
+    <li>Ouvrez la page d'inscription puis renseignez vos <strong>pr&eacute;nom</strong> et <strong>nom</strong>.</li>
+    <li>Saisissez votre <strong>adresse e&#8209;mail universitaire</strong>.</li>
+    <li>Choisissez un <strong>mot de passe</strong> (au moins 12 caract&egrave;res, 1 majuscule, 1 chiffre, 1 caract&egrave;re sp&eacute;cial) et confirmez&#8209;le.</li>
+    <li>S&eacute;lectionnez votre <strong>lieu</strong>, puis votre <strong>d&eacute;partement</strong> (la liste se remplit apr&egrave;s le choix du lieu).</li>
+    <li>Cochez le <strong>consentement</strong> au traitement des donn&eacute;es, puis validez&nbsp;: un e&#8209;mail de v&eacute;rification vous est envoy&eacute;.</li>
   </ol>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; Formulaire d'inscription</div>
-    <div class="desc">Page &laquo;&nbsp;Cr&eacute;er un compte&nbsp;&raquo; avec les champs e&#8209;mail, mot de passe, nom, pr&eacute;nom et le bouton de validation.</div>
-  </div>
+  <figure class="fig narrow">
+    <img src="captures/01-inscription.png" alt="Formulaire de cr&eacute;ation de compte I-AMU">
+    <figcaption><b>Figure 1</b> &mdash; &Eacute;cran &laquo; Cr&eacute;er un compte &raquo;&nbsp;: pr&eacute;nom, nom, adresse universitaire, mot de passe, lieu et d&eacute;partement, puis consentement.</figcaption>
+  </figure>
 
   <h3>2.2 V&eacute;rifier son adresse e&#8209;mail</h3>
   <p>Cliquez sur le lien re&ccedil;u par e&#8209;mail pour activer votre compte. Tant que l'adresse n'est pas v&eacute;rifi&eacute;e, l'acc&egrave;s reste restreint.</p>
   <div class="tip"><span class="t">Conseil</span> Si vous ne recevez rien, v&eacute;rifiez vos spams. Le lien de v&eacute;rification est &agrave; usage unique.</div>
 
-  <h3>2.3 Rejoindre un d&eacute;partement</h3>
-  <p>&Agrave; l'inscription (ou depuis votre profil), saisissez le <strong>code de d&eacute;partement</strong> communiqu&eacute; par votre &eacute;tablissement. Il vous rattache &agrave; votre composante (UFR, d&eacute;partement&hellip;).</p>
+  <h3>2.3 Choisir son lieu et son d&eacute;partement</h3>
+  <p>Lors de l'inscription, vous s&eacute;lectionnez d'abord un <strong>lieu</strong> (site), puis le <strong>d&eacute;partement</strong> correspondant&nbsp;: la liste des d&eacute;partements ne se remplit qu'apr&egrave;s le choix du lieu. Ce rattachement vous relie &agrave; votre composante (UFR, d&eacute;partement&hellip;).</p>
   <div class="note"><span class="t">&Agrave; noter</span> Les chercheurs ne sont pas rattach&eacute;s &agrave; un d&eacute;partement&nbsp;: ils demandent une autorisation d'acc&egrave;s (voir &sect;6).</div>
 
   <h3>2.4 Donner son consentement</h3>
@@ -217,11 +224,10 @@
     <li>Saisissez e&#8209;mail et mot de passe.</li>
     <li>Vous arrivez sur votre espace (l'interface de chat pour les &eacute;tudiants).</li>
   </ol>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; Page de connexion</div>
-    <div class="desc">&Eacute;cran de connexion avec champs e&#8209;mail / mot de passe et lien &laquo;&nbsp;mot de passe oubli&eacute;&nbsp;&raquo;.</div>
-  </div>
+  <figure class="fig narrow">
+    <img src="captures/02-connexion.png" alt="&Eacute;cran de connexion I-AMU">
+    <figcaption><b>Figure 2</b> &mdash; &Eacute;cran de connexion&nbsp;: adresse e&#8209;mail et mot de passe, avec le lien &laquo; S'inscrire &raquo;.</figcaption>
+  </figure>
 
   <h3>2.6 R&eacute;glages du profil</h3>
   <ul>
@@ -249,11 +255,10 @@
     <li>Saisissez votre question dans la zone de message et envoyez.</li>
     <li>La r&eacute;ponse s'affiche en texte format&eacute; (titres, listes, blocs de code colori&eacute;s).</li>
   </ol>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; Interface de chat</div>
-    <div class="desc">Vue principale&nbsp;: liste des conversations &agrave; gauche, fil de discussion au centre, zone de saisie en bas, s&eacute;lecteur de mod&egrave;le.</div>
-  </div>
+  <figure class="fig">
+    <img src="captures/03-chat-etudiant.png" alt="Interface de chat de l'&eacute;tudiant">
+    <figcaption><b>Figure 3</b> &mdash; Espace de chat&nbsp;: &agrave; gauche les conversations et les boutons &laquo; Nouvelle conversation &raquo; / &laquo; Rejoindre une session &raquo;&nbsp;; au centre le fil et le s&eacute;lecteur de mod&egrave;le&nbsp;; en bas la zone de saisie.</figcaption>
+  </figure>
   <div class="tip"><span class="t">Conseil</span> Formulez des demandes pr&eacute;cises et donnez du contexte. Une bonne question = une meilleure r&eacute;ponse.</div>
 
   <h3>3.2 Rejoindre une session</h3>
@@ -263,11 +268,10 @@
     <li>Saisissez le code &agrave; 6 caract&egrave;res (ex. <code>4F7K2B</code>).</li>
     <li>Vous &ecirc;tes inscrit&nbsp;: la session impose son cadre (mod&egrave;les, consignes, limites).</li>
   </ol>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; Saisie du code de session</div>
-    <div class="desc">Bo&icirc;te de dialogue &laquo;&nbsp;Rejoindre une session&nbsp;&raquo; avec le champ &agrave; 6 caract&egrave;res.</div>
-  </div>
+  <figure class="fig narrow">
+    <img src="captures/04-rejoindre-session.png" alt="Bo&icirc;te de dialogue Rejoindre une session">
+    <figcaption><b>Figure 4</b> &mdash; Fen&ecirc;tre &laquo; Rejoindre une session &raquo; avec le champ du code &agrave; 6 caract&egrave;res.</figcaption>
+  </figure>
 
   <h3>3.3 Importer un document</h3>
   <p>Si la session l'autorise, vous pouvez joindre un fichier pour que l'IA en tienne compte. Formats possibles&nbsp;: <strong>PDF, Markdown (.md), texte (.txt)</strong>, selon ce qu'a permis l'enseignant. Une taille maximale s'applique (jusqu'&agrave; 10&nbsp;Mo).</p>
@@ -303,11 +307,10 @@
     <li>Ajoutez d'&eacute;ventuels co&#8209;enseignants.</li>
     <li>Publiez la ressource quand elle est pr&ecirc;te.</li>
   </ol>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; Liste / formulaire des ressources</div>
-    <div class="desc">&Eacute;cran &laquo;&nbsp;Mes ressources&nbsp;&raquo; avec les &eacute;tats (Brouillon/Publi&eacute;/Archiv&eacute;) et le formulaire de cr&eacute;ation.</div>
-  </div>
+  <figure class="fig">
+    <img src="captures/05-nouvelle-ressource.png" alt="Formulaire de cr&eacute;ation d'une ressource">
+    <figcaption><b>Figure 5</b> &mdash; Cr&eacute;ation d'une ressource&nbsp;: code, intitul&eacute;, enseignants, description et semestre. Le panneau &laquo; &Agrave; savoir &raquo; rappelle les r&egrave;gles (code unique, &eacute;tat Brouillon &agrave; la cr&eacute;ation&hellip;).</figcaption>
+  </figure>
 
   <h3>4.2 Cr&eacute;er et piloter une session</h3>
   <p>Une <strong>session</strong> est un cadre d'usage rattach&eacute; &agrave; une ressource. Choisissez son <strong>type</strong>&nbsp;:</p>
@@ -326,11 +329,10 @@
     <li>R&eacute;glez les limites et consignes (&sect;4.4).</li>
     <li>Passez la session en &laquo;&nbsp;Programm&eacute;e&nbsp;&raquo; ou &laquo;&nbsp;Active&nbsp;&raquo; pour g&eacute;n&eacute;rer le code d'acc&egrave;s.</li>
   </ol>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; Param&eacute;trage d'une session</div>
-    <div class="desc">Formulaire de session&nbsp;: type, dates, mod&egrave;les associ&eacute;s, limites de tokens, consignes, formats de fichiers autoris&eacute;s.</div>
-  </div>
+  <figure class="fig">
+    <img src="captures/06-creation-session.png" alt="Param&eacute;trage d'une session">
+    <figcaption><b>Figure 6</b> &mdash; Param&eacute;trage d'une session&nbsp;: choix du type (TD, TP, &Eacute;tude libre, Examen), ressource, planification, mod&egrave;les autoris&eacute;s et pr&eacute;&#8209;prompt. Le panneau de droite montre l'aper&ccedil;u c&ocirc;t&eacute; &eacute;tudiant.</figcaption>
+  </figure>
 
   <h3>4.3 Le code d'acc&egrave;s</h3>
   <div class="note"><span class="t">Important</span> Le code &agrave; 6 caract&egrave;res est <strong>g&eacute;n&eacute;r&eacute; automatiquement</strong> lorsque la session passe en &laquo;&nbsp;Programm&eacute;e&nbsp;&raquo; ou &laquo;&nbsp;Active&nbsp;&raquo;. Tant qu'elle est en brouillon, aucun code n'existe. Communiquez ce code aux &eacute;tudiants au d&eacute;but de la s&eacute;ance.</div>
