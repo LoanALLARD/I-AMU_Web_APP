@@ -39,6 +39,7 @@
 
 
         <form method="POST" action="/login">
+            <?= csrf_field() ?>
 
             <div class="form-group">
                 <label for="email">Adresse e-mail</label>

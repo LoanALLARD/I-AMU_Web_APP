@@ -48,6 +48,7 @@ class AuthController extends Controller
             $password = isset($data['password']) ? $data['password'] : '';
         } else {
             // Lecture Formulaire pour le Web
+            $this->verifyCsrf();
             $email    = trim($this->input('email', ''));
             $password = $this->input('password', '');
         }
@@ -136,6 +137,8 @@ class AuthController extends Controller
      */
     public function register(): void
     {
+        $this->verifyCsrf();
+
         $data = [
             'email'            => trim($this->input('email', '')),
             'password'         => $this->input('password', ''),
