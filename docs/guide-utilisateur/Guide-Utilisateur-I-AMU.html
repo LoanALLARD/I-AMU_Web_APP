@@ -35,15 +35,17 @@
   .small{ font-size:9pt; color:var(--muted); }
   strong{ color:var(--navy); }
 
-  /* ---------- Cover ---------- */
-  .cover{ height:297mm; width:100%; background:linear-gradient(160deg,#1f3a5f 0%,#274d7e 55%,#2b6cb0 100%); color:#fff; padding:34mm 24mm; position:relative; }
-  .cover .kicker{ letter-spacing:5px; font-size:11pt; text-transform:uppercase; opacity:.85; }
-  .cover h1{ color:#fff; font-size:46pt; margin:8mm 0 2mm; line-height:1.05; }
-  .cover .sub{ font-size:16pt; font-weight:300; opacity:.95; max-width:120mm; }
-  .cover .logo{ background:#fff; border-radius:16px; padding:16px 22px; display:inline-flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,.18); }
-  .cover .logo svg{ display:block; height:48px; width:auto; }
-  .cover .meta{ position:absolute; bottom:30mm; left:24mm; right:24mm; border-top:1px solid rgba(255,255,255,.35); padding-top:6mm; display:flex; justify-content:space-between; font-size:10.5pt; opacity:.92; }
-  .cover .badge{ position:absolute; top:34mm; right:24mm; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.4); padding:5px 12px; border-radius:20px; font-size:9.5pt; }
+  /* ---------- Cover (sobre / institutionnelle) ---------- */
+  .cover{ height:297mm; width:100%; background:#ffffff; color:var(--ink); padding:42mm 26mm; position:relative; overflow:hidden; }
+  .cover::before{ content:""; position:absolute; top:0; left:0; width:12mm; height:100%; background:var(--navy); }
+  .cover .kicker{ letter-spacing:4px; font-size:10.5pt; text-transform:uppercase; color:var(--blue); font-weight:600; }
+  .cover h1{ color:var(--navy); font-size:44pt; margin:7mm 0 0; line-height:1.06; }
+  .cover .rule{ width:62mm; height:4px; background:#f4c20d; border-radius:2px; margin:8mm 0 7mm; }
+  .cover .sub{ font-size:14pt; font-weight:400; color:var(--muted); max-width:128mm; line-height:1.5; }
+  .cover .logo{ display:inline-flex; align-items:center; }
+  .cover .logo svg{ display:block; height:58px; width:auto; }
+  .cover .meta{ position:absolute; bottom:32mm; left:26mm; right:26mm; border-top:1px solid var(--line); padding-top:5mm; display:flex; justify-content:space-between; font-size:10pt; color:var(--muted); }
+  .cover .badge{ position:absolute; top:42mm; right:26mm; background:#fff; border:1px solid var(--navy); color:var(--navy); padding:5px 12px; border-radius:20px; font-size:9.5pt; font-weight:600; }
 
   /* ---------- TOC ---------- */
   .toc li{ margin:6px 0; }
@@ -110,10 +112,11 @@
   </div>
   <div class="badge">Version 1.0 &middot; Document utilisateur</div>
   <div class="kicker">Aix-Marseille Universit&eacute;</div>
-  <h1>I&#8209;AMU<br>Guide utilisateur</h1>
-  <p class="sub">Assistant d'apprentissage encadr&eacute; par IA. Mode d'emploi complet pour tous les profils&nbsp;: &eacute;tudiants, enseignants, chercheurs et administrateurs.</p>
+  <h1>Guide utilisateur</h1>
+  <div class="rule"></div>
+  <p class="sub">Manuel d'utilisation de la plateforme p&eacute;dagogique I&#8209;AMU. Prise en main compl&egrave;te, pas &agrave; pas, pour tous les profils&nbsp;: &eacute;tudiants, enseignants, chercheurs et administrateurs.</p>
   <div class="meta">
-    <span>Plateforme I&#8209;AMU &middot; Acc&egrave;s supervis&eacute; &agrave; un mod&egrave;le d'IA local</span>
+    <span>Plateforme p&eacute;dagogique I&#8209;AMU &middot; Aix-Marseille Universit&eacute;</span>
     <span>Juin 2026</span>
   </div>
 </div>
