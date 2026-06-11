@@ -146,11 +146,14 @@ class ChatService
         if ($conversation !== null) {
             $messages = array_map(
                 static fn (array $m): array => [
-                    'id'       => (int) $m['id'],
-                    'prompt'   => (string) $m['prompt'],
-                    'response' => (string) $m['response'],
-                    'model'    => (string) ($m['model_name'] ?? ''),
-                    'feedback' => isset($m['user_feedback']) && $m['user_feedback'] !== null ? (int) $m['user_feedback'] : null,
+                    'id'           => (int) $m['id'],
+                    'prompt'       => (string) $m['prompt'],
+                    'response'     => (string) $m['response'],
+                    'model'        => (string) ($m['model_name'] ?? ''),
+                    'feedback'     => isset($m['user_feedback']) && $m['user_feedback'] !== null ? (int) $m['user_feedback'] : null,
+                    'inputTokens'  => isset($m['input_tokens']) && $m['input_tokens'] !== null ? (int) $m['input_tokens'] : null,
+                    'outputTokens' => isset($m['output_tokens']) && $m['output_tokens'] !== null ? (int) $m['output_tokens'] : null,
+                    'latency'      => isset($m['latency']) && $m['latency'] !== null ? (int) $m['latency'] : null,
                 ],
              $this->interactions->listByConversation((int) $conversation['id'])
             );

@@ -143,6 +143,27 @@ $canAddModel = $canAddModel ?? false;
                         <span class="msg-model"><?= htmlspecialchars($m['model']) ?></span>
                     </div>
                     <div class="msg-content" data-markdown="<?= htmlspecialchars($m['response'], ENT_QUOTES, 'UTF-8') ?>">
+                        </div>
+                        <?php
+                        $inTok = (int) ($m['inputTokens'] ?? 0);
+                        $outTok = (int) ($m['outputTokens'] ?? 0);
+                        ?>
+                    <div class="msg-actions">
+                        <button class="msg-action" onclick="copyMsg(this)">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            Copier
+                        </button>
+                        <?php if (($m['latency'] ?? null) !== null): ?>
+                            <span class="msg-stat" title="Temps de réponse">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    <?= number_format($m['latency'] / 1000, 2) ?>s
+                                </span>
+                        <?php endif; ?>
+                        <?php if ($inTok > 0 || $outTok > 0): ?>
+                            <span class="msg-stat" title="<?= $inTok ?> entrée + <?= $outTok ?> sortie">
+                                    <?= $inTok + $outTok ?> tokens
+                                </span>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -577,7 +598,7 @@ $canAddModel = $canAddModel ?? false;
             // Final markdown render once the full answer is in.
             renderMarkdown(fullText || 'Pas de réponse.', contentEl);
 
-            const durationStr = ((performance.now() - startTime) / 1000).toFixed(2) + 's';
+            const durationStr = (meta.latency_ms != null ? meta.latency_ms / 1000 : (performance.now() - startTime) / 1000).toFixed(2) + 's';
             const newConvId = meta.conversation_id ?? null;
             const newConvName = meta.conversation_name ?? 'Nouvelle conversation';
             const inputTokens = meta.prompt_eval_count || 0;

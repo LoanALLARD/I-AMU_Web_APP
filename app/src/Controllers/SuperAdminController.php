@@ -67,6 +67,12 @@ class SuperAdminController extends Controller
             if ($password && $password_confirm && $password != $password_confirm) {
                 throw new \Exception("Les mots de passe ne correspondent pas.");
             }
+            if ($password) {
+                $passwordError = \Core\PasswordPolicy::validate($password);
+                if ($passwordError !== null) {
+                    throw new \Exception($passwordError);
+                }
+            }
             if ($first_name) {
                 $adminRepository->updateFirstName($admin["id"], $first_name);
             }

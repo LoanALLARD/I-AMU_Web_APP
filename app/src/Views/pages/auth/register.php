@@ -19,6 +19,7 @@
     <div class="card-body">
 
         <form method="POST" action="/register">
+            <?= csrf_field() ?>
 
             <div class="form-row">
                 <div class="form-group">

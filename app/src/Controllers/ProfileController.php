@@ -41,6 +41,9 @@ class ProfileController extends Controller
             'page'              => 'profile',
             'pageTitle'         => 'Mon profil',
             'title'             => 'Mon profil',
+            'teacherTitle'      => $isTeacher
+                ? (new UserRepository(Database::getConnection()))->getTitle((int) $user['id'])
+                : null,
             'specRequestStatus' => $isTeacher
                 ? (new TeacherSpecialisationService(Database::getConnection()))
                     ->requestStatus((int) $user['id'])
@@ -115,11 +118,18 @@ class ProfileController extends Controller
         $userRepository = new UserRepository($pdo);
 
         try {
-            if ($password && $password_confirm && $password != $password_confirm) {
-                throw new \Exception("Les mots de passe ne correspondent pas.");
-            }
             if ($password) {
-                $userRepository->updatePassword($user["id"], $password);
+                // Enforce the same strength rule as every other entry point so
+                // this form cannot be used to bypass the policy and set a weak
+                // password (min 12 chars, upper, digit, special).
+                $passwordError = \Core\PasswordPolicy::validate((string) $password);
+                if ($passwordError !== null) {
+                    throw new \Exception($passwordError);
+                }
+                if ($password !== $password_confirm) {
+                    throw new \Exception("Les mots de passe ne correspondent pas.");
+                }
+                $userRepository->updatePassword($user["id"], (string) $password);
             }
             if ($title) {
                 $userRepository->updateTitle($user["id"], $title);

@@ -116,8 +116,9 @@ final class AdminInviteService
         if ($firstName === '' || $lastName === '' || $password === '') {
             return ['success' => false, 'error' => 'Tous les champs sont obligatoires.'];
         }
-        if (strlen($password) < 8) {
-            return ['success' => false, 'error' => 'Le mot de passe doit faire au moins 8 caractères.'];
+        $passwordError = \Core\PasswordPolicy::validate($password);
+        if ($passwordError !== null) {
+            return ['success' => false, 'error' => $passwordError];
         }
         if ($password !== $passwordConfirm) {
             return ['success' => false, 'error' => 'Les mots de passe ne correspondent pas.'];
@@ -164,8 +165,9 @@ final class AdminInviteService
         if ($firstName === '' || $lastName === '' || $password === '') {
             return ['success' => false, 'error' => 'Tous les champs sont obligatoires.'];
         }
-        if (strlen($password) < 8) {
-            return ['success' => false, 'error' => 'Le mot de passe doit faire au moins 8 caractères.'];
+        $passwordError = \Core\PasswordPolicy::validate($password);
+        if ($passwordError !== null) {
+            return ['success' => false, 'error' => $passwordError];
         }
         if ($password !== $passwordConfirm) {
             return ['success' => false, 'error' => 'Les mots de passe ne correspondent pas.'];
