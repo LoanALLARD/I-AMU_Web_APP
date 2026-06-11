@@ -7,6 +7,9 @@ namespace Controllers;
 use Core\Controller;
 use Data\Database;
 use Models\UserRepository;
+use Models\AiRepository;
+use Models\DepartmentRepository;
+use Models\ResourceRepository;
 use Services\AuthService;
 use Services\TeacherSpecialisationService;
 use Services\UserStatsService;
@@ -205,5 +208,36 @@ class ProfileController extends Controller
 
         $this->flash('success', 'Préférence de recherche mise à jour.');
         $this->redirect('/profile');
+    }
+
+    public function formModel(): void {
+        $this->requireRole("teacher");
+        if (!$_SESSION["isSpecialized"]) {
+            $this->redirect('/chat');
+        }
+
+        $userId = $_SESSION["user_id"];
+        $pdo = Database::getConnection();   
+        $user = $this->currentUser();
+
+        // recover all types of api who is available
+        $Ai = new AiRepository($pdo);
+        $adapters = $Ai->getAllTypeOfAdapters();
+
+        // recover departements this admin can manage
+        $department = new DepartmentRepository($pdo);
+        $departments = $department->getDepartementFromUserId($userId);
+
+        // recover resources this teacher has
+        $resource = new ResourceRepository($pdo);
+        $resources = $resource->getResourcesFromUserId($userId);
+
+        $this->render('pages/admin/formAddModel', [
+            'user'         => $user,
+            'page'         => 'specialized',
+            'adapters'     => $adapters,
+            'departments'  => $departments,
+            'resources'    => $resources
+        ], 'chat');
     }
 }

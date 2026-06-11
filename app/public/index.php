@@ -144,6 +144,9 @@ $router->add('POST', '/profile/password', function () {
 $router->add('POST', '/profile/request-specialisation', function () {
     (new ProfileController())->requestSpecialisation();
 });
+$router->add('GET', '/specialiszed/addModel', function () {
+    (new ProfileController())->formModel();
+});
 $router->add('POST', '/profile/withdraw-consent', function () {
     (new ProfileController())->updateResearchOpposition();
 });

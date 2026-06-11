@@ -128,6 +128,9 @@ $themePref = match ($user['theme'] ?? null) {
     <?php if ($page === 'admin'): ?>
         <link rel="stylesheet" href="/assets/css/formAddModel.css<?= $v('formAddModel.css') ?>">
     <?php endif; ?>
+    <?php if ($page === 'specialized'): ?>
+        <link rel="stylesheet" href="/assets/css/formAddModelspecialized.css<?= $v('formAddModel.css') ?>">
+    <?php endif; ?>
     <?php if ($page === 'error'): ?>
         <link rel="stylesheet" href="/assets/css/error.css<?= $v('error.css') ?>">
     <?php endif; ?>

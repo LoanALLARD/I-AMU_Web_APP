@@ -69,7 +69,7 @@ $canAddModel = $canAddModel ?? false;
                                 </button>
                             <?php endforeach; ?>
                             <?php if ($canAddModel): ?>
-                                <a class="model-dropdown-item admin-action-item" href="/department-admin/addModel">
+                                <a class="model-dropdown-item admin-action-item" href="/specialiszed/addModel">
                                 <span class="model-dropdown-letter">
                                     <img src="/assets/img/add.svg" style="height: 20px;">
                                 </span>
