@@ -30,7 +30,6 @@ services :
       - ./database/schema/02_triggers.sql:/docker-entrypoint-initdb.d/02_triggers.sql:ro
       - ./database/schema/03_indexes.sql:/docker-entrypoint-initdb.d/03_indexes.sql:ro
       - ./database/seeds/01_bootstrap.sql:/docker-entrypoint-initdb.d/04_bootstrap.sql:ro
-      - ./database/seeds/02_dev_fixtures.sql:/docker-entrypoint-initdb.d/05_dev_fixtures.sql:ro
   adminer:
     image : adminer
     restart : always
