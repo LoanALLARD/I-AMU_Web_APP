@@ -157,7 +157,7 @@ class AiRepository
     public function getAllTypeOfAdapters(): mixed
     {
         $query = $this->pdo->prepare(
-            'SELECT adapter FROM models GROUP BY adapter'
+            'SELECT unnest(enum_range(NULL::adapter)) AS valeur'
         );
 
         $query->execute();
