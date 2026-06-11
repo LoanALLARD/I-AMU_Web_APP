@@ -33,7 +33,11 @@
                 </div>
                 <div class="form-group">
                     <label for="password">Mot de passe</label>
-                    <input type="password" id="password" name="password" required>
+                    <input type="password" id="password" name="password"
+                           placeholder="Min. 12 caractères, 1 majuscule, 1 chiffre, 1 caractère spécial"
+                           required minlength="12"
+                           pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{12,}"
+                           title="Au moins 12 caractères, une majuscule, un chiffre et un caractère spécial.">
                 </div>
                 <div class="form-group">
                     <label for="password_confirm">Confirmer le mot de passe</label>
