@@ -519,7 +519,8 @@ class DepartmentAdminController extends Controller
         }
     }
 
-    public function archiveModel() {
+    public function archiveModel(): void
+    {
         $this->requireAuth();
 
         $researcherId = (int) $this->input('id',null);

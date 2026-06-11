@@ -20,19 +20,25 @@ class AiRepository
         $this->pdo = $pdo;
     }
 
-    public function findAll(){
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function findAll(): array
+    {
         $query = $this->pdo->prepare(
             'SELECT * FROM models'
         );
-        
+
         $query->execute();
 
+        /** @var list<array<string, mixed>> $result */
         $result = $query->fetchAll();
 
         return $result;
     }
 
-    public function archive(int $id){
+    public function archive(int $id): bool
+    {
         $query = $this->pdo->prepare(
             'UPDATE models
             SET is_active = FALSE

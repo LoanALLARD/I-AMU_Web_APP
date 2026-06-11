@@ -83,6 +83,18 @@ final class ResearcherAnalyticsServiceTest extends TestCase
         ], $overrides);
     }
 
+    /**
+     * Wraps fixture rows in a Generator, matching exportRows()'s streaming
+     * return type (the repository yields rows, it no longer returns an array).
+     *
+     * @param list<array<string, mixed>> $rows
+     * @return \Generator<int, array<string, mixed>>
+     */
+    private static function rowsGenerator(array $rows): \Generator
+    {
+        yield from $rows;
+    }
+
     public function testNoActiveGrantReturnsError(): void
     {
         $this->auth->method('findActiveByResearcher')->willReturn([]);
@@ -100,11 +112,13 @@ final class ResearcherAnalyticsServiceTest extends TestCase
         $this->analytics->expects(self::once())
             ->method('exportRows')
             ->with([1, 2])
-            ->willReturn([]);
+            ->willReturn(self::rowsGenerator([]));
 
         $result = $this->service->export(13, []);
 
         self::assertTrue($result['success']);
+        // rows is a lazy Generator: draining it drives exportRows([1, 2]).
+        self::assertSame([], iterator_to_array($result['rows']));
     }
 
     public function testValidSubsetScopesToRequestedDepartments(): void
@@ -113,12 +127,14 @@ final class ResearcherAnalyticsServiceTest extends TestCase
         $this->analytics->expects(self::once())
             ->method('exportRows')
             ->with([1])
-            ->willReturn([]);
+            ->willReturn(self::rowsGenerator([]));
 
         $result = $this->service->export(13, [1]);
 
         self::assertTrue($result['success']);
         self::assertSame([['place' => 'Campus A', 'department' => 'Informatique']], $result['scope']);
+        // Drain the lazy rows so the exportRows([1]) expectation is met.
+        self::assertSame([], iterator_to_array($result['rows']));
     }
 
     public function testAntiIdorRejectsAnUngrantedDepartment(): void
@@ -135,12 +151,12 @@ final class ResearcherAnalyticsServiceTest extends TestCase
     public function testRowsArePseudonymisedWithNoDirectIdentifier(): void
     {
         $this->auth->method('findActiveByResearcher')->willReturn(self::activeGrants());
-        $this->analytics->method('exportRows')->willReturn([self::rawRow(9)]);
+        $this->analytics->method('exportRows')->willReturn(self::rowsGenerator([self::rawRow(9)]));
 
         $result = $this->service->export(13, [1]);
 
         self::assertTrue($result['success']);
-        $row = $result['rows'][0];
+        $row = iterator_to_array($result['rows'])[0];
 
         self::assertArrayHasKey('student', $row);
         self::assertMatchesRegularExpression('/^etudiant-[0-9a-f]+$/', $row['student']);
@@ -152,13 +168,13 @@ final class ResearcherAnalyticsServiceTest extends TestCase
     public function testPseudonymIsStablePerStudentAndDistinctAcrossStudents(): void
     {
         $this->auth->method('findActiveByResearcher')->willReturn(self::activeGrants());
-        $this->analytics->method('exportRows')->willReturn([
+        $this->analytics->method('exportRows')->willReturn(self::rowsGenerator([
             self::rawRow(9, ['interaction_id' => 901]),
             self::rawRow(9, ['interaction_id' => 902]),
             self::rawRow(10, ['interaction_id' => 903]),
-        ]);
+        ]));
 
-        $rows = $this->service->export(13, [1])['rows'];
+        $rows = iterator_to_array($this->service->export(13, [1])['rows']);
 
         // Same student -> same token (grouping preserved).
         self::assertSame($rows[0]['student'], $rows[1]['student']);
@@ -169,11 +185,11 @@ final class ResearcherAnalyticsServiceTest extends TestCase
     public function testShapedRowMapsAndCastsFields(): void
     {
         $this->auth->method('findActiveByResearcher')->willReturn(self::activeGrants());
-        $this->analytics->method('exportRows')->willReturn([
+        $this->analytics->method('exportRows')->willReturn(self::rowsGenerator([
             self::rawRow(9, ['is_archived' => true, 'latency' => null, 'session_access_code' => null]),
-        ]);
+        ]));
 
-        $row = $this->service->export(13, [1])['rows'][0];
+        $row = iterator_to_array($this->service->export(13, [1])['rows'])[0];
 
         self::assertSame('Campus A', $row['campus']);
         self::assertSame('Informatique', $row['department']);
