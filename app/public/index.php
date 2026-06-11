@@ -42,6 +42,7 @@
     $router->add('POST', '/chat/rename',    function() { (new HomeController())->renameChat(); });
     $router->add('POST', '/chat/archive',   function() { (new HomeController())->archiveChat(); });
     $router->add('POST', '/chat/unarchive', function() { (new HomeController())->unarchiveChat(); });
+    $router->add('POST', '/chat/feedback', function() { (new LLMController())->recordFeedback(); });
 
     $uri = $_SERVER['REQUEST_URI'];
     $method = $_SERVER['REQUEST_METHOD'];
