@@ -715,26 +715,6 @@ class SessionService
         ];
     }
 
-    /**
-     * Publishes a DRAFT resource the teacher owns (sets state to PUBLISHED).
-     *
-     * @throws \RuntimeException  On ownership mismatch or wrong state
-     */
-    public function publish(int $resourceId, int $teacherId): void
-    {
-        $row = $this->loadOwned($resourceId, $teacherId);
- 
-        if ($row['state'] === 'PUBLISHED') {
-            throw new \RuntimeException('Cette ressource est déjà publiée.');
-        }
-        if ($row['state'] === 'ARCHIVED') {
-            throw new \RuntimeException('Une ressource archivée ne peut pas être publiée directement. Restaurez-la d\'abord.');
-        }
- 
-        $this->resources->publish($resourceId);
-    }
-
-
     // ----------------------------------------------------------------
     // Helpers
     // ----------------------------------------------------------------

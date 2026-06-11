@@ -13,7 +13,7 @@
 > Mise à jour **2026-06-09**. RGPD **largement non couvert** — reste bloquant
 > pour une mise en production.
 
-- 🟡 **Consentement** : checkbox bloquante à l'inscription + mention via `GET /rgpd_consent` ; `users.consent_at` / `consent_version` (posé à `'1.0'` à l'inscription). Pas de retrait post-inscription ni d'interception bloquante au login.
+- 🟡 **Consentement** : checkbox bloquante à l'inscription + mention via `GET /gdrp_consent` ; `users.consent_at` / `consent_version` (posé à `'1.0'` à l'inscription). Pas de retrait post-inscription ni d'interception bloquante au login.
 - 🟡 **Effacement** : manuel — désactivation du compte (`is_active = false`) + demande à `dpo@univ-amu.fr` ; pas de `DeleteAccountService` ni d'anonymisation automatique.
 - 🟡 **Opposition recherche** : la colonne **`users.research_opposed BOOLEAN NOT NULL DEFAULT FALSE` existe désormais** au schéma (corrige l'ancien « absente »), **mais aucun code ne l'écrit ni ne la lit** : pas d'endpoint `/account/oppose-research`, pas de toggle compte, et **l'export par session ne la filtre pas** (cf. [SPEC-session-export](./SPEC-session-export.md) — dette RGPD).
 - ❌ **Information** : pas de page publique `/privacy` (`legal/privacy.php`).

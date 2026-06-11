@@ -4,11 +4,12 @@ namespace Models;
 
 use PDO;
 
-/*
- * This class use PDO to recover 
- * all data about AI in the database
+/**
+ * Data access for the `models` table (the LLM models a department can use).
+ *
+ * Holds the SQL for picking active models when creating or running a session,
+ * resolving a model by name, and registering a new model.
  */
-
 class AiRepository
 {
 
@@ -148,6 +149,11 @@ class AiRepository
         return $rows;
     }
 
+    /**
+     * Returns the distinct adapter values currently in use across models,
+     * to populate the adapter picker on the add-model form. Returns a single
+     * fetched row (`false` when no model exists).
+     */
     public function getAllTypeOfAdapters(): mixed
     {
         $query = $this->pdo->prepare(

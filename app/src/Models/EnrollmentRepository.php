@@ -15,6 +15,7 @@ class EnrollmentRepository
     {
     }
 
+    /** Whether the student already has an enrollment in the session (any state). */
     public function exists(int $studentId, int $sessionId): bool
     {
         $stmt = $this->pdo->prepare('SELECT 1 FROM enrollments WHERE student_id = :student AND session_id = :session');
@@ -23,6 +24,10 @@ class EnrollmentRepository
         return $stmt->fetchColumn() !== false;
     }
 
+    /**
+     * Joins a student to a session. Idempotent: a second call for the same
+     * pair is a no-op (`ON CONFLICT DO NOTHING`).
+     */
     public function enroll(int $studentId, int $sessionId): void
     {
         $stmt = $this->pdo->prepare(

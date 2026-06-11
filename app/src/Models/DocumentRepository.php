@@ -75,6 +75,7 @@ class DocumentRepository
         return $rows;
     }
 
+    /** Number of documents attached to a session. */
     public function countBySession(int $sessionId): int
     {
         $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM documents WHERE session_id = :sid');
@@ -99,6 +100,7 @@ class DocumentRepository
         return $rows;
     }
 
+    /** Number of documents attached to a conversation. */
     public function countByConversation(int $conversationId): int
     {
         $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM documents WHERE conversation_id = :cid');
@@ -178,6 +180,10 @@ class DocumentRepository
         $stmt->execute(['iid' => $interactionId, 'cid' => $conversationId]);
     }
 
+    /**
+     * Stores the result of text extraction on a document: the extracted text
+     * (null on failure) and the new processing status.
+     */
     public function updateExtraction(int $id, ?string $text, string $status): void
     {
         $stmt = $this->pdo->prepare(
@@ -186,6 +192,7 @@ class DocumentRepository
         $stmt->execute(['text' => $text, 'status' => $status, 'id' => $id]);
     }
 
+    /** Hard-deletes a document by id. */
     public function delete(int $id): void
     {
         $stmt = $this->pdo->prepare('DELETE FROM documents WHERE id = :id');

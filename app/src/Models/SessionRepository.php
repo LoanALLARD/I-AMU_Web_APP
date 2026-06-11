@@ -462,6 +462,11 @@ class SessionRepository
         return $rows;
 
     }
+    /**
+     * Total tokens (input + output) a student has consumed in a session,
+     * across all their conversations. Returns 0 when there is no usage yet.
+     * Used to enforce the per-student token budget.
+     */
     public function tokenUsageForStudent(int $studentId, int $sessionId): int
     {
         $stmt = $this->pdo->prepare(

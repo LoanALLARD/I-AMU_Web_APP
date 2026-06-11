@@ -437,31 +437,37 @@
 .badge-student {
     background: var(--blue-light);
     color: var(--blue);
+    border-color: var(--blue);
 }
 
 .badge-teacher {
     background: var(--gold-light);
     color: var(--gold);
+    border-color: var(--gold);
 }
 
 .badge-admin {
     background: var(--accept-bg);
     color: var(--accept);
+    border-color: var(--accept);
 }
 
 .badge-habilitated {
     background: var(--accept-bg);
     color: var(--accept);
+    border-color: var(--accept);
 }
 
 .badge-not-habilitated {
     background: var(--gray-100);
     color: var(--gray-400);
+    border-color: var(--gray-300);
 }
 
 .badge-rejected {
     background: var(--refuse-bg);
     color: var(--refuse);
+    border-color: var(--refuse);
 }
 
 /* Teacher habilitation request */
