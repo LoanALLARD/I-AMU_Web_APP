@@ -25,6 +25,7 @@ $conversation = $conversation ?? null;
 $conversations = $conversations ?? [];
 $env = $env ?? null;
 $archivedView = $archivedView ?? false;
+$endedView = $endedView ?? false;
 // Pages that display AI markdown opt in via needsMarkdown (chat replies and
 // the teacher monitor transcript). Drives loading marked/DOMPurify/highlight
 // + the shared renderer. Chat always needs it.
@@ -402,16 +403,17 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                        is unaffected. */ ?>
                         <?php $isSessionEnv = ($env['mode'] ?? 'libre') === 'session'; ?>
                         <?php $scopeBase = !empty($conversation['id']) ? '/chat/' . (int) $conversation['id'] : '/chat'; ?>
-                        <?php if ($isSessionEnv): ?>
+                        <?php if ($isSessionEnv && !$endedView): ?>
                             <?php /* Session conversations are driven by the session
                                    lifecycle: no rename, no archive — hence no scope
                                    switch either (a session never has an archive). */ ?>
                             <span class="conv-group-label">Conversations</span>
                         <?php else: ?>
+                            <?php $scopeLabel = $endedView ? 'Sessions terminées' : ($archivedView ? 'Archivées' : 'Conversations'); ?>
                             <div class="conv-scope">
                                 <button type="button" class="conv-scope-toggle" id="convScopeToggle" aria-haspopup="true"
                                     aria-expanded="false">
-                                    <span class="conv-group-label"><?= $archivedView ? 'Archivées' : 'Conversations' ?></span>
+                                    <span class="conv-group-label"><?= $scopeLabel ?></span>
                                     <svg class="conv-scope-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none"
                                         stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
                                         aria-hidden="true">
@@ -420,7 +422,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                                 </button>
                                 <div class="conv-scope-menu" id="convScopeMenu" role="menu" hidden>
                                     <a href="<?= htmlspecialchars($scopeBase) ?>"
-                                        class="conv-scope-item<?= !$archivedView ? ' is-current' : '' ?>" role="menuitem">
+                                        class="conv-scope-item<?= !$archivedView && !$endedView ? ' is-current' : '' ?>" role="menuitem">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -437,6 +439,15 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                                         </svg>
                                         Archivées
                                     </a>
+                                    <a href="<?= htmlspecialchars($scopeBase) ?>?view=ended"
+                                        class="conv-scope-item<?= $endedView ? ' is-current' : '' ?>" role="menuitem">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="9" />
+                                            <polyline points="12 7 12 12 15 14" />
+                                        </svg>
+                                        Sessions terminées
+                                    </a>
                                 </div>
                             </div>
                         <?php endif; ?>
@@ -448,10 +459,13 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                         <?php $canRename = ($env['mode'] ?? 'libre') !== 'session'; ?>
                         <?php foreach (($conversations ?? []) as $c): ?>
                             <div class="conv-row<?= (int) $c['id'] === (int) $activeConvId ? ' active' : '' ?>">
-                                <a href="/chat/<?= (int) $c['id'] ?>" class="conv-item">
+                                <a href="/chat/<?= (int) $c['id'] ?><?= $endedView ? '?view=ended' : '' ?>" class="conv-item">
                                     <span class="conv-title"><?= htmlspecialchars($c['name']) ?></span>
+                                    <?php if ($endedView && !empty($c['sessionLabel'])): ?>
+                                        <span class="conv-sub"><?= htmlspecialchars($c['sessionLabel']) ?> · <?= htmlspecialchars($c['statusLabel'] ?? '') ?></span>
+                                    <?php endif; ?>
                                 </a>
-                                <?php if (!$isSessionEnv): ?>
+                                <?php if (!$isSessionEnv && !$endedView): ?>
                                     <div class="conv-actions">
                                         <button type="button" class="conv-menu-btn" aria-haspopup="true" aria-expanded="false"
                                             aria-label="Actions sur la conversation">
@@ -505,7 +519,7 @@ On desktop these live as pills in the topbar (.topbar-tabs), so
                         <?php endforeach; ?>
                         <?php if (empty($conversations)): ?>
                             <p class="conv-empty">
-                                <?= $archivedView ? 'Aucune conversation archivée.' : 'Aucune conversation pour le moment.' ?>
+                                <?= $endedView ? 'Aucune conversation de session terminée.' : ($archivedView ? 'Aucune conversation archivée.' : 'Aucune conversation pour le moment.') ?>
                             </p>
                         <?php endif; ?>
                     </div>

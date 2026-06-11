@@ -579,6 +579,17 @@ class UserRepository
             'id'    => $id
         ]);
     }
+    /** Returns the teacher's academic title (on the `teachers` row), or null when unset / not a teacher. */
+    public function getTitle(int $id): ?string
+    {
+        $query = $this->pdo->prepare('SELECT title FROM teachers WHERE id = :id');
+        $query->execute(['id' => $id]);
+
+        $title = $query->fetchColumn();
+
+        return $title === false || $title === null ? null : (string) $title;
+    }
+
     /** Updates the teacher's academic title (on the `teachers` row). Returns the statement success. */
     public function updateTitle(int $id, string $title): bool
     {

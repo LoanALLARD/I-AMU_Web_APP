@@ -176,6 +176,17 @@ class LLMController{
                 return;
             }
             $sessionRow  = $sessionRepo->findById((int) $conversationData["session_id"]);
+            // A terminated session (ended/cancelled) is read-only: refuse any new
+            // prompt even if the read-only UI is bypassed. Mirrors the chat's
+            // "Sessions terminees" scope.
+            if ($sessionRow !== null
+                && \Domain\Session::fromRow($sessionRow)->computedStatus(new \DateTimeImmutable('now'))->isTerminal()
+            ) {
+                header('Content-Type: application/json');
+                http_response_code(403);
+                echo json_encode(['error' => 'Cette session est terminée : la conversation est en lecture seule.']);
+                return;
+            }
             // Per-prompt character limit (max_input_size). Counts characters of the raw user message
             $maxInputSize = isset($sessionRow['max_input_size']) && $sessionRow['max_input_size'] !== null
                 ? (int) $sessionRow['max_input_size']
@@ -284,14 +295,18 @@ class LLMController{
         // Persist the interaction (every conversation is persisted).
         $boundDocs = [];
         $interactionId = null;
+        $latencyMs = null;
         if ($conversationData !== null && $result['response'] !== '') {
             $interaction = new InteractionRepository($pdo);
+            $latencyMs = isset($result['total_duration']) && $result['total_duration'] !== null
+                ? (int) round($result['total_duration'] / 1000000) : null;
             $interactionData = $interaction->newInteration(
                 (int) $conversationData['id'],
                 $userMessage,
                 $result['response'],
                 $result['prompt_eval_count'],
-                $result['eval_count']
+                $result['eval_count'],
+                $latencyMs
             );
             // Store the provider context so the next turn keeps the thread.
             $meta_data = json_encode([
@@ -322,6 +337,7 @@ class LLMController{
         echo 'data: ' . json_encode([
                 'prompt_eval_count' => $result['prompt_eval_count'],
                 'eval_count'        => $result['eval_count'],
+                'latency_ms'        => $latencyMs,
                 'conversation_id'   => $conversationData['id'] ?? null,
                 'conversation_name' => $conversationData['name'] ?? null,
                 'interaction_id'    => $interactionId,

@@ -61,7 +61,7 @@ class OllamaAdaptater implements LlmAdaptaterInterface {
     /**
      * @param array<int, int> $context conversation context (Ollama token ids)
      * @param callable(string): void $onChunk
-     * @return array{response: string, context: list<int>, prompt_eval_count: ?int, eval_count: ?int}
+     * @return array{response: string, context: list<int>, prompt_eval_count: ?int, eval_count: ?int, total_duration: ?int}
      */
     public function generateStream(string $message, array $context, ?string $preprompt, ?string $posprompt, callable $onChunk): array {
         if ($posprompt != null) {
@@ -79,6 +79,7 @@ class OllamaAdaptater implements LlmAdaptaterInterface {
         $finalContext = [];
         $promptEval = null;
         $evalCount = null;
+        $totalDuration = null;
         $buffer = '';
 
         $ch = curl_init();
@@ -91,7 +92,7 @@ class OllamaAdaptater implements LlmAdaptaterInterface {
         ]);
         // Receive the body progressively instead of buffering it all.
         curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($curl, string $data) use (
-            &$buffer, &$full, &$finalContext, &$promptEval, &$evalCount, $onChunk
+            &$buffer, &$full, &$finalContext, &$promptEval, &$evalCount, &$totalDuration, $onChunk
         ): int {
             $buffer .= $data;
             // Ollama emits one JSON object per line. Only handle complete
@@ -116,6 +117,8 @@ class OllamaAdaptater implements LlmAdaptaterInterface {
                         : [];
                     $promptEval = isset($obj['prompt_eval_count']) ? (int) $obj['prompt_eval_count'] : null;
                     $evalCount  = isset($obj['eval_count']) ? (int) $obj['eval_count'] : null;
+                    // total response time reported by Ollama, in nanoseconds
+                    $totalDuration = isset($obj['total_duration']) ? (int) $obj['total_duration'] : null;
                 }
             }
             return strlen($data);
@@ -129,12 +132,7 @@ class OllamaAdaptater implements LlmAdaptaterInterface {
             curl_close($ch);
         }
 
-        return [
-            'response'          => $full,
-            'context'           => $finalContext,
-            'prompt_eval_count' => $promptEval,
-            'eval_count'        => $evalCount
-        ];
+        return ['response' => $full, 'context' => $finalContext, 'prompt_eval_count' => $promptEval, 'eval_count' => $evalCount, 'total_duration'    => $totalDuration];
     }
 
     public function formatMetadata(object $response): string {

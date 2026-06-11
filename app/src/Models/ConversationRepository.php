@@ -108,6 +108,32 @@ class ConversationRepository {
     }
 
     /**
+     * Every session-bound conversation a user owns (any session, archived or
+     * not), with its session id and prompt count. The caller keeps only those
+     * whose session is terminal, to build the "ended sessions" read-only list —
+     * the terminal test stays in the domain (Session::computedStatus).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listSessionBoundByUser(int $userId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT c.id, c.name, c.session_id, COUNT(i.id) AS prompt_count
+               FROM conversations c
+               LEFT JOIN interactions i ON i.conversation_id = c.id
+              WHERE c.user_id = :u AND c.session_id IS NOT NULL
+              GROUP BY c.id, c.name, c.session_id, c.created_at
+              ORDER BY c.created_at DESC, c.id DESC'
+        );
+        $stmt->execute(['u' => $userId]);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $rows;
+    }
+
+    /**
      * Number of conversations a user owns in a session. Used to cap how many
      * conversations a student may open in a given session.
      */

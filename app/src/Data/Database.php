@@ -27,7 +27,9 @@ class Database{
      * (stored in UTC) are returned in local time for the UI; the value is
      * sanitised because `SET TIME ZONE` cannot take a bound parameter.
      *
-     * On connection failure the script is terminated with `die()`.
+     * On connection failure the real PDO error is logged and a generic
+     * RuntimeException is thrown, so the global handler renders a clean 500
+     * page without leaking the database host / credentials to the visitor.
      */
     public static function getConnection(): PDO
     {
@@ -51,7 +53,10 @@ class Database{
                 $tz = preg_replace('/[^A-Za-z0-9\/_+-]/', '', (string) ($config['timezone'] ?? 'Europe/Paris'));
                 self::$instance->exec("SET TIME ZONE '" . $tz . "'");
             } catch (PDOException $e) {
-                die("Error while the connection with the database : " . $e->getMessage());
+                // Log the real cause (host, driver message) server-side only;
+                // never surface it to the client.
+                error_log('[I-AMU] Database connection failed: ' . $e->getMessage());
+                throw new \RuntimeException('Database connection failed.', 0, $e);
             }
         }
 

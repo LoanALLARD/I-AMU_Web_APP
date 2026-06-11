@@ -39,6 +39,7 @@
 
 
         <form method="POST" action="/login">
+            <?= csrf_field() ?>
 
             <div class="form-group">
                 <label for="email">Adresse e-mail</label>
@@ -51,6 +52,10 @@
                 <label for="password">Mot de passe</label>
                 <input type="password" id="password" name="password"
                        placeholder="Votre mot de passe" required>
+            </div>
+
+            <div class="forgot-password-link">
+                <a href="/forgot-password">Mot de passe oublié ?</a>
             </div>
 
             <button type="submit" class="btn-submit">

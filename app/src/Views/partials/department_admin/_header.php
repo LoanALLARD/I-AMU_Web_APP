@@ -12,6 +12,7 @@ $active = $activeNav ?? 'requests';
 $nav = [
     'requests' => ['/department-admin', 'Demandes', 'alert-triangle'],
     'users' => ['/department-admin/users', 'Utilisateurs', 'users'],
+    'models' => ['/department-admin/models', 'models', 'square']
 ];
 ?>
 <div class="page-header">
@@ -21,9 +22,6 @@ $nav = [
             <span class="badge badge-teacher"><?= icon('building', '', 13) ?>
                 <?= htmlspecialchars($department['name']) ?></span>
         <?php endif; ?>
-        <a href="/department-admin/addModel" class="btn sm page-header-cta">
-            <?= icon('plus', '', 13) ?> Ajouter un modèle
-        </a>
     </div>
     <div class="admin-identity-meta">
         Connecté en tant que
