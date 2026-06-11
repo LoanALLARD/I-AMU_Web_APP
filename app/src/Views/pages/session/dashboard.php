@@ -27,7 +27,7 @@ $canManage = $canManage ?? false;
     </div>
     <div class="dashboard-actions">
         <?php if (!empty($view['canMonitor'])): ?>
-            <a href="/sessions/<?= (int) $view['id'] ?>/monitor" class="btn primary">
+            <a href="/sessions/<?= (int) $view['id'] ?>/monitor" class="btn">
                 <?= icon('user', '', 12) ?> Suivi
             </a>
             <a href="/sessions/<?= (int) $view['id'] ?>/stats" class="btn">
