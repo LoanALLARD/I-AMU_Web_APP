@@ -176,6 +176,17 @@ class LLMController{
                 return;
             }
             $sessionRow  = $sessionRepo->findById((int) $conversationData["session_id"]);
+            // A terminated session (ended/cancelled) is read-only: refuse any new
+            // prompt even if the read-only UI is bypassed. Mirrors the chat's
+            // "Sessions terminees" scope.
+            if ($sessionRow !== null
+                && \Domain\Session::fromRow($sessionRow)->computedStatus(new \DateTimeImmutable('now'))->isTerminal()
+            ) {
+                header('Content-Type: application/json');
+                http_response_code(403);
+                echo json_encode(['error' => 'Cette session est terminée : la conversation est en lecture seule.']);
+                return;
+            }
             // Per-prompt character limit (max_input_size). Counts characters of the raw user message
             $maxInputSize = isset($sessionRow['max_input_size']) && $sessionRow['max_input_size'] !== null
                 ? (int) $sessionRow['max_input_size']
