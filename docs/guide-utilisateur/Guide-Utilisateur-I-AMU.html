@@ -74,6 +74,7 @@
   figure.fig{ margin:14px 0; page-break-inside:avoid; }
   figure.fig img{ width:100%; height:auto; display:block; border:1px solid var(--line); border-radius:8px; box-shadow:0 3px 10px rgba(31,58,95,.12); background:#0e1726; }
   figure.fig.narrow img{ max-width:78mm; margin:0 auto; }
+  figure.fig.medium img{ max-width:108mm; margin:0 auto; }
   figure.fig figcaption{ font-size:9pt; color:var(--muted); margin-top:6px; text-align:center; }
   figure.fig figcaption b{ color:var(--navy); }
 
@@ -134,7 +135,7 @@
   <ul class="toc" style="list-style:none;padding-left:0;">
     <li><span class="num">1.</span> Pr&eacute;sentation de la plateforme</li>
     <li><span class="num">2.</span> Premiers pas (commun &agrave; tous)</li>
-    <li class="lvl2">2.1 Cr&eacute;er son compte &middot; 2.2 V&eacute;rifier son e&#8209;mail &middot; 2.3 Rejoindre un d&eacute;partement &middot; 2.4 Consentement &middot; 2.5 Connexion &middot; 2.6 R&eacute;glages du profil</li>
+    <li class="lvl2">2.1 Cr&eacute;er son compte &middot; 2.2 V&eacute;rifier son e&#8209;mail &middot; 2.3 Lieu &amp; d&eacute;partement &middot; 2.4 Consentement &middot; 2.5 Connexion &middot; 2.6 R&eacute;glages du profil &middot; 2.7 Statistiques personnelles</li>
     <li><span class="num">3.</span> R&ocirc;le &mdash; &Eacute;tudiant</li>
     <li class="lvl2">3.1 Discuter avec l'IA &middot; 3.2 Rejoindre une session &middot; 3.3 Importer un document &middot; 3.4 Limites &middot; 3.5 Historique &amp; feedback</li>
     <li><span class="num">4.</span> R&ocirc;le &mdash; Enseignant</li>
@@ -150,7 +151,7 @@
 
   <div class="note">
     <span class="t">&Agrave; propos des captures d'&eacute;cran</span>
-    Les figures 1 &agrave; 6 sont d&eacute;j&agrave; ins&eacute;r&eacute;es&nbsp;: placez les fichiers d'image dans un sous&#8209;dossier <code>captures/</code> &agrave; c&ocirc;t&eacute; de ce document, nomm&eacute;s <code>01-inscription.png</code>, <code>02-connexion.png</code>, <code>03-chat-etudiant.png</code>, <code>04-rejoindre-session.png</code>, <code>05-nouvelle-ressource.png</code>, <code>06-creation-session.png</code>. Les autres &eacute;crans restent signal&eacute;s en <strong>pointill&eacute;s bleus</strong> en attendant leur capture.
+    Les illustrations (figures 1 &agrave; 17) sont charg&eacute;es depuis le sous&#8209;dossier <code>captures/</code> plac&eacute; &agrave; c&ocirc;t&eacute; de ce document. Si une image n'appara&icirc;t pas, v&eacute;rifiez que le fichier correspondant existe dans <code>captures/</code> avec le nom attendu (ex. <code>01-inscription.png</code>).
   </div>
 </div>
 
@@ -176,7 +177,7 @@
     <tr><td>Enseignant</td><td>Adresse <code>@univ-amu.fr</code></td><td>Cr&eacute;e ressources et sessions, suit les &eacute;changes.</td></tr>
     <tr><td>Enseignant habilit&eacute;</td><td>Enseignant valid&eacute; par l'admin</td><td>Peut importer des mod&egrave;les personnalis&eacute;s.</td></tr>
     <tr><td>Chercheur</td><td>Rattach&eacute; &agrave; un laboratoire</td><td>Exporte des donn&eacute;es pour la recherche.</td></tr>
-    <tr><td>Admin de d&eacute;partement</td><td>Sur invitation</td><td>G&egrave;re comptes, r&ocirc;les et mod&egrave;les du d&eacute;partement.</td></tr>
+    <tr><td>Admin de d&eacute;partement</td><td>Sur invitation</td><td>G&egrave;re comptes, habilitations et mod&egrave;les du d&eacute;partement.</td></tr>
     <tr><td>Super&#8209;administrateur</td><td>&Eacute;quipe centrale</td><td>G&egrave;re sites, d&eacute;partements, domaines e&#8209;mail, admins.</td></tr>
   </table>
   <div class="note"><span class="t">Un seul r&ocirc;le &agrave; la fois</span> Chaque compte poss&egrave;de un r&ocirc;le unique et exclusif. Un utilisateur appartient au plus &agrave; un d&eacute;partement (sauf le chercheur et le super&#8209;administrateur).</div>
@@ -193,7 +194,7 @@
     <tr><td><code>@etu.univ-amu.fr</code></td><td>&Eacute;tudiant (automatique)</td></tr>
     <tr><td><code>@univ-amu.fr</code></td><td>Enseignant (automatique)</td></tr>
     <tr><td>Autre domaine reconnu</td><td>Selon configuration (ex. chercheur)</td></tr>
-    <tr><td>Domaine non reconnu</td><td>Aucun r&ocirc;le&nbsp;: il sera attribu&eacute; par un administrateur</td></tr>
+    <tr><td>Domaine non reconnu</td><td>Inscription refus&eacute;e&nbsp;: seuls les domaines configur&eacute;s par l'&eacute;tablissement sont accept&eacute;s</td></tr>
   </table>
   <ol class="steps">
     <li>Ouvrez la page d'inscription puis renseignez vos <strong>pr&eacute;nom</strong> et <strong>nom</strong>.</li>
@@ -208,7 +209,7 @@
   </figure>
 
   <h3>2.2 V&eacute;rifier son adresse e&#8209;mail</h3>
-  <p>Cliquez sur le lien re&ccedil;u par e&#8209;mail pour activer votre compte. Tant que l'adresse n'est pas v&eacute;rifi&eacute;e, l'acc&egrave;s reste restreint.</p>
+  <p>Cliquez sur le lien re&ccedil;u par e&#8209;mail pour activer votre compte. <strong>Tant que l'adresse n'est pas v&eacute;rifi&eacute;e, la connexion est refus&eacute;e</strong>&nbsp;: le compte n'est pas utilisable.</p>
   <div class="tip"><span class="t">Conseil</span> Si vous ne recevez rien, v&eacute;rifiez vos spams. Le lien de v&eacute;rification est &agrave; usage unique.</div>
 
   <h3>2.3 Choisir son lieu et son d&eacute;partement</h3>
@@ -216,7 +217,7 @@
   <div class="note"><span class="t">&Agrave; noter</span> Les chercheurs ne sont pas rattach&eacute;s &agrave; un d&eacute;partement&nbsp;: ils demandent une autorisation d'acc&egrave;s (voir &sect;6).</div>
 
   <h3>2.4 Donner son consentement</h3>
-  <p>Lors de la premi&egrave;re connexion, vous devez accepter les conditions d'utilisation et la politique de traitement des donn&eacute;es. La version et la date de votre consentement sont enregistr&eacute;es.</p>
+  <p>L'inscription exige d'accepter le traitement de vos donn&eacute;es&nbsp;: cochez la case de consentement avant de cr&eacute;er votre compte. La date et la version du texte accept&eacute; sont conserv&eacute;es. Vous pourrez ensuite, depuis votre profil, vous opposer &agrave; l'usage de vos donn&eacute;es pour la recherche, ce qui vous exclut des analyses et des exports (voir &sect;9).</p>
 
   <h3>2.5 Se connecter</h3>
   <ol class="steps">
@@ -231,16 +232,27 @@
 
   <h3>2.6 R&eacute;glages du profil</h3>
   <ul>
-    <li><strong>Th&egrave;me</strong>&nbsp;: clair, sombre ou automatique.</li>
-    <li><strong>Identit&eacute;</strong>&nbsp;: nom, pr&eacute;nom (&eacute;tudiants&nbsp;: num&eacute;ro &eacute;tudiant et ann&eacute;e).</li>
-    <li><strong>Dur&eacute;e d'archivage</strong> de vos conversations (en jours).</li>
-    <li><strong>Opposition &agrave; l'usage recherche</strong> de vos donn&eacute;es (voir &sect;9).</li>
+    <li><strong>Th&egrave;me</strong> de l'interface&nbsp;: clair, sombre ou automatique.</li>
+    <li><strong>Identit&eacute;</strong>&nbsp;: vos nom et pr&eacute;nom (et, pour un enseignant, son <strong>titre</strong>).</li>
+    <li><strong>Mot de passe</strong>&nbsp;: le changer quand vous le souhaitez.</li>
+    <li><strong>Retrait du consentement</strong> &agrave; la recherche et <strong>d&eacute;sactivation</strong> du compte (zone &agrave; risque).</li>
   </ul>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; Page Profil / Pr&eacute;f&eacute;rences</div>
-    <div class="desc">&Eacute;cran de profil montrant le s&eacute;lecteur de th&egrave;me, les champs d'identit&eacute; et le r&eacute;glage de dur&eacute;e d'archivage.</div>
-  </div>
+  <div class="note"><span class="t">&Agrave; noter</span> Le <strong>lieu</strong> et le <strong>d&eacute;partement</strong> sont fix&eacute;s &agrave; l'inscription&nbsp;: ils ne se changent pas depuis le profil.</div>
+  <figure class="fig">
+    <img src="captures/07-profil.png" alt="Page Mon profil">
+    <figcaption><b>Figure 3</b> &mdash; Page &laquo; Mon profil &raquo;&nbsp;: identit&eacute;, choix du th&egrave;me, tableau &laquo; Ma consommation &raquo; et empreinte &eacute;cologique, zone &agrave; risque.</figcaption>
+  </figure>
+
+  <h3>2.7 Vos statistiques personnelles</h3>
+  <p>Les &eacute;tudiants et les enseignants disposent, dans &laquo; Mon profil &raquo;, d'un tableau <strong>&laquo; Ma consommation &raquo;</strong> qui r&eacute;capitule leur propre usage de l'assistant&nbsp;:</p>
+  <ul>
+    <li>nombre de <strong>conversations</strong> et de <strong>messages</strong> envoy&eacute;s&nbsp;;</li>
+    <li><strong>jetons (tokens) &eacute;chang&eacute;s</strong> et <strong>mod&egrave;le le plus utilis&eacute;</strong>&nbsp;;</li>
+    <li>moyenne de <strong>messages par conversation</strong> et <strong>derni&egrave;re activit&eacute;</strong>&nbsp;;</li>
+    <li>un <strong>graphique d'activit&eacute;</strong> sur les 30 derniers jours.</li>
+  </ul>
+  <p>Un encadr&eacute; <strong>&laquo; Empreinte &eacute;cologique &raquo;</strong> estime en plus l'&eacute;nergie et le CO&#8322; associ&eacute;s &agrave; vos &eacute;changes, avec des &eacute;quivalents concrets (km en voiture, recharges de t&eacute;l&eacute;phone&hellip;) et des conseils pour la r&eacute;duire.</p>
+  <div class="note"><span class="t">&Agrave; noter</span> Ces statistiques sont <strong>personnelles</strong>&nbsp;: chacun ne voit que les siennes, et l'empreinte affich&eacute;e est une estimation indicative, pas une mesure.</div>
 </div>
 
 <!-- ========================= 3. ETUDIANT ========================= -->
@@ -257,7 +269,7 @@
   </ol>
   <figure class="fig">
     <img src="captures/03-chat-etudiant.png" alt="Interface de chat de l'&eacute;tudiant">
-    <figcaption><b>Figure 3</b> &mdash; Espace de chat&nbsp;: &agrave; gauche les conversations et les boutons &laquo; Nouvelle conversation &raquo; / &laquo; Rejoindre une session &raquo;&nbsp;; au centre le fil et le s&eacute;lecteur de mod&egrave;le&nbsp;; en bas la zone de saisie.</figcaption>
+    <figcaption><b>Figure 4</b> &mdash; Espace de chat&nbsp;: &agrave; gauche les conversations et les boutons &laquo; Nouvelle conversation &raquo; / &laquo; Rejoindre une session &raquo;&nbsp;; au centre le fil et le s&eacute;lecteur de mod&egrave;le&nbsp;; en bas la zone de saisie.</figcaption>
   </figure>
   <div class="tip"><span class="t">Conseil</span> Formulez des demandes pr&eacute;cises et donnez du contexte. Une bonne question = une meilleure r&eacute;ponse.</div>
 
@@ -270,12 +282,13 @@
   </ol>
   <figure class="fig narrow">
     <img src="captures/04-rejoindre-session.png" alt="Bo&icirc;te de dialogue Rejoindre une session">
-    <figcaption><b>Figure 4</b> &mdash; Fen&ecirc;tre &laquo; Rejoindre une session &raquo; avec le champ du code &agrave; 6 caract&egrave;res.</figcaption>
+    <figcaption><b>Figure 5</b> &mdash; Fen&ecirc;tre &laquo; Rejoindre une session &raquo; avec le champ du code &agrave; 6 caract&egrave;res.</figcaption>
   </figure>
 
   <h3>3.3 Importer un document</h3>
-  <p>Si la session l'autorise, vous pouvez joindre un fichier pour que l'IA en tienne compte. Formats possibles&nbsp;: <strong>PDF, Markdown (.md), texte (.txt)</strong>, selon ce qu'a permis l'enseignant. Une taille maximale s'applique (jusqu'&agrave; 10&nbsp;Mo).</p>
-  <div class="warn"><span class="t">Attention</span> Hors session, ou si l'enseignant n'a autoris&eacute; aucun format, l'import de documents est d&eacute;sactiv&eacute;.</div>
+  <p>Vous pouvez joindre un fichier (ic&ocirc;ne trombone de la zone de saisie) pour que l'IA en tienne compte. Formats accept&eacute;s&nbsp;: <strong>PDF, Markdown (.md), texte (.txt)</strong>, jusqu'&agrave; <strong>10&nbsp;Mo</strong> et 10&nbsp;documents par conversation.</p>
+  <p>En <strong>chat libre</strong> (hors session), l'import est disponible par d&eacute;faut avec ces trois formats. En <strong>session</strong>, c'est l'enseignant qui d&eacute;cide&nbsp;: il peut restreindre les formats, abaisser la taille maximale, voire d&eacute;sactiver l'import.</p>
+  <div class="warn"><span class="t">Attention</span> Dans une session de type <strong>Examen</strong>, l'import de documents est toujours d&eacute;sactiv&eacute;.</div>
 
   <h3>3.4 Comprendre les limites</h3>
   <table>
@@ -286,12 +299,11 @@
   </table>
 
   <h3>3.5 Historique &amp; retour (feedback)</h3>
-  <p>Vos conversations sont conserv&eacute;es puis archiv&eacute;es selon la dur&eacute;e r&eacute;gl&eacute;e dans votre profil. Sur chaque r&eacute;ponse, donnez un <strong>retour</strong> (pouce haut / pouce bas) pour signaler ce qui vous a aid&eacute;.</p>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; Boutons de feedback sous une r&eacute;ponse</div>
-    <div class="desc">Gros plan sur une r&eacute;ponse de l'IA avec les ic&ocirc;nes pouce haut / pouce bas.</div>
-  </div>
+  <p>Vos conversations sont conserv&eacute;es et accessibles depuis la liste de gauche. Sur chaque r&eacute;ponse, vous pouvez indiquer si elle vous a &eacute;t&eacute; utile ou non (pouce haut / pouce bas).</p>
+  <figure class="fig narrow">
+    <img src="captures/08-feedback.png" alt="Boutons de feedback sous une r&eacute;ponse">
+    <figcaption><b>Figure 6</b> &mdash; Les boutons de retour (pouce haut / pouce bas) sous une r&eacute;ponse de l'IA.</figcaption>
+  </figure>
 </div>
 
 <!-- ========================= 4. ENSEIGNANT ========================= -->
@@ -309,7 +321,7 @@
   </ol>
   <figure class="fig">
     <img src="captures/05-nouvelle-ressource.png" alt="Formulaire de cr&eacute;ation d'une ressource">
-    <figcaption><b>Figure 5</b> &mdash; Cr&eacute;ation d'une ressource&nbsp;: code, intitul&eacute;, enseignants, description et semestre. Le panneau &laquo; &Agrave; savoir &raquo; rappelle les r&egrave;gles (code unique, &eacute;tat Brouillon &agrave; la cr&eacute;ation&hellip;).</figcaption>
+    <figcaption><b>Figure 7</b> &mdash; Cr&eacute;ation d'une ressource&nbsp;: code, intitul&eacute;, enseignants, description et semestre. Le panneau &laquo; &Agrave; savoir &raquo; rappelle les r&egrave;gles (code unique, &eacute;tat Brouillon &agrave; la cr&eacute;ation&hellip;).</figcaption>
   </figure>
 
   <h3>4.2 Cr&eacute;er et piloter une session</h3>
@@ -331,7 +343,7 @@
   </ol>
   <figure class="fig">
     <img src="captures/06-creation-session.png" alt="Param&eacute;trage d'une session">
-    <figcaption><b>Figure 6</b> &mdash; Param&eacute;trage d'une session&nbsp;: choix du type (TD, TP, &Eacute;tude libre, Examen), ressource, planification, mod&egrave;les autoris&eacute;s et pr&eacute;&#8209;prompt. Le panneau de droite montre l'aper&ccedil;u c&ocirc;t&eacute; &eacute;tudiant.</figcaption>
+    <figcaption><b>Figure 8</b> &mdash; Param&eacute;trage d'une session&nbsp;: choix du type (TD, TP, &Eacute;tude libre, Examen), ressource, planification, mod&egrave;les autoris&eacute;s et pr&eacute;&#8209;prompt. Le panneau de droite montre l'aper&ccedil;u c&ocirc;t&eacute; &eacute;tudiant.</figcaption>
   </figure>
 
   <h3>4.3 Le code d'acc&egrave;s</h3>
@@ -348,11 +360,10 @@
 
   <h3>4.5 Suivre les &eacute;changes</h3>
   <p>Pour chaque session, consultez les conversations des &eacute;tudiants&nbsp;: messages, r&eacute;ponses, retours (pouce haut/bas), latence et volume de jetons. Objectif&nbsp;: analyser <strong>comment</strong> les &eacute;tudiants mobilisent l'IA.</p>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; Tableau de suivi d'une session</div>
-    <div class="desc">Liste des &eacute;tudiants inscrits et de leurs conversations, avec indicateurs (nombre d'&eacute;changes, feedback, tokens).</div>
-  </div>
+  <figure class="fig">
+    <img src="captures/09-suivi-session.png" alt="Suivi d'une session c&ocirc;t&eacute; enseignant">
+    <figcaption><b>Figure 9</b> &mdash; Suivi d'une session&nbsp;: &eacute;tudiants inscrits et leurs &eacute;changes, avec les indicateurs (nombre d'&eacute;changes, feedback, jetons).</figcaption>
+  </figure>
   <div class="rgpd"><span class="t">Cadre d'usage</span> Le suivi sert un objectif p&eacute;dagogique. Restez dans le p&eacute;rim&egrave;tre de vos enseignements et respectez la confidentialit&eacute; des &eacute;tudiants.</div>
 
   <h3>Demander l'habilitation</h3>
@@ -379,15 +390,14 @@
     <li>Ajoutez un mod&egrave;le&nbsp;: nom, fournisseur, fen&ecirc;tre de contexte, URL d'API, type d'adaptateur.</li>
     <li>Enregistrez&nbsp;: le mod&egrave;le devient disponible pour cette ressource.</li>
   </ol>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; Import d'un mod&egrave;le sur une ressource</div>
-    <div class="desc">Formulaire d'ajout de mod&egrave;le (nom, fournisseur, contexte, URL, adaptateur) au sein d'une ressource.</div>
-  </div>
+  <figure class="fig medium">
+    <img src="captures/16-import-modele.png" alt="Import d'un mod&egrave;le sur une ressource">
+    <figcaption><b>Figure 10</b> &mdash; Import d'un mod&egrave;le sur une ressource&nbsp;: nom, fournisseur, fen&ecirc;tre de contexte, URL d'API et type d'adaptateur.</figcaption>
+  </figure>
 
-  <h3>5.3 Partager un mod&egrave;le</h3>
-  <p>Un mod&egrave;le rattach&eacute; &agrave; une ressource peut &ecirc;tre <strong>partag&eacute; avec d'autres ressources du m&ecirc;me d&eacute;partement</strong>, pour mutualiser une configuration.</p>
-  <div class="note"><span class="t">&Agrave; noter</span> Un mod&egrave;le li&eacute; &agrave; une ressource ne peut pas &ecirc;tre rendu &laquo;&nbsp;partageable&nbsp;&raquo; globalement&nbsp;: son partage reste cadr&eacute; au d&eacute;partement.</div>
+  <h3>5.3 Port&eacute;e d'un mod&egrave;le import&eacute;</h3>
+  <p>Un mod&egrave;le que vous importez est rattach&eacute; &agrave; une <strong>ressource</strong> pr&eacute;cise. Les enseignants de cette ressource peuvent alors le choisir lors de la cr&eacute;ation d'une session, aux c&ocirc;t&eacute;s des mod&egrave;les mis &agrave; disposition au niveau du <strong>d&eacute;partement</strong>.</p>
+  <div class="note"><span class="t">R&egrave;gle de port&eacute;e</span> Un mod&egrave;le est rattach&eacute; <strong>soit</strong> &agrave; un d&eacute;partement, <strong>soit</strong> &agrave; une ressource, jamais aux deux. Un mod&egrave;le de ressource ne peut pas &ecirc;tre marqu&eacute; comme &laquo;&nbsp;partageable&nbsp;&raquo; globalement.</div>
 </div>
 
 <!-- ========================= 6. CHERCHEUR ========================= -->
@@ -395,7 +405,7 @@
   <h2>6. R&ocirc;le &mdash; Chercheur</h2>
   <div class="role"><div class="who">Profil Chercheur</div><div class="one">Rattach&eacute; &agrave; un laboratoire, vous demandez l'acc&egrave;s aux donn&eacute;es d'un d&eacute;partement et exportez des &eacute;changes pour vos travaux.</div></div>
 
-  <p>Le chercheur n'appartient &agrave; aucun d&eacute;partement. Son compte est valid&eacute; au niveau de l'&eacute;tablissement et rattach&eacute; &agrave; un <strong>laboratoire</strong>.</p>
+  <p>Le chercheur n'appartient &agrave; aucun d&eacute;partement. Il est rattach&eacute; &agrave; un <strong>laboratoire</strong> (d&eacute;termin&eacute; par le domaine de son adresse e&#8209;mail), et son compte est <strong>approuv&eacute; par un super&#8209;administrateur</strong>. L'acc&egrave;s aux donn&eacute;es se demande ensuite <strong>d&eacute;partement par d&eacute;partement</strong>, et c'est l'<strong>administrateur du d&eacute;partement</strong> vis&eacute; qui l'accorde.</p>
 
   <h3>6.1 Demander l'acc&egrave;s &agrave; un d&eacute;partement</h3>
   <ol class="steps">
@@ -403,52 +413,63 @@
     <li>R&eacute;digez votre demande (objet de la recherche, donn&eacute;es souhait&eacute;es).</li>
     <li>L'administrateur du d&eacute;partement <strong>autorise</strong> ou <strong>rejette</strong>.</li>
   </ol>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; Demande d'autorisation</div>
-    <div class="desc">Formulaire de demande d'acc&egrave;s &agrave; un d&eacute;partement, avec le champ de motivation et le statut (en attente / autoris&eacute;e / rejet&eacute;e).</div>
-  </div>
+  <figure class="fig">
+    <img src="captures/17-demande-acces.png" alt="Demande d'acc&egrave;s &agrave; un d&eacute;partement">
+    <figcaption><b>Figure 11</b> &mdash; Demande d'acc&egrave;s &agrave; un d&eacute;partement&nbsp;: champ de motivation et statut (en attente / autoris&eacute;e / rejet&eacute;e).</figcaption>
+  </figure>
 
-  <h3>6.2 Exporter des conversations</h3>
-  <p>Une fois l'autorisation accord&eacute;e, vous pouvez exporter les conversations du d&eacute;partement concern&eacute;. Chaque export est <strong>trac&eacute;</strong> (chercheur, date, adresse IP).</p>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; &Eacute;cran d'export</div>
-    <div class="desc">Liste des conversations exportables avec filtres et bouton d'export.</div>
-  </div>
+  <h3>6.2 Analyser les usages</h3>
+  <p>Pour chaque d&eacute;partement autoris&eacute;, un <strong>tableau d'analyse</strong> agr&egrave;ge les usages des &eacute;tudiants &mdash; sans jamais r&eacute;v&eacute;ler d'identit&eacute;. On y trouve&nbsp;:</p>
+  <ul>
+    <li><strong>Volume</strong>&nbsp;: conversations (en session vs libres), &eacute;changes et nombre d'&eacute;tudiants concern&eacute;s&nbsp;;</li>
+    <li><strong>Consommation</strong>&nbsp;: jetons en entr&eacute;e / sortie et latence moyenne&nbsp;;</li>
+    <li><strong>Satisfaction</strong>&nbsp;: part de retours positifs (pouces)&nbsp;;</li>
+    <li><strong>Activit&eacute;</strong>&nbsp;: courbe sur les 30 derniers jours&nbsp;;</li>
+    <li><strong>Mots&#8209;cl&eacute;s</strong>&nbsp;: termes les plus fr&eacute;quents (un mot n'appara&icirc;t que s'il est employ&eacute; par au moins deux &eacute;tudiants distincts)&nbsp;;</li>
+    <li><strong>Forme des prompts</strong>&nbsp;: longueur moyenne des questions et profondeur moyenne des conversations.</li>
+  </ul>
+  <figure class="fig">
+    <img src="captures/10-analyse-chercheur.png" alt="Tableau d'analyse chercheur">
+    <figcaption><b>Figure 12</b> &mdash; Tableau d'analyse&nbsp;: cartes de volume / consommation / satisfaction, courbe d'activit&eacute; et mots&#8209;cl&eacute;s.</figcaption>
+  </figure>
 
-  <div class="rgpd"><span class="t">Donn&eacute;es &amp; recherche</span> La plateforme n'anonymise pas les donn&eacute;es&nbsp;: l'anonymisation et le respect du cadre &eacute;thique/RGPD rel&egrave;vent de votre responsabilit&eacute; de chercheur. Les utilisateurs ayant exerc&eacute; leur <strong>droit d'opposition</strong> &agrave; l'usage recherche doivent &ecirc;tre exclus de vos traitements.</div>
+  <h3>6.3 Exporter le corpus</h3>
+  <p>Vous pouvez exporter les &eacute;changes des d&eacute;partements autoris&eacute;s (JSON&nbsp;/ CSV) pour vos analyses hors ligne. Chaque export est <strong>trac&eacute;</strong> (chercheur, date, adresse IP).</p>
+  <figure class="fig">
+    <img src="captures/11-export-chercheur.png" alt="&Eacute;cran d'export du corpus">
+    <figcaption><b>Figure 13</b> &mdash; &Eacute;cran d'export&nbsp;: choix du p&eacute;rim&egrave;tre (d&eacute;partements) et bouton d'export (JSON / CSV).</figcaption>
+  </figure>
+
+  <div class="rgpd"><span class="t">Donn&eacute;es &amp; recherche</span> &Agrave; l'export, l'identit&eacute; est <strong>pseudonymis&eacute;e</strong>&nbsp;: ni nom, ni e&#8209;mail, ni num&eacute;ro &eacute;tudiant ne quittent la plateforme&nbsp;; chaque &eacute;tudiant re&ccedil;oit un <strong>jeton opaque stable</strong> (m&ecirc;me &eacute;tudiant = m&ecirc;me jeton). Les &eacute;tudiants ayant <strong>refus&eacute; l'usage recherche</strong> sont automatiquement exclus des analyses et des exports.</div>
 </div>
 
 <!-- ========================= 7. ADMIN DEPARTEMENT ========================= -->
 <div class="page">
   <h2>7. R&ocirc;le &mdash; Administrateur de d&eacute;partement</h2>
-  <div class="role"><div class="who">Profil Administrateur de d&eacute;partement</div><div class="one">Vous administrez votre d&eacute;partement&nbsp;: comptes, r&ocirc;les, habilitations, autorisations chercheurs et mod&egrave;les en acc&egrave;s libre.</div></div>
+  <div class="role"><div class="who">Profil Administrateur de d&eacute;partement</div><div class="one">Vous administrez votre d&eacute;partement&nbsp;: comptes, habilitations enseignants, autorisations chercheurs et mod&egrave;les.</div></div>
 
   <p>Le compte est cr&eacute;&eacute; <strong>sur invitation d'un super&#8209;administrateur</strong>. Votre p&eacute;rim&egrave;tre est limit&eacute; &agrave; votre d&eacute;partement.</p>
 
-  <h3>7.1 G&eacute;rer les utilisateurs et les r&ocirc;les</h3>
+  <h3>7.1 G&eacute;rer les utilisateurs</h3>
   <ul>
-    <li>Attribuer un r&ocirc;le aux comptes dont le domaine e&#8209;mail n'a pas de r&ocirc;le automatique.</li>
-    <li>Activer / d&eacute;sactiver des comptes.</li>
-    <li>Consulter la liste des membres du d&eacute;partement.</li>
+    <li>Consulter la liste des <strong>membres</strong> du d&eacute;partement (&eacute;tudiants, enseignants).</li>
+    <li><strong>Activer</strong> ou <strong>d&eacute;sactiver</strong> un compte.</li>
   </ul>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; Gestion des utilisateurs</div>
-    <div class="desc">Tableau des utilisateurs du d&eacute;partement avec r&ocirc;le, statut actif/inactif et actions.</div>
-  </div>
+  <div class="note"><span class="t">&Agrave; noter</span> Le r&ocirc;le d&eacute;coule du domaine e&#8209;mail &agrave; l'inscription&nbsp;: l'administrateur ne r&eacute;attribue pas les r&ocirc;les, il g&egrave;re l'acc&egrave;s des comptes.</div>
+  <figure class="fig">
+    <img src="captures/12-admin-utilisateurs.png" alt="Gestion des utilisateurs du d&eacute;partement">
+    <figcaption><b>Figure 14</b> &mdash; Liste des membres du d&eacute;partement avec leur r&ocirc;le, leur statut (actif/inactif) et les actions.</figcaption>
+  </figure>
 
   <h3>7.2 Traiter les demandes d'habilitation</h3>
   <p>Approuvez ou refusez les demandes des enseignants souhaitant importer des mod&egrave;les (voir &sect;5).</p>
 
   <h3>7.3 Autoriser les chercheurs</h3>
   <p>Examinez les demandes d'acc&egrave;s des chercheurs &agrave; votre d&eacute;partement&nbsp;: <strong>autoriser</strong> ou <strong>rejeter</strong> (voir &sect;6).</p>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; File des demandes (habilitation / chercheurs)</div>
-    <div class="desc">Liste des demandes en attente avec boutons Approuver / Rejeter.</div>
-  </div>
+  <figure class="fig">
+    <img src="captures/13-admin-demandes.png" alt="File des demandes (habilitation / chercheurs)">
+    <figcaption><b>Figure 15</b> &mdash; Demandes en attente (habilitation enseignant / acc&egrave;s chercheur) avec les boutons Approuver / Rejeter.</figcaption>
+  </figure>
 
   <h3>7.4 G&eacute;rer les mod&egrave;les en acc&egrave;s libre</h3>
   <p>D&eacute;finissez quels mod&egrave;les sont utilisables <strong>hors session</strong> (mode libre) par les membres du d&eacute;partement.</p>
@@ -462,24 +483,24 @@
 
   <div class="warn"><span class="t">Compte &agrave; privil&egrave;ges</span> Les comptes super&#8209;administrateurs sont en nombre limit&eacute;, isol&eacute;s du reste des comptes, et <strong>toutes leurs actions sont trac&eacute;es</strong>. Le premier compte est cr&eacute;&eacute; par un script d'initialisation unique.</div>
 
+  <div class="warn"><span class="t">Premi&egrave;re connexion</span> Le tout premier super&#8209;administrateur est initialis&eacute; avec un mot de passe provisoire&nbsp;: il doit <strong>le changer d&egrave;s sa premi&egrave;re connexion</strong>.</div>
+
   <h3>8.1 G&eacute;rer les sites et l'identit&eacute; visuelle</h3>
   <p>Cr&eacute;ez et configurez les <strong>sites</strong> (&eacute;tablissements)&nbsp;: nom, adresse, et personnalisation visuelle (logo, favicon, couleur principale).</p>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; Configuration d'un site</div>
-    <div class="desc">Formulaire de site avec t&eacute;l&eacute;versement du logo / favicon et s&eacute;lecteur de couleur principale.</div>
-  </div>
+  <figure class="fig">
+    <img src="captures/14-superadmin-site.png" alt="Configuration d'un site">
+    <figcaption><b>Figure 16</b> &mdash; Configuration d'un site&nbsp;: nom, adresse, t&eacute;l&eacute;versement du logo / favicon et couleur principale.</figcaption>
+  </figure>
 
   <h3>8.2 G&eacute;rer d&eacute;partements et laboratoires</h3>
   <p>Cr&eacute;ez les d&eacute;partements (rattach&eacute;s &agrave; un site) et les laboratoires utilis&eacute;s pour les chercheurs.</p>
 
   <h3>8.3 Configurer les domaines e&#8209;mail</h3>
   <p>D&eacute;finissez la correspondance <strong>domaine &rarr; r&ocirc;le automatique</strong> (ex. <code>@etu.univ-amu.fr</code> &rarr; &Eacute;tudiant). Ces r&egrave;gles ne sont jamais cod&eacute;es en dur&nbsp;: elles se g&egrave;rent ici.</p>
-  <div class="shot">
-    <div class="cam">&#9974;</div>
-    <div class="lbl">Capture &agrave; ajouter &mdash; Domaines e&#8209;mail</div>
-    <div class="desc">Tableau des domaines configur&eacute;s avec leur r&ocirc;le associ&eacute; et l'&eacute;tat actif/inactif.</div>
-  </div>
+  <figure class="fig">
+    <img src="captures/15-superadmin-domaines.png" alt="Domaines e-mail configur&eacute;s">
+    <figcaption><b>Figure 17</b> &mdash; Domaines e&#8209;mail configur&eacute;s, avec le r&ocirc;le associ&eacute; (domaine &rarr; r&ocirc;le) et l'&eacute;tat actif/inactif.</figcaption>
+  </figure>
 
   <h3>8.4 Cr&eacute;er les administrateurs et valider les chercheurs</h3>
   <ul>
@@ -495,12 +516,12 @@
   <table>
     <tr><th>Sujet</th><th>Ce qu'il faut savoir</th></tr>
     <tr><td>Consentement</td><td>Recueilli &agrave; la premi&egrave;re connexion&nbsp;; version et date enregistr&eacute;es.</td></tr>
-    <tr><td>Archivage</td><td>Vos conversations sont archiv&eacute;es selon la dur&eacute;e (en jours) d&eacute;finie dans votre profil.</td></tr>
-    <tr><td>Droit d'opposition</td><td>Vous pouvez vous opposer &agrave; l'utilisation de vos donn&eacute;es &agrave; des fins de recherche.</td></tr>
-    <tr><td>Usage recherche</td><td>Les exports par les chercheurs sont trac&eacute;s (qui, quand, depuis quelle IP).</td></tr>
+    <tr><td>Conservation</td><td>Vos conversations sont conserv&eacute;es pour vous permettre d'y revenir&nbsp;; pour leur suppression, contactez le DPO.</td></tr>
+    <tr><td>Droit d'opposition</td><td>Depuis &laquo; Mon profil &raquo;, vous pouvez retirer votre consentement &agrave; l'usage recherche (traitement jusqu'&agrave; 30 jours).</td></tr>
+    <tr><td>Usage recherche</td><td>Donn&eacute;es <strong>pseudonymis&eacute;es</strong> &agrave; l'export&nbsp;; les personnes ayant refus&eacute; la recherche sont exclues&nbsp;; chaque export est trac&eacute; (qui, quand, IP).</td></tr>
     <tr><td>IA locale</td><td>Le mod&egrave;le est h&eacute;berg&eacute; localement&nbsp;: vos &eacute;changes ne sont pas envoy&eacute;s &agrave; un service tiers grand public.</td></tr>
   </table>
-  <div class="rgpd"><span class="t">Exercer vos droits</span> Pour acc&eacute;der &agrave; vos donn&eacute;es, les rectifier ou vous opposer &agrave; un traitement, utilisez les r&eacute;glages de votre profil ou contactez l'administration de votre d&eacute;partement.</div>
+  <div class="rgpd"><span class="t">Exercer vos droits</span> Le retrait du consentement &agrave; la recherche et la d&eacute;sactivation du compte se font depuis &laquo; Mon profil &raquo;. Pour l'acc&egrave;s, la rectification ou la suppression de vos donn&eacute;es, contactez le DPO&nbsp;: <strong>dpo@univ-amu.fr</strong>.</div>
 </div>
 
 <!-- ========================= 10. FAQ ========================= -->
@@ -508,10 +529,10 @@
   <h2>10. FAQ &amp; r&eacute;solution de probl&egrave;mes</h2>
 
   <h4>Je n'arrive pas &agrave; me connecter</h4>
-  <p>V&eacute;rifiez que votre e&#8209;mail est confirm&eacute; (lien re&ccedil;u &agrave; l'inscription) et que votre compte est actif. En cas d'oubli, utilisez &laquo;&nbsp;mot de passe oubli&eacute;&nbsp;&raquo;.</p>
+  <p>Le plus souvent, l'<strong>adresse e&#8209;mail n'a pas encore &eacute;t&eacute; v&eacute;rifi&eacute;e</strong>&nbsp;: tant que le lien re&ccedil;u &agrave; l'inscription n'a pas &eacute;t&eacute; cliqu&eacute;, la connexion est refus&eacute;e. V&eacute;rifiez aussi que le compte n'a pas &eacute;t&eacute; d&eacute;sactiv&eacute;.</p>
 
-  <h4>Mon compte n'a aucun r&ocirc;le</h4>
-  <p>Votre domaine e&#8209;mail n'est pas reconnu automatiquement&nbsp;: un administrateur de d&eacute;partement doit vous attribuer un r&ocirc;le.</p>
+  <h4>Mon adresse e&#8209;mail est refus&eacute;e &agrave; l'inscription</h4>
+  <p>Le r&ocirc;le est attribu&eacute; automatiquement d'apr&egrave;s le domaine de l'adresse. Seuls les domaines configur&eacute;s par l'&eacute;tablissement (&eacute;tudiant, enseignant, ou laboratoire pour les chercheurs) sont accept&eacute;s&nbsp;; avec un autre domaine, la cr&eacute;ation de compte est refus&eacute;e. Rapprochez&#8209;vous de l'administration.</p>
 
   <h4>Le code de session ne fonctionne pas</h4>
   <p>Le code fait 6 caract&egrave;res (lettres majuscules et chiffres). V&eacute;rifiez qu'il n'y a pas de confusion (O/0, I/1) et que la session est bien <strong>programm&eacute;e</strong> ou <strong>active</strong>.</p>

@@ -30,6 +30,12 @@ cd app
 composer install
 ```
 
+Generate key for the mail server
+```bash
+openssl rand -hex 32
+```
+Then put it in the both `.env` under the tag `APP_SECRET`. 
+
 ### Available Commands (run from app/)
 
 | Command            | Tool                | Purpose                                                      |
